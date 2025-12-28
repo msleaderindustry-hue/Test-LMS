@@ -24,5 +24,5 @@
 .
 ├── index.html    # Entry point & CDN dependencies
 ├── app.js        # Application logic (React components & State)
-├── styles.css    # Global styles & Animations
+├── style.css    # Global styles & Animations
 └── README.md     # Documentation
