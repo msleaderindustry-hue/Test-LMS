@@ -3,6 +3,9 @@ const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
 const SECRET_KEY = "MySuperSecretKey_2025_v1";
+// НОВЫЙ КЛЮЧ
+const DEFAULT_GEMINI_KEY = "AIzaSyCJ90VjiIFzCTJmC2oCbENpH9CWYOJjp3U"; 
+
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function hmacSign(secret, message){const enc = new TextEncoder();const key = await crypto.subtle.importKey("raw", enc.encode(secret), {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
@@ -15,6 +18,78 @@ function useMathJax(contentRef, dependencies = []) {
       window.MathJax.typesetPromise([contentRef.current]).catch(err => console.log(err));
     }
   }, dependencies);
+}
+
+// --- AI EXPLANATION LOGIC  ---
+async function fetchAIExplanation(questionText, variants, correctIndex, userIndex, questionImg, apiKey) {
+    if(!apiKey) return "⚠️ Ключ API не найден. Проверьте настройки.";
+    
+    const prompt = `
+    Ты — опытный преподаватель. Студент допустил ошибку в тесте.
+    Объясни, почему правильный ответ именно этот (№${correctIndex + 1}), и почему ответ студента (№${userIndex + 1}) неверен.
+    Вопрос: "${questionText.replace(/<[^>]*>?/gm, '')}"
+    Варианты:
+    ${variants.map((v, i) => `${i+1}. ${v.text}`).join('\n')}
+    Ответь кратко (3-4 предложения). Используй LaTeX для формул (в $...$).
+    `;
+
+    // Формируем части запроса
+    const parts = [{ text: prompt }];
+
+    // Если есть картинка и она в формате Base64, добавляем её
+    if (questionImg && questionImg.startsWith('data:image')) {
+        try {
+            const mimeType = questionImg.split(';')[0].split(':')[1];
+            const base64Data = questionImg.split(',')[1];
+            parts.push({
+                inlineData: {
+                    mimeType: mimeType,
+                    data: base64Data
+                }
+            });
+        } catch (e) {
+            console.error("Ошибка обработки картинки:", e);
+        }
+    }
+
+    // СПИСОК МОДЕЛЕЙ ДЛЯ ПЕРЕБОРА (От новых к старым)
+    const models = [
+        'gemini-2.5-flash',       // Самая новая (быстрая)
+        'gemini-2.0-flash-exp',   // Экспериментальная
+        'gemini-1.5-flash',       // Стабильная старая (без -latest)
+        'gemini-1.5-flash-001',   // Конкретная версия
+        'gemini-pro'              // Самая старая (резерв)
+    ];
+
+    for (const modelName of models) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: parts }] })
+            });
+            
+            const data = await response.json();
+            
+            // Если ошибка 404 (Not Found), пробуем следующую модель
+            if (data.error) {
+                if (data.error.code === 404 || data.error.message.includes('not found')) {
+                    continue; // Идем к следующей модели в списке
+                }
+                return `Ошибка API (${modelName}): ` + data.error.message;
+            }
+            
+            if (!data.candidates || !data.candidates[0].content) return "AI вернул пустой ответ.";
+            
+            // Если успех — возвращаем текст
+            return data.candidates[0].content.parts[0].text;
+            
+        } catch (e) {
+            return "Ошибка сети: " + e.message;
+        }
+    }
+    
+    return "⚠️ Не удалось найти доступную модель AI. Проверьте API ключ.";
 }
 
 // --- UI COMPONENTS ---
@@ -74,8 +149,6 @@ const Input = (props) => (
   />
 );
 
-// --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
-
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
      const cardRef = useRef(null); useMathJax(cardRef, [question]); 
      if (!question) return null;
@@ -131,7 +204,23 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
 
 const ReviewView = ({ questions, answers, onBack }) => {
       const reviewRef = useRef(null);
-      useMathJax(reviewRef, [questions]); 
+      //explanations в зависимости, чтобы MathJax перерисовывал формулы при ответе ИИ
+      const [explanations, setExplanations] = useState({});
+      useMathJax(reviewRef, [questions, explanations]);
+      
+      const [loadingId, setLoadingId] = useState(null);
+      
+      // Ключ берется напрямую из константы
+      const apiKey = DEFAULT_GEMINI_KEY;
+
+      const handleExplain = async (index, q, userAns) => {
+          if(!apiKey) { alert('API Key не настроен!'); return; }
+          setLoadingId(index);
+          // ПЕРЕДАЕМ КАРТИНКУ (q.questionImg) в функцию AI
+          const text = await fetchAIExplanation(q.question, q.variants, q.correctIndex, userAns, q.questionImg, apiKey);
+          setExplanations(prev => ({...prev, [index]: text}));
+          setLoadingId(null);
+      };
 
       return (
           <motion.div 
@@ -149,13 +238,16 @@ const ReviewView = ({ questions, answers, onBack }) => {
                      const isCorrect = userAns === q.correctIndex;
                      return (
                          <div key={i} style={{
-                             background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444'
+                             background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, 
+                             border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444'
                          }}>
                              <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}>
                                  <strong>Вопрос {i+1}</strong> 
                                  <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
                              </div>
                              <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
+                             {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
+                             
                              {q.variants.map((v, vi) => {
                                  let style = {padding:'10px 15px', borderRadius:10, margin:'5px 0', border:'2px solid transparent', background:'var(--glass-bg)', opacity:0.8, color:'var(--text-main)'};
                                  
@@ -164,6 +256,29 @@ const ReviewView = ({ questions, answers, onBack }) => {
                                  
                                  return <div key={vi} style={style} dangerouslySetInnerHTML={{__html: v.text || 'Image'}}></div>
                              })}
+
+                             {/* AI BLOCK */}
+                             {!isCorrect && (
+                                 <div style={{marginTop: 15, borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: 12}}>
+                                     {!explanations[i] ? (
+                                         <button 
+                                            className="ai-btn"
+                                            onClick={() => handleExplain(i, q, userAns)}
+                                            disabled={loadingId === i}
+                                         >
+                                            {loadingId === i ? 'Думаю...' : '🤖 Почему я ошибся?'}
+                                         </button>
+                                     ) : (
+                                         <motion.div 
+                                            initial={{opacity:0}} animate={{opacity:1}}
+                                            style={{background: 'rgba(118, 75, 162, 0.08)', padding: 15, borderRadius: 12, fontSize: 14, lineHeight: 1.5, borderLeft: '4px solid #764ba2'}}
+                                         >
+                                             <strong style={{color: '#6b46c1', display:'block', marginBottom:5}}>🎓 AI Учитель:</strong>
+                                             <div dangerouslySetInnerHTML={{__html: explanations[i].replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br/>')}} />
+                                         </motion.div>
+                                     )}
+                                 </div>
+                             )}
                          </div>
                      )
                  })}
@@ -223,10 +338,11 @@ function App() {
   const [tests, setTests] = useState([]);
   const [history, setHistory] = useState([]);
   
+  // License
   const [fp, setFp] = useState('');
   const [licenseInput, setLicenseInput] = useState('');
   const [licMsg, setLicMsg] = useState('');
-
+  
   const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
   const [isResultSaved, setIsResultSaved] = useState(false);
   
@@ -236,7 +352,7 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
-
+  
   useEffect(() => {
       if(view !== 'test') return;
       const timer = setInterval(() => {
@@ -280,7 +396,7 @@ function App() {
     if(!raw) { localStorage.setItem('test_sets_list', JSON.stringify(['Электроника'])); localStorage.setItem('tests_Электроника', JSON.stringify([])); }
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
   };
-
+  
   const handleLicenseCheck = async () => {
     if(!/^[0-9a-f]{64}$/i.test(licenseInput.trim())){ setLicMsg('Неверный формат'); return; }
     const expected = await hmacSign(SECRET_KEY, fp);
@@ -322,7 +438,8 @@ function App() {
       let selectedQuestions = fullList.slice(0, qCount);
       
       let finalQuestions = selectedQuestions.map(t => {
-          let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex })); varsWithFlag = shuffleArray(varsWithFlag);
+          let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex })); 
+          varsWithFlag = shuffleArray(varsWithFlag);
           return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
       });
 
@@ -361,63 +478,54 @@ function App() {
     setView('result');
   };
 
-  // --- KEYBOARD SUPPORT ADDITION ---
   useEffect(() => {
       if (view !== 'test') return;
-
       const handleKeyDown = (e) => {
           if (isAnimating) return; 
-
           const { currentIdx, questions, answers } = testSession;
-          
-          // Navigation
           if (e.key === 'ArrowRight' || e.key === 'Enter') {
-              if (currentIdx < questions.length - 1) {
-                  handleNavClick(currentIdx + 1);
-              }
+              if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1);
           } else if (e.key === 'ArrowLeft') {
-              if (currentIdx > 0) {
-                  handleNavClick(currentIdx - 1);
-              }
-          } 
-          // Answers 1-9
-          else if (e.key >= '1' && e.key <= '9') {
+              if (currentIdx > 0) handleNavClick(currentIdx - 1);
+          } else if (e.key >= '1' && e.key <= '9') {
               const variantIndex = parseInt(e.key) - 1; 
-              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
-                  if (answers[currentIdx] === null) {
-                      handleAnswer(variantIndex);
-                  }
+              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length && answers[currentIdx] === null) {
+                  handleAnswer(variantIndex);
               }
           }
       };
-
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
-  // ---------------------------------
   
-  // --- НОВАЯ ФУНКЦИЯ ДЛЯ ПОВТОРЕНИЯ ОШИБОК ---
+  // --- ФУНКЦИЯ ПОВТОРА ОШИБОК С ПЕРЕМЕШИВАНИЕМ ---
   const restartMistakes = () => {
-    // Фильтруем вопросы, выбираем только те, где ответ не совпадает с правильным индексом
     const wrongQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-    
-    if(wrongQuestions.length === 0) return; // На всякий случай
+    if(wrongQuestions.length === 0) return;
 
-    // Сбрасываем таймер на исходное время
+    const reshuffledQuestions = wrongQuestions.map(q => {
+        const newVariants = shuffleArray([...q.variants]);
+        const newCorrectIndex = newVariants.findIndex(v => v._isCorrectOriginal);
+        return {
+            ...q,
+            variants: newVariants,
+            correctIndex: newCorrectIndex
+        };
+    });
+
     const mins = parseInt(customTime) || 20;
     setTimeLeft(mins * 60);
 
     setTestSession({ 
-        questions: wrongQuestions, 
+        questions: reshuffledQuestions, 
         currentIdx: 0, 
-        answers: new Array(wrongQuestions.length).fill(null), 
+        answers: new Array(reshuffledQuestions.length).fill(null), 
         score: 0 
     });
 
     setIsResultSaved(false);
     setView('test');
   };
-  // -------------------------------------------
 
   const saveResult = (name) => {
     if(!name.trim()) return alert('Введите имя!');
@@ -434,51 +542,16 @@ function App() {
       html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
       t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
     });
-    
     area.innerHTML = html; 
-    
-    if(window.MathJax) {
-        MathJax.typesetPromise([area]).then(() => {
-            setTimeout(() => { window.print(); }, 800);
-        });
-    } else {
-        window.print();
-    }
+    if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
   return (
     <>
       <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
-         <motion.div 
-           animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} 
-           transition={{ duration: 30, repeat: Infinity, ease: "linear" }} 
-           style={{
-               position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
-               background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(60px)', borderRadius:'50%'
-           }} 
-         />
-         <motion.div 
-           animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} 
-           transition={{ duration: 40, repeat: Infinity, ease: "linear" }} 
-           style={{
-               position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
-               background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(60px)', borderRadius:'50%'
-           }} 
-         />
-         <motion.div 
-           animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} 
-           transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} 
-           style={{
-               position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', 
-               /* Сделал цвета мягче (пастельными) */
-               background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(50px)', borderRadius:'50%'
-           }} 
-         />
+         <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%'}} />
+         <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%'}} />
+         <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%'}} />
       </div>
       
       <div id="themeBtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{position:'absolute', top:20, right:20, fontSize:24, width:44, height:44, borderRadius:'50%', background:'var(--glass-bg)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:1000, boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}}>
@@ -489,17 +562,11 @@ function App() {
         <AnimatePresence mode="wait">
           
           {view === 'license' && (
-            <motion.div key="lic" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" 
-              style={{width: '100%', maxWidth:'480px', textAlign:'center'}}>
+            <motion.div key="lic" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width: '100%', maxWidth:'480px', textAlign:'center'}}>
                <h2 style={{marginTop:0}}>🔐 Вход</h2>
                <div style={{display:'flex', alignItems:'center', gap:10, background:'rgba(128,128,128,0.1)', padding:'0 15px', borderRadius:14, marginBottom:15, height:54}}>
                    <span 
-                      onClick={(e)=>{
-                          const range = document.createRange();
-                          range.selectNode(e.target);
-                          window.getSelection().removeAllRanges();
-                          window.getSelection().addRange(range);
-                      }}
+                      onClick={(e)=>{const range = document.createRange();range.selectNode(e.target);window.getSelection().removeAllRanges();window.getSelection().addRange(range);}}
                       style={{fontFamily:'monospace', fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, userSelect:'all', WebkitUserSelect:'all'}}
                    >{fp}</span>
                    <button onClick={() => {navigator.clipboard.writeText(fp); alert('Скопировано!');}} style={{background:'transparent', fontSize:20, width:40, padding:0}}>📋</button>
@@ -512,23 +579,15 @@ function App() {
 
           {view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-              <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
+              <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS <span style={{fontSize:14, color:'var(--text-sec)'}}>Exam Edition</span></h2>
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button 
-                      variant="muted" 
-                      onClick={() => openSet(name)} 
-                      style={{
-                          flex:1, justifyContent:'flex-start', textAlign:'left', 
-                          padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word'
-                      }}
-                    >
-                      <span style={{marginRight:8}}>📂</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                    <Button variant="muted" onClick={() => openSet(name)} style={{flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word'}}>
+                      <span style={{marginRight:8}}>📂</span><span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
                     </Button>
                     <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
                   </div>
@@ -560,27 +619,14 @@ function App() {
           {view === 'timer_setup' && (
               <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
                   <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
-                  
                   <div style={{marginBottom:15, textAlign:'left'}}>
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
-                      <Input 
-                          type="number" 
-                          value={customTime} 
-                          onChange={e => setCustomTime(e.target.value)} 
-                          style={{textAlign:'center', fontSize:20, fontWeight:800}} 
-                      />
+                      <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                   </div>
-
                   <div style={{marginBottom:15, textAlign:'left'}}>
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
-                      <Input 
-                          type="number" 
-                          value={customQCount} 
-                          onChange={e => setCustomQCount(e.target.value)} 
-                          style={{textAlign:'center', fontSize:20, fontWeight:800}} 
-                      />
+                      <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                   </div>
-
                   <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
                   <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
               </motion.div>
@@ -588,42 +634,30 @@ function App() {
 
           {view === 'test' && (
             <div key="test-wrapper" className="test-layout">
-               
                <div className="question-column">
                    <AnimatePresence mode="wait">
                       <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
                    </AnimatePresence>
                </div>
-
                <div className="sidebar-column">
                    <div className="sidebar-content">
                       <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
-                      
                       <div className="nav-grid-wrapper">
                           <div className="nav-grid-compact">
                               {testSession.questions.map((_, i) => {
                                  let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
                                  if(i===testSession.currentIdx) { c='#764ba2'; txt='white'; }
                                  else if(testSession.answers[i]!==null) { c = testSession.answers[i]===testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt='white'; }
-                                 
                                  const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                 
                                  return (
-                                     <div 
-                                         key={i} 
-                                         className={itemClass} 
-                                         style={{background:c, color:txt}} 
-                                         onClick={()=>handleNavClick(i)}
-                                     >{i+1}</div>
+                                     <div key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</div>
                                  )
                               })}
                           </div>
                       </div>
-                      
                       <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                    </div>
                </div>
-
             </div>
           )}
 
@@ -634,7 +668,6 @@ function App() {
                   {Math.round(testSession.score/testSession.questions.length*100)}%
                </h1>
                <p style={{fontSize:18, color:'var(--text-sec)'}}>Верно: <b>{testSession.score}</b> из <b>{testSession.questions.length}</b></p>
-               
                <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                   {!isResultSaved ? (
                       <>
@@ -647,26 +680,18 @@ function App() {
                       </motion.div>
                   )}
                </div>
-
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
-                  
-                  {/* КНОПКА ПОВТОРА ОШИБОК */}
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
-
                   <Button onClick={()=>setView('menu')}>🏠 Меню</Button>
                </div>
             </motion.div>
           )}
 
           {view === 'review' && (
-              <ReviewView 
-                 questions={testSession.questions} 
-                 answers={testSession.answers} 
-                 onBack={()=>setView('menu')} 
-              />
+              <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {view === 'stats' && (
