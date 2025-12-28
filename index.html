@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ultimate LMS: Exam Mode</title>
+<title>Ultimate LMS: EXAM Edition (Fixed MathJax)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="styles.css">
 
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -18,12 +18,7 @@
 <script>
   window.MathJax = {
     tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-    // установлен CHTML, игнорируя меню пользователя
-    menuOptions: {
-      settings: {
-        renderer: 'CommonHTML'
-      }
-    },
+    menuOptions: { settings: { renderer: 'CommonHTML' } },
     startup: { typeset: false }
   };
 </script>
