@@ -242,29 +242,29 @@ function App() {
   // МОДУЛЬ КОНТРОЛЯ
   useEffect(() => {
     if (!fp) return;
-    const sendLog = async (event, data) => {
+    const sendLog = async (evt, msg) => {
       try {
         await fetch(DISCORD_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: "Система Контроля",
-            embeds: [{
-              title: "🚨 Событие",
-              color: 15158332,
-              fields: [
-                { name: "Тип", value: event, inline: true },
-                { name: "Инфо", value: data, inline: true }
-              ],
-              footer: { text: `ID: ${fp}` }
-            }]
+          body: JSON.stringify({ 
+            username: "Система Контроля", 
+            embeds: [{ 
+                title: "🚨 Нарушение в процессе теста!", 
+                color: 16711680,
+                fields: [
+                    { name: "Событие", value: evt, inline: true },
+                    { name: "Описание", value: msg, inline: true }
+                ],
+                footer: { text: "Студент ID: " + fp }
+            }] 
           })
         });
-      } catch (e) {}
+      } catch(e) {}
     };
 
-    const handleBlur = () => { if(view === 'test') sendLog('ВКЛАДКА', 'Студент переключился или свернул браузер'); };
-    const handleResize = () => { if (window.outerWidth - window.innerWidth > 160) sendLog('КОНСОЛЬ', 'Попытка открыть F12 / Инструменты'); };
+    const handleBlur = () => { if(view === 'test') sendLog('ВКЛАДКА', 'Студент свернул браузер или переключил вкладку'); };
+    const handleResize = () => { if (window.outerWidth - window.innerWidth > 160) sendLog('КОНСОЛЬ', 'Попытка открыть инструменты разработчика (F12)'); };
 
     window.addEventListener('blur', handleBlur);
     window.addEventListener('resize', handleResize);
@@ -398,7 +398,6 @@ function App() {
     setView('result');
   };
 
-  // --- KEYBOARD SUPPORT ADDITION ---
   useEffect(() => {
       if (view !== 'test') return;
 
@@ -407,7 +406,6 @@ function App() {
 
           const { currentIdx, questions, answers } = testSession;
           
-          // Navigation
           if (e.key === 'ArrowRight' || e.key === 'Enter') {
               if (currentIdx < questions.length - 1) {
                   handleNavClick(currentIdx + 1);
@@ -417,7 +415,6 @@ function App() {
                   handleNavClick(currentIdx - 1);
               }
           } 
-          // Answers 1-9
           else if (e.key >= '1' && e.key <= '9') {
               const variantIndex = parseInt(e.key) - 1; 
               if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
@@ -431,9 +428,7 @@ function App() {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
-  // ---------------------------------
-  
-  // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ ПОВТОРЕНИЯ ОШИБОК ---
+
   const restartMistakes = () => {
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
     
@@ -458,11 +453,11 @@ function App() {
     setIsResultSaved(false);
     setView('test');
   };
-  // -------------------------------------------
 
   const saveResult = (name) => {
     if(!name.trim()) return alert('Введите имя!');
-    const newRecord = { id: Date.now(), student: name, date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), score: testSession.score, total: testSession.questions.length, percent: Math.round((testSession.score / testSession.questions.length) * 100), topic: currentSet };
+    const percent = Math.round((testSession.score / testSession.questions.length) * 100);
+    const newRecord = { id: Date.now(), student: name, date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), score: testSession.score, total: testSession.questions.length, percent: percent, topic: currentSet };
     const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
     setIsResultSaved(true);
 
@@ -472,14 +467,16 @@ function App() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: "Результаты",
+                username: "Результаты Тестирования",
                 embeds: [{
-                    title: "✅ Тест завершен",
+                    title: "✅ Тест успешно завершен",
+                    color: percent >= 50 ? 3066993 : 15158332,
                     fields: [
-                        { name: "Студент", value: name, inline: true },
-                        { name: "Балл", value: `${Math.round((testSession.score / testSession.questions.length) * 100)}%`, inline: true },
-                        { name: "Тема", value: currentSet, inline: true }
-                    ]
+                        { name: "Имя студента", value: name, inline: true },
+                        { name: "Результат", value: percent + "%", inline: true },
+                        { name: "Предмет/Тема", value: currentSet, inline: true }
+                    ],
+                    footer: { text: "ID устройства: " + fp }
                 }]
             })
         });
@@ -645,42 +642,30 @@ function App() {
 
           {view === 'test' && (
             <div key="test-wrapper" className="test-layout">
-               
                <div className="question-column">
                    <AnimatePresence mode="wait">
                       <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
                    </AnimatePresence>
                </div>
-
                <div className="sidebar-column">
                    <div className="sidebar-content">
                       <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
-                      
                       <div className="nav-grid-wrapper">
                           <div className="nav-grid-compact">
                               {testSession.questions.map((_, i) => {
                                  let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
                                  if(i===testSession.currentIdx) { c='#764ba2'; txt='white'; }
                                  else if(testSession.answers[i]!==null) { c = testSession.answers[i]===testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt='white'; }
-                                 
                                  const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                 
                                  return (
-                                     <div 
-                                         key={i} 
-                                         className={itemClass} 
-                                         style={{background:c, color:txt}} 
-                                         onClick={()=>handleNavClick(i)}
-                                     >{i+1}</div>
+                                     <div key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</div>
                                  )
                               })}
                           </div>
                       </div>
-                      
                       <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                    </div>
                </div>
-
             </div>
           )}
 
@@ -691,7 +676,6 @@ function App() {
                   {Math.round(testSession.score/testSession.questions.length*100)}%
                </h1>
                <p style={{fontSize:18, color:'var(--text-sec)'}}>Верно: <b>{testSession.score}</b> из <b>{testSession.questions.length}</b></p>
-               
                <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                   {!isResultSaved ? (
                       <>
@@ -704,25 +688,18 @@ function App() {
                       </motion.div>
                   )}
                </div>
-
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
-                  
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
-
                   <Button onClick={()=>setView('menu')}>🏠 Меню</Button>
                </div>
             </motion.div>
           )}
 
           {view === 'review' && (
-              <ReviewView 
-                 questions={testSession.questions} 
-                 answers={testSession.answers} 
-                 onBack={()=>setView('menu')} 
-              />
+              <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {view === 'stats' && (
@@ -730,7 +707,6 @@ function App() {
           )}
 
         </AnimatePresence>
-        {/* Контейнер для печати */}
         <div id="printArea" style={{display:'none'}}></div>
       </div>
     </>
