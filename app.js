@@ -580,7 +580,14 @@ function App() {
   };
   // ------------------------------------
 
-  const handlePrint = () => { /* Логика печати остается нетронутой */ };
+ const handlePrint = () => {
+    const area = document.getElementById('printArea');
+    let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
+    const printTests = tests.map(t => ({ ...t, variants: shuffleArray([...t.variants]) }));
+    printTests.forEach((t, i) => {
+      html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
+      t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
+    });
 
   return (
     <>
