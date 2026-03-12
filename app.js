@@ -3,6 +3,8 @@ const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
 const SECRET_KEY = "MySuperSecretKey_2025_v1";
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1481534100194983958/L107VBFTCX5FYQFfAyiJu7PsTOhbsrNX9yOmRLExoj-B-a9okiGuyweAPmYzPcU09rEj";
+
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function hmacSign(secret, message){const enc = new TextEncoder();const key = await crypto.subtle.importKey("raw", enc.encode(secret), {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
@@ -156,7 +158,6 @@ const ReviewView = ({ questions, answers, onBack }) => {
                                  <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
                              </div>
                              <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
-                             {/* ДОБАВЛЕН ВЫВОД КАРТИНКИ В РЕЖИМЕ РАБОТЫ НАД ОШИБКАМИ */}
                              {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
                              
                              {q.variants.map((v, vi) => {
@@ -237,6 +238,38 @@ function App() {
   const [customTime, setCustomTime] = useState('20'); 
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // МОДУЛЬ КОНТРОЛЯ
+  useEffect(() => {
+    if (!fp) return;
+    const sendLog = async (event, data) => {
+      try {
+        await fetch(DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: "Система Контроля",
+            embeds: [{
+              title: "🚨 Событие",
+              color: 15158332,
+              fields: [
+                { name: "Тип", value: event, inline: true },
+                { name: "Инфо", value: data, inline: true }
+              ],
+              footer: { text: `ID: ${fp}` }
+            }]
+          })
+        });
+      } catch (e) {}
+    };
+
+    const handleBlur = () => { if(view === 'test') sendLog('ВКЛАДКА', 'Студент переключился или свернул браузер'); };
+    const handleResize = () => { if (window.outerWidth - window.innerWidth > 160) sendLog('КОНСОЛЬ', 'Попытка открыть F12 / Инструменты'); };
+
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('resize', handleResize);
+    return () => { window.removeEventListener('blur', handleBlur); window.removeEventListener('resize', handleResize); };
+  }, [fp, view]);
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
 
@@ -402,24 +435,19 @@ function App() {
   
   // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ ПОВТОРЕНИЯ ОШИБОК ---
   const restartMistakes = () => {
-    // 1. Фильтруем вопросы, где была ошибка
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
     
     if(wrongQuestionsRaw.length === 0) return; 
 
-    // 2. ПЕРЕМЕШИВАЕМ ВАРИАНТЫ ОТВЕТОВ ЗАНОВО
-    // Так как у нас уже есть флаг _isCorrectOriginal внутри объектов вариантов, мы можем спокойно мешать
     const reShuffledQuestions = wrongQuestionsRaw.map(q => {
        const newVars = shuffleArray([...q.variants]);
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
 
-    // Сбрасываем таймер
     const mins = parseInt(customTime) || 20;
     setTimeLeft(mins * 60);
 
-    // Запускаем тест с новыми перемешанными вопросами
     setTestSession({ 
         questions: reShuffledQuestions, 
         currentIdx: 0, 
@@ -437,23 +465,42 @@ function App() {
     const newRecord = { id: Date.now(), student: name, date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), score: testSession.score, total: testSession.questions.length, percent: Math.round((testSession.score / testSession.questions.length) * 100), topic: currentSet };
     const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
     setIsResultSaved(true);
+
+    // Отправка результата в Discord
+    try {
+        fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: "Результаты",
+                embeds: [{
+                    title: "✅ Тест завершен",
+                    fields: [
+                        { name: "Студент", value: name, inline: true },
+                        { name: "Балл", value: `${Math.round((testSession.score / testSession.questions.length) * 100)}%`, inline: true },
+                        { name: "Тема", value: currentSet, inline: true }
+                    ]
+                }]
+            })
+        });
+    } catch (e) {}
   };
 
   const handlePrint = () => {
     const area = document.getElementById('printArea');
-    let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
-    const printTests = tests.map(t => ({ ...t, variants: shuffleArray([...t.variants]) }));
-    printTests.forEach((t, i) => {
-      html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
-      t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
+    if (!area) return;
+    let html = `<h1>Тест: ${currentSet}</h1><hr/>`;
+    tests.forEach((q, i) => {
+        html += `<div style="margin-bottom: 20px; page-break-inside: avoid;">`;
+        html += `<p><strong>${i + 1}. ${q.question}</strong></p>`;
+        if (q.questionImg) html += `<img src="${q.questionImg}" style="max-width: 300px; display: block; margin: 10px 0;"/>`;
+        html += `<ul style="list-style-type: circle;">`;
+        q.variants.forEach(v => { html += `<li>${v.text}</li>`; });
+        html += `</ul></div>`;
     });
-    
-    area.innerHTML = html; 
-    
-    if(window.MathJax) {
-        MathJax.typesetPromise([area]).then(() => {
-            setTimeout(() => { window.print(); }, 800);
-        });
+    area.innerHTML = html;
+    if (window.MathJax) {
+        window.MathJax.typesetPromise([area]).then(() => window.print());
     } else {
         window.print();
     }
@@ -467,7 +514,6 @@ function App() {
            transition={{ duration: 30, repeat: Infinity, ease: "linear" }} 
            style={{
                position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(60px)', borderRadius:'50%'
            }} 
@@ -477,7 +523,6 @@ function App() {
            transition={{ duration: 40, repeat: Infinity, ease: "linear" }} 
            style={{
                position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(60px)', borderRadius:'50%'
            }} 
@@ -487,7 +532,6 @@ function App() {
            transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} 
            style={{
                position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(50px)', borderRadius:'50%'
            }} 
@@ -664,7 +708,6 @@ function App() {
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
                   
-                  {/* КНОПКА ПОВТОРА ОШИБОК */}
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
@@ -687,6 +730,8 @@ function App() {
           )}
 
         </AnimatePresence>
+        {/* Контейнер для печати */}
+        <div id="printArea" style={{display:'none'}}></div>
       </div>
     </>
   );
