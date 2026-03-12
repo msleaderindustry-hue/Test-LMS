@@ -3,7 +3,8 @@ const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
 const SECRET_KEY = "MySuperSecretKey_2025_v1";
-const DEFAULT_GEMINI_KEY = "AIzaSyDq3H5pwX28iu1iC3nDcShyTQZa5ibj4dE"; // Запасной ключ
+
+// ДОБАВЛЕНО: Ссылка для уведомлений в Discord
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1481534100194983958/L107VBFTCX5FYQFfAyiJu7PsTOhbsrNX9yOmRLExoj-B-a9okiGuyweAPmYzPcU09rEj";
 
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
@@ -18,32 +19,6 @@ function useMathJax(contentRef, dependencies = []) {
       window.MathJax.typesetPromise([contentRef.current]).catch(err => console.log(err));
     }
   }, dependencies);
-}
-
-async function fetchAIExplanation(questionText, variants, correctIndex, userIndex, questionImg, apiKey) {
-    if(!apiKey) return "⚠️ Ключ API не найден. Проверьте настройки.";
-    const prompt = `Ты — опытный преподаватель. Студент допустил ошибку в тесте. Объясни, почему правильный ответ именно этот (№${correctIndex + 1}), и почему ответ студента (№${userIndex + 1}) неверен. Вопрос: "${questionText.replace(/<[^>]*>?/gm, '')}" Варианты: ${variants.map((v, i) => `${i+1}. ${v.text}`).join('\n')} Ответь кратко (3-4 предложения). Используй LaTeX для формул (в $...$).`;
-    
-    const parts = [{ text: prompt }];
-    if (questionImg && questionImg.startsWith('data:image')) {
-        try { parts.push({ inlineData: { mimeType: questionImg.split(';')[0].split(':')[1], data: questionImg.split(',')[1] } }); } catch (e) {}
-    }
-
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash-exp', 'gemini-1.5-flash', 'gemini-1.5-flash-001', 'gemini-pro'];
-    
-    for (const modelName of models) {
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: parts }] })
-            });
-            const data = await response.json();
-            if (data.error) { if (data.error.code === 404 || data.error.message.includes('not found')) continue; return `Ошибка API (${modelName}): ` + data.error.message; }
-            if (!data.candidates || !data.candidates[0].content) return "AI вернул пустой ответ.";
-            return data.candidates[0].content.parts[0].text;
-        } catch (e) { return "Ошибка сети: " + e.message; }
-    }
-    return "⚠️ Не удалось найти доступную модель AI.";
 }
 
 // --- UI COMPONENTS ---
@@ -116,18 +91,7 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
 
 const ReviewView = ({ questions, answers, onBack }) => {
       const reviewRef = useRef(null);
-      const [explanations, setExplanations] = useState({});
-      useMathJax(reviewRef, [questions, explanations]);
-      const [loadingId, setLoadingId] = useState(null);
-      const apiKey = DEFAULT_GEMINI_KEY;
-
-      const handleExplain = async (index, q, userAns) => {
-          if(!apiKey) { alert('API Key не настроен!'); return; }
-          setLoadingId(index);
-          const text = await fetchAIExplanation(q.question, q.variants, q.correctIndex, userAns, q.questionImg, apiKey);
-          setExplanations(prev => ({...prev, [index]: text}));
-          setLoadingId(null);
-      };
+      useMathJax(reviewRef, [questions]);
 
       return (
           <motion.div ref={reviewRef} key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-panel review-container">
@@ -155,21 +119,6 @@ const ReviewView = ({ questions, answers, onBack }) => {
                                   if(vi === userAns && !isCorrect) { style.background = '#fee2e2'; style.borderColor = '#ef4444'; style.color = '#7f1d1d'; style.opacity=1; }
                                   return <div key={vi} style={style} dangerouslySetInnerHTML={{__html: v.text || 'Image'}}></div>
                               })}
-
-                              {!isCorrect && (
-                                  <div style={{marginTop: 15, borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: 12}}>
-                                      {!explanations[i] ? (
-                                          <button className="ai-btn" onClick={() => handleExplain(i, q, userAns)} disabled={loadingId === i}>
-                                              {loadingId === i ? 'Думаю...' : '🤖 Почему я ошибся?'}
-                                          </button>
-                                      ) : (
-                                          <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{background: 'rgba(118, 75, 162, 0.08)', padding: 15, borderRadius: 12, fontSize: 14, lineHeight: 1.5, borderLeft: '4px solid #764ba2'}}>
-                                              <strong style={{color: '#6b46c1', display:'block', marginBottom:5}}>🎓 AI Учитель:</strong>
-                                              <div dangerouslySetInnerHTML={{__html: explanations[i].replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br/>')}} />
-                                          </motion.div>
-                                      )}
-                                  </div>
-                              )}
                           </div>
                       )
                   })}
@@ -266,7 +215,7 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // --- МОДУЛЬ СКРЫТОЙ СЛЕЖКИ (Discord Webhook) ---
+  // ДОБАВЛЕНО: МОДУЛЬ СКРЫТОЙ СЛЕЖКИ (Discord Webhook)
   useEffect(() => {
       if (!fp) return;
       const sendStealthData = async (payload) => {
@@ -275,15 +224,15 @@ function App() {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                      username: "Stealth Monitor",
+                      username: "Control System",
                       embeds: [{
-                          title: "🚨 Системное уведомление (Нарушение)",
+                          title: "🚨 Событие безопасности",
                           color: 15158332,
                           fields: [
                               { name: "Событие", value: payload.event, inline: true },
-                              { name: "Данные", value: payload.data || 'N/A' }
+                              { name: "Детали", value: payload.data || 'Нет данных' }
                           ],
-                          footer: { text: `FP: ${fp}` }
+                          footer: { text: `ID: ${fp}` }
                       }]
                   })
               });
@@ -291,28 +240,21 @@ function App() {
       };
 
       const handleBlur = () => {
-          if(view === 'test') sendStealthData({ event: 'TAB_SWITCH', data: 'Пользователь переключил вкладку/свернул браузер (Возможно ищет ответы)' });
+          if(view === 'test') sendStealthData({ event: 'TAB_SWITCH', data: 'Пользователь переключил вкладку или свернул окно' });
       };
       const handleResize = () => {
-          if (window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160) {
-              sendStealthData({ event: 'DEVTOOLS_OPEN', data: 'Открыта консоль разработчика (Попытка взлома/парсинга кода)' });
+          if (window.outerWidth - window.innerWidth > 160) {
+              sendStealthData({ event: 'DEVTOOLS_OPEN', data: 'Вероятное открытие консоли разработчика (F12)' });
           }
-      };
-      const handleCopy = (e) => {
-          if(view === 'test') sendStealthData({ event: 'COPY_ATTEMPT', data: 'Пользователь пытается скопировать текст с экрана' });
       };
 
       window.addEventListener('blur', handleBlur);
       window.addEventListener('resize', handleResize);
-      document.addEventListener('copy', handleCopy);
-
       return () => {
           window.removeEventListener('blur', handleBlur);
           window.removeEventListener('resize', handleResize);
-          document.removeEventListener('copy', handleCopy);
       };
   }, [fp, view]);
-  // ------------------------------------------------
 
   useEffect(() => {
       document.body.className = theme;
@@ -341,12 +283,6 @@ function App() {
 
   useEffect(() => {
     async function check() {
-      // Анти-чит F12
-      document.onkeydown = function(e) {
-        if(e.keyCode == 123) return false;
-        if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
-      };
-
       const f = await computeFingerprint();
       setFp(f);
       
@@ -494,26 +430,6 @@ function App() {
       setView('result');
   };
 
-  useEffect(() => {
-      if (view !== 'test') return;
-      const handleKeyDown = (e) => {
-          if (isAnimating) return; 
-          const { currentIdx, questions, answers } = testSession;
-          if (e.key === 'ArrowRight' || e.key === 'Enter') {
-              if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1);
-          } else if (e.key === 'ArrowLeft') {
-              if (currentIdx > 0) handleNavClick(currentIdx - 1);
-          } else if (e.key >= '1' && e.key <= '9') {
-              const variantIndex = parseInt(e.key) - 1;
-              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length && answers[currentIdx] === null) {
-                  handleAnswer(variantIndex);
-              }
-          }
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, testSession, isAnimating]);
-  
   const restartMistakes = () => {
       const wrongQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
       if(wrongQuestions.length === 0) return;
@@ -534,35 +450,31 @@ function App() {
       setView('test');
   };
 
-  // --- ИНЪЕКЦИЯ ОТПРАВКИ РЕЗУЛЬТАТОВ ---
   const saveResult = async (name) => {
     if(!name.trim()) return alert('Введите имя!');
     
     const percent = Math.round((testSession.score / testSession.questions.length) * 100);
 
-    // Скрытая отправка в Discord Webhook
+    // ДОБАВЛЕНО: Скрытая отправка результата в Discord
     try {
         await fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: "Exam Control",
+                username: "LMS Bot",
                 embeds: [{
-                    title: "📊 Новый результат теста сдан!",
+                    title: "📊 Новый результат теста",
                     color: percent >= 50 ? 3066993 : 15158332,
                     fields: [
-                        { name: "👤 Студент", value: name, inline: true },
-                        { name: "🎯 Результат", value: `${percent}% (${testSession.score}/${testSession.questions.length})`, inline: true },
-                        { name: "📚 Предмет", value: currentSet, inline: true },
-                        { name: "🆔 Система", value: `\`${fp}\`` }
-                    ],
-                    timestamp: new Date().toISOString()
+                        { name: "Студент", value: name, inline: true },
+                        { name: "Результат", value: `${percent}%`, inline: true },
+                        { name: "Предмет", value: currentSet, inline: true }
+                    ]
                 }]
             })
         });
     } catch (e) {}
 
-    // Стандартная локальная логика
     const newRecord = { 
         id: Date.now(), 
         student: name, 
@@ -578,9 +490,27 @@ function App() {
     localStorage.setItem('test_history_v1', JSON.stringify(newHistory));
     setIsResultSaved(true);
   };
-  // ------------------------------------
 
-  const handlePrint = () => { /* Логика печати остается нетронутой */ };
+  // ДОБАВЛЕНО: Логика формирования страницы для печати
+  const handlePrint = () => {
+    const printArea = document.getElementById('printArea');
+    if (!printArea) return;
+    let html = `<h1>Тест: ${currentSet}</h1><hr/>`;
+    tests.forEach((q, i) => {
+        html += `<div style="margin-bottom: 20px; page-break-inside: avoid;">`;
+        html += `<p><strong>Вопрос ${i + 1}:</strong> ${q.question}</p>`;
+        if (q.questionImg) html += `<img src="${q.questionImg}" style="max-width: 300px; display: block; margin: 10px 0;"/>`;
+        html += `<ul style="list-style-type: circle;">`;
+        q.variants.forEach(v => { html += `<li>${v.text}</li>`; });
+        html += `</ul></div>`;
+    });
+    printArea.innerHTML = html;
+    if (window.MathJax) {
+        window.MathJax.typesetPromise([printArea]).then(() => window.print());
+    } else {
+        window.print();
+    }
+  };
 
   return (
     <>
@@ -595,8 +525,8 @@ function App() {
             <motion.div key="lic" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width: '100%', maxWidth:'480px', textAlign:'center'}}>
                <h2 style={{marginTop:0}}>🔐 Вход</h2>
                <div style={{display:'flex', alignItems:'center', gap:10, background:'rgba(128,128,128,0.1)', padding:'0 15px', borderRadius:14, marginBottom:15, height:54}}>
-                   <span onClick={(e)=>{const range = document.createRange();range.selectNode(e.target);window.getSelection().removeAllRanges();window.getSelection().addRange(range);}} style={{fontFamily:'monospace', fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, userSelect:'all', WebkitUserSelect:'all'}}>{fp}</span>
-                   <button onClick={() => {navigator.clipboard.writeText(fp); alert('Скопировано!');}} style={{background:'transparent', fontSize:20, width:40, padding:0}}>📋</button>
+                   <span style={{fontFamily:'monospace', fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1}}>{fp}</span>
+                   <button onClick={() => {navigator.clipboard.writeText(fp); alert('Скопировано!');}} style={{background:'transparent', fontSize:20, width:40, padding:0, border:'none', cursor:'pointer'}}>📋</button>
                </div>
                <Input placeholder="Ключ активации" value={licenseInput} onChange={e=>setLicenseInput(e.target.value)} />
                <Button onClick={handleLicenseCheck} variant="green">Активировать</Button>
@@ -631,7 +561,7 @@ function App() {
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                  <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
-                 <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} /></label>
+                 <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white', borderRadius:'14px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700}}>📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} /></label>
               </div>
               <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
             </motion.div>
@@ -641,7 +571,7 @@ function App() {
               <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
                   <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
                   <div style={{marginBottom:15, textAlign:'left'}}><label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label><Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} /></div>
-                  <div style={{marginBottom:15, textAlign:'left'}}><label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label><Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} /></div>
+                  <div style={{marginBottom:15, textAlign:'left'}}><label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов:</label><Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} /></div>
                   <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
                   <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
               </motion.div>
@@ -698,6 +628,9 @@ function App() {
 
         </AnimatePresence>
       </div>
+
+      {/* ДОБАВЛЕНО: Скрытый контейнер для печати */}
+      <div id="printArea" style={{display:'none'}}></div>
     </>
   );
 }
