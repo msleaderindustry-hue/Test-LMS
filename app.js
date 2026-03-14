@@ -332,10 +332,10 @@ function App() {
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
-      setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 3000);
+      setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 90000);
       intervalId = setInterval(() => {
         captureViolation("📸 Плановая проверка (мониторинг)");
-      }, 30000);
+      }, 90000);
     }
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [view, fp]);
