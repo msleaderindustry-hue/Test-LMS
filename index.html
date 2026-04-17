@@ -34,6 +34,25 @@
 
 <div id="root"></div>
 <div id="printArea"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyA5HbiIrc1B78LXiWua8KBoAGi1kbp0C_4",
+        authDomain: "my-lms-project-13739.firebaseapp.com",
+        projectId: "my-lms-project-13739",
+        storageBucket: "my-lms-project-13739.firebasestorage.app",
+        messagingSenderId: "671533939709",
+        appId: "1:671533939709:web:4ad737477bcc5690533794"
+      };
+
+      // Инициализация
+      firebase.initializeApp(firebaseConfig);
+      window.auth = firebase.auth();
+      window.db = firebase.firestore();
+    </script>
 
 <script type="text/babel" src="app.js"></script>
 
