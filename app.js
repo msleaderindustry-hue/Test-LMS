@@ -2,11 +2,9 @@ const { useState, useEffect, useRef, useLayoutEffect, memo } = React;
 const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
-const SECRET_KEY = "MySuperSecretKey_2025_v1";
 const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1481534100194983958/L107VBFTCX5FYQFfAyiJu7PsTOhbsrNX9yOmRLExoj-B-a9okiGuyweAPmYzPcU09rEj';
 
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
-async function hmacSign(secret, message){const enc = new TextEncoder();const key = await crypto.subtle.importKey("raw", enc.encode(secret), {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
 async function computeFingerprint(){const parts=[navigator.userAgent||'',navigator.platform||'',screen.width+'x'+screen.height,navigator.language||'',String(navigator.hardwareConcurrency||''),await sha256hex(canvasFingerprint())];return await sha256hex(parts.join('|'));}
 function shuffleArray(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
@@ -273,8 +271,6 @@ function App() {
   const [history, setHistory] = useState([]);
   
   const [fp, setFp] = useState('');
-  const [licenseInput, setLicenseInput] = useState('');
-  const [licMsg, setLicMsg] = useState('');
 
   const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
   const [isResultSaved, setIsResultSaved] = useState(false);
@@ -504,12 +500,13 @@ function App() {
 
   useEffect(() => {
     async function check() {
+      // Сохраняем блокировку DevTools и сбор отпечатка (нужно для Discord вебхука)
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
       const f = await computeFingerprint(); setFp(f);
-      const saved = localStorage.getItem('license_for_app_v1');
-      let valid = false;
-      if(saved) { try { const obj = JSON.parse(saved); if(obj.fingerprint === f) { const expected = await hmacSign(SECRET_KEY, f); if(obj.license === expected) valid = true; } } catch(e){} }
-      if(valid) { loadData(); setView('menu'); } else { setView('license'); }
+      
+      // Загружаем тесты и сразу пускаем в меню (лицензия больше не нужна)
+      loadData(); 
+      setView('menu'); 
     }
     check();
   }, []);
@@ -518,14 +515,6 @@ function App() {
     const raw = localStorage.getItem('test_sets_list'); setSets(raw ? JSON.parse(raw) : ['Электроника']);
     if(!raw) { localStorage.setItem('test_sets_list', JSON.stringify(['Электроника'])); localStorage.setItem('tests_Электроника', JSON.stringify([])); }
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
-  };
-
-  const handleLicenseCheck = async () => {
-    if(!/^[0-9a-f]{64}$/i.test(licenseInput.trim())){ setLicMsg('Неверный формат'); return; }
-    const expected = await hmacSign(SECRET_KEY, fp);
-    if(licenseInput.trim() !== expected) { setLicMsg('❌ Ключ не подходит'); return; }
-    localStorage.setItem('license_for_app_v1', JSON.stringify({fingerprint: fp, license: licenseInput.trim()}));
-    loadData(); setView('menu');
   };
 
   const addSet = (name) => {
@@ -786,28 +775,6 @@ function App() {
           {!isAuthLoading && !user && <AuthScreen />}
 
           {/* ВСЕ ОСТАЛЬНЫЕ БЛОКИ: Работают ТОЛЬКО ЕСЛИ ЮЗЕР ЗАЛОГИНЕН (!isAuthLoading && user) */}
-          {!isAuthLoading && user && view === 'license' && (
-            <motion.div key="lic" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" 
-              style={{width: '100%', maxWidth:'480px', textAlign:'center'}}>
-               <h2 style={{marginTop:0}}>🔐 Лицензия устройства</h2>
-               <div style={{display:'flex', alignItems:'center', gap:10, background:'rgba(128,128,128,0.1)', padding:'0 15px', borderRadius:14, marginBottom:15, height:54}}>
-                   <span 
-                      onClick={(e)=>{
-                          const range = document.createRange();
-                          range.selectNode(e.target);
-                          window.getSelection().removeAllRanges();
-                          window.getSelection().addRange(range);
-                      }}
-                      style={{fontFamily:'monospace', fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, userSelect:'all', WebkitUserSelect:'all'}}
-                   >{fp}</span>
-                   <button onClick={() => {navigator.clipboard.writeText(fp); alert('Скопировано!');}} style={{background:'transparent', fontSize:20, width:40, padding:0}}>📋</button>
-               </div>
-               <Input placeholder="Ключ активации" value={licenseInput} onChange={e=>setLicenseInput(e.target.value)} />
-               <Button onClick={handleLicenseCheck} variant="green">Активировать</Button>
-               <div style={{color:'#e53e3e', marginTop:15, minHeight:20}}>{licMsg}</div>
-            </motion.div>
-          )}
-
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
@@ -954,7 +921,6 @@ function App() {
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
                   
-                  {/* КНОПКА ПОВТОРА ОШИБОК */}
                   {testSession.score < testSession.questions.length && (
                       <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
                   )}
@@ -981,7 +947,6 @@ function App() {
     </>
   );
 }
-
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
