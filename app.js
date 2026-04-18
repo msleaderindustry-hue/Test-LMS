@@ -76,7 +76,6 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
-// ЭКРАН АВТОРИЗАЦИИ (FIREBASE) С КРАСИВЫМИ ОШИБКАМИ
 const AuthScreen = memo(() => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -100,19 +99,11 @@ const AuthScreen = memo(() => {
             }
         } catch (err) {
             let errMsg = "Произошла неизвестная ошибка.";
-            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                errMsg = "Неверный Email или пароль. Проверьте данные!";
-            } else if (err.code === 'auth/email-already-in-use') {
-                errMsg = "Этот Email уже зарегистрирован. Попробуйте войти.";
-            } else if (err.code === 'auth/weak-password') {
-                errMsg = "Пароль слишком простой (нужно минимум 6 символов).";
-            } else if (err.code === 'auth/invalid-email') {
-                errMsg = "Некорректный формат Email адреса.";
-            } else if (err.code === 'auth/network-request-failed') {
-                errMsg = "Ошибка сети. Проверьте интернет-соединение.";
-            } else if (err.code === 'auth/too-many-requests') {
-                errMsg = "Слишком много попыток. Подождите немного.";
-            }
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') errMsg = "Неверный Email или пароль. Проверьте данные!";
+            else if (err.code === 'auth/email-already-in-use') errMsg = "Этот Email уже зарегистрирован. Попробуйте войти.";
+            else if (err.code === 'auth/weak-password') errMsg = "Пароль слишком простой (нужно минимум 6 символов).";
+            else if (err.code === 'auth/invalid-email') errMsg = "Некорректный формат Email адреса.";
+            else if (err.code === 'auth/too-many-requests') errMsg = "Слишком много попыток. Подождите немного.";
             setError(errMsg);
         }
     };
@@ -123,19 +114,14 @@ const AuthScreen = memo(() => {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
-                
                 <AnimatePresence>
                     {error && (
-                        <motion.div 
-                            initial={{opacity: 0, height: 0, overflow: 'hidden'}} 
-                            animate={{opacity: 1, height: 'auto', marginTop: '5px', marginBottom: '5px'}} 
-                            exit={{opacity: 0, height: 0, marginTop: 0, marginBottom: 0}} 
+                        <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto', margin: '5px 0'}} exit={{opacity: 0, height: 0}} 
                             style={{ color: '#ef4444', fontSize: '0.95rem', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '500' }}>
                             ⚠️ {error}
                         </motion.div>
                     )}
                 </AnimatePresence>
-
                 <Button type="submit" variant="primary" style={{height: '54px'}}>{isLogin ? 'Войти' : 'Создать аккаунт'}</Button>
             </form>
             <button style={{ marginTop: '15px', border: 'none', background: 'transparent', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px', width: '100%', outline: 'none' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
@@ -145,21 +131,80 @@ const AuthScreen = memo(() => {
     );
 });
 
+// НОВЫЙ КОМПОНЕНТ: АДМИН-ПАНЕЛЬ
+const AdminPanel = ({ onBack }) => {
+    const [users, setUsers] = useState([]);
+    const [testName, setTestName] = useState('');
+
+    // Загружаем студентов в реальном времени
+    useEffect(() => {
+        const unsub = window.db.collection('users').onSnapshot(snap => {
+            setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        });
+        return () => unsub();
+    }, []);
+
+    const toggleBan = async (uid, currentStatus) => {
+        await window.db.collection('users').doc(uid).update({ isBanned: !currentStatus });
+    };
+
+    const handleUploadToCloud = (e) => {
+        if(!testName.trim()) return alert("Сначала введите название теста!");
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex }));
+                
+                // Сохраняем тест в облако
+                await window.db.collection('tests').doc(testName.trim()).set({ questions: normalized });
+                alert(`✅ Тест "${testName}" успешно загружен в облако! Теперь он доступен всем.`);
+                setTestName('');
+            } catch(err) { alert('Ошибка загрузки JSON файла'); }
+        };
+        reader.readAsText(file);
+    };
+
+    return (
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} className="glass-panel" style={{width:'100%', maxWidth:'800px', maxHeight:'90vh', overflowY:'auto'}}>
+            <Button variant="muted" onClick={onBack} style={{marginBottom: 20}}>⬅ В меню</Button>
+            <h2 style={{color:'#ef4444', textAlign:'center', marginTop:0}}>Панель Администратора</h2>
+
+            <div style={{background:'rgba(128,128,128,0.05)', padding:20, borderRadius:15, marginBottom:20, border: '1px solid var(--glass-border)'}}>
+                <h3 style={{marginTop: 0}}>☁️ Загрузить тест в облако</h3>
+                <Input placeholder="Название теста (например: Промбезопасность)" value={testName} onChange={e=>setTestName(e.target.value)} />
+                <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white', marginTop: 10}}>
+                    📥 Выбрать JSON и загрузить <input type="file" style={{display:'none'}} accept=".json" onChange={handleUploadToCloud} />
+                </label>
+            </div>
+
+            <div style={{background:'rgba(128,128,128,0.05)', padding:20, borderRadius:15, border: '1px solid var(--glass-border)'}}>
+                <h3 style={{marginTop: 0}}>👥 Управление студентами</h3>
+                {users.map(u => (
+                    <div key={u.id} style={{display:'flex', justifyContent:'space-between', alignItems: 'center', padding:'10px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
+                        <div style={{overflow: 'hidden', paddingRight: '10px'}}>
+                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
+                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
+                        </div>
+                        {u.email !== 'msleaderindustry@gmail.com' && (
+                            <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                {u.isBanned ? "Разбанить" : "Забанить"}
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </motion.div>
+    );
+};
 
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
      const cardRef = useRef(null); useMathJax(cardRef, [question]); 
      if (!question) return null;
 
      return (
-       <motion.div 
-         ref={cardRef} 
-         key={index} 
-         initial={{ opacity: 0, x: 20 }} 
-         animate={{ opacity: 1, x: 0 }} 
-         exit={{ opacity: 0, x: -20 }} 
-         transition={{ duration: 0.3 }}
-         className="glass-panel" style={{width: '100%', display:'block'}}
-       >
+       <motion.div ref={cardRef} key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="glass-panel" style={{width: '100%', display:'block'}}>
          <h3 style={{textAlign:'center', marginBottom:15, opacity:0.6, fontSize:14, textTransform:'uppercase'}}>Вопрос {index+1}</h3>
          <div style={{fontSize:18, marginBottom:20, fontWeight:600}} dangerouslySetInnerHTML={{__html: question.question}} />
          {question.questionImg && <img src={question.questionImg} className="question-image" />}
@@ -167,7 +212,6 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
          <div style={{display:'flex', flexDirection:'column', gap:10}}>
             {question.variants.map((v, i) => {
                const isAnswered = answers[index] !== null; const isSelected = answers[index] === i; const isCorrect = question.correctIndex === i;
-               
                let styleOverride = {};
                if(isAnswered) {
                  if(isCorrect) { styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; } 
@@ -176,17 +220,9 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                }
                
                return (
-                 <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, x: -20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   transition={{ delay: i * 0.1 }}
-                   className="variant-item" 
-                   onClick={() => !isAnswered && onAnswer(i)}
-                   style={{
-                     pointerEvents: isAnswered ? 'none' : 'auto',
-                     ...styleOverride
-                   }}
+                 <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+                   className="variant-item" onClick={() => !isAnswered && onAnswer(i)}
+                   style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }}
                    whileHover={!isAnswered ? { scale: 1.01 } : {}}
                  >
                     {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
@@ -200,50 +236,31 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
 });
 
 const ReviewView = ({ questions, answers, onBack }) => {
-      const reviewRef = useRef(null);
-      useMathJax(reviewRef, [questions]); 
-
+      const reviewRef = useRef(null); useMathJax(reviewRef, [questions]); 
       return (
-          <motion.div 
-             ref={reviewRef}
-             key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} 
-             className="glass-panel review-container" 
-          >
-             <div className="review-header">
-                 <h2 style={{textAlign:'center', margin:0}}>Работа над ошибками</h2>
-             </div>
-             
+          <motion.div ref={reviewRef} key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-panel review-container">
+             <div className="review-header"><h2 style={{textAlign:'center', margin:0}}>Работа над ошибками</h2></div>
              <div className="review-content">
                  {questions.map((q, i) => {
-                     const userAns = answers[i];
-                     const isCorrect = userAns === q.correctIndex;
+                     const userAns = answers[i]; const isCorrect = userAns === q.correctIndex;
                      return (
-                         <div key={i} style={{
-                             background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444'
-                         }}>
+                         <div key={i} style={{ background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444' }}>
                              <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}>
-                                 <strong>Вопрос {i+1}</strong> 
-                                 <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
+                                 <strong>Вопрос {i+1}</strong> <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
                              </div>
                              <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
                              {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
-                             
                              {q.variants.map((v, vi) => {
                                  let style = {padding:'10px 15px', borderRadius:10, margin:'5px 0', border:'2px solid transparent', background:'var(--glass-bg)', opacity:0.8, color:'var(--text-main)'};
-                                 
                                  if(vi === q.correctIndex) { style.background = '#d1fae5'; style.borderColor = '#10b981'; style.color = '#064e3b'; style.opacity=1; }
                                  if(vi === userAns && !isCorrect) { style.background = '#fee2e2'; style.borderColor = '#ef4444'; style.color = '#7f1d1d'; style.opacity=1; }
-                                 
                                  return <div key={vi} style={style} dangerouslySetInnerHTML={{__html: v.text || 'Image'}}></div>
                              })}
                          </div>
                      )
                  })}
              </div>
-             
-             <div className="review-footer">
-               <Button onClick={onBack} style={{boxShadow:'0 5px 15px rgba(0,0,0,0.1)', width:'auto', padding:'0 40px'}}>В меню</Button>
-             </div>
+             <div className="review-footer"><Button onClick={onBack} style={{boxShadow:'0 5px 15px rgba(0,0,0,0.1)', width:'auto', padding:'0 40px'}}>В меню</Button></div>
           </motion.div>
       );
 };
@@ -263,8 +280,11 @@ const StatsView = ({ history, setHistory, onBack }) => {
     }, []);
     return (
        <motion.div key="stats" initial={{opacity:0}} animate={{opacity:1}} className="glass-panel" style={{width:'100%', maxWidth:800, maxHeight:'90vh', overflowY:'auto', display:'block'}}>
-           <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={onBack}>⬅ Назад</Button>
-           <h2 style={{textAlign:'center', margin:'10px 0 20px 0'}}>Рейтинг</h2>
+           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13, margin: 0}} onClick={onBack}>⬅ Назад</Button>
+               <Button variant="red" style={{width:'auto', padding:'0 20px', height:40, minHeight:40, fontSize:13, margin: 0}} onClick={() => window.auth.signOut()}>🚪 Выйти</Button>
+           </div>
+           <h2 style={{textAlign:'center', margin:'0 0 20px 0'}}>Рейтинг</h2>
            <div style={{background:'var(--variant-default)', padding:15, borderRadius:20, marginBottom:25, height:220}}><canvas ref={chartRef}></canvas></div>
            <table style={{width:'100%', borderCollapse:'collapse'}}>
               <thead><tr style={{borderBottom:'2px solid rgba(0,0,0,0.1)', color:'var(--text-sec)'}}><th style={{textAlign:'left', padding:10}}>Студент</th><th style={{padding:10}}>%</th><th style={{padding:10}}></th></tr></thead>
@@ -290,16 +310,17 @@ const StatsView = ({ history, setHistory, onBack }) => {
 function App() {
   const [view, setView] = useState('loading'); 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  
+  // Облачные тесты
   const [sets, setSets] = useState([]);
   const [currentSet, setCurrentSet] = useState(null);
   const [tests, setTests] = useState([]);
-  const [history, setHistory] = useState([]);
   
+  const [history, setHistory] = useState([]);
   const [fp, setFp] = useState('');
 
   const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
   const [isResultSaved, setIsResultSaved] = useState(false);
-  
   const [timeLeft, setTimeLeft] = useState(1200);
   const [customTime, setCustomTime] = useState('20'); 
   const [customQCount, setCustomQCount] = useState(''); 
@@ -308,11 +329,11 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
+  // Проверка: является ли пользователь Админом
+  const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
+
   useEffect(() => {
-      if (!window.auth) {
-          setIsAuthLoading(false);
-          return;
-      }
+      if (!window.auth) { setIsAuthLoading(false); return; }
       const unsubscribeAuth = window.auth.onAuthStateChanged((currentUser) => {
           setUser(currentUser);
           setIsAuthLoading(false);
@@ -331,6 +352,16 @@ function App() {
       });
       return () => unsubscribeAuth();
   }, []);
+
+  // Слушаем список тестов из облака в реальном времени
+  useEffect(() => {
+      if (user && window.db) {
+          const unsub = window.db.collection('tests').onSnapshot(snap => {
+              setSets(snap.docs.map(doc => doc.id));
+          });
+          return () => unsub();
+      }
+  }, [user]);
 
   const logVisitor = async () => {
       try {
@@ -353,13 +384,11 @@ function App() {
                   timestamp: new Date().toISOString()
               }]
           };
-
           let formData = new FormData();
           formData.append('payload_json', JSON.stringify(payload));
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
       } catch (e) {}
   };
-
   useEffect(() => { logVisitor(); }, []);
 
   const streamRef = useRef(null);
@@ -371,10 +400,7 @@ function App() {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               streamRef.current = stream;
               const video = document.createElement('video');
-              video.muted = true;
-              video.playsInline = true;
-              video.autoplay = true;
-              video.srcObject = stream;
+              video.muted = true; video.playsInline = true; video.autoplay = true; video.srcObject = stream;
               videoRef.current = video;
               await new Promise((resolve) => {
                   video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve); };
@@ -391,11 +417,9 @@ function App() {
           username: "Ultimate LMS Security",
           avatar_url: "https://i.imgur.com/4M34hi2.png",
           embeds: [{
-              title: title,
-              color: isPlanned ? 3447003 : 15158332,
+              title: title, color: isPlanned ? 3447003 : 15158332,
               fields: [...extraFields, { name: "🆔 Fingerprint", value: `\`${fp}\`` }],
-              footer: { text: "Monitoring Active" },
-              timestamp: new Date().toISOString()
+              footer: { text: "Monitoring Active" }, timestamp: new Date().toISOString()
           }]
       };
 
@@ -403,8 +427,7 @@ function App() {
           try {
               const video = videoRef.current;
               const canvas = document.createElement('canvas');
-              canvas.width = video.videoWidth || 640; 
-              canvas.height = video.videoHeight || 480;
+              canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
               canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
               const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
               if (blob && blob.size > 100) {
@@ -419,19 +442,14 @@ function App() {
 
   useEffect(() => {
       if (view !== 'test') {
-          if (streamRef.current) {
-              streamRef.current.getTracks().forEach(t => t.stop());
-              streamRef.current = null;
-          }
+          if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
           if (videoRef.current) { videoRef.current = null; }
       }
   }, [view]);
 
   useEffect(() => {
     let intervalId = null;
-    if (view === 'test') {
-      intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000);
-    }
+    if (view === 'test') { intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000); }
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [view, fp]);
 
@@ -475,54 +493,43 @@ function App() {
   
   useEffect(() => { if(timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
 
-  const formatTime = (s) => {
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      return `${m}:${sec < 10 ? '0'+sec : sec}`;
-  };
+  const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0'+sec : sec}`; };
 
   useEffect(() => {
     async function check() {
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
       const f = await computeFingerprint(); setFp(f);
-      loadData(); 
+      setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
       setView('menu');
     }
     check();
   }, []);
 
-  const loadData = () => {
-    const raw = localStorage.getItem('test_sets_list'); setSets(raw ? JSON.parse(raw) : ['Электроника']);
-    if(!raw) { localStorage.setItem('test_sets_list', JSON.stringify(['Электроника'])); localStorage.setItem('tests_Электроника', JSON.stringify([])); }
-    setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
+  const openSet = async (name) => { 
+      setCurrentSet(name); 
+      // Загружаем тест напрямую из облака
+      const doc = await window.db.collection('tests').doc(name).get();
+      if (doc.exists) {
+          setTests(doc.data().questions || []);
+          setView('set_menu'); 
+      } else {
+          alert("Ошибка: Тест не найден в базе данных.");
+      }
   };
 
-  const addSet = (name) => {
-    if(!name) return; if(sets.includes(name)) return alert('Уже есть!');
-    const newSets = [...sets, name]; setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.setItem('tests_' + name, JSON.stringify([]));
-  };
-  const deleteSet = (name) => {
-    if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name);
-    setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name);
-  };
-  const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
-
-  const importJSON = (e) => {
-    const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-    reader.onload = ev => { try { const data = JSON.parse(ev.target.result); const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex })); setTests(normalized); localStorage.setItem('tests_' + currentSet, JSON.stringify(normalized)); alert(`✅ Импортировано: ${normalized.length}`); } catch { alert('Ошибка JSON'); } };
-    reader.readAsText(file);
+  const deleteTestFromCloud = async (name) => {
+      if(confirm(`Удалить тест "${name}" навсегда из облака? Студенты больше не смогут его пройти.`)) {
+          await window.db.collection('tests').doc(name).delete();
+      }
   };
 
   const startTest = () => { if(tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
   
   const launchTestWithTimer = async () => {
       await startCamera();
-      const mins = parseInt(customTime) || 20;
-      let qCount = parseInt(customQCount);
-      if (!qCount || qCount <= 0) qCount = tests.length;
-      if (qCount > tests.length) qCount = tests.length;
-      let fullList = shuffleArray(tests);
-      let selectedQuestions = fullList.slice(0, qCount);
+      const mins = parseInt(customTime) || 20; let qCount = parseInt(customQCount);
+      if (!qCount || qCount <= 0) qCount = tests.length; if (qCount > tests.length) qCount = tests.length;
+      let fullList = shuffleArray(tests); let selectedQuestions = fullList.slice(0, qCount);
       let finalQuestions = selectedQuestions.map(t => {
           let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
           varsWithFlag = shuffleArray(varsWithFlag);
@@ -539,16 +546,13 @@ function App() {
     setTestSession(prev => ({...prev, answers: newAnswers}));
     setIsAnimating(true);
     setTimeout(() => { 
-        if(testSession.currentIdx < testSession.questions.length - 1) { 
-            setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); 
-        }
+        if(testSession.currentIdx < testSession.questions.length - 1) setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); 
         setIsAnimating(false);
     }, 700);
   };
   
   const handleNavClick = (i) => {
-      if(isAnimating) return; 
-      if(i === testSession.currentIdx) return;
+      if(isAnimating) return; if(i === testSession.currentIdx) return;
       setIsAnimating(true); setTestSession(p => ({...p, currentIdx: i}));
       setTimeout(() => setIsAnimating(false), 350); 
   };
@@ -563,15 +567,12 @@ function App() {
   useEffect(() => {
       if (view !== 'test') return;
       const handleKeyDown = (e) => {
-          if (isAnimating) return; 
-          const { currentIdx, questions, answers } = testSession;
+          if (isAnimating) return; const { currentIdx, questions, answers } = testSession;
           if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
           else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
           else if (e.key >= '1' && e.key <= '9') {
               const variantIndex = parseInt(e.key) - 1; 
-              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
-                  if (answers[currentIdx] === null) handleAnswer(variantIndex);
-              }
+              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) { if (answers[currentIdx] === null) handleAnswer(variantIndex); }
           }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -582,12 +583,10 @@ function App() {
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
     if(wrongQuestionsRaw.length === 0) return; 
     const reShuffledQuestions = wrongQuestionsRaw.map(q => {
-       const newVars = shuffleArray([...q.variants]);
-       const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
+       const newVars = shuffleArray([...q.variants]); const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
-    await startCamera();
-    const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
+    await startCamera(); const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
     setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
     setIsResultSaved(false); setView('test');
   };
@@ -597,40 +596,24 @@ function App() {
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       try {
           await fetch(DISCORD_WEBHOOK, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                  username: "System Monitor",
-                  avatar_url: "https://i.imgur.com/4M34hi2.png",
+                  username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
                   embeds: [{
-                      title: "📊 Новый результат теста",
-                      color: 3066993,
+                      title: "📊 Новый результат теста", color: 3066993,
                       fields: [
                           { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
                           { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
                           { name: "📚 Тема", value: scoreData.topic, inline: true },
                           { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
                           { name: "🆔 Fingerprint", value: `\`${fp}\`` }
-                      ],
-                      timestamp: new Date().toISOString()
+                      ], timestamp: new Date().toISOString()
                   }]
               })
           });
       } catch (e) {}
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
       const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
-  };
-
-  const handlePrint = () => {
-    const area = document.getElementById('printArea');
-    let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
-    const printTests = tests.map(t => ({ ...t, variants: shuffleArray([...t.variants]) }));
-    printTests.forEach((t, i) => {
-      html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
-      t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
-    });
-    area.innerHTML = html; 
-    if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
   return (
@@ -656,39 +639,55 @@ function App() {
 
           {!isAuthLoading && !user && <AuthScreen />}
 
+          {/* НОВЫЙ ВЬЮ ДЛЯ АДМИНКИ */}
+          {!isAuthLoading && user && view === 'admin' && (
+              <AdminPanel onBack={() => setView('menu')} />
+          )}
+
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
-              {/* --- ШАПКА МЕНЮ С ПОЧТОЙ И КНОПКОЙ ВЫХОДА --- */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60vw' }}>
-                      👤 {user.email}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>👤</span>
+                      <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+                          <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '40vw' }}>{user.email}</div>
+                      </div>
                   </div>
-                  <Button variant="red" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0 }}>
-                      🚪 ВЫЙТИ
-                  </Button>
+                  {/* КНОПКА АДМИНКИ (Только для тебя) */}
+                  {isAdmin && (
+                      <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 15px', height: '38px', minHeight: '38px', fontSize: '12px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
+                          🛡️ АДМИНКА
+                      </Button>
+                  )}
               </div>
 
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
+              
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
+
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
-                {sets.map(name => (
-                  <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
-                      <span style={{marginRight:8}}>📂</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
-                    </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
-                  </div>
-                ))}
+                {sets.length === 0 ? (
+                    <div style={{textAlign: 'center', color: 'var(--text-sec)', padding: '20px'}}>Нет доступных тестов. Администратор скоро их добавит.</div>
+                ) : (
+                    sets.map(name => (
+                      <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                        <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                          <span style={{marginRight:8}}>☁️</span>
+                          <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                        </Button>
+                        {/* Удалять тесты из облака может только Админ */}
+                        {isAdmin && (
+                            <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteTestFromCloud(name)}>🗑</Button>
+                        )}
+                      </div>
+                    ))
+                )}
               </div>
-              <div style={{display:'flex', gap:10, alignItems: 'center'}}>
-                 <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                 <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
-              </div>
-              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
+              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Alisher. All Rights Reserved.</div>
             </motion.div>
           )}
 
@@ -696,14 +695,9 @@ function App() {
             <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
-              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                 <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
-                 <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
-                   📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
-                 </label>
-              </div>
+              {/* Импорт JSON убран, тесты загружаются через Админку */}
               <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
-              <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+              <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов в облаке: <b>{tests.length}</b></p>
             </motion.div>
           )}
           
