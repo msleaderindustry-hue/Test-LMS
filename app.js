@@ -190,18 +190,15 @@ const AdminPanel = ({ onBack }) => {
                     correctIndex: t.correctIndex
                 }));
 
-                // ИЩЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ, ЧТОБЫ ПОЛУЧИТЬ ЕГО СТАРЫЕ ТЕСТЫ
                 const currentUser = users.find(u => u.id === uid);
                 const currentTests = currentUser.assignedTests || [];
                 
-                // СОЗДАЕМ НОВЫЙ ТЕСТ С УНИКАЛЬНЫМ ID
                 const newTest = { 
                     id: Date.now(),
                     title: title.trim(),
                     data: normalized
                 };
 
-                // ДОБАВЛЯЕМ НОВЫЙ ТЕСТ В МАССИВ (НЕ ПЕРЕЗАПИСЫВАЯ СТАРЫЕ)
                 await window.db.collection('users').doc(uid).update({ 
                     assignedTests: [...currentTests, newTest] 
                 });
@@ -242,7 +239,6 @@ const AdminPanel = ({ onBack }) => {
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
                             
-                            {/* ОТОБРАЖЕНИЕ СПИСКА ВСЕХ ТЕСТОВ АДМИНУ */}
                             {u.assignedTests && u.assignedTests.length > 0 && (
                                 <div style={{marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
                                     {u.assignedTests.map(test => (
@@ -391,7 +387,6 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
-  // МАССИВ ДЛЯ ХРАНЕНИЯ ВСЕХ НАЗНАЧЕННЫХ ТЕСТОВ
   const [teacherTests, setTeacherTests] = useState([]); 
 
   const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
@@ -415,7 +410,6 @@ function App() {
                               window.auth.signOut();
                               window.location.reload();
                           }
-                          // ПОЛУЧАЕМ МАССИВ ТЕСТОВ ИЗ БАЗЫ
                           if (data.assignedTests) {
                               setTeacherTests(data.assignedTests);
                           } else {
@@ -567,7 +561,6 @@ function App() {
       }, 300);
   };
 
-  // ФУНКЦИЯ УДАЛЕНИЯ КОНКРЕТНОГО ТЕСТА ИЗ МАССИВА СТУДЕНТОМ
   const removeTeacherTestStudent = async (testId, testTitle) => {
       if(!confirm(`Удалить назначенный тест "${testTitle}"?`)) return;
       try {
@@ -729,21 +722,22 @@ function App() {
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* --- ИСПРАВЛЕННАЯ ПАНЕЛЬ С АДАПТАЦИЕЙ ПОД МОБИЛЬНЫЕ (FLEX WRAP) --- */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '150px' }}>
                       <span style={{ fontSize: '20px' }}>👤</span>
                       <div style={{ textAlign: 'left', overflow: 'hidden' }}>
                           <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '40vw' }}>{user.email}</div>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%' }}>{user.email}</div>
                       </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flex: '0 0 auto' }}>
                       {isAdmin && (
-                          <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
+                          <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 12px', height: '36px', minHeight: '36px', fontSize: '11px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
                               🛡️ АДМИНКА
                           </Button>
                       )}
-                      <Button variant="muted" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0 }}>
+                      <Button variant="muted" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 12px', height: '36px', minHeight: '36px', fontSize: '11px', margin: 0 }}>
                           ВЫЙТИ
                       </Button>
                   </div>
