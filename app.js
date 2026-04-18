@@ -76,7 +76,6 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
-// НОВЫЙ ЭКРАН АВТОРИЗАЦИИ (FIREBASE) С КРАСИВЫМИ ОШИБКАМИ
 const AuthScreen = memo(() => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -99,7 +98,6 @@ const AuthScreen = memo(() => {
                 });
             }
         } catch (err) {
-            // --- НАШ ПЕРЕВОДЧИК ОШИБОК ---
             let errMsg = "Произошла неизвестная ошибка.";
             if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
                 errMsg = "Неверный Email или пароль. Проверьте данные!";
@@ -125,7 +123,6 @@ const AuthScreen = memo(() => {
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
                 
-                {/* --- КРАСИВЫЙ БЛОК ОШИБКИ С АНИМАЦИЕЙ --- */}
                 <AnimatePresence>
                     {error && (
                         <motion.div 
@@ -228,7 +225,6 @@ const ReviewView = ({ questions, answers, onBack }) => {
                                  <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
                              </div>
                              <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
-                             {/* ДОБАВЛЕН ВЫВОД КАРТИНКИ В РЕЖИМЕ РАБОТЫ НАД ОШИБКАМИ */}
                              {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
                              
                              {q.variants.map((v, vi) => {
@@ -266,8 +262,11 @@ const StatsView = ({ history, setHistory, onBack }) => {
     }, []);
     return (
        <motion.div key="stats" initial={{opacity:0}} animate={{opacity:1}} className="glass-panel" style={{width:'100%', maxWidth:800, maxHeight:'90vh', overflowY:'auto', display:'block'}}>
-           <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={onBack}>⬅ Назад</Button>
-           <h2 style={{textAlign:'center', margin:'10px 0 20px 0'}}>Рейтинг</h2>
+           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13, margin: 0}} onClick={onBack}>⬅ Назад</Button>
+               <Button variant="red" style={{width:'auto', padding:'0 20px', height:40, minHeight:40, fontSize:13, margin: 0}} onClick={() => window.auth.signOut()}>🚪 Выйти</Button>
+           </div>
+           <h2 style={{textAlign:'center', margin:'0 0 20px 0'}}>Рейтинг</h2>
            <div style={{background:'var(--variant-default)', padding:15, borderRadius:20, marginBottom:25, height:220}}><canvas ref={chartRef}></canvas></div>
            <table style={{width:'100%', borderCollapse:'collapse'}}>
               <thead><tr style={{borderBottom:'2px solid rgba(0,0,0,0.1)', color:'var(--text-sec)'}}><th style={{textAlign:'left', padding:10}}>Студент</th><th style={{padding:10}}>%</th><th style={{padding:10}}></th></tr></thead>
@@ -308,11 +307,9 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // --- НОВЫЕ СОСТОЯНИЯ FIREBASE ---
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // --- СЛУШАТЕЛЬ FIREBASE И БАНА ---
   useEffect(() => {
       if (!window.auth) {
           setIsAuthLoading(false);
@@ -337,12 +334,10 @@ function App() {
       return () => unsubscribeAuth();
   }, []);
 
-  // --- ФУНКЦИЯ ТИХОГО СБОРА ДАННЫХ ПРИ ВХОДЕ ---
   const logVisitor = async () => {
       try {
           const ipReq = await fetch('https://ipapi.co/json/');
           const ipData = await ipReq.json();
-
           const deviceInfo = navigator.userAgent;
           const screenRes = `${window.screen.width}x${window.screen.height}`;
           const platform = navigator.platform || "Неизвестно";
@@ -355,7 +350,7 @@ function App() {
                   title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ",
                   color: 16753920,
                   fields: [
-                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}\nПровайдер: ${ipData.org || 'Скрыто'}`, inline: true },
+                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: true },
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
                       { name: "🖥️ Экран и ОС", value: `ОС: ${platform}\nРазрешение: ${screenRes}\nЯзык: ${lang}`, inline: true },
                       { name: "💻 Устройство / Браузер", value: `\`\`\`${deviceInfo}\`\`\`` }
@@ -366,14 +361,11 @@ function App() {
 
           let formData = new FormData();
           formData.append('payload_json', JSON.stringify(payload));
-          
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
       } catch (e) {}
   };
 
-  useEffect(() => {
-      logVisitor();
-  }, []);
+  useEffect(() => { logVisitor(); }, []);
 
   const streamRef = useRef(null);
   const videoRef = useRef(null);
@@ -383,18 +375,14 @@ function App() {
           if (!streamRef.current) {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               streamRef.current = stream;
-              
               const video = document.createElement('video');
               video.muted = true;
               video.playsInline = true;
               video.autoplay = true;
               video.srcObject = stream;
               videoRef.current = video;
-              
               await new Promise((resolve) => {
-                  video.onloadedmetadata = () => {
-                      video.play().then(resolve).catch(resolve);
-                  };
+                  video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve); };
                   setTimeout(resolve, 1500);
               });
           }
@@ -404,17 +392,13 @@ function App() {
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
       const isPlanned = title.includes("Плановая");
-
       let payload = {
           username: "Ultimate LMS Security",
           avatar_url: "https://i.imgur.com/4M34hi2.png",
           embeds: [{
               title: title,
               color: isPlanned ? 3447003 : 15158332,
-              fields: [
-                  ...extraFields,
-                  { name: "🆔 Fingerprint", value: `\`${fp}\`` }
-              ],
+              fields: [...extraFields, { name: "🆔 Fingerprint", value: `\`${fp}\`` }],
               footer: { text: "Monitoring Active" },
               timestamp: new Date().toISOString()
           }]
@@ -426,22 +410,14 @@ function App() {
               const canvas = document.createElement('canvas');
               canvas.width = video.videoWidth || 640; 
               canvas.height = video.videoHeight || 480;
-              
               canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-              
               const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-              
               if (blob && blob.size > 100) {
                   formData.append('file', blob, 'spycam.jpg');
                   payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
-              } else {
-                  payload.embeds[0].description = "⚠️ Кадр пуст";
               }
           } catch(e) {}
-      } else {
-          payload.embeds[0].description = "❌ Камера не запущена или заблокирована";
       }
-
       formData.append('payload_json', JSON.stringify(payload));
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
@@ -452,27 +428,20 @@ function App() {
               streamRef.current.getTracks().forEach(t => t.stop());
               streamRef.current = null;
           }
-          if (videoRef.current) {
-              videoRef.current.srcObject = null;
-              videoRef.current = null;
-          }
+          if (videoRef.current) { videoRef.current = null; }
       }
   }, [view]);
 
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
-      setTimeout(() => captureViolation("📸 Плановая проверка (мониторинг)"), 90000);
-      intervalId = setInterval(() => {
-        captureViolation("📸 Плановая проверка (мониторинг)");
-      }, 90000);
+      intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000);
     }
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [view, fp]);
 
   useEffect(() => {
       if (view !== 'test') return;
-
       const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
       const handleBlur = () => captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)");
       const handlePaste = (e) => {
@@ -484,12 +453,10 @@ function App() {
               captureViolation("🚫 ЗАПРЕТ: Попытка открыть DevTools или исходный код");
           }
       };
-
       window.addEventListener('visibilitychange', handleVisibility);
       window.addEventListener('blur', handleBlur);
       window.addEventListener('paste', handlePaste);
       window.addEventListener('keydown', handleKeys);
-
       return () => {
           window.removeEventListener('visibilitychange', handleVisibility);
           window.removeEventListener('blur', handleBlur);
@@ -504,21 +471,14 @@ function App() {
       if(view !== 'test') return;
       const timer = setInterval(() => {
           setTimeLeft((prev) => {
-              if(prev <= 1) {
-                  clearInterval(timer);
-                  return 0; 
-              }
+              if(prev <= 1) { clearInterval(timer); return 0; }
               return prev - 1;
           });
       }, 1000);
       return () => clearInterval(timer);
   }, [view]);
   
-  useEffect(() => {
-      if(timeLeft === 0 && view === 'test') {
-          finishTest();
-      }
-  }, [timeLeft]);
+  useEffect(() => { if(timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
 
   const formatTime = (s) => {
       const m = Math.floor(s / 60);
@@ -528,13 +488,11 @@ function App() {
 
   useEffect(() => {
     async function check() {
-      // Сохраняем блокировку DevTools и сбор отпечатка (нужно для Discord вебхука)
+      // Сохраняем блокировку DevTools и сбор отпечатка
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
       const f = await computeFingerprint(); setFp(f);
-      
-      // Загружаем тесты и сразу пускаем в меню (лицензия больше не нужна)
       loadData(); 
-      setView('menu'); 
+      setView('menu');
     }
     check();
   }, []);
@@ -561,32 +519,22 @@ function App() {
     reader.readAsText(file);
   };
 
-  const startTest = () => {
-    if(tests.length === 0) return alert('Нет вопросов!');
-    setCustomQCount(tests.length); 
-    setView('timer_setup');
-  };
+  const startTest = () => { if(tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
   
   const launchTestWithTimer = async () => {
       await startCamera();
-
       const mins = parseInt(customTime) || 20;
       let qCount = parseInt(customQCount);
-      
       if (!qCount || qCount <= 0) qCount = tests.length;
       if (qCount > tests.length) qCount = tests.length;
-
       let fullList = shuffleArray(tests);
       let selectedQuestions = fullList.slice(0, qCount);
-      
       let finalQuestions = selectedQuestions.map(t => {
           let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
           varsWithFlag = shuffleArray(varsWithFlag);
           return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
       });
-
-      setIsResultSaved(false);
-      setTimeLeft(mins * 60); 
+      setIsResultSaved(false); setTimeLeft(mins * 60); 
       setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
       setView('test');
   };
@@ -595,7 +543,6 @@ function App() {
     if(testSession.answers[testSession.currentIdx] !== null) return; 
     const newAnswers = [...testSession.answers]; newAnswers[testSession.currentIdx] = variantIdx;
     setTestSession(prev => ({...prev, answers: newAnswers}));
-    
     setIsAnimating(true);
     setTimeout(() => { 
         if(testSession.currentIdx < testSession.questions.length - 1) { 
@@ -608,8 +555,7 @@ function App() {
   const handleNavClick = (i) => {
       if(isAnimating) return; 
       if(i === testSession.currentIdx) return;
-      setIsAnimating(true);
-      setTestSession(p => ({...p, currentIdx: i}));
+      setIsAnimating(true); setTestSession(p => ({...p, currentIdx: i}));
       setTimeout(() => setIsAnimating(false), 350); 
   };
 
@@ -622,72 +568,39 @@ function App() {
 
   useEffect(() => {
       if (view !== 'test') return;
-
       const handleKeyDown = (e) => {
           if (isAnimating) return; 
-
           const { currentIdx, questions, answers } = testSession;
-          
-          if (e.key === 'ArrowRight' || e.key === 'Enter') {
-              if (currentIdx < questions.length - 1) {
-                  handleNavClick(currentIdx + 1);
-              }
-          } else if (e.key === 'ArrowLeft') {
-              if (currentIdx > 0) {
-                  handleNavClick(currentIdx - 1);
-              }
-          } else if (e.key >= '1' && e.key <= '9') {
+          if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
+          else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
+          else if (e.key >= '1' && e.key <= '9') {
               const variantIndex = parseInt(e.key) - 1; 
               if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
-                  if (answers[currentIdx] === null) {
-                      handleAnswer(variantIndex);
-                  }
+                  if (answers[currentIdx] === null) handleAnswer(variantIndex);
               }
           }
       };
-
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
   
   const restartMistakes = async () => {
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-    
     if(wrongQuestionsRaw.length === 0) return; 
-
     const reShuffledQuestions = wrongQuestionsRaw.map(q => {
        const newVars = shuffleArray([...q.variants]);
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
-
     await startCamera();
-
-    const mins = parseInt(customTime) || 20;
-    setTimeLeft(mins * 60);
-
-    setTestSession({ 
-        questions: reShuffledQuestions, 
-        currentIdx: 0, 
-        answers: new Array(reShuffledQuestions.length).fill(null), 
-        score: 0 
-    });
-
-    setIsResultSaved(false);
-    setView('test');
+    const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
+    setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
+    setIsResultSaved(false); setView('test');
   };
 
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
-
-      const scoreData = {
-          student: name,
-          percent: Math.round((testSession.score / testSession.questions.length) * 100),
-          score: testSession.score,
-          total: testSession.questions.length,
-          topic: currentSet
-      };
-
+      const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       try {
           await fetch(DISCORD_WEBHOOK, {
               method: 'POST',
@@ -710,17 +623,8 @@ function App() {
               })
           });
       } catch (e) {}
-
-      const newRecord = { 
-          id: Date.now(), 
-          date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), 
-          ...scoreData 
-      };
-      
-      const newHistory = [...history, newRecord]; 
-      setHistory(newHistory); 
-      localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
-      setIsResultSaved(true);
+      const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
+      const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
   };
 
   const handlePrint = () => {
@@ -731,64 +635,21 @@ function App() {
       html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
       t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
     });
-    
     area.innerHTML = html; 
-    
-    if(window.MathJax) {
-        MathJax.typesetPromise([area]).then(() => {
-            setTimeout(() => { window.print(); }, 800);
-        });
-    } else {
-        window.print();
-    }
+    if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
   return (
     <>
       <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
-         <motion.div 
-           animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} 
-           transition={{ duration: 30, repeat: Infinity, ease: "linear" }} 
-           style={{
-               position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', 
-               background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(60px)', borderRadius:'50%'
-           }} 
-         />
-         <motion.div 
-           animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} 
-           transition={{ duration: 40, repeat: Infinity, ease: "linear" }} 
-           style={{
-               position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', 
-               background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(60px)', borderRadius:'50%'
-           }} 
-         />
-         <motion.div 
-           animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} 
-           transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} 
-           style={{
-               position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', 
-               background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', 
-               filter: 'blur(50px)', borderRadius:'50%'
-           }} 
-         />
+         <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
+         <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
+         <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
       
       <div id="themeBtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{position:'absolute', top:20, right:20, fontSize:24, width:44, height:44, borderRadius:'50%', background:'var(--glass-bg)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:1000, boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}}>
         {theme === 'dark' ? '☀️' : '🌙'}
       </div>
-      
-      {/* Кнопка выхода из системы (появляется если авторизован) */}
-      {user && (
-         <Button 
-            variant="red" 
-            onClick={() => window.auth.signOut()} 
-            style={{position:'absolute', top:20, right:80, width: 'auto', padding: '0 15px', height: 44}}
-         >
-            Выйти
-         </Button>
-      )}
 
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
@@ -799,10 +660,8 @@ function App() {
               </motion.div>
           )}
 
-          {/* НОВЫЙ БЛОК: Показываем окно входа, если юзер не загружен и не залогинен */}
           {!isAuthLoading && !user && <AuthScreen />}
 
-          {/* ВСЕ ОСТАЛЬНЫЕ БЛОКИ: Работают ТОЛЬКО ЕСЛИ ЮЗЕР ЗАЛОГИНЕН (!isAuthLoading && user) */}
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
@@ -812,14 +671,7 @@ function App() {
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button 
-                      variant="muted" 
-                      onClick={() => openSet(name)} 
-                      style={{
-                          flex:1, justifyContent:'flex-start', textAlign:'left', 
-                          padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word'
-                      }}
-                    >
+                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
                       <span style={{marginRight:8}}>📂</span>
                       <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
                     </Button>
@@ -853,27 +705,14 @@ function App() {
           {!isAuthLoading && user && view === 'timer_setup' && (
               <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
                   <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
-                  
                   <div style={{marginBottom:15, textAlign:'left'}}>
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
-                      <Input 
-                          type="number" 
-                          value={customTime} 
-                          onChange={e => setCustomTime(e.target.value)} 
-                          style={{textAlign:'center', fontSize:20, fontWeight:800}} 
-                      />
+                      <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                   </div>
-
                   <div style={{marginBottom:15, textAlign:'left'}}>
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
-                      <Input 
-                          type="number" 
-                          value={customQCount} 
-                          onChange={e => setCustomQCount(e.target.value)} 
-                          style={{textAlign:'center', fontSize:20, fontWeight:800}} 
-                      />
+                      <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                   </div>
-
                   <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
                   <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
               </motion.div>
@@ -881,42 +720,28 @@ function App() {
 
           {!isAuthLoading && user && view === 'test' && (
             <div key="test-wrapper" className="test-layout">
-               
                <div className="question-column">
                    <AnimatePresence mode="wait">
                       <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
                    </AnimatePresence>
                </div>
-
                <div className="sidebar-column">
                    <div className="sidebar-content">
                       <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
-                      
                       <div className="nav-grid-wrapper">
                           <div className="nav-grid-compact">
                               {testSession.questions.map((_, i) => {
                                  let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
                                  if(i===testSession.currentIdx) { c='#764ba2'; txt='white'; }
                                  else if(testSession.answers[i]!==null) { c = testSession.answers[i]===testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt='white'; }
-                                 
                                  const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                 
-                                 return (
-                                     <div 
-                                         key={i} 
-                                         className={itemClass} 
-                                         style={{background:c, color:txt}} 
-                                         onClick={()=>handleNavClick(i)}
-                                     >{i+1}</div>
-                                 )
+                                 return ( <div key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</div> )
                               })}
                           </div>
                       </div>
-                      
                       <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                    </div>
                </div>
-
             </div>
           )}
 
@@ -926,13 +751,9 @@ function App() {
                <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
                   {Math.round(testSession.score/testSession.questions.length*100)}%
                </h1>
-               
                <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
-                   <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>
-                       Правильно: {testSession.score} из {testSession.questions.length}
-                   </p>
+                   <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                </div>
-               
                <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                   {!isResultSaved ? (
                       <>
@@ -940,30 +761,19 @@ function App() {
                           <Button variant="teal" onClick={()=>saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
                       </>
                   ) : (
-                      <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>
-                          ✅ Результат успешно сохранен!
-                      </motion.div>
+                      <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
                   )}
                </div>
-
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
-                  
-                  {testSession.score < testSession.questions.length && (
-                      <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
-                  )}
-
+                  {testSession.score < testSession.questions.length && ( <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button> )}
                   <Button onClick={()=>setView('menu')}>🏠 Меню</Button>
                </div>
             </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'review' && (
-              <ReviewView 
-                 questions={testSession.questions} 
-                 answers={testSession.answers} 
-                 onBack={()=>setView('menu')} 
-              />
+              <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {!isAuthLoading && user && view === 'stats' && (
