@@ -76,7 +76,7 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
-// НОВЫЙ ЭКРАН АВТОРИЗАЦИИ (FIREBASE)
+// НОВЫЙ ЭКРАН АВТОРИЗАЦИИ (FIREBASE) С КРАСИВЫМИ ОШИБКАМИ
 const AuthScreen = memo(() => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -99,7 +99,22 @@ const AuthScreen = memo(() => {
                 });
             }
         } catch (err) {
-            setError(err.message);
+            // --- НАШ ПЕРЕВОДЧИК ОШИБОК ---
+            let errMsg = "Произошла неизвестная ошибка.";
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                errMsg = "Неверный Email или пароль. Проверьте данные!";
+            } else if (err.code === 'auth/email-already-in-use') {
+                errMsg = "Этот Email уже зарегистрирован. Попробуйте войти.";
+            } else if (err.code === 'auth/weak-password') {
+                errMsg = "Пароль слишком простой (нужно минимум 6 символов).";
+            } else if (err.code === 'auth/invalid-email') {
+                errMsg = "Некорректный формат Email адреса.";
+            } else if (err.code === 'auth/network-request-failed') {
+                errMsg = "Ошибка сети. Проверьте интернет-соединение.";
+            } else if (err.code === 'auth/too-many-requests') {
+                errMsg = "Слишком много попыток. Подождите немного.";
+            }
+            setError(errMsg);
         }
     };
 
@@ -109,10 +124,23 @@ const AuthScreen = memo(() => {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
-                {error && <div style={{ color: '#ef4444', fontSize: '0.9rem' }}>{error}</div>}
+                
+                {/* --- КРАСИВЫЙ БЛОК ОШИБКИ С АНИМАЦИЕЙ --- */}
+                <AnimatePresence>
+                    {error && (
+                        <motion.div 
+                            initial={{opacity: 0, height: 0, overflow: 'hidden'}} 
+                            animate={{opacity: 1, height: 'auto', marginTop: '5px', marginBottom: '5px'}} 
+                            exit={{opacity: 0, height: 0, marginTop: 0, marginBottom: 0}} 
+                            style={{ color: '#ef4444', fontSize: '0.95rem', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '500' }}>
+                            ⚠️ {error}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <Button type="submit" variant="primary" style={{height: '54px'}}>{isLogin ? 'Войти' : 'Создать аккаунт'}</Button>
             </form>
-            <button style={{ marginTop: '15px', border: 'none', background: 'transparent', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px', width: '100%', outline: 'none' }} onClick={() => setIsLogin(!isLogin)}>
+            <button style={{ marginTop: '15px', border: 'none', background: 'transparent', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px', width: '100%', outline: 'none' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
                 {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
             </button>
         </motion.div>
