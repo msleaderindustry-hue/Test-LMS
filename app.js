@@ -76,76 +76,87 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
-// ЭКРАН АВТОРИЗАЦИИ
+// ЭКРАН АВТОРИЗАЦИИ ЧЕРЕЗ GOOGLE
 const AuthScreen = memo(() => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleGoogleSignIn = async () => {
         setError('');
+        setIsLoading(true);
         try {
-            if (isLogin) {
-                await window.auth.signInWithEmailAndPassword(email, password);
-            } else {
-                const userCred = await window.auth.createUserWithEmailAndPassword(email, password);
-                await window.db.collection('users').doc(userCred.user.uid).set({
-                    email: email,
+            // Создаем провайдер Google
+            const provider = new window.firebase.auth.GoogleAuthProvider();
+            // Вызываем окно авторизации
+            const result = await window.auth.signInWithPopup(provider);
+            const user = result.user;
+
+            // Проверяем, есть ли этот пользователь в нашей базе данных
+            const userDoc = await window.db.collection('users').doc(user.uid).get();
+            
+            // Если пользователя нет (первый вход), создаем ему карточку
+            if (!userDoc.exists) {
+                await window.db.collection('users').doc(user.uid).set({
+                    email: user.email,
                     role: 'student',
                     isBanned: false,
                     registeredAt: new Date().toISOString()
                 });
             }
         } catch (err) {
-            let errMsg = "Произошла неизвестная ошибка.";
-            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                errMsg = "Неверный Email или пароль. Проверьте данные!";
-            } else if (err.code === 'auth/email-already-in-use') {
-                errMsg = "Этот Email уже зарегистрирован. Попробуйте войти.";
-            } else if (err.code === 'auth/weak-password') {
-                errMsg = "Пароль слишком простой (нужно минимум 6 символов).";
-            } else if (err.code === 'auth/invalid-email') {
-                errMsg = "Некорректный формат Email адреса.";
+            console.error(err);
+            let errMsg = "Произошла ошибка при авторизации.";
+            if (err.code === 'auth/popup-closed-by-user') {
+                errMsg = "Вы закрыли окно авторизации. Попробуйте снова.";
             } else if (err.code === 'auth/network-request-failed') {
                 errMsg = "Ошибка сети. Проверьте интернет-соединение.";
-            } else if (err.code === 'auth/too-many-requests') {
-                errMsg = "Слишком много попыток. Подождите немного.";
+            } else if (err.code === 'auth/operation-not-allowed') {
+                errMsg = "Вход через Google не включен в настройках Firebase!";
             }
             setError(errMsg);
+            setIsLoading(false);
         }
     };
 
     return (
-        <motion.div key="auth" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="glass-panel" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-            <h2 style={{marginTop:0}}>{isLogin ? 'Вход в систему' : 'Регистрация'}</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
-                
-                <AnimatePresence>
-                    {error && (
-                        <motion.div 
-                            initial={{opacity: 0, height: 0, overflow: 'hidden'}} 
-                            animate={{opacity: 1, height: 'auto', marginTop: '5px', marginBottom: '5px'}} 
-                            exit={{opacity: 0, height: 0, marginTop: 0, marginBottom: 0}} 
-                            style={{ color: '#ef4444', fontSize: '0.95rem', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '500' }}>
-                            ⚠️ {error}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+        <motion.div key="auth" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="glass-panel" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
+            <h2 style={{marginTop:0, marginBottom: 30}}>Вход в систему</h2>
+            
+            <AnimatePresence>
+                {error && (
+                    <motion.div 
+                        initial={{opacity: 0, height: 0, overflow: 'hidden'}} 
+                        animate={{opacity: 1, height: 'auto', marginBottom: '15px'}} 
+                        exit={{opacity: 0, height: 0, marginBottom: 0}} 
+                        style={{ color: '#ef4444', fontSize: '0.95rem', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '500' }}>
+                        ⚠️ {error}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                <Button type="submit" variant="primary" style={{height: '54px'}}>{isLogin ? 'Войти' : 'Создать аккаунт'}</Button>
-            </form>
-            <button style={{ marginTop: '15px', border: 'none', background: 'transparent', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px', width: '100%', outline: 'none' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
-                {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
-            </button>
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                    width: '100%', height: '54px', borderRadius: '14px', border: '1px solid var(--glass-border)',
+                    background: 'var(--glass-bg)', color: 'var(--text-main)', fontSize: '16px', fontWeight: '600',
+                    cursor: isLoading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', opacity: isLoading ? 0.7 : 1
+                }}
+            >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{width: 24, height: 24}} />
+                {isLoading ? 'Загрузка...' : 'Продолжить с Google'}
+            </motion.button>
+            <div style={{ marginTop: '20px', fontSize: '12px', color: 'var(--text-sec)', opacity: 0.7 }}>
+                Доступ разрешен только для подтвержденных аккаунтов.
+            </div>
         </motion.div>
     );
 });
 
-// --- НОВАЯ АДМИН-ПАНЕЛЬ ---
+// --- АДМИН-ПАНЕЛЬ ---
 const AdminPanel = ({ onBack }) => {
     const [users, setUsers] = useState([]);
 
@@ -708,7 +719,7 @@ function App() {
 
           {!isAuthLoading && !user && <AuthScreen />}
 
-          {/* НОВЫЙ ВЬЮ ДЛЯ АДМИНКИ */}
+          {/* ВЬЮ ДЛЯ АДМИНКИ */}
           {!isAuthLoading && user && view === 'admin' && (
               <AdminPanel onBack={() => setView('menu')} />
           )}
@@ -717,19 +728,19 @@ function App() {
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60vw' }}>
-                      👤 {user.email}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>👤</span>
+                      <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+                          <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '40vw' }}>{user.email}</div>
+                      </div>
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                      {/* КНОПКА АДМИНКИ (Появляется только если зашел msleaderindustry@gmail.com) */}
                       {isAdmin && (
                           <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
                               🛡️ АДМИНКА
                           </Button>
                       )}
-                      <Button variant="red" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0 }}>
-                          🚪 ВЫЙТИ
-                      </Button>
                   </div>
               </div>
 
@@ -762,7 +773,6 @@ function App() {
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                  <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
-                 {/* Кнопка импорта JSON сохранена как ты и просил */}
                  <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
                    📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                  </label>
