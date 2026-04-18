@@ -190,13 +190,23 @@ const AdminPanel = ({ onBack }) => {
                     correctIndex: t.correctIndex
                 }));
 
+                // ИЩЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ, ЧТОБЫ ПОЛУЧИТЬ ЕГО СТАРЫЕ ТЕСТЫ
+                const currentUser = users.find(u => u.id === uid);
+                const currentTests = currentUser.assignedTests || [];
+                
+                // СОЗДАЕМ НОВЫЙ ТЕСТ С УНИКАЛЬНЫМ ID
+                const newTest = { 
+                    id: Date.now(),
+                    title: title.trim(),
+                    data: normalized
+                };
+
+                // ДОБАВЛЯЕМ НОВЫЙ ТЕСТ В МАССИВ (НЕ ПЕРЕЗАПИСЫВАЯ СТАРЫЕ)
                 await window.db.collection('users').doc(uid).update({ 
-                    assignedTest: { 
-                        title: title.trim(),
-                        data: normalized
-                    } 
+                    assignedTests: [...currentTests, newTest] 
                 });
-                alert("✅ Тест успешно загружен и назначен студенту!");
+                
+                alert("✅ Тест успешно загружен и добавлен студенту!");
             } catch (err) {
                 console.error(err);
                 alert("Ошибка чтения JSON файла! Проверьте, правильный ли это файл теста.");
@@ -206,10 +216,12 @@ const AdminPanel = ({ onBack }) => {
         e.target.value = null; 
     };
 
-    const removeTest = async (uid) => {
-        if(confirm("Удалить назначенный тест у этого студента?")) {
+    const removeTest = async (uid, testId) => {
+        if(confirm("Удалить этот тест у студента?")) {
             try {
-                await window.db.collection('users').doc(uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
+                const currentUser = users.find(u => u.id === uid);
+                const updatedTests = (currentUser.assignedTests || []).filter(t => t.id !== testId);
+                await window.db.collection('users').doc(uid).update({ assignedTests: updatedTests });
             } catch(e) {
                 alert("Ошибка при удалении теста");
             }
@@ -226,16 +238,23 @@ const AdminPanel = ({ onBack }) => {
                 {users.length === 0 && <div style={{textAlign: 'center', color: 'var(--text-sec)'}}>Загрузка пользователей...</div>}
                 {users.map(u => (
                     <div key={u.id} style={{display:'flex', justifyContent:'space-between', alignItems: 'center', padding:'10px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
-                        <div style={{overflow: 'hidden', paddingRight: '10px'}}>
+                        <div style={{overflow: 'hidden', paddingRight: '10px', flex: 1}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
-                            {u.assignedTest && (
-                                <div style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px'}}>
-                                    ☁️ Назначен тест: {u.assignedTest.title}
-                                    <span style={{cursor: 'pointer', color: '#ef4444'}} onClick={() => removeTest(u.id)}>✖</span>
+                            
+                            {/* ОТОБРАЖЕНИЕ СПИСКА ВСЕХ ТЕСТОВ АДМИНУ */}
+                            {u.assignedTests && u.assignedTests.length > 0 && (
+                                <div style={{marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                                    {u.assignedTests.map(test => (
+                                        <div key={test.id} style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(59, 130, 246, 0.1)', padding: '5px 10px', borderRadius: '8px', marginRight: '10px'}}>
+                                            <span>☁️ {test.title}</span>
+                                            <span style={{cursor: 'pointer', color: '#ef4444', fontSize: '14px', padding: '0 5px'}} onClick={() => removeTest(u.id, test.id)}>✖</span>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
+                        
                         {u.email !== 'msleaderindustry@gmail.com' && (
                             <div style={{display: 'flex', gap: '5px'}}>
                                 <label style={{cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 15px', height: '35px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
@@ -371,7 +390,9 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [teacherTest, setTeacherTest] = useState(null); 
+  
+  // МАССИВ ДЛЯ ХРАНЕНИЯ ВСЕХ НАЗНАЧЕННЫХ ТЕСТОВ
+  const [teacherTests, setTeacherTests] = useState([]); 
 
   const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
 
@@ -394,10 +415,11 @@ function App() {
                               window.auth.signOut();
                               window.location.reload();
                           }
-                          if (data.assignedTest) {
-                              setTeacherTest(data.assignedTest);
+                          // ПОЛУЧАЕМ МАССИВ ТЕСТОВ ИЗ БАЗЫ
+                          if (data.assignedTests) {
+                              setTeacherTests(data.assignedTests);
                           } else {
-                              setTeacherTest(null);
+                              setTeacherTests([]);
                           }
                       }
                   });
@@ -536,7 +558,6 @@ function App() {
   const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
 
-  // ОТКРЫВАЕМ ТЕСТ НАПРЯМУЮ ИЗ БАЗЫ
   const openTeacherAssignedTest = (testInfo) => {
       setView('loading');
       setTimeout(() => {
@@ -546,11 +567,12 @@ function App() {
       }, 300);
   };
 
-  // ФУНКЦИЯ ДЛЯ СТУДЕНТА: УДАЛИТЬ ТЕСТ ОТ ПРЕПОДАВАТЕЛЯ ИЗ СВОЕГО МЕНЮ
-  const removeTeacherTestStudent = async () => {
-      if(!confirm(`Удалить назначенный тест "${teacherTest.title}"?`)) return;
+  // ФУНКЦИЯ УДАЛЕНИЯ КОНКРЕТНОГО ТЕСТА ИЗ МАССИВА СТУДЕНТОМ
+  const removeTeacherTestStudent = async (testId, testTitle) => {
+      if(!confirm(`Удалить назначенный тест "${testTitle}"?`)) return;
       try {
-          await window.db.collection('users').doc(user.uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
+          const updatedTests = teacherTests.filter(t => t.id !== testId);
+          await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
       } catch(e) {
           alert("Ошибка при удалении теста");
       }
@@ -735,16 +757,16 @@ function App() {
 
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
-                {/* --- ПЕРСОНАЛЬНЫЙ ТЕСТ ИЗ ОБЛАКА --- */}
-                {teacherTest && (
-                  <div style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button variant="muted" onClick={() => openTeacherAssignedTest(teacherTest)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                {/* ОТОБРАЖАЕМ МНОЖЕСТВО ТЕСТОВ ОТ ПРЕПОДАВАТЕЛЯ */}
+                {teacherTests.map(test => (
+                  <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
                       <span style={{marginRight:8}}>☁️</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{teacherTest.title}</span>
+                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
                     </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={removeTeacherTestStudent}>🗑</Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
                   </div>
-                )}
+                ))}
 
                 {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
