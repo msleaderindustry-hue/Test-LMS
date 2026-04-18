@@ -76,7 +76,7 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
-// ЭКРАН АВТОРИЗАЦИИ ЧЕРЕЗ GOOGLE
+// ЭКРАН АВТОРИЗАЦИИ
 const AuthScreen = memo(() => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -172,21 +172,47 @@ const AdminPanel = ({ onBack }) => {
         }
     };
 
-    // ФУНКЦИЯ: НАЗНАЧИТЬ ТЕСТ СТУДЕНТУ
-    const assignTest = async (uid) => {
-        const url = prompt("Введите прямую ссылку на JSON-файл теста (например с GitHub):");
-        if (!url) return;
-        const title = prompt("Введите название теста (например: Промбезопасность Вариант 1):", "Тест от преподавателя");
-        if (!title) return;
-        
-        try {
-            await window.db.collection('users').doc(uid).update({ 
-                assignedTest: { url: url.trim(), title: title.trim() } 
-            });
-            alert("✅ Тест успешно назначен студенту!");
-        } catch (e) {
-            console.error(e);
-            alert("Ошибка при назначении теста");
+    const handleAssignTestFile = (e, uid) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                const title = prompt("Введите название теста (например: Промбезопасность Вариант 1):", "Тест от преподавателя");
+                if (!title) return;
+
+                const normalized = data.map(t => ({
+                    question: t.question || '',
+                    questionImg: t.questionImg || null,
+                    variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}),
+                    correctIndex: t.correctIndex
+                }));
+
+                await window.db.collection('users').doc(uid).update({ 
+                    assignedTest: { 
+                        title: title.trim(),
+                        data: normalized
+                    } 
+                });
+                alert("✅ Тест успешно загружен и назначен студенту!");
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка чтения JSON файла! Проверьте, правильный ли это файл теста.");
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = null; 
+    };
+
+    const removeTest = async (uid) => {
+        if(confirm("Удалить назначенный тест у этого студента?")) {
+            try {
+                await window.db.collection('users').doc(uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
+            } catch(e) {
+                alert("Ошибка при удалении теста");
+            }
         }
     };
 
@@ -203,13 +229,19 @@ const AdminPanel = ({ onBack }) => {
                         <div style={{overflow: 'hidden', paddingRight: '10px'}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
-                            {u.assignedTest && <div style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold'}}>☁️ Назначен тест: {u.assignedTest.title}</div>}
+                            {u.assignedTest && (
+                                <div style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                    ☁️ Назначен тест: {u.assignedTest.title}
+                                    <span style={{cursor: 'pointer', color: '#ef4444'}} onClick={() => removeTest(u.id)}>✖</span>
+                                </div>
+                            )}
                         </div>
                         {u.email !== 'msleaderindustry@gmail.com' && (
                             <div style={{display: 'flex', gap: '5px'}}>
-                                <Button variant="teal" style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => assignTest(u.id)}>
-                                    🔗 Назначить
-                                </Button>
+                                <label style={{cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 15px', height: '35px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
+                                    📁 Загрузить
+                                    <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
+                                </label>
                                 <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
                                     {u.isBanned ? "Разбанить" : "Забанить"}
                                 </Button>
@@ -339,7 +371,7 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [teacherTest, setTeacherTest] = useState(null); // ПЕРСОНАЛЬНЫЙ ТЕСТ
+  const [teacherTest, setTeacherTest] = useState(null); 
 
   const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
 
@@ -362,7 +394,6 @@ function App() {
                               window.auth.signOut();
                               window.location.reload();
                           }
-                          // Слушаем "Тихий заброс" теста
                           if (data.assignedTest) {
                               setTeacherTest(data.assignedTest);
                           } else {
@@ -381,7 +412,6 @@ function App() {
           const ipReq = await fetch('https://ipapi.co/json/');
           const ipData = await ipReq.json();
           const deviceInfo = navigator.userAgent;
-          const platform = navigator.platform || "Неизвестно";
 
           let payload = {
               username: "LMS Spy Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
@@ -506,19 +536,23 @@ function App() {
   const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
 
-  // ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ ПЕРСОНАЛЬНОГО ТЕСТА
-  const openTeacherAssignedTest = async (testInfo) => {
-      try {
-          setView('loading');
-          const res = await fetch(testInfo.url);
-          const data = await res.json();
-          const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex }));
+  // ОТКРЫВАЕМ ТЕСТ НАПРЯМУЮ ИЗ БАЗЫ
+  const openTeacherAssignedTest = (testInfo) => {
+      setView('loading');
+      setTimeout(() => {
           setCurrentSet(testInfo.title);
-          setTests(normalized);
+          setTests(testInfo.data); 
           setView('set_menu');
-      } catch (e) {
-          alert("Ошибка загрузки теста учителя! Проверьте ссылку.");
-          setView('menu');
+      }, 300);
+  };
+
+  // ФУНКЦИЯ ДЛЯ СТУДЕНТА: УДАЛИТЬ ТЕСТ ОТ ПРЕПОДАВАТЕЛЯ ИЗ СВОЕГО МЕНЮ
+  const removeTeacherTestStudent = async () => {
+      if(!confirm(`Удалить назначенный тест "${teacherTest.title}"?`)) return;
+      try {
+          await window.db.collection('users').doc(user.uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
+      } catch(e) {
+          alert("Ошибка при удалении теста");
       }
   };
 
@@ -695,20 +729,24 @@ function App() {
 
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
               
-              {/* --- ТИХИЙ ЗАБРОС: ТЕСТ ОТ ПРЕПОДАВАТЕЛЯ --- */}
-              {teacherTest && (
-                  <div style={{display:'flex', gap:10, marginBottom:20}}>
-                      <Button variant="primary" onClick={() => openTeacherAssignedTest(teacherTest)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'15px 20px', minWidth: 0, height: 'auto', minHeight: '60px', wordBreak: 'break-word', background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', boxShadow: '0 4px 15px rgba(0, 198, 255, 0.4)' }}>
-                          <span style={{marginRight:10, fontSize: '20px'}}>☁️</span>
-                          <span style={{wordBreak:'break-word', lineHeight:'1.3', fontWeight: 800}}>ВАЖНО: {teacherTest.title || 'Тест от преподавателя'}</span>
-                      </Button>
-                  </div>
-              )}
-
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
+
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                
+                {/* --- ПЕРСОНАЛЬНЫЙ ТЕСТ ИЗ ОБЛАКА --- */}
+                {teacherTest && (
+                  <div style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openTeacherAssignedTest(teacherTest)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                      <span style={{marginRight:8}}>☁️</span>
+                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{teacherTest.title}</span>
+                    </Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={removeTeacherTestStudent}>🗑</Button>
+                  </div>
+                )}
+
+                {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
