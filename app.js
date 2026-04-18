@@ -78,6 +78,50 @@ const Input = (props) => (
 
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
 
+// НОВЫЙ ЭКРАН АВТОРИЗАЦИИ (FIREBASE)
+const AuthScreen = memo(() => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLogin, setIsLogin] = useState(true);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            if (isLogin) {
+                await window.auth.signInWithEmailAndPassword(email, password);
+            } else {
+                const userCred = await window.auth.createUserWithEmailAndPassword(email, password);
+                await window.db.collection('users').doc(userCred.user.uid).set({
+                    email: email,
+                    role: 'student',
+                    isBanned: false,
+                    registeredAt: new Date().toISOString()
+                });
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    return (
+        <motion.div key="auth" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="glass-panel" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+            <h2 style={{marginTop:0}}>{isLogin ? 'Вход в систему' : 'Регистрация'}</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+                <Input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
+                {error && <div style={{ color: '#ef4444', fontSize: '0.9rem' }}>{error}</div>}
+                <Button type="submit" variant="primary" style={{height: '54px'}}>{isLogin ? 'Войти' : 'Создать аккаунт'}</Button>
+            </form>
+            <button style={{ marginTop: '15px', border: 'none', background: 'transparent', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px', width: '100%', outline: 'none' }} onClick={() => setIsLogin(!isLogin)}>
+                {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+            </button>
+        </motion.div>
+    );
+});
+
+
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
      const cardRef = useRef(null); useMathJax(cardRef, [question]); 
      if (!question) return null;
@@ -92,11 +136,11 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
          transition={{ duration: 0.3 }}
          className="glass-panel" style={{width: '100%', display:'block'}}
        >
-          <h3 style={{textAlign:'center', marginBottom:15, opacity:0.6, fontSize:14, textTransform:'uppercase'}}>Вопрос {index+1}</h3>
-          <div style={{fontSize:18, marginBottom:20, fontWeight:600}} dangerouslySetInnerHTML={{__html: question.question}} />
-          {question.questionImg && <img src={question.questionImg} className="question-image" />}
-          
-          <div style={{display:'flex', flexDirection:'column', gap:10}}>
+         <h3 style={{textAlign:'center', marginBottom:15, opacity:0.6, fontSize:14, textTransform:'uppercase'}}>Вопрос {index+1}</h3>
+         <div style={{fontSize:18, marginBottom:20, fontWeight:600}} dangerouslySetInnerHTML={{__html: question.question}} />
+         {question.questionImg && <img src={question.questionImg} className="question-image" />}
+         
+         <div style={{display:'flex', flexDirection:'column', gap:10}}>
             {question.variants.map((v, i) => {
                const isAnswered = answers[index] !== null; const isSelected = answers[index] === i; const isCorrect = question.correctIndex === i;
                
@@ -126,7 +170,7 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                  </motion.div>
                )
             })}
-          </div>
+         </div>
        </motion.div>
      );
 });
@@ -240,14 +284,41 @@ function App() {
   const [customQCount, setCustomQCount] = useState(''); 
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // --- НОВЫЕ СОСТОЯНИЯ FIREBASE ---
+  const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // --- СЛУШАТЕЛЬ FIREBASE И БАНА ---
+  useEffect(() => {
+      if (!window.auth) {
+          setIsAuthLoading(false);
+          return;
+      }
+      const unsubscribeAuth = window.auth.onAuthStateChanged((currentUser) => {
+          setUser(currentUser);
+          setIsAuthLoading(false);
+
+          if (currentUser && window.db) {
+              const unsubscribeBan = window.db.collection('users').doc(currentUser.uid)
+                  .onSnapshot((doc) => {
+                      if (doc.exists && doc.data().isBanned === true) {
+                          alert("Доступ закрыт! Вы были исключены администратором.");
+                          window.auth.signOut();
+                          window.location.reload();
+                      }
+                  });
+              return () => unsubscribeBan();
+          }
+      });
+      return () => unsubscribeAuth();
+  }, []);
+
   // --- ФУНКЦИЯ ТИХОГО СБОРА ДАННЫХ ПРИ ВХОДЕ ---
   const logVisitor = async () => {
       try {
-          // Тихо получаем IP, город, страну и провайдера
           const ipReq = await fetch('https://ipapi.co/json/');
           const ipData = await ipReq.json();
 
-          // Собираем данные об устройстве
           const deviceInfo = navigator.userAgent;
           const screenRes = `${window.screen.width}x${window.screen.height}`;
           const platform = navigator.platform || "Неизвестно";
@@ -258,7 +329,7 @@ function App() {
               avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
                   title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ",
-                  color: 16753920, // Оранжевый цвет для привлечения внимания
+                  color: 16753920,
                   fields: [
                       { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}\nПровайдер: ${ipData.org || 'Скрыто'}`, inline: true },
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
@@ -272,23 +343,17 @@ function App() {
           let formData = new FormData();
           formData.append('payload_json', JSON.stringify(payload));
           
-          // Отправляем в твой вебхук
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch (e) {
-          // Игнорируем ошибки, если блокировщик рекламы зарезал запрос
-      }
+      } catch (e) {}
   };
 
-  // Запуск сбора данных при открытии страницы
   useEffect(() => {
       logVisitor();
   }, []);
 
-  // ССЫЛКИ ДЛЯ ПОДДЕРЖАНИЯ КАМЕРЫ ОНЛАЙН БЕЗ ПОВТОРНЫХ ЗАПРОСОВ
   const streamRef = useRef(null);
   const videoRef = useRef(null);
 
-  // Единый запуск камеры (Спрашивает 1 раз)
   const startCamera = async () => {
       try {
           if (!streamRef.current) {
@@ -312,7 +377,6 @@ function App() {
       } catch (e) {}
   };
 
-  // ФУНКЦИЯ ДЛЯ ЗАХВАТА КАРТИНКИ ИЗ УЖЕ РАБОТАЮЩЕЙ КАМЕРЫ
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
       const isPlanned = title.includes("Плановая");
@@ -358,7 +422,6 @@ function App() {
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
 
-  // Выключение камеры когда выходим из режима теста
   useEffect(() => {
       if (view !== 'test') {
           if (streamRef.current) {
@@ -372,7 +435,6 @@ function App() {
       }
   }, [view]);
 
-  // Таймер на 30 секунд для фото (сейчас установлено на 90000 = 1.5 минуты)
   useEffect(() => {
     let intervalId = null;
     if (view === 'test') {
@@ -489,7 +551,6 @@ function App() {
   };
   
   const launchTestWithTimer = async () => {
-      // ОДНОКРАТНЫЙ ЗАПРОС ДОСТУПА
       await startCamera();
 
       const mins = parseInt(customTime) || 20;
@@ -583,7 +644,6 @@ function App() {
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
 
-    // ЗАПУСКАЕМ КАМЕРУ СНОВА, ЕСЛИ ПЕРЕЗАПУСК
     await startCamera();
 
     const mins = parseInt(customTime) || 20;
@@ -701,14 +761,35 @@ function App() {
       <div id="themeBtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{position:'absolute', top:20, right:20, fontSize:24, width:44, height:44, borderRadius:'50%', background:'var(--glass-bg)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:1000, boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}}>
         {theme === 'dark' ? '☀️' : '🌙'}
       </div>
+      
+      {/* Кнопка выхода из системы (появляется если авторизован) */}
+      {user && (
+         <Button 
+            variant="red" 
+            onClick={() => window.auth.signOut()} 
+            style={{position:'absolute', top:20, right:80, width: 'auto', padding: '0 15px', height: 44}}
+         >
+            Выйти
+         </Button>
+      )}
 
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
           
-          {view === 'license' && (
+          {isAuthLoading && (
+              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center'}}>
+                  <h2>Загрузка системы...</h2>
+              </motion.div>
+          )}
+
+          {/* НОВЫЙ БЛОК: Показываем окно входа, если юзер не загружен и не залогинен */}
+          {!isAuthLoading && !user && <AuthScreen />}
+
+          {/* ВСЕ ОСТАЛЬНЫЕ БЛОКИ: Работают ТОЛЬКО ЕСЛИ ЮЗЕР ЗАЛОГИНЕН (!isAuthLoading && user) */}
+          {!isAuthLoading && user && view === 'license' && (
             <motion.div key="lic" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" 
               style={{width: '100%', maxWidth:'480px', textAlign:'center'}}>
-               <h2 style={{marginTop:0}}>🔐 Вход</h2>
+               <h2 style={{marginTop:0}}>🔐 Лицензия устройства</h2>
                <div style={{display:'flex', alignItems:'center', gap:10, background:'rgba(128,128,128,0.1)', padding:'0 15px', borderRadius:14, marginBottom:15, height:54}}>
                    <span 
                       onClick={(e)=>{
@@ -727,7 +808,7 @@ function App() {
             </motion.div>
           )}
 
-          {view === 'menu' && (
+          {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
@@ -759,14 +840,14 @@ function App() {
             </motion.div>
           )}
 
-          {view === 'set_menu' && (
+          {!isAuthLoading && user && view === 'set_menu' && (
             <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                  <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
                  <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
-                    📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                   📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                  </label>
               </div>
               <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
@@ -774,7 +855,7 @@ function App() {
             </motion.div>
           )}
           
-          {view === 'timer_setup' && (
+          {!isAuthLoading && user && view === 'timer_setup' && (
               <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
                   <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
                   
@@ -803,7 +884,7 @@ function App() {
               </motion.div>
           )}
 
-          {view === 'test' && (
+          {!isAuthLoading && user && view === 'test' && (
             <div key="test-wrapper" className="test-layout">
                
                <div className="question-column">
@@ -844,7 +925,7 @@ function App() {
             </div>
           )}
 
-          {view === 'result' && (
+          {!isAuthLoading && user && view === 'result' && (
             <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                <h2 style={{marginBottom:5}}>{testSession.score/testSession.questions.length>=0.5?'Отлично!':'Результат'}</h2>
                <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
@@ -883,7 +964,7 @@ function App() {
             </motion.div>
           )}
 
-          {view === 'review' && (
+          {!isAuthLoading && user && view === 'review' && (
               <ReviewView 
                  questions={testSession.questions} 
                  answers={testSession.answers} 
@@ -891,7 +972,7 @@ function App() {
               />
           )}
 
-          {view === 'stats' && (
+          {!isAuthLoading && user && view === 'stats' && (
              <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
           )}
 
