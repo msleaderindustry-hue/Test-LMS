@@ -172,6 +172,15 @@ const AdminPanel = ({ onBack }) => {
         }
     };
 
+    const toggleAdmin = async (uid, currentRole) => {
+        try {
+            const newRole = currentRole === 'admin' ? 'student' : 'admin';
+            await window.db.collection('users').doc(uid).update({ role: newRole });
+        } catch (e) {
+            alert("Ошибка при изменении роли");
+        }
+    };
+
     const handleAssignTestFile = (e, uid) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -237,7 +246,10 @@ const AdminPanel = ({ onBack }) => {
                     <div key={u.id} style={{display:'flex', justifyContent:'space-between', alignItems: 'center', padding:'10px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
                         <div style={{overflow: 'hidden', paddingRight: '10px', flex: 1}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
-                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
+                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>
+                                {u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}
+                                {u.role === 'admin' ? ' | 🛡️ АДМИН' : ''}
+                            </div>
                             
                             {u.assignedTests && u.assignedTests.length > 0 && (
                                 <div style={{marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
@@ -251,8 +263,11 @@ const AdminPanel = ({ onBack }) => {
                             )}
                         </div>
                         
-                        {u.email !== 'msleaderindustry@gmail.com' && (
-                            <div style={{display: 'flex', gap: '5px'}}>
+                        {u.id !== window.auth.currentUser?.uid && (
+                            <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
+                                <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
+                                    {u.role === 'admin' ? "Снять админа" : "Дать админа"}
+                                </Button>
                                 <label style={{cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 15px', height: '35px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
                                     📁 Загрузить
                                     <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
@@ -385,11 +400,12 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState('student');
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
   const [teacherTests, setTeacherTests] = useState([]); 
 
-  const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
+  const isAdmin = userRole === 'admin';
 
   useEffect(() => {
       if (!window.auth) {
@@ -410,6 +426,7 @@ function App() {
                               window.auth.signOut();
                               window.location.reload();
                           }
+                          setUserRole(data.role || 'student');
                           if (data.assignedTests) {
                               setTeacherTests(data.assignedTests);
                           } else {
@@ -418,6 +435,8 @@ function App() {
                       }
                   });
               return () => unsubscribeBan();
+          } else {
+              setUserRole('student');
           }
       });
       return () => unsubscribeAuth();
