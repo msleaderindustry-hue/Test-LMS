@@ -243,16 +243,18 @@ const AdminPanel = ({ onBack }) => {
                 <h3 style={{marginTop: 0}}>👥 Управление студентами</h3>
                 {users.length === 0 && <div style={{textAlign: 'center', color: 'var(--text-sec)'}}>Загрузка пользователей...</div>}
                 {users.map(u => (
-                    <div key={u.id} style={{display:'flex', justifyContent:'space-between', alignItems: 'center', padding:'10px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
-                        <div style={{overflow: 'hidden', paddingRight: '10px', flex: 1}}>
-                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
-                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>
+                    <div key={u.id} style={{display:'flex', flexWrap: 'wrap', gap: '15px', justifyContent:'space-between', alignItems: 'center', padding:'15px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
+                        
+                        {/* --- Блок с текстом: почта и статус --- */}
+                        <div style={{overflow: 'hidden', flex: '1 1 200px'}}>
+                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{u.email}</div>
+                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold', marginTop: '5px'}}>
                                 {u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}
                                 {u.role === 'admin' ? ' | 🛡️ АДМИН' : ''}
                             </div>
                             
                             {u.assignedTests && u.assignedTests.length > 0 && (
-                                <div style={{marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                                <div style={{marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
                                     {u.assignedTests.map(test => (
                                         <div key={test.id} style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(59, 130, 246, 0.1)', padding: '5px 10px', borderRadius: '8px', marginRight: '10px'}}>
                                             <span>☁️ {test.title}</span>
@@ -263,16 +265,17 @@ const AdminPanel = ({ onBack }) => {
                             )}
                         </div>
                         
+                        {/* --- Блок с кнопками управления --- */}
                         {u.id !== window.auth.currentUser?.uid && (
-                            <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
-                                <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
+                            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-start'}}>
+                                <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
                                     {u.role === 'admin' ? "Снять админа" : "Дать админа"}
                                 </Button>
-                                <label style={{cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 15px', height: '35px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
+                                <label style={{cursor: 'pointer', flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 12px', height: '36px', fontSize: '11px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
                                     📁 Загрузить
                                     <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                 </label>
-                                <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                <Button variant={u.isBanned ? "green" : "red"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
                                     {u.isBanned ? "Разбанить" : "Забанить"}
                                 </Button>
                             </div>
