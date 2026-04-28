@@ -302,14 +302,32 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                const isAnswered = answers[index] !== null; const isSelected = answers[index] === i; const isCorrect = question.correctIndex === i;
                
                let styleOverride = {};
+               let animationProps = { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 }, transition: { delay: i * 0.1 } };
+
                if(isAnswered) {
-                 if(isCorrect) { styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; } 
-                 else if(isSelected) { styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; } 
+                 if(isCorrect) { 
+                     styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; 
+                     // Анимация правильного ответа (пульсация)
+                     if(isSelected) animationProps.animate = { opacity: 1, x: 0, scale: [1, 1.05, 1] };
+                 } 
+                 else if(isSelected) { 
+                     styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; 
+                     // Анимация неправильного ответа (тряска)
+                     animationProps.animate = { opacity: 1, x: [-5, 5, -5, 5, 0] };
+                     animationProps.transition = { duration: 0.3 };
+                 } 
                  else if(question.correctIndex === i) { styleOverride = {borderColor: '#10b981', opacity: 0.7}; } 
                }
                
                return (
-                 <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="variant-item" onClick={() => !isAnswered && onAnswer(i)} style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} whileHover={!isAnswered ? { scale: 1.01 } : {}}>
+                 <motion.div 
+                    key={i} 
+                    {...animationProps}
+                    className="variant-item" 
+                    onClick={() => !isAnswered && onAnswer(i)} 
+                    style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} 
+                    whileHover={!isAnswered ? { scale: 1.01 } : {}}
+                 >
                     {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
                     {v.text}
                  </motion.div>
@@ -691,8 +709,12 @@ function App() {
         <AnimatePresence mode="wait">
           
           {isAuthLoading && (
-              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center'}}>
-                  <h2>Загрузка системы...</h2>
+              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
+                  <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
+                  {/* --- СКЕЛЕТОН ЗАГРУЗЧИК ВМЕСТО СКУЧНОГО ТЕКСТА --- */}
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
               </motion.div>
           )}
 
