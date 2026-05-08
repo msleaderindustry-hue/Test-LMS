@@ -811,11 +811,18 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
+      {/* ГАМБУРГЕР КНОПКА (Фиксированная слева снаружи glass-panel для правильного отображения) */}
+      {!isAuthLoading && user && view === 'menu' && (
+          <div style={{position: 'fixed', top: 20, left: 20, zIndex: 1000}}>
+              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
+          </div>
+      )}
+
       <AnimatePresence>
           {isSidebarOpen && (
               <>
                   <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar">
+                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ overflowY: 'auto' }}>
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)'}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
@@ -843,7 +850,7 @@ function App() {
                           )}
                       </div>
 
-                      <div style={{marginTop: 'auto'}}>
+                      <div style={{marginTop: 'auto', paddingBottom: '30px'}}>
                           <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444'}}>
                               ВЫЙТИ
                           </Button>
@@ -882,12 +889,6 @@ function App() {
 
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-              
-              {/* ГАМБУРГЕР КНОПКА (Фиксированная) */}
-              <div style={{position: 'fixed', top: 20, left: 20, zIndex: 1000}}>
-                  <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
-              </div>
-
               <h2 style={{textAlign:'center', fontSize:32, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0', paddingTop: 10}}>Ultimate LMS</h2>
               
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
@@ -1027,4 +1028,3 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
-
