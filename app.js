@@ -771,24 +771,32 @@ function App() {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       try {
-          await fetch(DISCORD_WEBHOOK, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
-                  embeds: [{
-                      title: "📊 Новый результат теста", color: 3066993,
-                      fields: [
-                          { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
-                          { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
-                          { name: "📚 Тема", value: scoreData.topic, inline: true },
-                          { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
-                          { name: "🆔 Fingerprint", value: `\`${fp}\`` }
-                      ],
-                      timestamp: new Date().toISOString()
-                  }]
-              })
-          });
-      } catch (e) {}
+          // 1. Формируем данные
+          let payload = {
+              username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
+              embeds: [{
+                  title: "📊 Новый результат теста", color: 3066993,
+                  fields: [
+                      { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
+                      { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
+                      { name: "📚 Тема", value: scoreData.topic, inline: true },
+                      { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
+                      { name: "🆔 Fingerprint", value: `\`${fp}\`` }
+                  ],
+                  timestamp: new Date().toISOString()
+              }]
+          };
+          
+          // 2. Упаковываем в FormData (ЭТО РЕШАЕТ ПРОБЛЕМУ С БЛОКИРОВКОЙ)
+          let formData = new FormData(); 
+          formData.append('payload_json', JSON.stringify(payload));
+          
+          // 3. Отправляем
+          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+      } catch (e) {
+          console.error("Ошибка при отправке в Discord:", e);
+      }
+      
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
       const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
   };
