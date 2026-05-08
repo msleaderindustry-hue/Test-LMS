@@ -463,8 +463,10 @@ const ChatPanel = ({ user, onClose }) => {
     return (
         <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-chat-panel">
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)'}}>
-                <h3 style={{margin:0, fontSize:18}}>{activeChat ? `💬 ${activeChat.email}` : '💬 Контакты'}</h3>
-                <Button variant="muted" onClick={() => activeChat ? setActiveChat(null) : onClose()} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
+                <h3 style={{margin:0, fontSize:18, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '10px'}}>
+                    {activeChat ? `💬 ${activeChat.email}` : '💬 Контакты'}
+                </h3>
+                <Button variant="muted" onClick={() => activeChat ? setActiveChat(null) : onClose()} style={{width:44, height:44, minWidth: 44, padding:0, borderRadius:'50%', flexShrink: 0}}>✖</Button>
             </div>
 
             <div style={{flex:1, overflowY:'auto', padding:'20px', scrollbarWidth:'thin'}}>
@@ -811,7 +813,7 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (Фиксированная слева снаружи glass-panel для правильного отображения) */}
+      {/* ГАМБУРГЕР КНОПКА (Фиксированная вне контекста анимации) */}
       {!isAuthLoading && user && view === 'menu' && (
           <div style={{position: 'fixed', top: 20, left: 20, zIndex: 1000}}>
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
@@ -822,13 +824,15 @@ function App() {
           {isSidebarOpen && (
               <>
                   <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ overflowY: 'auto' }}>
-                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)'}}>
+                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                      {/* Шапка меню (Фиксированная) */}
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
                       </div>
                       
-                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)'}}>
+                      {/* Профиль (Фиксированный) */}
+                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <span style={{ fontSize: '30px' }}>👤</span>
                           <div style={{ overflow: 'hidden' }}>
                               <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
@@ -836,22 +840,24 @@ function App() {
                           </div>
                       </div>
 
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 10}}>
-                          <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                      {/* Скроллируемая центральная часть с кнопками */}
+                      <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
+                          <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>{theme === 'dark' ? '☀️' : '🌙'}</span> Сменить тему
                           </Button>
-                          <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                          <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
                           {isAdmin && (
-                              <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                              <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
                               </Button>
                           )}
                       </div>
 
-                      <div style={{marginTop: 'auto', paddingBottom: '30px'}}>
-                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444'}}>
+                      {/* Кнопка ВЫЙТИ (Фиксированная в самом низу) */}
+                      <div style={{paddingTop: '15px', paddingBottom: '10px', flexShrink: 0}}>
+                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>
                               ВЫЙТИ
                           </Button>
                       </div>
