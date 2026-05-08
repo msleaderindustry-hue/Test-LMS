@@ -462,7 +462,7 @@ const ChatPanel = ({ user, onClose }) => {
 
     return (
         <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-chat-panel">
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)', flexShrink: 0}}>
                 <h3 style={{margin:0, fontSize:18, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '10px'}}>
                     {activeChat ? `💬 ${activeChat.email}` : '💬 Контакты'}
                 </h3>
@@ -503,9 +503,9 @@ const ChatPanel = ({ user, onClose }) => {
             </div>
 
             {activeChat && (
-                <div style={{padding:'20px', borderTop:'1px solid var(--glass-border)', display:'flex', gap:10}}>
+                <div style={{padding:'20px', paddingBottom: 'max(20px, env(safe-area-inset-bottom))', borderTop:'1px solid var(--glass-border)', display:'flex', gap:10, flexShrink: 0}}>
                     <Input value={msgText} onChange={e=>setMsgText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendMessage()}} placeholder="Сообщение..." style={{margin:0, flex:1, borderRadius: '24px'}} />
-                    <Button variant="primary" onClick={sendMessage} style={{width:54, height:54, padding:0, borderRadius:'50%'}}>➤</Button>
+                    <Button variant="primary" onClick={sendMessage} style={{width:54, height:54, minWidth:54, padding:0, borderRadius:'50%', flexShrink: 0}}>➤</Button>
                 </div>
             )}
         </motion.div>
@@ -813,9 +813,9 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (Фиксированная вне контекста анимации) */}
+      {/* ГАМБУРГЕР КНОПКА (С железобетонной фиксацией через отдельный CSS класс) */}
       {!isAuthLoading && user && view === 'menu' && (
-          <div style={{position: 'fixed', top: 20, left: 20, zIndex: 1000}}>
+          <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
           </div>
       )}
@@ -824,7 +824,7 @@ function App() {
           {isSidebarOpen && (
               <>
                   <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
                       {/* Шапка меню (Фиксированная) */}
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
