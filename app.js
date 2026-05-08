@@ -402,6 +402,184 @@ const StatsView = ({ history, setHistory, onBack }) => {
     )
 };
 
+// --- НОВЫЙ КОД ДЛЯ ЧАТА (В СТИЛЕ ТЕЛЕГРАМ) ---
+const ChatWidget = ({ user }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [text, setText] = useState('');
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [activeMenuId, setActiveMenuId] = useState(null);
+    const messagesEndRef = useRef(null);
+
+    // Подписка на сообщения в реальном времени
+    useEffect(() => {
+        if (!window.db || !user) return;
+        const unsubscribe = window.db.collection('campus_chat')
+            .orderBy('timestamp', 'asc')
+            .onSnapshot(snap => {
+                const msgs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Считаем непрочитанные, если чат закрыт (упрощенная логика)
+                if (!isOpen && msgs.length > messages.length && messages.length > 0) {
+                    setUnreadCount(prev => prev + 1);
+                }
+                
+                setMessages(msgs);
+                
+                // Скролл вниз при новых сообщениях
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            });
+            
+        return () => unsubscribe();
+    }, [user, isOpen, messages.length]);
+
+    // Сброс счетчика при открытии
+    useEffect(() => {
+        if (isOpen) {
+            setUnreadCount(0);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView(), 100);
+        }
+    }, [isOpen]);
+
+    const handleSend = async (e) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        
+        const newMsg = {
+            text: text.trim(),
+            senderId: user.uid,
+            senderEmail: user.email.split('@')[0], // Показываем только ник до @
+            timestamp: Date.now(),
+            deletedFor: [], // массив ID пользователей, для которых удалено
+            deletedForEveryone: false
+        };
+
+        setText(''); // очищаем инпут сразу
+        await window.db.collection('campus_chat').add(newMsg);
+    };
+
+    const handleDelete = async (id, type) => {
+        const msg = messages.find(m => m.id === id);
+        if (!msg) return;
+
+        try {
+            if (type === 'everyone') {
+                await window.db.collection('campus_chat').doc(id).update({ deletedForEveryone: true });
+            } else if (type === 'me') {
+                const currentDeleted = msg.deletedFor || [];
+                await window.db.collection('campus_chat').doc(id).update({ 
+                    deletedFor: [...currentDeleted, user.uid] 
+                });
+            }
+        } catch(e) {
+            console.error("Ошибка удаления", e);
+        }
+        setActiveMenuId(null);
+    };
+
+    // Закрытие контекстного меню по клику вне
+    useEffect(() => {
+        const handleClickOutside = () => setActiveMenuId(null);
+        if (activeMenuId) window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [activeMenuId]);
+
+    // Фильтруем сообщения перед рендером
+    const visibleMessages = messages.filter(m => 
+        !m.deletedForEveryone && !(m.deletedFor || []).includes(user.uid)
+    );
+
+    return (
+        <>
+            {/* Кнопка открытия (Кружок внизу) */}
+            <motion.div 
+                className="chat-float-btn"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                💬
+                {unreadCount > 0 && <div className="chat-badge">{unreadCount}</div>}
+            </motion.div>
+
+            {/* Окно чата */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                        className="chat-window glass-panel"
+                    >
+                        <div className="chat-header">
+                            <div className="chat-title">
+                                <b>Общий чат группы</b>
+                                <span style={{fontSize: '11px', color: 'var(--text-sec)', display: 'block'}}>Online</span>
+                            </div>
+                            <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
+                        </div>
+
+                        <div className="chat-body">
+                            {visibleMessages.length === 0 ? (
+                                <div style={{textAlign: 'center', color: 'var(--text-sec)', marginTop: '50%'}}>Нет сообщений</div>
+                            ) : (
+                                visibleMessages.map(msg => {
+                                    const isMine = msg.senderId === user.uid;
+                                    const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                    
+                                    return (
+                                        <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
+                                            <div 
+                                                className={`chat-message ${isMine ? 'mine' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}
+                                            >
+                                                {!isMine && <div className="chat-sender">{msg.senderEmail}</div>}
+                                                <div className="chat-text">{msg.text}</div>
+                                                <div className="chat-time">{time}</div>
+                                                
+                                                {/* Контекстное меню */}
+                                                {activeMenuId === msg.id && (
+                                                    <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
+                                                        <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>
+                                                            🗑 Удалить у себя
+                                                        </div>
+                                                        {isMine && (
+                                                            <div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>
+                                                                🔥 Удалить для всех
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <form onSubmit={handleSend} className="chat-footer">
+                            <input 
+                                type="text" 
+                                placeholder="Написать сообщение..." 
+                                value={text}
+                                onChange={e => setText(e.target.value)}
+                                className="chat-input"
+                            />
+                            <button type="submit" className="chat-send-btn" disabled={!text.trim()}>
+                                ➤
+                            </button>
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+};
+// --- КОНЕЦ НОВОГО КОДА ЧАТА ---
+
 // --- APP ---
 
 function App() {
@@ -487,8 +665,6 @@ function App() {
   };
 
   useEffect(() => { logVisitor(); }, []);
-
-  // --- КОД ДЛЯ КАМЕРЫ ПОЛНОСТЬЮ УДАЛЕН ---
 
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
@@ -711,7 +887,6 @@ function App() {
           {isAuthLoading && (
               <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
                   <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
-                  {/* --- СКЕЛЕТОН ЗАГРУЗЧИК ВМЕСТО СКУЧНОГО ТЕКСТА --- */}
                   <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
                   <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
                   <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
@@ -720,7 +895,6 @@ function App() {
 
           {!isAuthLoading && !user && <AuthScreen />}
 
-          {/* ВЬЮ ДЛЯ АДМИНКИ */}
           {!isAuthLoading && user && view === 'admin' && (
               <AdminPanel onBack={() => setView('menu')} />
           )}
@@ -728,7 +902,6 @@ function App() {
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
-              {/* --- ИСПРАВЛЕННАЯ ПАНЕЛЬ С АДАПТАЦИЕЙ ПОД МОБИЛЬНЫЕ (FLEX WRAP) --- */}
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '150px' }}>
                       <span style={{ fontSize: '20px' }}>👤</span>
@@ -757,7 +930,6 @@ function App() {
 
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
-                {/* ОТОБРАЖАЕМ МНОЖЕСТВО ТЕСТОВ ОТ ПРЕПОДАВАТЕЛЯ */}
                 {teacherTests.map(test => (
                   <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
@@ -768,7 +940,6 @@ function App() {
                   </div>
                 ))}
 
-                {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
@@ -881,6 +1052,10 @@ function App() {
           )}
 
         </AnimatePresence>
+        
+        {/* --- ПОДКЛЮЧЕНИЕ ЧАТА ДЛЯ АВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ --- */}
+        {user && <ChatWidget user={user} />}
+
       </div>
     </>
   );
