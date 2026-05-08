@@ -245,7 +245,6 @@ const AdminPanel = ({ onBack }) => {
                 {users.map(u => (
                     <div key={u.id} style={{display:'flex', flexWrap: 'wrap', gap: '15px', justifyContent:'space-between', alignItems: 'center', padding:'15px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
                         
-                        {/* --- Блок с текстом: почта и статус --- */}
                         <div style={{overflow: 'hidden', flex: '1 1 200px'}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold', marginTop: '5px'}}>
@@ -265,7 +264,6 @@ const AdminPanel = ({ onBack }) => {
                             )}
                         </div>
                         
-                        {/* --- Блок с кнопками управления --- */}
                         {u.id !== window.auth.currentUser?.uid && (
                             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-start'}}>
                                 <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
@@ -400,34 +398,27 @@ const StatsView = ({ history, setHistory, onBack }) => {
     )
 };
 
-// --- НОВЫЙ КОД ДЛЯ ЧАТА (ПРИВАТНЫЕ СООБЩЕНИЯ) ---
-const ChatWidget = ({ user }) => {
-    const [isOpen, setIsOpen] = useState(false);
+// --- КОД ДЛЯ ЧАТА (ИСПОЛЬЗУЕТ ПРОПСЫ ДЛЯ ОТКРЫТИЯ ИЗ МЕНЮ) ---
+const ChatWidget = ({ user, isOpen, setIsOpen }) => {
     const [usersList, setUsersList] = useState([]);
-    const [activeChat, setActiveChat] = useState(null); // с кем сейчас переписка
+    const [activeChat, setActiveChat] = useState(null); 
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
     const [activeMenuId, setActiveMenuId] = useState(null);
     const messagesEndRef = useRef(null);
 
-    // Загрузка списка всех пользователей (для контактов)
     useEffect(() => {
         if (!window.db || !user || !isOpen) return;
         const unsubscribe = window.db.collection('users').onSnapshot(snap => {
             const allUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Убираем самого себя из списка контактов
             setUsersList(allUsers.filter(u => u.id !== user.uid));
         });
         return () => unsubscribe();
     }, [user, isOpen]);
 
-    // Подписка на личные сообщения с ВЫБРАННЫМ пользователем
     useEffect(() => {
         if (!window.db || !user || !activeChat) return;
-        
-        // Генерируем уникальный ID чата для двух людей (всегда одинаковый порядок)
         const chatId = [user.uid, activeChat.id].sort().join('_');
-
         const unsubscribe = window.db.collection('private_chats')
             .doc(chatId)
             .collection('messages')
@@ -435,17 +426,11 @@ const ChatWidget = ({ user }) => {
             .onSnapshot(snap => {
                 const msgs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setMessages(msgs);
-                
-                // Скролл вниз при новых сообщениях
-                setTimeout(() => {
-                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
+                setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, 100);
             });
-            
         return () => unsubscribe();
     }, [user, activeChat]);
 
-    // Прокрутка при открытии
     useEffect(() => {
         if (isOpen && activeChat) {
             setTimeout(() => messagesEndRef.current?.scrollIntoView(), 100);
@@ -455,18 +440,15 @@ const ChatWidget = ({ user }) => {
     const handleSend = async (e) => {
         e.preventDefault();
         if (!text.trim() || !activeChat) return;
-        
         const chatId = [user.uid, activeChat.id].sort().join('_');
-        
         const newMsg = {
             text: text.trim(),
             senderId: user.uid,
             timestamp: Date.now(),
-            deletedFor: [], // массив ID пользователей, для которых удалено
+            deletedFor: [], 
             deletedForEveryone: false
         };
-
-        setText(''); // очищаем инпут сразу
+        setText(''); 
         await window.db.collection('private_chats').doc(chatId).collection('messages').add(newMsg);
     };
 
@@ -485,138 +467,93 @@ const ChatWidget = ({ user }) => {
                     deletedFor: [...currentDeleted, user.uid] 
                 });
             }
-        } catch(e) {
-            console.error("Ошибка удаления", e);
-        }
+        } catch(e) { console.error("Ошибка удаления", e); }
         setActiveMenuId(null);
     };
 
-    // Закрытие контекстного меню по клику вне
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
         if (activeMenuId) window.addEventListener('click', handleClickOutside);
         return () => window.removeEventListener('click', handleClickOutside);
     }, [activeMenuId]);
 
-    // Фильтруем сообщения перед рендером
-    const visibleMessages = messages.filter(m => 
-        !m.deletedForEveryone && !(m.deletedFor || []).includes(user.uid)
-    );
+    const visibleMessages = messages.filter(m => !m.deletedForEveryone && !(m.deletedFor || []).includes(user.uid));
 
     return (
-        <>
-            {/* Кнопка открытия (Кружок внизу) */}
-            <motion.div 
-                className="chat-float-btn"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                💬
-            </motion.div>
-
-            {/* Окно чата */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                        className="chat-window glass-panel"
-                    >
-                        {/* ЕСЛИ НЕ ВЫБРАН ЧАТ - ПОКАЗЫВАЕМ СПИСОК КОНТАКТОВ */}
-                        {!activeChat ? (
-                            <>
-                                <div className="chat-header" style={{justifyContent: 'space-between'}}>
-                                    <b>Контакты</b>
-                                    <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                    className="chat-window glass-panel"
+                >
+                    {!activeChat ? (
+                        <>
+                            <div className="chat-header" style={{justifyContent: 'space-between'}}>
+                                <b>Контакты</b>
+                                <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
+                            </div>
+                            <div className="chat-body" style={{padding: 0}}>
+                                {usersList.length === 0 ? (
+                                    <div style={{textAlign: 'center', padding: '20px', color: 'var(--text-sec)'}}>Нет пользователей</div>
+                                ) : (
+                                    usersList.map(u => (
+                                        <div key={u.id} className="chat-contact-item" onClick={() => setActiveChat(u)}>
+                                            <div className="chat-contact-avatar">{u.email.charAt(0).toUpperCase()}</div>
+                                            <div className="chat-contact-info">
+                                                <div className="chat-contact-name">{u.email.split('@')[0]}</div>
+                                                <div className="chat-contact-status">{u.role === 'admin' ? 'Преподаватель/Админ' : 'Студент'}</div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="chat-header">
+                                <button className="chat-back-btn" onClick={() => setActiveChat(null)}>⬅</button>
+                                <div className="chat-title" style={{flex: 1, marginLeft: '10px'}}>
+                                    <b>{activeChat.email.split('@')[0]}</b>
                                 </div>
-                                <div className="chat-body" style={{padding: 0}}>
-                                    {usersList.length === 0 ? (
-                                        <div style={{textAlign: 'center', padding: '20px', color: 'var(--text-sec)'}}>Нет доступных пользователей</div>
-                                    ) : (
-                                        usersList.map(u => (
-                                            <div key={u.id} className="chat-contact-item" onClick={() => setActiveChat(u)}>
-                                                <div className="chat-contact-avatar">{u.email.charAt(0).toUpperCase()}</div>
-                                                <div className="chat-contact-info">
-                                                    <div className="chat-contact-name">{u.email.split('@')[0]}</div>
-                                                    <div className="chat-contact-status">{u.role === 'admin' ? 'Преподаватель/Админ' : 'Студент'}</div>
+                                <button className="chat-close" onClick={() => {setIsOpen(false); setActiveChat(null);}}>✕</button>
+                            </div>
+
+                            <div className="chat-body">
+                                {visibleMessages.length === 0 ? (
+                                    <div style={{textAlign: 'center', color: 'var(--text-sec)', marginTop: '50%'}}>Начните диалог</div>
+                                ) : (
+                                    visibleMessages.map(msg => {
+                                        const isMine = msg.senderId === user.uid;
+                                        const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                        return (
+                                            <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
+                                                <div className={`chat-message ${isMine ? 'mine' : ''}`} onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}>
+                                                    <div className="chat-text">{msg.text}</div>
+                                                    <div className="chat-time">{time}</div>
+                                                    {activeMenuId === msg.id && (
+                                                        <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
+                                                            <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>🗑 Удалить у себя</div>
+                                                            {isMine && (<div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>🔥 Удалить для всех</div>)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            /* ЕСЛИ ЧАТ ВЫБРАН - ПОКАЗЫВАЕМ ПЕРЕПИСКУ */
-                            <>
-                                <div className="chat-header">
-                                    <button className="chat-back-btn" onClick={() => setActiveChat(null)}>⬅</button>
-                                    <div className="chat-title" style={{flex: 1, marginLeft: '10px'}}>
-                                        <b>{activeChat.email.split('@')[0]}</b>
-                                    </div>
-                                    <button className="chat-close" onClick={() => {setIsOpen(false); setActiveChat(null);}}>✕</button>
-                                </div>
-
-                                <div className="chat-body">
-                                    {visibleMessages.length === 0 ? (
-                                        <div style={{textAlign: 'center', color: 'var(--text-sec)', marginTop: '50%'}}>Начните диалог</div>
-                                    ) : (
-                                        visibleMessages.map(msg => {
-                                            const isMine = msg.senderId === user.uid;
-                                            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                                            
-                                            return (
-                                                <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
-                                                    <div 
-                                                        className={`chat-message ${isMine ? 'mine' : ''}`}
-                                                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}
-                                                    >
-                                                        <div className="chat-text">{msg.text}</div>
-                                                        <div className="chat-time">{time}</div>
-                                                        
-                                                        {/* Контекстное меню */}
-                                                        {activeMenuId === msg.id && (
-                                                            <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
-                                                                <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>
-                                                                    🗑 Удалить у себя
-                                                                </div>
-                                                                {isMine && (
-                                                                    <div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>
-                                                                        🔥 Удалить для всех
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )
-                                        })
-                                    )}
-                                    <div ref={messagesEndRef} />
-                                </div>
-
-                                <form onSubmit={handleSend} className="chat-footer">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Сообщение..." 
-                                        value={text}
-                                        onChange={e => setText(e.target.value)}
-                                        className="chat-input"
-                                    />
-                                    <button type="submit" className="chat-send-btn" disabled={!text.trim()}>
-                                        ➤
-                                    </button>
-                                </form>
-                            </>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+                                        )
+                                    })
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+                            <form onSubmit={handleSend} className="chat-footer">
+                                <input type="text" placeholder="Сообщение..." value={text} onChange={e => setText(e.target.value)} className="chat-input" />
+                                <button type="submit" className="chat-send-btn" disabled={!text.trim()}>➤</button>
+                            </form>
+                        </>
+                    )}
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
-// --- КОНЕЦ НОВОГО КОДА ЧАТА ---
 
 // --- APP ---
 
@@ -642,6 +579,10 @@ function App() {
   
   const [teacherTests, setTeacherTests] = useState([]); 
 
+  // СТЕЙТЫ ДЛЯ МЕНЮ И ЧАТА
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const isAdmin = userRole === 'admin';
 
   useEffect(() => {
@@ -664,11 +605,7 @@ function App() {
                               window.location.reload();
                           }
                           setUserRole(data.role || 'student');
-                          if (data.assignedTests) {
-                              setTeacherTests(data.assignedTests);
-                          } else {
-                              setTeacherTests([]);
-                          }
+                          if (data.assignedTests) { setTeacherTests(data.assignedTests); } else { setTeacherTests([]); }
                       }
                   });
               return () => unsubscribeBan();
@@ -740,9 +677,7 @@ function App() {
 
   useEffect(() => {
       if(view !== 'test') return;
-      const timer = setInterval(() => {
-          setTimeLeft((prev) => { if(prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
-      }, 1000);
+      const timer = setInterval(() => { setTimeLeft((prev) => { if(prev <= 1) { clearInterval(timer); return 0; } return prev - 1; }); }, 1000);
       return () => clearInterval(timer);
   }, [view]);
   
@@ -770,23 +705,11 @@ function App() {
   const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
 
-  const openTeacherAssignedTest = (testInfo) => {
-      setView('loading');
-      setTimeout(() => {
-          setCurrentSet(testInfo.title);
-          setTests(testInfo.data); 
-          setView('set_menu');
-      }, 300);
-  };
+  const openTeacherAssignedTest = (testInfo) => { setView('loading'); setTimeout(() => { setCurrentSet(testInfo.title); setTests(testInfo.data); setView('set_menu'); }, 300); };
 
   const removeTeacherTestStudent = async (testId, testTitle) => {
       if(!confirm(`Удалить назначенный тест "${testTitle}"?`)) return;
-      try {
-          const updatedTests = teacherTests.filter(t => t.id !== testId);
-          await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
-      } catch(e) {
-          alert("Ошибка при удалении теста");
-      }
+      try { const updatedTests = teacherTests.filter(t => t.id !== testId); await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests }); } catch(e) { alert("Ошибка при удалении теста"); }
   };
 
   const importJSON = (e) => {
@@ -798,15 +721,11 @@ function App() {
   const startTest = () => { if(tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
   
   const launchTestWithTimer = async () => {
-      const mins = parseInt(customTime) || 20;
-      let qCount = parseInt(customQCount);
-      if (!qCount || qCount <= 0) qCount = tests.length;
-      if (qCount > tests.length) qCount = tests.length;
-      let fullList = shuffleArray(tests);
-      let selectedQuestions = fullList.slice(0, qCount);
+      const mins = parseInt(customTime) || 20; let qCount = parseInt(customQCount);
+      if (!qCount || qCount <= 0) qCount = tests.length; if (qCount > tests.length) qCount = tests.length;
+      let fullList = shuffleArray(tests); let selectedQuestions = fullList.slice(0, qCount);
       let finalQuestions = selectedQuestions.map(t => {
-          let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
-          varsWithFlag = shuffleArray(varsWithFlag);
+          let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex })); varsWithFlag = shuffleArray(varsWithFlag);
           return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
       });
       setIsResultSaved(false); setTimeLeft(mins * 60); 
@@ -816,27 +735,15 @@ function App() {
 
   const handleAnswer = (variantIdx) => {
     if(testSession.answers[testSession.currentIdx] !== null) return; 
-    const newAnswers = [...testSession.answers]; newAnswers[testSession.currentIdx] = variantIdx;
-    setTestSession(prev => ({...prev, answers: newAnswers}));
-    setIsAnimating(true);
-    setTimeout(() => { 
-        if(testSession.currentIdx < testSession.questions.length - 1) { setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); }
-        setIsAnimating(false);
-    }, 700);
+    const newAnswers = [...testSession.answers]; newAnswers[testSession.currentIdx] = variantIdx; setTestSession(prev => ({...prev, answers: newAnswers})); setIsAnimating(true);
+    setTimeout(() => { if(testSession.currentIdx < testSession.questions.length - 1) { setTestSession(prev => ({...prev, currentIdx: prev.currentIdx + 1})); } setIsAnimating(false); }, 700);
   };
   
-  const handleNavClick = (i) => {
-      if(isAnimating) return; 
-      if(i === testSession.currentIdx) return;
-      setIsAnimating(true); setTestSession(p => ({...p, currentIdx: i}));
-      setTimeout(() => setIsAnimating(false), 350); 
-  };
+  const handleNavClick = (i) => { if(isAnimating) return; if(i === testSession.currentIdx) return; setIsAnimating(true); setTestSession(p => ({...p, currentIdx: i})); setTimeout(() => setIsAnimating(false), 350); };
 
   const finishTest = () => {
-    let correct = 0; testSession.questions.forEach((q, i) => { if(testSession.answers[i] === q.correctIndex) correct++; });
-    setTestSession(prev => ({...prev, score: correct}));
-    if(correct/testSession.questions.length >= 0.5) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    setView('result');
+    let correct = 0; testSession.questions.forEach((q, i) => { if(testSession.answers[i] === q.correctIndex) correct++; }); setTestSession(prev => ({...prev, score: correct}));
+    if(correct/testSession.questions.length >= 0.5) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); setView('result');
   };
 
   useEffect(() => {
@@ -846,50 +753,22 @@ function App() {
           const { currentIdx, questions, answers } = testSession;
           if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
           else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
-          else if (e.key >= '1' && e.key <= '9') {
-              const variantIndex = parseInt(e.key) - 1; 
-              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
-                  if (answers[currentIdx] === null) handleAnswer(variantIndex);
-              }
-          }
+          else if (e.key >= '1' && e.key <= '9') { const variantIndex = parseInt(e.key) - 1; if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) { if (answers[currentIdx] === null) handleAnswer(variantIndex); } }
       };
       window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, testSession, isAnimating]);
   
   const restartMistakes = async () => {
-    const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-    if(wrongQuestionsRaw.length === 0) return; 
-    const reShuffledQuestions = wrongQuestionsRaw.map(q => {
-       const newVars = shuffleArray([...q.variants]);
-       const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
-       return { ...q, variants: newVars, correctIndex: newCorrectIdx };
-    });
-    const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
-    setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
-    setIsResultSaved(false); setView('test');
+    const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex); if(wrongQuestionsRaw.length === 0) return; 
+    const reShuffledQuestions = wrongQuestionsRaw.map(q => { const newVars = shuffleArray([...q.variants]); const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal); return { ...q, variants: newVars, correctIndex: newCorrectIdx }; });
+    const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60); setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 }); setIsResultSaved(false); setView('test');
   };
 
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       try {
-          await fetch(DISCORD_WEBHOOK, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
-                  embeds: [{
-                      title: "📊 Новый результат теста", color: 3066993,
-                      fields: [
-                          { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
-                          { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
-                          { name: "📚 Тема", value: scoreData.topic, inline: true },
-                          { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
-                          { name: "🆔 Fingerprint", value: `\`${fp}\`` }
-                      ],
-                      timestamp: new Date().toISOString()
-                  }]
-              })
-          });
+          await fetch(DISCORD_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png", embeds: [{ title: "📊 Новый результат теста", color: 3066993, fields: [ { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true }, { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true }, { name: "📚 Тема", value: scoreData.topic, inline: true }, { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true }, { name: "🆔 Fingerprint", value: `\`${fp}\`` } ], timestamp: new Date().toISOString() }] }) });
       } catch (e) {}
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
       const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
@@ -899,26 +778,88 @@ function App() {
     const area = document.getElementById('printArea');
     let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
     const printTests = tests.map(t => ({ ...t, variants: shuffleArray([...t.variants]) }));
-    printTests.forEach((t, i) => {
-      html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
-      t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
-    });
-    area.innerHTML = html; 
+    printTests.forEach((t, i) => { html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if(t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`; t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`; }); area.innerHTML = html; 
     if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
   return (
     <>
+      {/* ФОНОВЫЕ ЭФФЕКТЫ */}
       <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
          <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
          <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
-      
-      <div id="themeBtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{position:'absolute', top:20, right:20, fontSize:24, width:44, height:44, borderRadius:'50%', background:'var(--glass-bg)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:1000, boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}}>
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </div>
 
+      {/* КНОПКА ГАМБУРГЕР-МЕНЮ (ПОЯВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ АВТОРИЗАЦИИ) */}
+      {!isAuthLoading && user && (
+          <div className="hamburger-btn" onClick={() => setIsSideMenuOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+          </div>
+      )}
+
+      {/* ВЫЕЗЖАЮЩЕЕ БОКОВОЕ МЕНЮ */}
+      <AnimatePresence>
+          {isSideMenuOpen && (
+              <>
+                  <motion.div 
+                      className="side-menu-overlay" 
+                      initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} 
+                      onClick={() => setIsSideMenuOpen(false)} 
+                  />
+                  <motion.div 
+                      className="side-menu glass-panel" 
+                      initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} 
+                      transition={{type: 'tween', duration: 0.3}}
+                  >
+                      <button onClick={() => setIsSideMenuOpen(false)} style={{background:'transparent', border:'none', fontSize:24, alignSelf:'flex-end', color:'var(--text-main)', cursor:'pointer', marginBottom: '20px'}}>✕</button>
+
+                      {/* Профиль */}
+                      <div className="side-menu-profile">
+                          <div style={{fontSize: 32}}>👤</div>
+                          <div style={{overflow: 'hidden'}}>
+                              <div style={{fontSize: 11, opacity: 0.6, fontWeight: 'bold', textTransform: 'uppercase'}}>Аккаунт</div>
+                              <div style={{fontWeight: 600, wordBreak: 'break-all', fontSize: 14}}>{user?.email}</div>
+                          </div>
+                      </div>
+
+                      <div className="side-menu-content">
+                          {/* Переключатель темы */}
+                          <div className="side-menu-item" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                              <span style={{fontSize: '18px'}}>{theme === 'dark' ? '☀️' : '🌙'}</span>
+                              {theme === 'dark' ? 'Светлая тема' : 'Темная тема'}
+                          </div>
+
+                          {/* Кнопка чата */}
+                          <div className="side-menu-item" onClick={() => { setIsChatOpen(true); setIsSideMenuOpen(false); }}>
+                              <span style={{fontSize: '18px'}}>💬</span>
+                              Открыть чат
+                          </div>
+
+                          {/* Админ-панель */}
+                          {isAdmin && (
+                              <div className="side-menu-item" style={{color: '#ef4444'}} onClick={() => { setView('admin'); setIsSideMenuOpen(false); }}>
+                                  <span style={{fontSize: '18px'}}>🛡️</span>
+                                  Админ-панель
+                              </div>
+                          )}
+
+                          {/* Выход */}
+                          <div className="side-menu-item" style={{marginTop: 'auto', color: 'var(--text-sec)'}} onClick={() => { window.auth.signOut(); setIsSideMenuOpen(false); }}>
+                              <span style={{fontSize: '18px'}}>🚪</span>
+                              Выйти из аккаунта
+                          </div>
+                      </div>
+                  </motion.div>
+              </>
+          )}
+      </AnimatePresence>
+
+      {/* ГЛАВНЫЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ */}
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
           
@@ -937,37 +878,17 @@ function App() {
               <AdminPanel onBack={() => setView('menu')} />
           )}
 
+          {/* ГЛАВНОЕ МЕНЮ (ОЧИЩЕННОЕ) */}
           {!isAuthLoading && user && view === 'menu' && (
-            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', marginTop: '40px'}}>
               
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '150px' }}>
-                      <span style={{ fontSize: '20px' }}>👤</span>
-                      <div style={{ textAlign: 'left', overflow: 'hidden' }}>
-                          <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%' }}>{user.email}</div>
-                      </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', flex: '0 0 auto' }}>
-                      {isAdmin && (
-                          <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 12px', height: '36px', minHeight: '36px', fontSize: '11px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
-                              🛡️ АДМИНКА
-                          </Button>
-                      )}
-                      <Button variant="muted" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 12px', height: '36px', minHeight: '36px', fontSize: '11px', margin: 0 }}>
-                          ВЫЙТИ
-                      </Button>
-                  </div>
-              </div>
-
-              <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
+              <h2 style={{textAlign:'center', fontSize:32, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
               
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
 
-              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
-                
+              <div style={{maxHeight:350, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 {teacherTests.map(test => (
                   <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
@@ -977,7 +898,6 @@ function App() {
                     <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
                   </div>
                 ))}
-
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
@@ -992,12 +912,11 @@ function App() {
                  <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
                  <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
               </div>
-              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
             </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'set_menu' && (
-            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
+            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', marginTop: '40px'}}>
               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
@@ -1090,9 +1009,9 @@ function App() {
           )}
 
         </AnimatePresence>
-        
-        {/* --- ЧАТ ТЕПЕРЬ ПОЯВЛЯЕТСЯ ТОЛЬКО ЕСЛИ АКТИВНО ГЛАВНОЕ МЕНЮ --- */}
-        {user && view === 'menu' && <ChatWidget user={user} />}
+
+        {/* ЧАТ ТЕПЕРЬ ОТОБРАЖАЕТСЯ, КОГДА isChatOpen === true */}
+        {user && <ChatWidget user={user} isOpen={isChatOpen} setIsOpen={setIsChatOpen} />}
 
       </div>
     </>
