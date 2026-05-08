@@ -245,6 +245,7 @@ const AdminPanel = ({ onBack }) => {
                 {users.map(u => (
                     <div key={u.id} style={{display:'flex', flexWrap: 'wrap', gap: '15px', justifyContent:'space-between', alignItems: 'center', padding:'15px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
                         
+                        {/* --- Блок с текстом: почта и статус --- */}
                         <div style={{overflow: 'hidden', flex: '1 1 200px'}}>
                             <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{u.email}</div>
                             <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold', marginTop: '5px'}}>
@@ -264,6 +265,7 @@ const AdminPanel = ({ onBack }) => {
                             )}
                         </div>
                         
+                        {/* --- Блок с кнопками управления --- */}
                         {u.id !== window.auth.currentUser?.uid && (
                             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-start'}}>
                                 <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
@@ -305,10 +307,12 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                if(isAnswered) {
                  if(isCorrect) { 
                      styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; 
+                     // Анимация правильного ответа (пульсация)
                      if(isSelected) animationProps.animate = { opacity: 1, x: 0, scale: [1, 1.05, 1] };
                  } 
                  else if(isSelected) { 
                      styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; 
+                     // Анимация неправильного ответа (тряска)
                      animationProps.animate = { opacity: 1, x: [-5, 5, -5, 5, 0] };
                      animationProps.transition = { duration: 0.3 };
                  } 
@@ -399,177 +403,112 @@ const StatsView = ({ history, setHistory, onBack }) => {
 };
 
 // --- КОМПОНЕНТ ЧАТА ---
-const ChatWidget = ({ user, isOpen, setIsOpen }) => {
-    const [usersList, setUsersList] = useState([]);
-    const [activeChat, setActiveChat] = useState(null); 
+const ChatPanel = ({ user, onClose }) => {
+    const [chatUsers, setChatUsers] = useState([]);
+    const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [text, setText] = useState('');
-    const [activeMenuId, setActiveMenuId] = useState(null);
+    const [msgText, setMsgText] = useState('');
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        if (!window.db || !user || !isOpen) return;
-        const unsubscribe = window.db.collection('users').onSnapshot(snap => {
-            const allUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setUsersList(allUsers.filter(u => u.id !== user.uid));
+        if(!window.db) return;
+        const unsub = window.db.collection('users').onSnapshot(snap => {
+            setChatUsers(snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid));
         });
-        return () => unsubscribe();
-    }, [user, isOpen]);
+        return () => unsub();
+    }, [user]);
 
     useEffect(() => {
-        if (!window.db || !user || !activeChat) return;
-        const chatId = [user.uid, activeChat.id].sort().join('_');
-        const unsubscribe = window.db.collection('private_chats')
-            .doc(chatId)
-            .collection('messages')
-            .orderBy('timestamp', 'asc')
+        if(!activeChat || !window.db) return;
+        const chatId = [user.uid, activeChat.uid].sort().join('_');
+        const unsub = window.db.collection('private_chats').doc(chatId).collection('messages')
+            .orderBy('createdAt', 'asc')
             .onSnapshot(snap => {
-                const msgs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setMessages(msgs);
-                setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, 100);
+                setMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
+                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
             });
-        return () => unsubscribe();
-    }, [user, activeChat]);
+        return () => unsub();
+    }, [activeChat, user]);
 
-    useEffect(() => {
-        if (isOpen && activeChat) {
-            setTimeout(() => messagesEndRef.current?.scrollIntoView(), 100);
-        }
-    }, [isOpen, activeChat]);
-
-    const handleSend = async (e) => {
-        e.preventDefault();
-        if (!text.trim() || !activeChat) return;
-        const chatId = [user.uid, activeChat.id].sort().join('_');
-        const newMsg = {
-            text: text.trim(),
+    const sendMessage = async () => {
+        if(!msgText.trim()) return;
+        const chatId = [user.uid, activeChat.uid].sort().join('_');
+        await window.db.collection('private_chats').doc(chatId).collection('messages').add({
+            text: msgText.trim(),
             senderId: user.uid,
-            timestamp: Date.now(),
-            deletedFor: [], 
+            createdAt: new Date().toISOString(),
+            deletedFor: [],
             deletedForEveryone: false
-        };
-        setText(''); 
-        await window.db.collection('private_chats').doc(chatId).collection('messages').add(newMsg);
+        });
+        setMsgText('');
     };
 
-    const handleDelete = async (id, type) => {
-        if (!activeChat) return;
-        const chatId = [user.uid, activeChat.id].sort().join('_');
-        const msg = messages.find(m => m.id === id);
-        if (!msg) return;
-
-        try {
-            if (type === 'everyone') {
-                await window.db.collection('private_chats').doc(chatId).collection('messages').doc(id).update({ deletedForEveryone: true });
-            } else if (type === 'me') {
-                const currentDeleted = msg.deletedFor || [];
-                await window.db.collection('private_chats').doc(chatId).collection('messages').doc(id).update({ 
-                    deletedFor: [...currentDeleted, user.uid] 
-                });
-            }
-        } catch(e) { console.error("Ошибка удаления", e); }
-        setActiveMenuId(null);
+    const delForMe = async (msgId) => {
+        const chatId = [user.uid, activeChat.uid].sort().join('_');
+        const msgRef = window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId);
+        const doc = await msgRef.get();
+        if(doc.exists) {
+            const data = doc.data();
+            await msgRef.update({ deletedFor: [...(data.deletedFor || []), user.uid] });
+        }
     };
 
-    useEffect(() => {
-        const handleClickOutside = () => setActiveMenuId(null);
-        if (activeMenuId) window.addEventListener('click', handleClickOutside);
-        return () => window.removeEventListener('click', handleClickOutside);
-    }, [activeMenuId]);
-
-    const visibleMessages = messages.filter(m => !m.deletedForEveryone && !(m.deletedFor || []).includes(user.uid));
-
-    // КРАСИВЫЕ SVG ИКОНКИ ДЛЯ ЧАТА
-    const SendIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
-    const BackIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
-    const MoreIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>;
+    const delForEveryone = async (msgId) => {
+        const chatId = [user.uid, activeChat.uid].sort().join('_');
+        await window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId).update({
+            deletedForEveryone: true
+        });
+    };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div 
-                    initial={{ opacity: 0, x: '100%', filter: 'blur(10px)' }} 
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} 
-                    exit={{ opacity: 0, x: '100%', filter: 'blur(10px)' }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="chat-window glass-panel"
-                >
-                    {!activeChat ? (
-                        <>
-                            <div className="chat-header">
-                                <h3 style={{margin:0, fontSize:18}}>Чаты</h3>
-                                <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
-                            </div>
-                            <div className="chat-body" style={{padding: 0}}>
-                                {usersList.length === 0 ? (
-                                    <div className="chat-empty-state">Пока нет пользователей</div>
-                                ) : (
-                                    usersList.map(u => (
-                                        <div key={u.id} className="chat-contact-item" onClick={() => setActiveChat(u)}>
-                                            <div className="chat-contact-avatar">{u.email.charAt(0).toUpperCase()}</div>
-                                            <div className="chat-contact-info">
-                                                <div className="chat-contact-name">{u.email.split('@')[0]}</div>
-                                                <div className="chat-contact-status">{u.role === 'admin' ? '🛡️ Преподаватель' : '🎓 Студент'}</div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="chat-header">
-                                <button className="chat-back-btn" onClick={() => setActiveChat(null)}><BackIcon/></button>
-                                <div className="chat-contact-avatar" style={{width: 32, height: 32, fontSize: 14, marginRight: 10}}>{activeChat.email.charAt(0).toUpperCase()}</div>
-                                <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
-                                    <span style={{fontWeight: 700, fontSize: 15, lineHeight: 1.2}}>{activeChat.email.split('@')[0]}</span>
-                                </div>
-                                <button className="chat-close" onClick={() => {setIsOpen(false); setActiveChat(null);}}>✕</button>
-                            </div>
+        <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-chat-panel">
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)'}}>
+                <h3 style={{margin:0, fontSize:18}}>{activeChat ? `💬 ${activeChat.email}` : '💬 Контакты'}</h3>
+                <Button variant="muted" onClick={() => activeChat ? setActiveChat(null) : onClose()} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
+            </div>
 
-                            <div className="chat-body" style={{padding: '15px'}}>
-                                {visibleMessages.length === 0 ? (
-                                    <div className="chat-empty-state">Напишите первое сообщение ✨</div>
-                                ) : (
-                                    visibleMessages.map(msg => {
-                                        const isMine = msg.senderId === user.uid;
-                                        const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                                        return (
-                                            <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
-                                                <div className={`chat-message ${isMine ? 'mine' : ''}`}>
-                                                    <div className="chat-text">{msg.text}</div>
-                                                    <div className="chat-meta">
-                                                        <span className="chat-time">{time}</span>
-                                                        {isMine && (
-                                                            <span className="msg-more-btn" onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}>
-                                                                <MoreIcon/>
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    {activeMenuId === msg.id && (
-                                                        <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
-                                                            <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>🗑 Удалить у себя</div>
-                                                            {isMine && (<div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>🔥 Удалить для всех</div>)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })
-                                )}
-                                <div ref={messagesEndRef} />
+            <div style={{flex:1, overflowY:'auto', padding:'20px', scrollbarWidth:'thin'}}>
+                {!activeChat ? (
+                    <div style={{display:'flex', flexDirection:'column', gap:10}}>
+                        {chatUsers.length === 0 && <div style={{textAlign:'center', color:'var(--text-sec)', marginTop: 20}}>Нет других пользователей</div>}
+                        {chatUsers.map(u => (
+                            <div key={u.uid} onClick={()=>setActiveChat(u)} className="chat-user-card" style={{padding:15, borderRadius:14, background:'var(--variant-default)', cursor:'pointer', border:'1px solid var(--glass-border)'}}>
+                                👤 <b style={{fontSize: 14}}>{u.email}</b>
                             </div>
-                            <form onSubmit={handleSend} className="chat-footer">
-                                <input type="text" placeholder="Сообщение..." value={text} onChange={e => setText(e.target.value)} className="chat-input" />
-                                <button type="submit" className="chat-send-btn" disabled={!text.trim()}><SendIcon/></button>
-                            </form>
-                        </>
-                    )}
-                </motion.div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{display:'flex', flexDirection:'column', gap:15}}>
+                        {messages.filter(m => !(m.deletedFor || []).includes(user.uid)).map(m => {
+                            const isMine = m.senderId === user.uid;
+                            if (m.deletedForEveryone) {
+                                return <div key={m.id} style={{alignSelf: isMine?'flex-end':'flex-start', fontSize:12, color:'var(--text-sec)', fontStyle:'italic', padding:'5px 10px'}}>🚫 Сообщение удалено</div>
+                            }
+                            return (
+                                <div key={m.id} className="chat-bubble" style={{alignSelf: isMine?'flex-end':'flex-start', maxWidth:'80%', background: isMine?'var(--primary-grad)':'var(--glass-bg)', color: isMine?'white':'var(--text-main)', padding:'12px 16px', borderRadius:'16px', border:'1px solid var(--glass-border)', position:'relative', wordBreak:'break-word', borderBottomRightRadius: isMine ? '4px' : '16px', borderBottomLeftRadius: !isMine ? '4px' : '16px'}}>
+                                    <div style={{marginBottom:6, fontSize: 14}}>{m.text}</div>
+                                    <div style={{display:'flex', gap:12, fontSize:10, justifyContent:'flex-end', opacity:0.8}}>
+                                        <span>{new Date(m.createdAt).toLocaleTimeString().slice(0,5)}</span>
+                                        <span style={{cursor:'pointer', fontWeight: 600}} onClick={()=>delForMe(m.id)}>🗑️ У себя</span>
+                                        {isMine && <span style={{cursor:'pointer', fontWeight: 600}} onClick={()=>delForEveryone(m.id)}>🔥 У всех</span>}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        <div ref={messagesEndRef} />
+                    </div>
+                )}
+            </div>
+
+            {activeChat && (
+                <div style={{padding:'20px', borderTop:'1px solid var(--glass-border)', display:'flex', gap:10}}>
+                    <Input value={msgText} onChange={e=>setMsgText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendMessage()}} placeholder="Сообщение..." style={{margin:0, flex:1, borderRadius: '24px'}} />
+                    <Button variant="primary" onClick={sendMessage} style={{width:54, height:54, padding:0, borderRadius:'50%'}}>➤</Button>
+                </div>
             )}
-        </AnimatePresence>
+        </motion.div>
     );
-};
+}
 
 // --- APP ---
 
@@ -595,20 +534,11 @@ function App() {
   
   const [teacherTests, setTeacherTests] = useState([]); 
 
-  const isAdmin = userRole === 'admin';
-
-  // СТЕЙТЫ МЕНЮ И ЧАТА
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  // Новые состояния для Гамбургера и Чата
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // КРАСИВЫЕ ИКОНКИ ДЛЯ МЕНЮ
-  const HamburgerIcon = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
-  const UserIcon = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
-  const SunIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>;
-  const MoonIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>;
-  const MessageIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>;
-  const ShieldIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
-  const LogoutIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
+  const isAdmin = userRole === 'admin';
 
   useEffect(() => {
       if (!window.auth) {
@@ -880,71 +810,54 @@ function App() {
          <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
-      
-      {/* КНОПКА ГАМБУРГЕР-МЕНЮ СЛЕВА СВЕРХУ (Появляется на главном экране) */}
-      {!isAuthLoading && user && view === 'menu' && (
-          <div className="burger-btn" onClick={() => setIsSideMenuOpen(true)}>
-             <HamburgerIcon />
-          </div>
-      )}
 
-      {/* ВЫЕЗЖАЮЩЕЕ КРАСИВОЕ БОКОВОЕ МЕНЮ СЛЕВА */}
       <AnimatePresence>
-          {isSideMenuOpen && (
+          {isSidebarOpen && (
               <>
-                  <motion.div 
-                      className="side-menu-overlay" 
-                      initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} 
-                      onClick={() => setIsSideMenuOpen(false)} 
-                  />
-                  <motion.div 
-                      className="side-menu glass-panel" 
-                      initial={{x: '-100%', filter: 'blur(10px)'}} 
-                      animate={{x: 0, filter: 'blur(0px)'}} 
-                      exit={{x: '-100%', filter: 'blur(10px)'}} 
-                      transition={{type: 'spring', damping: 25, stiffness: 200}}
-                  >
-                      <div className="side-menu-header">
-                          <button className="side-menu-close" onClick={() => setIsSideMenuOpen(false)}>✕</button>
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
+                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar">
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)'}}>
+                          <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
+                          <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
                       </div>
-
-                      {/* Блок профиля */}
-                      <div className="side-menu-profile">
-                          <div className="profile-icon-wrapper">
-                              <UserIcon />
-                          </div>
-                          <div className="profile-info">
-                              <span className="profile-label">АККАУНТ</span>
-                              <span className="profile-email" title={user?.email}>{user?.email}</span>
+                      
+                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)'}}>
+                          <span style={{ fontSize: '30px' }}>👤</span>
+                          <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user?.email}</div>
                           </div>
                       </div>
 
-                      <div className="side-menu-content">
-                          <div className="side-menu-item" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                              <span className="item-icon">{theme === 'dark' ? <SunIcon/> : <MoonIcon/>}</span>
-                              {theme === 'dark' ? 'Светлая тема' : 'Темная тема'}
-                          </div>
-
-                          <div className="side-menu-item" onClick={() => { setIsChatOpen(true); setIsSideMenuOpen(false); }}>
-                              <span className="item-icon"><MessageIcon/></span>
-                              Открыть чат
-                          </div>
-
+                      <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 10}}>
+                          <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                              <span style={{marginRight: 10}}>{theme === 'dark' ? '☀️' : '🌙'}</span> Сменить тему
+                          </Button>
+                          <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                              <span style={{marginRight: 10}}>💬</span> Открыть чат
+                          </Button>
                           {isAdmin && (
-                              <div className="side-menu-item admin-item" onClick={() => { setView('admin'); setIsSideMenuOpen(false); }}>
-                                  <span className="item-icon"><ShieldIcon/></span>
-                                  Админ-панель
-                              </div>
+                              <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54}}>
+                                  <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
+                              </Button>
                           )}
                       </div>
 
-                      <div className="side-menu-footer">
-                          <div className="side-menu-item logout-item" onClick={() => { window.auth.signOut(); setIsSideMenuOpen(false); }}>
-                              <span className="item-icon"><LogoutIcon/></span>
-                              Выйти из аккаунта
-                          </div>
+                      <div style={{marginTop: 'auto'}}>
+                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444'}}>
+                              ВЫЙТИ
+                          </Button>
                       </div>
                   </motion.div>
+              </>
+          )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+          {isChatOpen && (
+              <>
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsChatOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
+                  <ChatPanel user={user} onClose={() => setIsChatOpen(false)} />
               </>
           )}
       </AnimatePresence>
@@ -967,42 +880,41 @@ function App() {
               <AdminPanel onBack={() => setView('menu')} />
           )}
 
-          {/* ГЛАВНОЕ МЕНЮ (Чистое, без кнопок профиля) */}
           {!isAuthLoading && user && view === 'menu' && (
-            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', marginTop: '30px'}}>
+            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
-              <h2 style={{textAlign:'center', fontSize:32, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
-              
-              <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
-                 <Button variant="orange" style={{maxWidth:300, display: 'flex', gap: '8px', alignItems: 'center'}} onClick={() => setView('stats')}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                    СТАТИСТИКА
-                 </Button>
+              {/* ГАМБУРГЕР КНОПКА (Фиксированная) */}
+              <div style={{position: 'fixed', top: 20, left: 20, zIndex: 1000}}>
+                  <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
               </div>
 
-              <div style={{maxHeight:350, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+              <h2 style={{textAlign:'center', fontSize:32, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0', paddingTop: 10}}>Ultimate LMS</h2>
+              
+              <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
+                 <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
+              </div>
+
+              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
+                {/* ОТОБРАЖАЕМ МНОЖЕСТВО ТЕСТОВ ОТ ПРЕПОДАВАТЕЛЯ */}
                 {teacherTests.map(test => (
                   <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
-                      <span style={{marginRight:12, fontSize: 18}}>☁️</span>
+                      <span style={{marginRight:8}}>☁️</span>
                       <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
                     </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
-                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
                   </div>
                 ))}
 
+                {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
-                      <span style={{marginRight:12, fontSize: 18}}>📂</span>
+                      <span style={{marginRight:8}}>📂</span>
                       <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
                     </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>
-                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
                   </div>
                 ))}
               </div>
@@ -1010,17 +922,18 @@ function App() {
                  <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
                  <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
               </div>
+              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
             </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'set_menu' && (
-            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', marginTop: '40px'}}>
+            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
               <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                  <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
                  <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
-                   📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                    📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                  </label>
               </div>
               <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
@@ -1107,10 +1020,6 @@ function App() {
           )}
 
         </AnimatePresence>
-
-        {/* ЧАТ ОТРИСОВЫВАЕТСЯ ПОВЕРХ ВСЕГО */}
-        {user && <ChatWidget user={user} isOpen={isChatOpen} setIsOpen={setIsChatOpen} />}
-
       </div>
     </>
   );
@@ -1118,3 +1027,4 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
+
