@@ -307,12 +307,10 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                if(isAnswered) {
                  if(isCorrect) { 
                      styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; 
-                     // Анимация правильного ответа (пульсация)
                      if(isSelected) animationProps.animate = { opacity: 1, x: 0, scale: [1, 1.05, 1] };
                  } 
                  else if(isSelected) { 
                      styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; 
-                     // Анимация неправильного ответа (тряска)
                      animationProps.animate = { opacity: 1, x: [-5, 5, -5, 5, 0] };
                      animationProps.transition = { duration: 0.3 };
                  } 
@@ -402,28 +400,40 @@ const StatsView = ({ history, setHistory, onBack }) => {
     )
 };
 
-// --- НОВЫЙ КОД ДЛЯ ЧАТА (В СТИЛЕ ТЕЛЕГРАМ) ---
+// --- НОВЫЙ КОД ДЛЯ ЧАТА (ПРИВАТНЫЕ СООБЩЕНИЯ) ---
 const ChatWidget = ({ user }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [usersList, setUsersList] = useState([]);
+    const [activeChat, setActiveChat] = useState(null); // с кем сейчас переписка
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
-    const [unreadCount, setUnreadCount] = useState(0);
     const [activeMenuId, setActiveMenuId] = useState(null);
     const messagesEndRef = useRef(null);
 
-    // Подписка на сообщения в реальном времени
+    // Загрузка списка всех пользователей (для контактов)
     useEffect(() => {
-        if (!window.db || !user) return;
-        const unsubscribe = window.db.collection('campus_chat')
+        if (!window.db || !user || !isOpen) return;
+        const unsubscribe = window.db.collection('users').onSnapshot(snap => {
+            const allUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Убираем самого себя из списка контактов
+            setUsersList(allUsers.filter(u => u.id !== user.uid));
+        });
+        return () => unsubscribe();
+    }, [user, isOpen]);
+
+    // Подписка на личные сообщения с ВЫБРАННЫМ пользователем
+    useEffect(() => {
+        if (!window.db || !user || !activeChat) return;
+        
+        // Генерируем уникальный ID чата для двух людей (всегда одинаковый порядок)
+        const chatId = [user.uid, activeChat.id].sort().join('_');
+
+        const unsubscribe = window.db.collection('private_chats')
+            .doc(chatId)
+            .collection('messages')
             .orderBy('timestamp', 'asc')
             .onSnapshot(snap => {
                 const msgs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Считаем непрочитанные, если чат закрыт (упрощенная логика)
-                if (!isOpen && msgs.length > messages.length && messages.length > 0) {
-                    setUnreadCount(prev => prev + 1);
-                }
-                
                 setMessages(msgs);
                 
                 // Скролл вниз при новых сообщениях
@@ -433,43 +443,45 @@ const ChatWidget = ({ user }) => {
             });
             
         return () => unsubscribe();
-    }, [user, isOpen, messages.length]);
+    }, [user, activeChat]);
 
-    // Сброс счетчика при открытии
+    // Прокрутка при открытии
     useEffect(() => {
-        if (isOpen) {
-            setUnreadCount(0);
+        if (isOpen && activeChat) {
             setTimeout(() => messagesEndRef.current?.scrollIntoView(), 100);
         }
-    }, [isOpen]);
+    }, [isOpen, activeChat]);
 
     const handleSend = async (e) => {
         e.preventDefault();
-        if (!text.trim()) return;
+        if (!text.trim() || !activeChat) return;
+        
+        const chatId = [user.uid, activeChat.id].sort().join('_');
         
         const newMsg = {
             text: text.trim(),
             senderId: user.uid,
-            senderEmail: user.email.split('@')[0], // Показываем только ник до @
             timestamp: Date.now(),
             deletedFor: [], // массив ID пользователей, для которых удалено
             deletedForEveryone: false
         };
 
         setText(''); // очищаем инпут сразу
-        await window.db.collection('campus_chat').add(newMsg);
+        await window.db.collection('private_chats').doc(chatId).collection('messages').add(newMsg);
     };
 
     const handleDelete = async (id, type) => {
+        if (!activeChat) return;
+        const chatId = [user.uid, activeChat.id].sort().join('_');
         const msg = messages.find(m => m.id === id);
         if (!msg) return;
 
         try {
             if (type === 'everyone') {
-                await window.db.collection('campus_chat').doc(id).update({ deletedForEveryone: true });
+                await window.db.collection('private_chats').doc(chatId).collection('messages').doc(id).update({ deletedForEveryone: true });
             } else if (type === 'me') {
                 const currentDeleted = msg.deletedFor || [];
-                await window.db.collection('campus_chat').doc(id).update({ 
+                await window.db.collection('private_chats').doc(chatId).collection('messages').doc(id).update({ 
                     deletedFor: [...currentDeleted, user.uid] 
                 });
             }
@@ -501,7 +513,6 @@ const ChatWidget = ({ user }) => {
                 onClick={() => setIsOpen(!isOpen)}
             >
                 💬
-                {unreadCount > 0 && <div className="chat-badge">{unreadCount}</div>}
             </motion.div>
 
             {/* Окно чата */}
@@ -513,65 +524,92 @@ const ChatWidget = ({ user }) => {
                         exit={{ opacity: 0, y: 50, scale: 0.9 }}
                         className="chat-window glass-panel"
                     >
-                        <div className="chat-header">
-                            <div className="chat-title">
-                                <b>Общий чат группы</b>
-                                <span style={{fontSize: '11px', color: 'var(--text-sec)', display: 'block'}}>Online</span>
-                            </div>
-                            <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
-                        </div>
+                        {/* ЕСЛИ НЕ ВЫБРАН ЧАТ - ПОКАЗЫВАЕМ СПИСОК КОНТАКТОВ */}
+                        {!activeChat ? (
+                            <>
+                                <div className="chat-header" style={{justifyContent: 'space-between'}}>
+                                    <b>Контакты</b>
+                                    <button className="chat-close" onClick={() => setIsOpen(false)}>✕</button>
+                                </div>
+                                <div className="chat-body" style={{padding: 0}}>
+                                    {usersList.length === 0 ? (
+                                        <div style={{textAlign: 'center', padding: '20px', color: 'var(--text-sec)'}}>Нет доступных пользователей</div>
+                                    ) : (
+                                        usersList.map(u => (
+                                            <div key={u.id} className="chat-contact-item" onClick={() => setActiveChat(u)}>
+                                                <div className="chat-contact-avatar">{u.email.charAt(0).toUpperCase()}</div>
+                                                <div className="chat-contact-info">
+                                                    <div className="chat-contact-name">{u.email.split('@')[0]}</div>
+                                                    <div className="chat-contact-status">{u.role === 'admin' ? 'Преподаватель/Админ' : 'Студент'}</div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            /* ЕСЛИ ЧАТ ВЫБРАН - ПОКАЗЫВАЕМ ПЕРЕПИСКУ */
+                            <>
+                                <div className="chat-header">
+                                    <button className="chat-back-btn" onClick={() => setActiveChat(null)}>⬅</button>
+                                    <div className="chat-title" style={{flex: 1, marginLeft: '10px'}}>
+                                        <b>{activeChat.email.split('@')[0]}</b>
+                                    </div>
+                                    <button className="chat-close" onClick={() => {setIsOpen(false); setActiveChat(null);}}>✕</button>
+                                </div>
 
-                        <div className="chat-body">
-                            {visibleMessages.length === 0 ? (
-                                <div style={{textAlign: 'center', color: 'var(--text-sec)', marginTop: '50%'}}>Нет сообщений</div>
-                            ) : (
-                                visibleMessages.map(msg => {
-                                    const isMine = msg.senderId === user.uid;
-                                    const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                                    
-                                    return (
-                                        <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
-                                            <div 
-                                                className={`chat-message ${isMine ? 'mine' : ''}`}
-                                                onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}
-                                            >
-                                                {!isMine && <div className="chat-sender">{msg.senderEmail}</div>}
-                                                <div className="chat-text">{msg.text}</div>
-                                                <div className="chat-time">{time}</div>
-                                                
-                                                {/* Контекстное меню */}
-                                                {activeMenuId === msg.id && (
-                                                    <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
-                                                        <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>
-                                                            🗑 Удалить у себя
-                                                        </div>
-                                                        {isMine && (
-                                                            <div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>
-                                                                🔥 Удалить для всех
+                                <div className="chat-body">
+                                    {visibleMessages.length === 0 ? (
+                                        <div style={{textAlign: 'center', color: 'var(--text-sec)', marginTop: '50%'}}>Начните диалог</div>
+                                    ) : (
+                                        visibleMessages.map(msg => {
+                                            const isMine = msg.senderId === user.uid;
+                                            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                            
+                                            return (
+                                                <div key={msg.id} className={`chat-message-wrapper ${isMine ? 'mine' : ''}`}>
+                                                    <div 
+                                                        className={`chat-message ${isMine ? 'mine' : ''}`}
+                                                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === msg.id ? null : msg.id); }}
+                                                    >
+                                                        <div className="chat-text">{msg.text}</div>
+                                                        <div className="chat-time">{time}</div>
+                                                        
+                                                        {/* Контекстное меню */}
+                                                        {activeMenuId === msg.id && (
+                                                            <div className={`chat-context-menu ${isMine ? 'right' : 'left'}`}>
+                                                                <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'me'); }}>
+                                                                    🗑 Удалить у себя
+                                                                </div>
+                                                                {isMine && (
+                                                                    <div className="menu-item delete-all" onClick={(e) => { e.stopPropagation(); handleDelete(msg.id, 'everyone'); }}>
+                                                                        🔥 Удалить для всех
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                })
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
+                                                </div>
+                                            )
+                                        })
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
 
-                        <form onSubmit={handleSend} className="chat-footer">
-                            <input 
-                                type="text" 
-                                placeholder="Написать сообщение..." 
-                                value={text}
-                                onChange={e => setText(e.target.value)}
-                                className="chat-input"
-                            />
-                            <button type="submit" className="chat-send-btn" disabled={!text.trim()}>
-                                ➤
-                            </button>
-                        </form>
+                                <form onSubmit={handleSend} className="chat-footer">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Сообщение..." 
+                                        value={text}
+                                        onChange={e => setText(e.target.value)}
+                                        className="chat-input"
+                                    />
+                                    <button type="submit" className="chat-send-btn" disabled={!text.trim()}>
+                                        ➤
+                                    </button>
+                                </form>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1053,8 +1091,8 @@ function App() {
 
         </AnimatePresence>
         
-        {/* --- ПОДКЛЮЧЕНИЕ ЧАТА ДЛЯ АВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ --- */}
-        {user && <ChatWidget user={user} />}
+        {/* --- ЧАТ ТЕПЕРЬ ПОЯВЛЯЕТСЯ ТОЛЬКО ЕСЛИ АКТИВНО ГЛАВНОЕ МЕНЮ --- */}
+        {user && view === 'menu' && <ChatWidget user={user} />}
 
       </div>
     </>
