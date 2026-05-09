@@ -827,7 +827,7 @@ function App() {
       {/* ГАМБУРГЕР КНОПКА (С железобетонной фиксацией через отдельный CSS класс) */}
       {!isAuthLoading && user && view === 'menu' && (
           <div className="mobile-burger-fixed">
-              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>🍔</Button>
+              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
       )}
 
