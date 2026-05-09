@@ -2,7 +2,7 @@ const { useState, useEffect, useRef, useLayoutEffect, memo } = React;
 const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
-const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1481534100194983958/L107VBFTCX5FYQFfAyiJu7PsTOhbsrNX9yOmRLExoj-B-a9okiGuyweAPmYzPcU09rEj';
+const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1502549157850775573/-HMez8dO8ifxGII_elVSGW0isBHy2FJF32_uinsF92OegVonn7bfDW_ap4_EvDr3_N9O';
 
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
