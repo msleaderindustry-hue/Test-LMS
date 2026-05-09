@@ -657,10 +657,13 @@ function App() {
     }
     check();
   }, []);
-
-  const loadData = () => {
-    const raw = localStorage.getItem('test_sets_list'); setSets(raw ? JSON.parse(raw) : ['Электроника']);
-    if(!raw) { localStorage.setItem('test_sets_list', JSON.stringify(['Электроника'])); localStorage.setItem('tests_Электроника', JSON.stringify([])); }
+  
+ const loadData = () => {
+    const raw = localStorage.getItem('test_sets_list'); 
+    setSets(raw ? JSON.parse(raw) : []); 
+    if(!raw) { 
+        localStorage.setItem('test_sets_list', JSON.stringify([]));       
+    }
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
   };
 
