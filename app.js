@@ -770,25 +770,70 @@ function App() {
     setIsResultSaved(false); setView('test');
   };
 
-  const saveResult = async (name) => {
+const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
+      
       try {
-          // 1. Формируем данные
+          // 1. Ищем вопросы, на которые ответили неправильно
+          const failedQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
+
+          // 2. Базовые поля карточки
+          let embedFields = [
+              { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
+              { name: "📧 Email", value: `**${user ? user.email : "Неизвестно"}**`, inline: true },
+              { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
+              { name: "📚 Тема", value: scoreData.topic, inline: true },
+              { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
+              { name: "🆔 Fingerprint", value: `\`${fp}\``, inline: false }
+          ];
+
+          // 3. Добавляем список ошибок, если они есть
+          if (failedQuestions.length > 0) {
+              embedFields.push({ name: "▬▬▬ ОШИБКИ ▬▬▬", value: "Список неверных ответов:", inline: false });
+              
+              failedQuestions.forEach(q => {
+                  const originalIndex = testSession.questions.indexOf(q);
+                  const userAnsIdx = testSession.answers[originalIndex];
+                  
+                  const userAnsText = userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил";
+                  const correctAnsText = q.variants[q.correctIndex].text;
+
+                  embedFields.push({
+                      name: `❓ ${q.question.replace(/<[^>]+>/g, '')}`, // Очищаем от HTML тегов
+                      value: `❌ Ответил: ${userAnsText}\n✅ Правильный: ${correctAnsText}`,
+                      inline: false
+                  });
+              });
+          }
+
+          // 4. Формируем данные
           let payload = {
               username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
-                  title: "📊 Новый результат теста", color: 3066993,
-                  fields: [
-                      { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
-                      { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
-                      { name: "📚 Тема", value: scoreData.topic, inline: true },
-                      { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
-                      { name: "🆔 Fingerprint", value: `\`${fp}\`` }
-                  ],
+                  title: "📊 Новый результат теста", 
+                  color: failedQuestions.length > 0 ? 16711680 : 3066993, // Красный (ошибки) или Зеленый (100%)
+                  fields: embedFields,
                   timestamp: new Date().toISOString()
               }]
           };
+
+          // 5. Отправляем через FormData
+          let formData = new FormData(); 
+          formData.append('payload_json', JSON.stringify(payload));
+          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+          
+      } catch (e) {
+          console.error("Ошибка при отправке в Discord:", e);
+      }
+      
+      // 6. Сохранение в локальную историю
+      const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
+      const newHistory = [...history, newRecord]; 
+      setHistory(newHistory); 
+      localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
+      setIsResultSaved(true);
+  };
           
           // 2. Упаковываем в FormData (ЭТО РЕШАЕТ ПРОБЛЕМУ С БЛОКИРОВКОЙ)
           let formData = new FormData(); 
