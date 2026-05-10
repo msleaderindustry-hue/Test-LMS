@@ -770,7 +770,7 @@ function App() {
     setIsResultSaved(false); setView('test');
   };
 
-const saveResult = async (name) => {
+  const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       
@@ -833,47 +833,6 @@ const saveResult = async (name) => {
       setHistory(newHistory); 
       localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
       setIsResultSaved(true);
-  };
-          // 4. Формируем данные
-          let payload = {
-              username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
-              embeds: [{
-                  title: "📊 Новый результат теста", 
-                  color: failedQuestions.length > 0 ? 16711680 : 3066993, // Красный (ошибки) или Зеленый (100%)
-                  fields: embedFields,
-                  timestamp: new Date().toISOString()
-              }]
-          };
-
-          // 5. Отправляем через FormData
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-          
-      } catch (e) {
-          console.error("Ошибка при отправке в Discord:", e);
-      }
-      
-      // 6. Сохранение в локальную историю
-      const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
-      const newHistory = [...history, newRecord]; 
-      setHistory(newHistory); 
-      localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
-      setIsResultSaved(true);
-  };
-          
-          // 2. Упаковываем в FormData (ЭТО РЕШАЕТ ПРОБЛЕМУ С БЛОКИРОВКОЙ)
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
-          
-          // 3. Отправляем
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch (e) {
-          console.error("Ошибка при отправке в Discord:", e);
-      }
-      
-      const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
-      const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
   };
 
   const handlePrint = () => {
