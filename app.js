@@ -583,24 +583,43 @@ function App() {
           const ipData = await ipReq.json();
           const deviceInfo = navigator.userAgent;
 
+          // Формируем ссылку на Google Карты, если координаты доступны
+          const mapsLink = ipData.latitude && ipData.longitude 
+              ? `https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}` 
+              : null;
+
           let payload = {
-              username: "LMS Spy Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
+              username: "LMS Spy Monitor", 
+              avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
-                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", color: 16753920,
+                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", 
+                  color: 16753920,
                   fields: [
-                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: true },
+                      // Детальная локация
+                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.region || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: false },
+                      // Ссылка на карту
+                      { name: "🗺️ На карте", value: mapsLink ? `[📍 Открыть Google Maps](${mapsLink})` : 'Нет данных', inline: true },
+                      // IP адрес
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
-                      { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\`` }
+                      // Название интернет-провайдера (например, Uztelecom, Beeline)
+                      { name: "📡 Провайдер", value: `\`${ipData.org || 'Скрыто'}\``, inline: true },
+                      // Устройство
+                      { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\``, inline: false }
                   ],
                   timestamp: new Date().toISOString()
               }]
           };
-          let formData = new FormData(); formData.append('payload_json', JSON.stringify(payload));
+          
+          let formData = new FormData(); 
+          formData.append('payload_json', JSON.stringify(payload));
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch (e) {}
+      } catch (e) {
+          console.error("Ошибка логгера:", e);
+      }
   };
 
   useEffect(() => { logVisitor(); }, []);
+
 
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
