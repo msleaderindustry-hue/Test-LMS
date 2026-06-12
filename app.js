@@ -455,16 +455,14 @@ const ChatPanel = ({ user, onClose }) => {
 
     const delForEveryone = async (msgId) => {
         const chatId = [user.uid, activeChat.uid].sort().join('_');
-        await window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId).update({
-            deletedForEveryone: true
-        });
+        await window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId).delete();
     };
 
     return (
         <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-chat-panel">
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)', flexShrink: 0}}>
                 <h3 style={{margin:0, fontSize:18, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '10px'}}>
-                    {activeChat ? `💬 ${activeChat.email}` : '💬 Контакты'}
+                    {activeChat ? `💬 ${activeChat.nickname || activeChat.email}` : '💬 Контакты'}
                 </h3>
                 <Button variant="muted" onClick={() => activeChat ? setActiveChat(null) : onClose()} style={{width:44, height:44, minWidth: 44, padding:0, borderRadius:'50%', flexShrink: 0}}>✖</Button>
             </div>
@@ -475,7 +473,7 @@ const ChatPanel = ({ user, onClose }) => {
                         {chatUsers.length === 0 && <div style={{textAlign:'center', color:'var(--text-sec)', marginTop: 20}}>Нет других пользователей</div>}
                         {chatUsers.map(u => (
                             <div key={u.uid} onClick={()=>setActiveChat(u)} className="chat-user-card" style={{padding:15, borderRadius:14, background:'var(--variant-default)', cursor:'pointer', border:'1px solid var(--glass-border)'}}>
-                                👤 <b style={{fontSize: 14}}>{u.email}</b>
+                                👤 <b style={{fontSize: 14}}>{u.nickname || u.email}</b>
                             </div>
                         ))}
                     </div>
@@ -483,9 +481,6 @@ const ChatPanel = ({ user, onClose }) => {
                     <div style={{display:'flex', flexDirection:'column', gap:15}}>
                         {messages.filter(m => !(m.deletedFor || []).includes(user.uid)).map(m => {
                             const isMine = m.senderId === user.uid;
-                            if (m.deletedForEveryone) {
-                                return <div key={m.id} style={{alignSelf: isMine?'flex-end':'flex-start', fontSize:12, color:'var(--text-sec)', fontStyle:'italic', padding:'5px 10px'}}>🚫 Сообщение удалено</div>
-                            }
                             return (
                                 <div key={m.id} className="chat-bubble" style={{alignSelf: isMine?'flex-end':'flex-start', maxWidth:'80%', background: isMine?'var(--primary-grad)':'var(--glass-bg)', color: isMine?'white':'var(--text-main)', padding:'12px 16px', borderRadius:'16px', border:'1px solid var(--glass-border)', position:'relative', wordBreak:'break-word', borderBottomRightRadius: isMine ? '4px' : '16px', borderBottomLeftRadius: !isMine ? '4px' : '16px'}}>
                                     <div style={{marginBottom:6, fontSize: 14}}>{m.text}</div>
@@ -532,6 +527,7 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState('student');
+  const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
   const [teacherTests, setTeacherTests] = useState([]); 
@@ -562,6 +558,7 @@ function App() {
                               window.location.reload();
                           }
                           setUserRole(data.role || 'student');
+                          setUserNickname(data.nickname || ''); 
                           if (data.assignedTests) {
                               setTeacherTests(data.assignedTests);
                           } else {
@@ -854,6 +851,17 @@ function App() {
       setIsResultSaved(true);
   };
 
+  const changeNickname = async () => {
+      const newNick = prompt("Введите ваш новый никнейм (будет виден в чате):", userNickname || "");
+      if (newNick && newNick.trim() !== "") {
+          try {
+              await window.db.collection('users').doc(user.uid).update({ nickname: newNick.trim() });
+          } catch (e) {
+              alert("Ошибка при сохранении никнейма!");
+          }
+      }
+  };
+
   const handlePrint = () => {
     const area = document.getElementById('printArea');
     let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
@@ -897,7 +905,10 @@ function App() {
                           <span style={{ fontSize: '30px' }}>👤</span>
                           <div style={{ overflow: 'hidden' }}>
                               <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user?.email}</div>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {userNickname || user?.email}
+                                  <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8}} title="Изменить никнейм">✏️</span>
+                              </div>
                           </div>
                       </div>
 
