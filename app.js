@@ -19,6 +19,114 @@ function useMathJax(contentRef, dependencies = []) {
 
 // --- UI COMPONENTS ---
 
+const GooeyText = ({ texts, morphTime = 1, cooldownTime = 0.5, style }) => {
+  const text1Ref = useRef(null);
+  const text2Ref = useRef(null);
+
+  useEffect(() => {
+    let textIndex = texts.length - 1;
+    let time = new Date();
+    let morph = 0;
+    let cooldown = cooldownTime;
+
+    const setMorph = (fraction) => {
+      if (text1Ref.current && text2Ref.current) {
+        text2Ref.current.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+        text2Ref.current.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
+
+        fraction = 1 - fraction;
+        text1Ref.current.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+        text1Ref.current.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
+      }
+    };
+
+    const doCooldown = () => {
+      morph = 0;
+      if (text1Ref.current && text2Ref.current) {
+        text2Ref.current.style.filter = "";
+        text2Ref.current.style.opacity = "100%";
+        text1Ref.current.style.filter = "";
+        text1Ref.current.style.opacity = "0%";
+      }
+    };
+
+    const doMorph = () => {
+      morph -= cooldown;
+      cooldown = 0;
+      let fraction = morph / morphTime;
+
+      if (fraction > 1) {
+        cooldown = cooldownTime;
+        fraction = 1;
+      }
+
+      setMorph(fraction);
+    };
+
+    let animationFrameId;
+    function animate() {
+      animationFrameId = requestAnimationFrame(animate);
+      const newTime = new Date();
+      const shouldIncrementIndex = cooldown > 0;
+      const dt = (newTime.getTime() - time.getTime()) / 1000;
+      time = newTime;
+
+      cooldown -= dt;
+
+      if (cooldown <= 0) {
+        if (shouldIncrementIndex) {
+          textIndex = (textIndex + 1) % texts.length;
+          if (text1Ref.current && text2Ref.current) {
+            text1Ref.current.textContent = texts[textIndex % texts.length];
+            text2Ref.current.textContent = texts[(textIndex + 1) % texts.length];
+          }
+        }
+        doMorph();
+      } else {
+        doCooldown();
+      }
+    }
+
+    animate();
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [texts, morphTime, cooldownTime]);
+
+  return (
+    <div style={{ position: 'relative', height: '60px', ...style }}>
+      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="threshold">
+            <feColorMatrix
+              in="SourceGraphic"
+              type="matrix"
+              values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      0 0 0 255 -140"
+            />
+          </filter>
+        </defs>
+      </svg>
+      <div style={{ filter: "url(#threshold)", display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+        <span
+          ref={text1Ref}
+          style={{
+            position: 'absolute', display: 'inline-block', userSelect: 'none', textAlign: 'center',
+            fontSize: '32px', fontWeight: 'bold', background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+          }}
+        />
+        <span
+          ref={text2Ref}
+          style={{
+            position: 'absolute', display: 'inline-block', userSelect: 'none', textAlign: 'center',
+            fontSize: '32px', fontWeight: 'bold', background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
 const Button = ({ children, onClick, variant = 'primary', style, className }) => {
   const vars = {
     primary: 'linear-gradient(135deg, #4158D0 0%, #C850C0 100%)',
@@ -967,7 +1075,8 @@ function App() {
 
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-              <h2 style={{textAlign:'center', fontSize:32, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0', paddingTop: 10}}>Ultimate LMS</h2>
+              
+              <GooeyText texts={["Ultimate", "LMS", "Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
               
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
