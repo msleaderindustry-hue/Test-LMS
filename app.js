@@ -1009,16 +1009,26 @@ function App() {
                       </div>
                       
                       {/* Профиль (Фиксированный) */}
-                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-                          <span style={{ fontSize: '30px' }}>👤</span>
-                          <div style={{ overflow: 'hidden' }}>
-                              <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  {userNickname || user?.email}
-                                  <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8}} title="Изменить никнейм">✏️</span>
-                              </div>
-                          </div>
-                      </div>
+    <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
+    <span style={{ fontSize: '30px' }}>👤</span>
+    
+    {/* Добавили flex: 1 и minWidth: 0, чтобы контейнер не выходил за рамки */}
+    <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+        
+        {/* Убрали обрезку текста из родителя и перенесли в отдельный <span> */}
+        <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {userNickname || user?.email}
+            </span>
+            
+            {/* Добавили flexShrink: 0, чтобы карандаш никогда не сжимался и не исчезал */}
+            <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
+                ✏️
+            </span>
+        </div>
+    </div>
+</div>
 
                       {/* Скроллируемая центральная часть с кнопками */}
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
