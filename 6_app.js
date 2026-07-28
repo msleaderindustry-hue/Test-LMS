@@ -1,4 +1,5 @@
 // --- APP ---
+const { TypingTest } = window; // ДОБАВЛЕНО: Получаем тренажер из window
 
 function App() {
   const [view, setView] = useState('loading'); 
@@ -421,6 +422,12 @@ function App() {
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
+
+                          {/* ДОБАВЛЕНО: Кнопка тренажера в бургер-меню */}
+                          <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                              <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
+                          </Button>
+
                           {isAdmin && (
                               <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
@@ -598,6 +605,13 @@ function App() {
 
           {!isAuthLoading && user && view === 'stats' && (
              <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
+          )}
+
+          {/* Экран тренажера */}
+          {!isAuthLoading && user && view === 'typing' && (
+              <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
+                  <TypingTest onBack={() => setView('menu')} />
+              </motion.div>
           )}
 
         </AnimatePresence>
