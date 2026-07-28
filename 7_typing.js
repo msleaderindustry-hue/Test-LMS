@@ -213,3 +213,4 @@ const TypingTest = () => {
 }
 
 Object.assign(window, { TypingTest });
+
