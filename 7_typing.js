@@ -1,4 +1,3 @@
-// ИМПОРТЫ НАПРЯМУЮ ИЗ REACT И WINDOW
 const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
