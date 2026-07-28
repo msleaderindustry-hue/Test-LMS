@@ -175,51 +175,40 @@ const TypingTest = ({ onBack }) => {
                             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
                             animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
                         >
-                            <div style={{ textAlign: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
                                 <h2 style={{ fontSize: '48px', marginBottom: '10px', color: '#fff' }}>Отличный результат!</h2>
                                 <p style={{ fontSize: '20px', color: 'var(--text-main)', marginBottom: '30px' }}>
                                     Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
                                     Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
                                 </p>
-                                <button className="reset-btn" onClick={() => resetGame()}>Новый раунд</button>
+                                <Button variant="primary" onClick={() => resetGame()} style={{ width: '250px', margin: '0 auto' }}>Новый раунд</Button>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
-            <div className="keyboard">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={lang}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -15 }}
-                        transition={{ duration: 0.25 }}
-                        style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}
-                    >
-                        {currentLayout.map((row, rIndex) => (
-                            <div key={rIndex} className="key-row">
-                                {row.map((key, kIndex) => {
-                                    const isSpace = key === " ";
-                                    const isTarget = key === expectedKey;
-                                    const isActive = key === pressedKey;
-                                    
-                                    let classNames = "key";
-                                    if (isSpace) classNames += " space";
-                                    if (isTarget) classNames += " target";
-                                    if (isActive) classNames += isErrorKey ? " error-active" : " active";
+            <div className="keyboard" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+                {currentLayout.map((row, rIndex) => (
+                    <div key={`${lang}-${rIndex}`} className="key-row">
+                        {row.map((key, kIndex) => {
+                            const isSpace = key === " ";
+                            const isTarget = key === expectedKey;
+                            const isActive = key === pressedKey;
+                            
+                            let classNames = "key";
+                            if (isSpace) classNames += " space";
+                            if (isTarget) classNames += " target";
+                            if (isActive) classNames += isErrorKey ? " error-active" : " active";
 
-                                    return (
-                                        <div key={`${key}-${kIndex}`} className={classNames}>
-                                            {isSpace ? "SPACE" : key}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </motion.div>
-                </AnimatePresence>
+                            return (
+                                <div key={`${lang}-${key}-${kIndex}`} className={classNames}>
+                                    {isSpace ? "SPACE" : key}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
             </div>
         </motion.div>
     );
