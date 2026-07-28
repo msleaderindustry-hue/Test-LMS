@@ -1,4 +1,7 @@
-const { useState, useEffect, useRef, useCallback, motion, AnimatePresence, Button } = window;
+// ИМПОРТЫ НАПРЯМУЮ ИЗ REACT И WINDOW
+const { useState, useEffect, useRef, useCallback } = React;
+const { motion, AnimatePresence } = window.Motion;
+const { Button } = window;
 
 const dictionaries = {
     en: ["react", "framer", "motion", "component", "state", "props", "function", "const", "return", "interface", "tailwind", "javascript", "typescript", "frontend", "developer", "async", "await", "promise", "export", "default", "import", "useEffect", "useState", "padding", "margin", "display", "flex", "grid", "server", "client", "database", "api", "json", "layout", "hook"],
