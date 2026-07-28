@@ -22,7 +22,7 @@ const layouts = {
     ]
 };
 
-const TypingTest = ({ onBack }) => {
+const TypingTest = () => {
     const [lang, setLang] = useState('en');
     const [text, setText] = useState("");
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -127,8 +127,6 @@ const TypingTest = ({ onBack }) => {
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
             style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
         >
-            <Button variant="muted" onClick={onBack} style={{width: 'fit-content', padding: '0 20px', height: '40px', minHeight: '40px'}}>⬅ В меню</Button>
-            
             <header className="type-header">
                 <div className="title-group">
                     <div className="type-title">Pro<span>Type</span></div>
