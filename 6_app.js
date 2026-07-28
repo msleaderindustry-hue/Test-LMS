@@ -5,7 +5,7 @@ const {
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
-  TypingTest // <--- Теперь тренажер корректно подгружается
+  TypingTest 
 } = window;
 
 // --- APP ---
@@ -375,8 +375,8 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА */}
-      {!isAuthLoading && user && view === 'menu' && (
+      {/* ГАМБУРГЕР КНОПКА (Отображается и в меню, и в тренажере) */}
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -415,9 +415,18 @@ function App() {
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
-                          <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                              <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
-                          </Button>
+                          
+                          {/* УМНАЯ КНОПКА: Меняет вид в зависимости от того, где мы находимся */}
+                          {view === 'typing' ? (
+                              <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
+                              </Button>
+                          )}
+
                           {isAdmin && (
                               <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
@@ -597,7 +606,7 @@ function App() {
           {/* Экран тренажера */}
           {!isAuthLoading && user && view === 'typing' && (
               <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
-                  <TypingTest onBack={() => setView('menu')} />
+                  <TypingTest />
               </motion.div>
           )}
 
