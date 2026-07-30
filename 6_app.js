@@ -5,7 +5,8 @@ const {
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
-  TypingTest 
+  TypingTest,
+  HotkeyTrainer // <--- ДОБАВЛЕНО: Подключаем тренажер горячих клавиш
 } = window;
 
 // --- APP ---
@@ -375,8 +376,9 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (Отображается и в меню, и в тренажере) */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing') && (
+      {/* ГАМБУРГЕР КНОПКА (Отображается в меню, тренажере печати и хоткеях) */}
+      {/* ДОБАВЛЕНО: поддержка view === 'hotkeys' */}
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -424,6 +426,17 @@ function App() {
                           ) : (
                               <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
+                              </Button>
+                          )}
+
+                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ХОТКЕЕВ */}
+                          {view === 'hotkeys' ? (
+                              <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
                               </Button>
                           )}
 
@@ -607,6 +620,13 @@ function App() {
           {!isAuthLoading && user && view === 'typing' && (
               <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
                   <TypingTest />
+              </motion.div>
+          )}
+
+          {/* ДОБАВЛЕНО: ЭКРАН ХОТКЕЕВ */}
+          {!isAuthLoading && user && view === 'hotkeys' && (
+              <motion.div key="hotkey_trainer" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '700px'}}>
+                  <HotkeyTrainer />
               </motion.div>
           )}
 
