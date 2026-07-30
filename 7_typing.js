@@ -22,7 +22,7 @@ const layouts = {
     ]
 };
 
-const TypingTest = () => {
+const TypingTest = ({ onBack }) => {
     const [lang, setLang] = useState('en');
     const [text, setText] = useState("");
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,10 +37,37 @@ const TypingTest = () => {
 
     const textContainerRef = useRef(null);
 
+    // Умная генерация текста: заглавные буквы, запятые и точки
     const generateText = useCallback((currentLang) => {
         const wordsList = dictionaries[currentLang];
-        const arr = Array.from({length: 35}, () => wordsList[Math.floor(Math.random() * wordsList.length)]);
-        return arr.join(" ") + " ";
+        let sentence = [];
+        let capitalizeNext = true; // Первое слово всегда с заглавной
+
+        for (let i = 0; i < 30; i++) {
+            let word = wordsList[Math.floor(Math.random() * wordsList.length)];
+            
+            // Делаем заглавную букву, если нужно
+            if (capitalizeNext) {
+                word = word.charAt(0).toUpperCase() + word.slice(1);
+                capitalizeNext = false;
+            }
+
+            // Добавляем знаки препинания (не для последнего слова)
+            if (i < 29) {
+                const rand = Math.random();
+                if (rand < 0.15) {
+                    word += ","; // 15% шанс на запятую
+                } else if (rand < 0.25) {
+                    word += "."; // 10% шанс на точку
+                    capitalizeNext = true; // Следующее слово после точки будет с заглавной
+                }
+            } else {
+                word += "."; // Текст всегда заканчивается точкой
+            }
+
+            sentence.push(word);
+        }
+        return sentence.join(" ") + " ";
     }, []);
 
     useEffect(() => {
@@ -69,18 +96,22 @@ const TypingTest = () => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
+            // Игнорируем нажатия только сервисных кнопок
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
 
-            const key = e.key.toLowerCase();
-            setPressedKey(key);
+            const actualKey = e.key; // Строго берем то, что нажато (с учетом регистра)
+            const visualKey = e.key.toLowerCase(); // Приводим к нижнему регистру только для подсветки кнопки на экране
+            
+            setPressedKey(visualKey);
             
             if (!startTime) setStartTime(Date.now());
 
-            const expectedChar = text[currentIndex];
+            const expectedChar = text[currentIndex]; // Символ, который мы ждем от пользователя (большой или маленький)
 
-            if (key === expectedChar) {
+            // Строго сравниваем нажатую кнопку и ожидаемый символ
+            if (actualKey === expectedChar) {
                 setIsErrorKey(false);
                 const newCombo = combo + 1;
                 setCombo(newCombo);
@@ -115,7 +146,9 @@ const TypingTest = () => {
     };
 
     const stats = calculateStats();
-    const expectedKey = text[currentIndex]?.toLowerCase();
+    
+    // Приводим ожидаемую букву к нижнему регистру, чтобы нарисованная клавиатура знала, какую кнопку подсвечивать
+    const expectedKey = text[currentIndex]?.toLowerCase(); 
     const currentLayout = layouts[lang];
     const progress = (currentIndex / text.length) * 100;
 
@@ -213,4 +246,3 @@ const TypingTest = () => {
 }
 
 Object.assign(window, { TypingTest });
-
