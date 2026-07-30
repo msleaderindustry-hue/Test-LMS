@@ -2,9 +2,32 @@ const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-const dictionaries = {
-    en: ["react", "framer", "motion", "component", "state", "props", "function", "const", "return", "interface", "tailwind", "javascript", "typescript", "frontend", "developer", "async", "await", "promise", "export", "default", "import", "useEffect", "useState", "padding", "margin", "display", "flex", "grid", "server", "client", "database", "api", "json", "layout", "hook"],
-    ru: ["реакт", "компонент", "состояние", "свойство", "функция", "переменная", "возврат", "интерфейс", "стили", "скрипт", "разработка", "фронтенд", "анимация", "сервер", "клиент", "запрос", "модуль", "база", "данных", "массив", "объект", "строка", "число", "ошибка", "успех", "загрузка", "память", "процессор", "код", "программист"]
+// База интересных осмысленных текстов вместо набора случайных слов
+const textsData = {
+    en: [
+        "The universe is constantly expanding, and galaxies are moving further apart every second.",
+        "Octopuses have three hearts and blue blood, and their intelligence amazes scientists.",
+        "A day on Venus is longer than its year because it rotates so slowly on its axis.",
+        "Water can boil and freeze at the same time under specific conditions known as the triple point.",
+        "Natural honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs.",
+        "The human brain operates on about twenty watts of power, enough to light a dim bulb.",
+        "Bananas are curved because they grow towards the sun, a process called negative geotropism.",
+        "There are more trees on planet Earth than there are stars in the Milky Way galaxy.",
+        "The Eiffel Tower can be fifteen centimeters taller during the summer due to thermal expansion.",
+        "A single strand of spider silk is incredibly thin but stronger than a thread of steel."
+    ],
+    ru: [
+        "Космос невероятно огромен и постоянно расширяется, скрывая в себе миллиарды неизученных галактик.",
+        "Осьминоги имеют три сердца и голубую кровь, а их интеллект поражает воображение биологов.",
+        "День на Венере длится дольше, чем ее год, потому что она вращается вокруг оси невероятно медленно.",
+        "Вода может кипеть и замерзать одновременно при определенных условиях, известных как тройная точка.",
+        "Натуральный мед никогда не портится. Археологи находили в гробницах мед, которому более трех тысяч лет.",
+        "Человеческий мозг генерирует достаточно энергии, чтобы зажечь небольшую светодиодную лампочку.",
+        "Бананы имеют изогнутую форму, потому что в процессе роста они тянутся вверх к солнечному свету.",
+        "На планете Земля растет больше деревьев, чем существует звезд в нашей галактике Млечный Путь.",
+        "Летом Эйфелева башня может становиться на пятнадцать сантиметров выше из-за теплового расширения металла.",
+        "Паутина невероятно тонкая, но при этом она прочнее стальной нити такой же толщины."
+    ]
 };
 
 const layouts = {
@@ -37,37 +60,18 @@ const TypingTest = ({ onBack }) => {
 
     const textContainerRef = useRef(null);
 
-    // Умная генерация текста: заглавные буквы, запятые и точки
+    // Генерируем текст, объединяя два случайных предложения
     const generateText = useCallback((currentLang) => {
-        const wordsList = dictionaries[currentLang];
-        let sentence = [];
-        let capitalizeNext = true; // Первое слово всегда с заглавной
-
-        for (let i = 0; i < 30; i++) {
-            let word = wordsList[Math.floor(Math.random() * wordsList.length)];
-            
-            // Делаем заглавную букву, если нужно
-            if (capitalizeNext) {
-                word = word.charAt(0).toUpperCase() + word.slice(1);
-                capitalizeNext = false;
-            }
-
-            // Добавляем знаки препинания (не для последнего слова)
-            if (i < 29) {
-                const rand = Math.random();
-                if (rand < 0.15) {
-                    word += ","; // 15% шанс на запятую
-                } else if (rand < 0.25) {
-                    word += "."; // 10% шанс на точку
-                    capitalizeNext = true; // Следующее слово после точки будет с заглавной
-                }
-            } else {
-                word += "."; // Текст всегда заканчивается точкой
-            }
-
-            sentence.push(word);
+        const list = textsData[currentLang];
+        const fact1 = list[Math.floor(Math.random() * list.length)];
+        let fact2 = list[Math.floor(Math.random() * list.length)];
+        
+        // Гарантируем, что второе предложение не будет повторять первое
+        while (fact1 === fact2) {
+            fact2 = list[Math.floor(Math.random() * list.length)];
         }
-        return sentence.join(" ") + " ";
+        
+        return fact1 + " " + fact2;
     }, []);
 
     useEffect(() => {
@@ -96,21 +100,19 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // Игнорируем нажатия только сервисных кнопок
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
 
-            const actualKey = e.key; // Строго берем то, что нажато (с учетом регистра)
-            const visualKey = e.key.toLowerCase(); // Приводим к нижнему регистру только для подсветки кнопки на экране
+            const actualKey = e.key; 
+            const visualKey = e.key.toLowerCase(); 
             
             setPressedKey(visualKey);
             
             if (!startTime) setStartTime(Date.now());
 
-            const expectedChar = text[currentIndex]; // Символ, который мы ждем от пользователя (большой или маленький)
+            const expectedChar = text[currentIndex];
 
-            // Строго сравниваем нажатую кнопку и ожидаемый символ
             if (actualKey === expectedChar) {
                 setIsErrorKey(false);
                 const newCombo = combo + 1;
@@ -146,8 +148,6 @@ const TypingTest = ({ onBack }) => {
     };
 
     const stats = calculateStats();
-    
-    // Приводим ожидаемую букву к нижнему регистру, чтобы нарисованная клавиатура знала, какую кнопку подсвечивать
     const expectedKey = text[currentIndex]?.toLowerCase(); 
     const currentLayout = layouts[lang];
     const progress = (currentIndex / text.length) * 100;
