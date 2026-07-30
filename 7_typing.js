@@ -2,7 +2,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-// База интересных осмысленных текстов вместо набора случайных слов
+// Сильно расширенная база данных для генерации уникальных комбинаций
 const textsData = {
     en: [
         "The universe is constantly expanding, and galaxies are moving further apart every second.",
@@ -14,7 +14,17 @@ const textsData = {
         "Bananas are curved because they grow towards the sun, a process called negative geotropism.",
         "There are more trees on planet Earth than there are stars in the Milky Way galaxy.",
         "The Eiffel Tower can be fifteen centimeters taller during the summer due to thermal expansion.",
-        "A single strand of spider silk is incredibly thin but stronger than a thread of steel."
+        "A single strand of spider silk is incredibly thin but stronger than a thread of steel.",
+        "Mount Everest was named after a British surveyor who never actually saw the peak himself.",
+        "The shortest war in history lasted only thirty-eight minutes between Britain and Zanzibar.",
+        "Wombats have cube-shaped poop, which stops it from rolling away and marks their territory.",
+        "A jiffy is an actual unit of time, representing one hundredth of a second in physics.",
+        "Strawberries share a surprising amount of genetic material with human beings.",
+        "Sharks have been swimming in the oceans for longer than trees have existed on land.",
+        "Humans share fifty percent of their DNA with bananas, highlighting our evolutionary past.",
+        "An adult human body contains enough carbon to produce thousands of graphite pencils.",
+        "There is enough gold in the core of the Earth to cover the entire surface of the planet.",
+        "The first computer mouse was invented in the sixties and was made entirely of wood."
     ],
     ru: [
         "Космос невероятно огромен и постоянно расширяется, скрывая в себе миллиарды неизученных галактик.",
@@ -26,7 +36,17 @@ const textsData = {
         "Бананы имеют изогнутую форму, потому что в процессе роста они тянутся вверх к солнечному свету.",
         "На планете Земля растет больше деревьев, чем существует звезд в нашей галактике Млечный Путь.",
         "Летом Эйфелева башня может становиться на пятнадцать сантиметров выше из-за теплового расширения металла.",
-        "Паутина невероятно тонкая, но при этом она прочнее стальной нити такой же толщины."
+        "Паутина невероятно тонкая, но при этом она прочнее стальной нити такой же толщины.",
+        "Самая короткая война в истории человечества длилась всего тридцать восемь минут.",
+        "Акулы бороздят просторы мирового океана дольше, чем на суше существуют деревья.",
+        "Люди делят около пятидесяти процентов своей ДНК с обычными бананами.",
+        "В ядре Земли находится столько золота, что им можно было бы покрыть всю поверхность планеты.",
+        "Первая в мире компьютерная мышь была изобретена в шестидесятых годах и сделана из дерева.",
+        "Если сложить все кровеносные сосуды человека в одну линию, они обогнут Землю несколько раз.",
+        "Жирафы обладают уникальной способностью обходиться без воды дольше, чем верблюды.",
+        "Ежедневно в мире выпивается более двух миллиардов чашек кофе, что делает его самым популярным напитком.",
+        "Дельфины спят с одним открытым глазом, чтобы вовремя заметить приближающуюся опасность.",
+        "Гравитация на Луне составляет лишь шестую часть земной, поэтому там можно прыгать очень высоко."
     ]
 };
 
@@ -60,18 +80,21 @@ const TypingTest = ({ onBack }) => {
 
     const textContainerRef = useRef(null);
 
-    // Генерируем текст, объединяя два случайных предложения
+    // Берем от 3 до 4 случайных фактов для нормального объема абзаца
     const generateText = useCallback((currentLang) => {
         const list = textsData[currentLang];
-        const fact1 = list[Math.floor(Math.random() * list.length)];
-        let fact2 = list[Math.floor(Math.random() * list.length)];
+        let selectedFacts = [];
+        const factCount = Math.floor(Math.random() * 2) + 3; // 3 или 4 факта
         
-        // Гарантируем, что второе предложение не будет повторять первое
-        while (fact1 === fact2) {
-            fact2 = list[Math.floor(Math.random() * list.length)];
+        while(selectedFacts.length < factCount) {
+            let randomFact = list[Math.floor(Math.random() * list.length)];
+            // Проверяем, чтобы факты не повторялись в одном тексте
+            if (!selectedFacts.includes(randomFact)) {
+                selectedFacts.push(randomFact);
+            }
         }
         
-        return fact1 + " " + fact2;
+        return selectedFacts.join(" ") + " ";
     }, []);
 
     useEffect(() => {
