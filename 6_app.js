@@ -7,7 +7,7 @@ const {
   TestQuestionCard, ReviewView, StatsView,
   TypingTest,
   HotkeyTrainer,
-  CodePlayground // <--- ДОБАВЛЕНО: Подключаем песочницу кода
+  CodePlayground
 } = window;
 
 // --- APP ---
@@ -420,7 +420,7 @@ function App() {
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {view === 'typing' ? (
-                              <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
@@ -431,7 +431,7 @@ function App() {
 
                           {/* УМНАЯ КНОПКА: Хоткеи */}
                           {view === 'hotkeys' ? (
-                              <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
@@ -440,14 +440,14 @@ function App() {
                               </Button>
                           )}
 
-                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
+                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА (По вашим скриншотам) */}
                           {view === 'code' ? (
-                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
-                              <Button variant="muted" onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#fff', border: 'none'}}>
-                                  <span style={{marginRight: 10}}>💻</span> Школа кода
+                              <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>💻</span> ШКОЛА КОДА
                               </Button>
                           )}
 
@@ -630,21 +630,21 @@ function App() {
           {/* Экран тренажера печати */}
           {!isAuthLoading && user && view === 'typing' && (
               <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
-                  <TypingTest onBack={() => setView('menu')} />
+                  <TypingTest />
               </motion.div>
           )}
 
           {/* Экран хоткеев */}
           {!isAuthLoading && user && view === 'hotkeys' && (
               <motion.div key="hotkey_trainer" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '700px'}}>
-                  <HotkeyTrainer onBack={() => setView('menu')} />
+                  <HotkeyTrainer />
               </motion.div>
           )}
 
-          {/* ДОБАВЛЕНО: ЭКРАН ШКОЛЫ КОДА */}
+          {/* ЭКРАН ШКОЛЫ КОДА */}
           {!isAuthLoading && user && view === 'code' && (
               <motion.div key="code_playground" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
-                  <CodePlayground onBack={() => setView('menu')} />
+                  <CodePlayground />
               </motion.div>
           )}
 
