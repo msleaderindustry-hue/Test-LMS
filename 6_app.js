@@ -420,7 +420,7 @@ function App() {
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {view === 'typing' ? (
-                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                              <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
@@ -431,7 +431,7 @@ function App() {
 
                           {/* УМНАЯ КНОПКА: Хоткеи */}
                           {view === 'hotkeys' ? (
-                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                              <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
@@ -440,9 +440,9 @@ function App() {
                               </Button>
                           )}
 
-                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА (По вашим скриншотам) */}
+                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
                           {view === 'code' ? (
-                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
