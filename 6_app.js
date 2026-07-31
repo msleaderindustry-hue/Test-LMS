@@ -6,7 +6,8 @@ const {
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
   TypingTest,
-  HotkeyTrainer // <--- ДОБАВЛЕНО: Подключаем тренажер горячих клавиш
+  HotkeyTrainer,
+  CodePlayground // <--- ДОБАВЛЕНО: Подключаем песочницу кода
 } = window;
 
 // --- APP ---
@@ -246,7 +247,7 @@ function App() {
   const finishTest = () => {
     let correct = 0; testSession.questions.forEach((q, i) => { if(testSession.answers[i] === q.correctIndex) correct++; });
     setTestSession(prev => ({...prev, score: correct}));
-    if(correct/testSession.questions.length >= 0.5) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    if(correct/testSession.questions.length >= 0.5) window.confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     setView('result');
   };
 
@@ -376,9 +377,8 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (Отображается в меню, тренажере печати и хоткеях) */}
-      {/* ДОБАВЛЕНО: поддержка view === 'hotkeys' */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys') && (
+      {/* ГАМБУРГЕР КНОПКА */}
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -418,7 +418,7 @@ function App() {
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
                           
-                          {/* УМНАЯ КНОПКА: Меняет вид в зависимости от того, где мы находимся */}
+                          {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {view === 'typing' ? (
                               <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
@@ -429,7 +429,7 @@ function App() {
                               </Button>
                           )}
 
-                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ХОТКЕЕВ */}
+                          {/* УМНАЯ КНОПКА: Хоткеи */}
                           {view === 'hotkeys' ? (
                               <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
@@ -437,6 +437,17 @@ function App() {
                           ) : (
                               <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
+                              </Button>
+                          )}
+
+                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
+                          {view === 'code' ? (
+                              <Button variant="muted" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button variant="muted" onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#fff', border: 'none'}}>
+                                  <span style={{marginRight: 10}}>💻</span> Школа кода
                               </Button>
                           )}
 
@@ -616,17 +627,24 @@ function App() {
              <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
           )}
 
-          {/* Экран тренажера */}
+          {/* Экран тренажера печати */}
           {!isAuthLoading && user && view === 'typing' && (
               <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
-                  <TypingTest />
+                  <TypingTest onBack={() => setView('menu')} />
               </motion.div>
           )}
 
-          {/* ДОБАВЛЕНО: ЭКРАН ХОТКЕЕВ */}
+          {/* Экран хоткеев */}
           {!isAuthLoading && user && view === 'hotkeys' && (
               <motion.div key="hotkey_trainer" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '700px'}}>
-                  <HotkeyTrainer />
+                  <HotkeyTrainer onBack={() => setView('menu')} />
+              </motion.div>
+          )}
+
+          {/* ДОБАВЛЕНО: ЭКРАН ШКОЛЫ КОДА */}
+          {!isAuthLoading && user && view === 'code' && (
+              <motion.div key="code_playground" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
+                  <CodePlayground onBack={() => setView('menu')} />
               </motion.div>
           )}
 
