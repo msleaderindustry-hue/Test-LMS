@@ -447,7 +447,7 @@ function App() {
                               </Button>
                           ) : (
                               <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>💻</span> ШКОЛА КОДА
+                                  <span style={{marginRight: 10}}>💻</span> VS School
                               </Button>
                           )}
 
