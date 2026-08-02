@@ -49,34 +49,68 @@ const HotkeyTrainer = ({ onBack }) => {
     const [shake, setShake] = useState(false);
     const [successPulse, setSuccessPulse] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
-    // При старте перемешиваем список клавиш и берем 10 случайных для одной игры
+    // Следим за состоянием полного экрана
     useEffect(() => {
-        resetGame();
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                setIsFullscreen(false);
+                if (navigator.keyboard && navigator.keyboard.unlock) {
+                    navigator.keyboard.unlock();
+                }
+            } else {
+                setIsFullscreen(true);
+            }
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
-    const resetGame = () => {
+    const startFullscreenGame = async () => {
+        try {
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            }
+            // Магия блокировки браузерных горячих клавиш (Ctrl+T, Ctrl+W и т.д.)
+            if (navigator.keyboard && navigator.keyboard.lock) {
+                await navigator.keyboard.lock(["ControlLeft", "ControlRight", "KeyT", "KeyW", "KeyN", "KeyR", "KeyS", "KeyP"]);
+            }
+        } catch (e) {
+            console.warn("Fullscreen or Keyboard Lock API warning:", e);
+        }
+        startGame();
+    };
+
+    const startGame = () => {
         setTasks(shuffleArray([...HOTKEYS_DB]).slice(0, 10)); 
         setCurrentIndex(0);
         setScore(0);
         setIsFinished(false);
+        setGameStarted(true);
+    };
+
+    const leaveGame = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
+        setGameStarted(false);
     };
 
     useEffect(() => {
-        if (isFinished || tasks.length === 0) return;
+        if (!gameStarted || isFinished || tasks.length === 0) return;
 
         const handleKeyDown = (e) => {
-            // Игнорируем просто нажатие сервисных клавиш
             if (e.key === "Control" || e.key === "Meta" || e.key === "Shift" || e.key === "Alt") return;
 
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
             const currentTask = tasks[currentIndex];
 
             if (isCtrlOrCmd) {
-                e.preventDefault(); // Блокируем стандартные действия браузера (чтобы Ctrl+S не открывал окно сохранения и т.д.)
+                e.preventDefault(); // Намертво глушим стандартные действия браузера
 
                 if (e.key.toLowerCase() === currentTask.key) {
-                    // Правильный ответ!
                     setSuccessPulse(true);
                     setScore(prev => prev + 1);
                     setTimeout(() => setSuccessPulse(false), 200);
@@ -87,12 +121,10 @@ const HotkeyTrainer = ({ onBack }) => {
                         setIsFinished(true);
                     }
                 } else {
-                    // Нажал Ctrl, но не ту букву
                     setShake(true);
                     setTimeout(() => setShake(false), 300);
                 }
             } else {
-                // Нажал букву без Ctrl
                 setShake(true);
                 setTimeout(() => setShake(false), 300);
             }
@@ -100,7 +132,35 @@ const HotkeyTrainer = ({ onBack }) => {
 
         window.addEventListener("keydown", handleKeyDown, { passive: false });
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [currentIndex, tasks, isFinished]);
+    }, [currentIndex, tasks, isFinished, gameStarted]);
+
+    // ЭКРАН СТАРТА С ПРЕДУПРЕЖДЕНИЕМ О БРАУЗЕРЕ
+    if (!gameStarted) {
+        return (
+            <motion.div 
+                className="glass-panel"
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px 30px', textAlign: 'center' }}
+            >
+                <div style={{fontSize: '60px'}}>⚡</div>
+                <h2 style={{margin: 0, fontSize: '32px', color: 'var(--text-main)'}}>Тренажер Горячих Клавиш</h2>
+                <p style={{fontSize: '16px', color: 'var(--text-sec)', maxWidth: '450px', lineHeight: '1.5'}}>
+                    Чтобы комбинации вроде <b>Ctrl+T</b> (новая вкладка) и <b>Ctrl+W</b> (закрытие) не открывали вкладки браузера, а тренировали тебя, мы запустим режим полного погружения.
+                </p>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px', width: '100%', maxWidth: '320px'}}>
+                    <Button variant="orange" onClick={startFullscreenGame} style={{height: '54px', fontSize: '16px'}}>
+                        🚀 Начать в полном экране
+                    </Button>
+                    <Button variant="muted" onClick={startGame} style={{height: '54px', fontSize: '16px'}}>
+                        Обычный режим
+                    </Button>
+                    <Button variant="red" onClick={onBack} style={{height: '54px', fontSize: '16px', marginTop: '10px', background: 'transparent', border: '1px solid #ef4444'}}>
+                        Назад в меню
+                    </Button>
+                </div>
+            </motion.div>
+        );
+    }
 
     if (tasks.length === 0) return null;
 
@@ -113,14 +173,20 @@ const HotkeyTrainer = ({ onBack }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
+            style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px', position: 'relative' }}
         >
             <header style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px'}}>
-                <h2 style={{margin: 0, fontSize: '28px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-                    Хоткеи ⚡
-                </h2>
-                <div style={{fontSize: '18px', fontWeight: 'bold', color: 'var(--text-sec)'}}>
-                    {currentIndex} / {tasks.length}
+                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                    <h2 style={{margin: 0, fontSize: '28px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                        Хоткеи ⚡
+                    </h2>
+                    {isFullscreen && <span style={{fontSize: '11px', background: '#10b981', color: '#fff', padding: '4px 8px', borderRadius: '8px', fontWeight: 'bold'}}>🔒 КЛАВИАТУРА ЗАХВАЧЕНА</span>}
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                    <div style={{fontSize: '18px', fontWeight: 'bold', color: 'var(--text-sec)'}}>
+                        {currentIndex} / {tasks.length}
+                    </div>
+                    <Button variant="muted" onClick={leaveGame} style={{padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '14px'}}>Выйти</Button>
                 </div>
             </header>
 
@@ -168,7 +234,7 @@ const HotkeyTrainer = ({ onBack }) => {
                 >
                     <h2 style={{ fontSize: '42px', margin: 0, color: '#10b981' }}>Отличная работа!</h2>
                     <p style={{ fontSize: '18px', color: 'var(--text-sec)' }}>Вы успешно закрепили {score} горячих клавиш в мышечной памяти.</p>
-                    <Button variant="orange" onClick={resetGame} style={{ width: '250px', marginTop: '20px' }}>Пройти еще раз</Button>
+                    <Button variant="orange" onClick={startGame} style={{ width: '250px', marginTop: '20px' }}>Пройти еще раз</Button>
                 </motion.div>
             )}
         </motion.div>
