@@ -69,7 +69,7 @@ const TypingTest = ({ onBack }) => {
         setPressedKey(null);
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
+    // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
         
@@ -96,30 +96,25 @@ const TypingTest = ({ onBack }) => {
 
             const data = await response.json();
             
-            // ВЫВОДИМ ОТВЕТ В КОНСОЛЬ. Если текст не генерируется, смотри сюда!
             console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
 
-            // Защита: проверяем, не прислал ли Google явную ошибку
             if (data.error) {
                 throw new Error(data.error.message || "Неизвестная ошибка API");
             }
 
-            // Защита: проверяем, есть ли вообще массив candidates
             if (!data.candidates || data.candidates.length === 0) {
                 throw new Error("Google не вернул текст (ответ пуст).");
             }
 
-            // Если всё хорошо, смело читаем текст
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // Дополнительная зачистка текста (на всякий случай)
+            // Дополнительная зачистка текста
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
-            aiText = aiText.replace(/\s+/g, ' '); // Убираем двойные пробелы
+            aiText = aiText.replace(/\s+/g, ' '); 
 
             resetGame(lang, aiText + " ");
             
         } catch (error) {
-            // Теперь ошибка не уронит весь сайт, а красиво выведется сюда:
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
             resetGame(lang, generateLocalText(lang));
@@ -139,7 +134,7 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (isGenerating) return; // Блокируем ввод во время загрузки
+            if (isGenerating) return; 
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
@@ -273,19 +268,19 @@ const TypingTest = ({ onBack }) => {
                     </motion.div>
                 ) : (
                     <>
-                        <div ref={textContainerRef} style={{ fontSize: '26px', lineHeight: '2', fontFamily: "'Courier New', Courier, monospace", letterSpacing: '1.5px', color: '#64748b', fontWeight: '600' }}>
+                        <div ref={textContainerRef} style={{ fontSize: '26px', lineHeight: '2', fontFamily: "'Courier New', Courier, monospace", letterSpacing: '1.5px', color: '#64748b', fontWeight: '600', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {text.split('').map((char, index) => {
-                                let color = '#64748b'; // Обычный не напечатанный текст (серый)
+                                let color = '#64748b'; 
                                 let borderBottom = '2px solid transparent';
                                 
                                 if (index < currentIndex) {
-                                    color = '#94a3b8'; // Напечатанный текст (светлее)
+                                    color = '#94a3b8'; 
                                 } else if (index === currentIndex) {
-                                    color = '#0ea5e9'; // Текущая буква (циановая)
-                                    borderBottom = '3px solid #0ea5e9'; // Подчеркивание
+                                    color = '#0ea5e9'; 
+                                    borderBottom = '3px solid #0ea5e9'; 
                                 }
                                 
-                                return <span key={index} className={index === currentIndex ? 'current' : ''} style={{ color, borderBottom, paddingBottom: '2px', display: 'inline-block' }}>{char}</span>;
+                                return <span key={index} className={index === currentIndex ? 'current' : ''} style={{ color, borderBottom, paddingBottom: '2px', whiteSpace: 'pre-wrap' }}>{char}</span>;
                             })}
                         </div>
                     </>
