@@ -82,7 +82,7 @@ const CodePlayground = ({ onBack }) => {
         }
     };
 
-    // Стили вкладок (с поддержкой темной/светлой темы)
+    // Стили в духе VS Code вкладок, но с поддержкой тем
     const tabStyle = (isActive, type) => {
         let accentColor = type === 'html' ? '#e34c26' : type === 'css' ? '#264de4' : '#f7df1e';
         return {
@@ -111,7 +111,7 @@ const CodePlayground = ({ onBack }) => {
 
     return (
         <motion.div 
-            className="glass-panel" // ВЕРНУЛИ КЛАСС ДЛЯ ФОНА И ОТСТУПОВ
+            className="glass-panel" // ВЕРНУЛИ КЛАСС ДЛЯ ФОНА И ОТСТУПОВ ИЗ ТЕМЫ
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
@@ -193,12 +193,11 @@ const CodePlayground = ({ onBack }) => {
 
                         {/* Поля ввода (Сам редактор) */}
                         <div style={{ flex: 1, display: 'flex', position: 'relative', background: 'var(--bg-body)' }}>
-                            {/* Панель с номерами строк (Gutter) */}
+                            {/* Фальшивая панель с номерами строк (Gutter) */}
                             <div style={{ width: '40px', background: 'var(--bg-panel)', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '20px 10px 20px 0', color: 'var(--text-sec)', opacity: 0.7, fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '15px', lineHeight: '1.6', userSelect: 'none' }}>
                                 {[...Array(15)].map((_, i) => <div key={i}>{i + 1}</div>)}
                             </div>
 
-                            {/* Текстареа: Цвет текста зависит от глобальной темы */}
                             {activeTab === 'html' && (
                                 <textarea 
                                     value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)}
@@ -285,7 +284,7 @@ const CodePlayground = ({ onBack }) => {
                         </div>
                     </div>
                     
-                    {/* Сам результат (Всегда белый, так как это веб-страница) */}
+                    {/* Сам результат (Оставляем белым, так как это готовый сайт) */}
                     <iframe 
                         srcDoc={srcDoc}
                         title="output"
