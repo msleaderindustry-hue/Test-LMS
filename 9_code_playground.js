@@ -82,36 +82,36 @@ const CodePlayground = ({ onBack }) => {
         }
     };
 
-    // Стили в духе VS Code вкладок
+    // Стили вкладок (с поддержкой темной/светлой темы)
     const tabStyle = (isActive, type) => {
         let accentColor = type === 'html' ? '#e34c26' : type === 'css' ? '#264de4' : '#f7df1e';
         return {
             padding: '10px 20px',
-            background: isActive ? '#1e1e1e' : '#2d2d2d',
-            color: isActive ? '#ffffff' : '#969696',
+            background: isActive ? 'var(--bg-body)' : 'transparent',
+            color: isActive ? 'var(--text-main)' : 'var(--text-sec)',
             border: 'none',
             borderTop: isActive ? `2px solid ${accentColor}` : '2px solid transparent',
-            borderRight: '1px solid #252526',
+            borderRight: '1px solid var(--glass-border)',
             fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
             fontSize: '13px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            transition: 'background 0.2s',
+            transition: 'background 0.2s, color 0.2s',
             minWidth: '120px'
         };
     };
 
     const getFileIcon = (type) => {
-        // ИСПРАВЛЕНА ОШИБКА: Символы </> теперь обернуты как строка
         if (type === 'html') return <span style={{color: '#e34c26', fontSize: '14px'}}>{'</>'}</span>;
         if (type === 'css') return <span style={{color: '#264de4', fontSize: '14px'}}>#</span>;
-        return <span style={{color: '#f7df1e', fontSize: '14px'}}>JS</span>;
+        return <span style={{color: '#d4b830', fontSize: '14px'}}>JS</span>;
     };
 
     return (
         <motion.div 
+            className="glass-panel" // ВЕРНУЛИ КЛАСС ДЛЯ ФОНА И ОТСТУПОВ
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
@@ -122,12 +122,12 @@ const CodePlayground = ({ onBack }) => {
             }}
         >
             {/* ШАПКА КАК В IDE */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#181818', padding: '15px 25px', borderRadius: '12px', border: '1px solid #333' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-panel)', padding: '15px 25px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <h2 style={{margin: 0, fontSize: '24px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px'}}>
-                        <span style={{ color: '#007acc' }}>{'</>'}</span> VS School
+                    <h2 style={{margin: 0, fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        <span style={{ color: '#0ea5e9' }}>{'</>'}</span> VS School
                     </h2>
-                    <span style={{ background: '#2d2d2d', color: '#ccc', padding: '4px 10px', borderRadius: '6px', fontSize: '12px' }}>
+                    <span style={{ background: 'var(--bg-body)', color: 'var(--text-sec)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--glass-border)' }}>
                         Проект: Мой первый сайт
                     </span>
                 </div>
@@ -136,19 +136,19 @@ const CodePlayground = ({ onBack }) => {
             <div style={{ display: 'flex', gap: '20px', height: '70vh', minHeight: '550px' }}>
                 
                 {/* ЛЕВАЯ ЧАСТЬ - VS CODE РЕДАКТОР */}
-                <div style={{ flex: 1.2, display: 'flex', background: '#1e1e1e', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', border: '1px solid #333' }}>
+                <div style={{ flex: 1.2, display: 'flex', background: 'var(--bg-body)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', border: '1px solid var(--glass-border)' }}>
                     
                     {/* Боковая панелька инструментов (Activity Bar) */}
-                    <div style={{ width: '48px', background: '#333333', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15px', gap: '20px', borderRight: '1px solid #252526' }}>
-                        <div style={{ color: '#fff', fontSize: '20px', cursor: 'pointer', opacity: 1 }}>📄</div>
-                        <div style={{ color: '#fff', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>🔍</div>
-                        <div style={{ color: '#fff', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>🧩</div>
-                        <div style={{ marginTop: 'auto', marginBottom: '15px', color: '#fff', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>⚙️</div>
+                    <div style={{ width: '48px', background: 'var(--bg-panel)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15px', gap: '20px', borderRight: '1px solid var(--glass-border)' }}>
+                        <div style={{ color: 'var(--text-main)', fontSize: '20px', cursor: 'pointer', opacity: 1 }}>📄</div>
+                        <div style={{ color: 'var(--text-main)', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>🔍</div>
+                        <div style={{ color: 'var(--text-main)', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>🧩</div>
+                        <div style={{ marginTop: 'auto', marginBottom: '15px', color: 'var(--text-main)', fontSize: '20px', cursor: 'pointer', opacity: 0.4 }}>⚙️</div>
                     </div>
 
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                         {/* Верхняя панель вкладок файлов */}
-                        <div style={{ display: 'flex', background: '#252526', overflowX: 'auto' }}>
+                        <div style={{ display: 'flex', background: 'var(--bg-panel)', overflowX: 'auto', borderBottom: '1px solid var(--glass-border)' }}>
                             <button onClick={() => setActiveTab('html')} style={tabStyle(activeTab === 'html', 'html')}>
                                 {getFileIcon('html')} index.html
                             </button>
@@ -159,7 +159,7 @@ const CodePlayground = ({ onBack }) => {
                                 {getFileIcon('js')} script.js
                             </button>
                             
-                            {/* Кнопка вызова ИИ */}
+                            {/* Кнопка вызова ИИ (Стилизована под плагин Copilot) */}
                             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '10px' }}>
                                 <button 
                                     onClick={askAI}
@@ -168,8 +168,8 @@ const CodePlayground = ({ onBack }) => {
                                         display: 'flex', alignItems: 'center', gap: '6px',
                                         padding: '6px 12px',
                                         background: isAsking ? 'transparent' : 'rgba(139, 92, 246, 0.1)',
-                                        color: isAsking ? '#888' : '#c4b5fd',
-                                        border: isAsking ? '1px solid #444' : '1px solid #8b5cf6',
+                                        color: isAsking ? 'var(--text-sec)' : '#a78bfa',
+                                        border: isAsking ? '1px solid var(--glass-border)' : '1px solid #8b5cf6',
                                         borderRadius: '6px',
                                         fontWeight: '600',
                                         cursor: isAsking ? 'not-allowed' : 'pointer',
@@ -184,38 +184,39 @@ const CodePlayground = ({ onBack }) => {
                         </div>
 
                         {/* Хлебные крошки (Breadcrumbs) */}
-                        <div style={{ background: '#1e1e1e', padding: '4px 15px', fontSize: '12px', color: '#969696', borderBottom: '1px solid #2d2d2d', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ background: 'var(--bg-body)', padding: '4px 15px', fontSize: '12px', color: 'var(--text-sec)', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <span>project</span> <span>›</span> 
-                            <span style={{color: '#ccc'}}>
+                            <span style={{color: 'var(--text-main)'}}>
                                 {activeTab === 'html' ? 'index.html' : activeTab === 'css' ? 'style.css' : 'script.js'}
                             </span>
                         </div>
 
                         {/* Поля ввода (Сам редактор) */}
-                        <div style={{ flex: 1, display: 'flex', position: 'relative', background: '#1e1e1e' }}>
-                            {/* Фальшивая панель с номерами строк (Gutter) */}
-                            <div style={{ width: '40px', background: '#1e1e1e', borderRight: '1px solid #2d2d2d', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '20px 10px 20px 0', color: '#6e7681', fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '15px', lineHeight: '1.6', userSelect: 'none' }}>
+                        <div style={{ flex: 1, display: 'flex', position: 'relative', background: 'var(--bg-body)' }}>
+                            {/* Панель с номерами строк (Gutter) */}
+                            <div style={{ width: '40px', background: 'var(--bg-panel)', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '20px 10px 20px 0', color: 'var(--text-sec)', opacity: 0.7, fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '15px', lineHeight: '1.6', userSelect: 'none' }}>
                                 {[...Array(15)].map((_, i) => <div key={i}>{i + 1}</div>)}
                             </div>
 
+                            {/* Текстареа: Цвет текста зависит от глобальной темы */}
                             {activeTab === 'html' && (
                                 <textarea 
                                     value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)}
-                                    style={{ flex: 1, background: 'transparent', color: '#ce9178', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
+                                    style={{ flex: 1, background: 'transparent', color: 'var(--text-main)', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
                                     spellCheck="false"
                                 />
                             )}
                             {activeTab === 'css' && (
                                 <textarea 
                                     value={cssCode} onChange={(e) => setCssCode(e.target.value)}
-                                    style={{ flex: 1, background: 'transparent', color: '#9cdcfe', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
+                                    style={{ flex: 1, background: 'transparent', color: 'var(--text-main)', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
                                     spellCheck="false"
                                 />
                             )}
                             {activeTab === 'js' && (
                                 <textarea 
                                     value={jsCode} onChange={(e) => setJsCode(e.target.value)}
-                                    style={{ flex: 1, background: 'transparent', color: '#dcdcaa', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
+                                    style={{ flex: 1, background: 'transparent', color: 'var(--text-main)', fontFamily: "'Fira Code', Consolas, Monaco, 'Courier New', monospace", fontSize: '15px', padding: '20px', border: 'none', resize: 'none', outline: 'none', lineHeight: '1.6', whiteSpace: 'pre' }}
                                     spellCheck="false"
                                 />
                             )}
@@ -233,23 +234,23 @@ const CodePlayground = ({ onBack }) => {
                                             right: '20px',
                                             width: 'calc(100% - 60px)',
                                             maxWidth: '500px',
-                                            background: '#252526',
+                                            background: 'var(--bg-panel)',
                                             border: '1px solid #8b5cf6',
                                             borderRadius: '8px',
                                             padding: '0',
-                                            color: '#cccccc',
-                                            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+                                            color: 'var(--text-main)',
+                                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
                                             zIndex: 10,
                                             overflow: 'hidden'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e1e1e', padding: '10px 15px', borderBottom: '1px solid #333' }}>
-                                            <div style={{ fontWeight: '600', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-body)', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)' }}>
+                                            <div style={{ fontWeight: '600', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
                                                 <span style={{color: '#a78bfa'}}>✨</span> Помощник (Gemini)
                                             </div>
                                             <button 
                                                 onClick={() => setAiResponse(null)}
-                                                style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '14px' }}
+                                                style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px' }}
                                             >
                                                 ✖
                                             </button>
@@ -265,10 +266,10 @@ const CodePlayground = ({ onBack }) => {
                 </div>
 
                 {/* ПРАВАЯ ЧАСТЬ - МИНИ-БРАУЗЕР */}
-                <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #e2e8f0' }}>
+                <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', border: '1px solid var(--glass-border)' }}>
                     
                     {/* Строка браузера */}
-                    <div style={{ background: '#f1f5f9', padding: '10px 15px', borderBottom: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ background: 'var(--bg-panel)', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ display: 'flex', gap: '6px' }}>
                             <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%' }}></div>
                             <div style={{ width: '12px', height: '12px', background: '#eab308', borderRadius: '50%' }}></div>
@@ -276,15 +277,15 @@ const CodePlayground = ({ onBack }) => {
                         </div>
                         
                         <div style={{ 
-                            flex: 1, background: '#e2e8f0', borderRadius: '6px', padding: '4px 0', 
-                            textAlign: 'center', fontSize: '12px', color: '#64748b', fontWeight: '600',
+                            flex: 1, background: 'var(--bg-body)', borderRadius: '6px', padding: '4px 0', 
+                            textAlign: 'center', fontSize: '12px', color: 'var(--text-main)', fontWeight: '600',
                             display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px'
                         }}>
                             <span style={{ fontSize: '10px' }}>🔒</span> localhost:3000
                         </div>
                     </div>
                     
-                    {/* Сам результат */}
+                    {/* Сам результат (Всегда белый, так как это веб-страница) */}
                     <iframe 
                         srcDoc={srcDoc}
                         title="output"
