@@ -69,14 +69,13 @@ const TypingTest = ({ onBack }) => {
         setPressedKey(null);
     };
 
-    // ФУНКЦИЯ ОБРАЩЕНИЯ К ТВОЕМУ PROXY-SERVER (CLOUDFLARE WORKER)
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
         
         setIsGenerating(true);
         resetGame(lang, " "); // Очищаем текст перед загрузкой
 
-        // Специальный промпт для Gemini, исключающий спецсимволы
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
         Язык: ${promptLang}. 
@@ -86,6 +85,7 @@ const TypingTest = ({ onBack }) => {
         Сразу выведи только текст, без приветствий и пояснений.`;
 
         try {
+            console.log("🚀 Отправляем запрос на Cloudflare...");
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -94,19 +94,34 @@ const TypingTest = ({ onBack }) => {
                 })
             });
 
-            if (!response.ok) throw new Error("Ошибка сервера прокси");
-
             const data = await response.json();
+            
+            // ВЫВОДИМ ОТВЕТ В КОНСОЛЬ. Если текст не генерируется, смотри сюда!
+            console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
+
+            // Защита: проверяем, не прислал ли Google явную ошибку
+            if (data.error) {
+                throw new Error(data.error.message || "Неизвестная ошибка API");
+            }
+
+            // Защита: проверяем, есть ли вообще массив candidates
+            if (!data.candidates || data.candidates.length === 0) {
+                throw new Error("Google не вернул текст (ответ пуст).");
+            }
+
+            // Если всё хорошо, смело читаем текст
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // Дополнительная зачистка текста (на всякий случай, если ИИ проигнорирует запрет)
+            // Дополнительная зачистка текста (на всякий случай)
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
             aiText = aiText.replace(/\s+/g, ' '); // Убираем двойные пробелы
 
             resetGame(lang, aiText + " ");
+            
         } catch (error) {
-            console.error("Gemini API Error:", error);
-            alert("Не удалось сгенерировать текст (возможно, прокси спит). Загружен резервный текст.");
+            // Теперь ошибка не уронит весь сайт, а красиво выведется сюда:
+            console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
+            alert("Ошибка генерации: " + error.message);
             resetGame(lang, generateLocalText(lang));
         } finally {
             setIsGenerating(false);
