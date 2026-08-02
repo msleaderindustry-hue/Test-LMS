@@ -194,74 +194,137 @@ const TypingTest = ({ onBack }) => {
 
     return (
         <motion.div 
-            className="glass-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
+            style={{ 
+                width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '20px', 
+                padding: '40px', background: '#1c1e29', borderRadius: '24px', 
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', fontFamily: 'sans-serif'
+            }}
         >
-            <header className="type-header">
-                <div className="title-group">
-                    <div className="type-title" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                        Pro<span>Type</span>
-                        <span style={{fontSize: '12px', background: 'linear-gradient(90deg, #8e2de2, #4a00e0)', color: 'white', padding: '4px 8px', borderRadius: '8px', letterSpacing: '1px'}}>AI POWERED</span>
+            {/* ШАПКА */}
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.5px' }}>
+                            Pro<span style={{ color: '#3b82f6' }}>Type</span>
+                        </h2>
+                        {/* ИСПРАВЛЕННЫЙ ЗНАЧОК AI POWERED: ярче, контрастнее */}
+                        <span style={{
+                            fontSize: '11px', 
+                            fontWeight: '900', 
+                            background: 'linear-gradient(90deg, #a855f7, #6d28d9)', 
+                            color: '#ffffff', 
+                            padding: '6px 12px', 
+                            borderRadius: '12px', 
+                            letterSpacing: '1px',
+                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.6)',
+                            textTransform: 'uppercase'
+                        }}>
+                            AI POWERED
+                        </span>
                     </div>
-                    <div className="lang-switch">
-                        <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>English</button>
-                        <button className={`lang-btn ${lang === 'ru' ? 'active' : ''}`} onClick={() => setLang('ru')}>Русский</button>
+                    
+                    <div style={{ display: 'flex', background: '#13141c', borderRadius: '12px', padding: '6px', border: '1px solid #2e303e', width: 'fit-content' }}>
+                        <button 
+                            onClick={() => setLang('en')}
+                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'en' ? '#334155' : 'transparent', color: lang === 'en' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
+                        >English</button>
+                        <button 
+                            onClick={() => setLang('ru')}
+                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'ru' ? '#4b5563' : 'transparent', color: lang === 'ru' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
+                        >Русский</button>
                     </div>
                 </div>
                 
-                <div className="stats-grid">
-                    <div className="stat-box">
-                        <span className="stat-label">Комбо</span>
-                        <span className={`stat-value ${combo > 10 ? 'combo-glow' : ''}`}>x{combo}</span>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
+                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#fff' }}>x{combo}</span>
                     </div>
-                    <div className="stat-box">
-                        <span className="stat-label">Точность</span>
-                        <span className="stat-value" style={{color: stats.accuracy < 90 ? "#f43f5e" : "#10b981"}}>{stats.accuracy}%</span>
+                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Точность</span>
+                        <span style={{ fontSize: '24px', fontWeight: '900', color: stats.accuracy < 90 ? "#f43f5e" : "#10b981" }}>{stats.accuracy}%</span>
                     </div>
-                    <div className="stat-box">
-                        <span className="stat-label">Скорость</span>
-                        <span className="stat-value" style={{color: "#0ea5e9"}}>{stats.wpm} WPM</span>
+                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Скорость</span>
+                        <span style={{ fontSize: '24px', fontWeight: '900', color: "#0ea5e9" }}>{stats.wpm} WPM</span>
                     </div>
                 </div>
             </header>
 
-            {/* AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: 'rgba(142, 45, 226, 0.05)', border: '1px solid rgba(142, 45, 226, 0.2)', padding: '15px 20px', borderRadius: '16px' }}>
+            {/* ИСПРАВЛЕННАЯ AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
+            <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '15px', 
+                alignItems: 'center', 
+                background: 'rgba(30, 30, 46, 0.4)', 
+                border: '1px solid rgba(139, 92, 246, 0.2)', 
+                padding: '12px 16px', 
+                borderRadius: '16px' 
+            }}>
                 <span style={{ fontSize: '24px' }}>✨</span>
+                
+                {/* Исправленное поле ввода: flex: '1 1 auto' и убран maxWidth */}
                 <input
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder="На какую тему сгенерировать текст? (Например: Космос)"
-                    style={{ flex: 1, padding: '12px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '16px' }}
+                    placeholder="Тема для текста (напр. Пушкин)"
+                    style={{ 
+                        flex: '1 1 auto', 
+                        minWidth: '200px', 
+                        padding: '14px 20px', 
+                        borderRadius: '12px', 
+                        border: '1px solid #2e303e', 
+                        outline: 'none', 
+                        background: '#13141c', 
+                        color: '#fff', 
+                        fontSize: '16px' 
+                    }}
                     disabled={isGenerating}
                 />
-                <Button 
+                
+                {/* Исправленная кнопка: занимает размер по тексту (whiteSpace: 'nowrap') */}
+                <button 
                     onClick={fetchAIText} 
                     disabled={isGenerating}
-                    style={{ minWidth: '180px', height: '46px', background: 'linear-gradient(90deg, #8e2de2, #4a00e0)', color: 'white', border: 'none' }}
+                    style={{ 
+                        whiteSpace: 'nowrap',
+                        padding: '0 30px', 
+                        height: '50px', 
+                        background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '12px', 
+                        fontWeight: '800', 
+                        fontSize: '14px', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '1px', 
+                        cursor: isGenerating ? 'not-allowed' : 'pointer', 
+                        transition: 'opacity 0.2s', 
+                        opacity: isGenerating ? 0.7 : 1,
+                        boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)'
+                    }}
                 >
-                    {isGenerating ? "⏳ Нейросеть думает..." : "Сгенерировать текст"}
-                </Button>
+                    {isGenerating ? "Генерация..." : "Сгенерировать текст"}
+                </button>
             </div>
 
-            <div className="text-container">
+            {/* КОНТЕЙНЕР ТЕКСТА */}
+            <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '40px', position: 'relative', minHeight: '220px' }}>
                 {isGenerating ? (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ height: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)' }}
+                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
                     >
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>
-                            ⚙️
-                        </motion.div>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>⚙️</motion.div>
                         <div style={{ fontSize: '18px' }}>Пишем уникальный текст...</div>
                     </motion.div>
                 ) : (
                     <>
-                        {/* ЗДЕСЬ ИСПРАВЛЕНА ПРОБЛЕМА СО СЛИПАНИЕМ СЛОВ (whiteSpace: 'pre-wrap') */}
                         <div className="text-display" ref={textContainerRef} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', display: 'block', lineHeight: '1.6' }}>
                             {text.split('').map((char, index) => {
                                 let statusClass = "";
@@ -300,6 +363,7 @@ const TypingTest = ({ onBack }) => {
                 </AnimatePresence>
             </div>
 
+            {/* КЛАВИАТУРА */}
             <div className="keyboard" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', flexShrink: 0, opacity: isGenerating ? 0.5 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
                 {currentLayout.map((row, rIndex) => (
                     <div key={`${lang}-${rIndex}`} className="key-row">
