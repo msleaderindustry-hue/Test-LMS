@@ -69,12 +69,12 @@ const TypingTest = ({ onBack }) => {
         setPressedKey(null);
     };
 
-    // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
         
         setIsGenerating(true);
-        resetGame(lang, " "); 
+        resetGame(lang, " "); // Очищаем текст перед загрузкой
 
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
@@ -95,24 +95,31 @@ const TypingTest = ({ onBack }) => {
             });
 
             const data = await response.json();
+            
+            // ВЫВОДИМ ОТВЕТ В КОНСОЛЬ. Если текст не генерируется, смотри сюда!
             console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
 
+            // Защита: проверяем, не прислал ли Google явную ошибку
             if (data.error) {
                 throw new Error(data.error.message || "Неизвестная ошибка API");
             }
 
+            // Защита: проверяем, есть ли вообще массив candidates
             if (!data.candidates || data.candidates.length === 0) {
                 throw new Error("Google не вернул текст (ответ пуст).");
             }
 
+            // Если всё хорошо, смело читаем текст
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
+            // Дополнительная зачистка текста (на всякий случай)
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
-            aiText = aiText.replace(/\s+/g, ' '); 
+            aiText = aiText.replace(/\s+/g, ' '); // Убираем двойные пробелы
 
             resetGame(lang, aiText + " ");
             
         } catch (error) {
+            // Теперь ошибка не уронит весь сайт, а красиво выведется сюда:
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
             resetGame(lang, generateLocalText(lang));
@@ -132,7 +139,7 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (isGenerating) return; 
+            if (isGenerating) return; // Блокируем ввод во время загрузки
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
@@ -187,102 +194,85 @@ const TypingTest = ({ onBack }) => {
 
     return (
         <motion.div 
+            className="glass-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ 
-                width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '20px', 
-                padding: '40px', background: '#1c1e29', borderRadius: '24px', 
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', fontFamily: 'sans-serif'
-            }}
+            style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
         >
-            {/* ШАПКА */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.5px' }}>
-                            Pro<span style={{ color: '#3b82f6' }}>Type</span>
-                        </h2>
-                        <div style={{ width: '80px', height: '20px', borderRadius: '10px', background: 'linear-gradient(90deg, #8b5cf6, #3b0764)' }}></div>
+            <header className="type-header">
+                <div className="title-group">
+                    <div className="type-title" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        Pro<span>Type</span>
+                        <span style={{fontSize: '12px', background: 'linear-gradient(90deg, #8e2de2, #4a00e0)', color: 'white', padding: '4px 8px', borderRadius: '8px', letterSpacing: '1px'}}>AI POWERED</span>
                     </div>
-                    
-                    <div style={{ display: 'flex', background: '#13141c', borderRadius: '12px', padding: '6px', border: '1px solid #2e303e', width: 'fit-content' }}>
-                        <button 
-                            onClick={() => setLang('en')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'en' ? '#334155' : 'transparent', color: lang === 'en' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
-                        >English</button>
-                        <button 
-                            onClick={() => setLang('ru')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'ru' ? '#4b5563' : 'transparent', color: lang === 'ru' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
-                        >Русский</button>
+                    <div className="lang-switch">
+                        <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>English</button>
+                        <button className={`lang-btn ${lang === 'ru' ? 'active' : ''}`} onClick={() => setLang('ru')}>Русский</button>
                     </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#fff' }}>x{combo}</span>
+                <div className="stats-grid">
+                    <div className="stat-box">
+                        <span className="stat-label">Комбо</span>
+                        <span className={`stat-value ${combo > 10 ? 'combo-glow' : ''}`}>x{combo}</span>
                     </div>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Точность</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: stats.accuracy < 90 ? "#f43f5e" : "#10b981" }}>{stats.accuracy}%</span>
+                    <div className="stat-box">
+                        <span className="stat-label">Точность</span>
+                        <span className="stat-value" style={{color: stats.accuracy < 90 ? "#f43f5e" : "#10b981"}}>{stats.accuracy}%</span>
                     </div>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Скорость</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: "#0ea5e9" }}>{stats.wpm} WPM</span>
+                    <div className="stat-box">
+                        <span className="stat-label">Скорость</span>
+                        <span className="stat-value" style={{color: "#0ea5e9"}}>{stats.wpm} WPM</span>
                     </div>
                 </div>
             </header>
 
             {/* AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: 'rgba(109, 40, 217, 0.08)', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '15px 20px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: 'rgba(142, 45, 226, 0.05)', border: '1px solid rgba(142, 45, 226, 0.2)', padding: '15px 20px', borderRadius: '16px' }}>
                 <span style={{ fontSize: '24px' }}>✨</span>
                 <input
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Тема для текста (напр. Пушкин)"
-                    style={{ flex: 1, maxWidth: '250px', padding: '14px 20px', borderRadius: '10px', border: '1px solid #2e303e', outline: 'none', background: '#13141c', color: '#e2e8f0', fontSize: '15px' }}
+                    placeholder="На какую тему сгенерировать текст? (Например: Космос)"
+                    style={{ flex: 1, padding: '12px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '16px' }}
                     disabled={isGenerating}
                 />
-                <button 
+                <Button 
                     onClick={fetchAIText} 
                     disabled={isGenerating}
-                    style={{ flex: 1, height: '50px', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', cursor: isGenerating ? 'not-allowed' : 'pointer', transition: '0.2s', opacity: isGenerating ? 0.7 : 1 }}
+                    style={{ minWidth: '180px', height: '46px', background: 'linear-gradient(90deg, #8e2de2, #4a00e0)', color: 'white', border: 'none' }}
                 >
-                    {isGenerating ? "Генерация..." : "Сгенерировать текст"}
-                </button>
+                    {isGenerating ? "⏳ Нейросеть думает..." : "Сгенерировать текст"}
+                </Button>
             </div>
 
-            {/* КОНТЕЙНЕР ТЕКСТА */}
-            <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '40px', position: 'relative', minHeight: '220px' }}>
+            <div className="text-container">
                 {isGenerating ? (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+                        style={{ height: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)' }}
                     >
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>⚙️</motion.div>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>
+                            ⚙️
+                        </motion.div>
                         <div style={{ fontSize: '18px' }}>Пишем уникальный текст...</div>
                     </motion.div>
                 ) : (
                     <>
-                        <div ref={textContainerRef} style={{ fontSize: '26px', lineHeight: '2', fontFamily: "'Courier New', Courier, monospace", letterSpacing: '1.5px', color: '#64748b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
+                        {/* ЗДЕСЬ ИСПРАВЛЕНА ПРОБЛЕМА СО СЛИПАНИЕМ СЛОВ (whiteSpace: 'pre-wrap') */}
+                        <div className="text-display" ref={textContainerRef} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', display: 'block', lineHeight: '1.6' }}>
                             {text.split('').map((char, index) => {
-                                let color = '#64748b'; 
-                                let borderBottom = '2px solid transparent';
-                                let background = 'transparent';
+                                let statusClass = "";
+                                if (index < currentIndex) statusClass = "correct";
+                                else if (index === currentIndex) statusClass = "current";
                                 
-                                if (index < currentIndex) {
-                                    color = '#94a3b8'; 
-                                } else if (index === currentIndex) {
-                                    color = '#0ea5e9'; 
-                                    borderBottom = '3px solid #0ea5e9'; 
-                                    background = 'rgba(14, 165, 233, 0.15)'; // Подсветка текущей буквы
-                                }
-                                
-                                // ВАЖНО: whiteSpace: 'pre' гарантирует, что пробелы не схлопнутся!
-                                return <span key={index} className={index === currentIndex ? 'current' : ''} style={{ color, borderBottom, background, paddingBottom: '2px', whiteSpace: 'pre', borderRadius: '3px' }}>{char}</span>;
+                                return <span key={index} className={`char ${statusClass}`} style={{ whiteSpace: 'pre-wrap' }}>{char}</span>;
                             })}
+                        </div>
+                        <div className="progress-bar-container">
+                            <div className="progress-bar" style={{ width: `${progress || 0}%`, background: 'linear-gradient(90deg, #8e2de2, #4a00e0)' }}></div>
                         </div>
                     </>
                 )}
@@ -290,54 +280,42 @@ const TypingTest = ({ onBack }) => {
                 <AnimatePresence>
                     {currentIndex === text.length && text.length > 5 && !isGenerating && (
                         <motion.div 
+                            className="overlay"
                             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
                             animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(19, 20, 28, 0.8)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '16px' }}
                         >
-                            <h2 style={{ fontSize: '42px', margin: '0 0 10px 0', color: '#fff' }}>Отлично!</h2>
-                            <p style={{ fontSize: '20px', color: '#94a3b8', margin: '0 0 30px 0' }}>
-                                Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
-                                Комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
-                            </p>
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <button onClick={() => fetchAIText()} style={{ padding: '12px 25px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Новый AI-текст</button>
-                                <button onClick={() => resetGame(lang, generateLocalText(lang))} style={{ padding: '12px 25px', background: '#334155', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Обычный текст</button>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
+                                <h2 style={{ fontSize: '48px', marginBottom: '10px', color: '#fff' }}>Отличный результат!</h2>
+                                <p style={{ fontSize: '20px', color: 'var(--text-main)', marginBottom: '30px' }}>
+                                    Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
+                                    Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
+                                </p>
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <Button variant="primary" onClick={() => fetchAIText()} style={{ width: '200px' }}>Новый AI-текст</Button>
+                                    <Button variant="muted" onClick={() => resetGame(lang, generateLocalText(lang))} style={{ width: '200px' }}>Обычный текст</Button>
+                                </div>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
-            {/* КЛАВИАТУРА */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '20px', opacity: isGenerating ? 0.3 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
+            <div className="keyboard" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', flexShrink: 0, opacity: isGenerating ? 0.5 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
                 {currentLayout.map((row, rIndex) => (
-                    <div key={`${lang}-${rIndex}`} style={{ display: 'flex', gap: '8px' }}>
+                    <div key={`${lang}-${rIndex}`} className="key-row">
                         {row.map((key, kIndex) => {
                             const isSpace = key === " ";
                             const isTarget = key === expectedKey;
                             const isActive = key === pressedKey;
                             
-                            let bg = '#2e303e';
-                            let color = '#cbd5e1';
-                            let border = '1px solid transparent';
-                            
-                            if (isTarget) {
-                                border = '1px solid #0ea5e9';
-                            }
-                            if (isActive) {
-                                bg = isErrorKey ? '#e11d48' : '#3b82f6';
-                                color = '#fff';
-                            }
+                            let classNames = "key";
+                            if (isSpace) classNames += " space";
+                            if (isTarget) classNames += " target";
+                            if (isActive) classNames += isErrorKey ? " error-active" : " active";
 
                             return (
-                                <div key={`${lang}-${key}-${kIndex}`} style={{ 
-                                    background: bg, color: color, border: border,
-                                    borderRadius: '8px', padding: '14px 0', 
-                                    minWidth: isSpace ? '450px' : '45px', 
-                                    textAlign: 'center', fontSize: '15px', fontWeight: 'bold', textTransform: 'uppercase',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                }}>
-                                    {isSpace ? "" : key}
+                                <div key={`${lang}-${key}-${kIndex}`} className={classNames}>
+                                    {isSpace ? "SPACE" : key}
                                 </div>
                             );
                         })}
