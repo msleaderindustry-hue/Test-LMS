@@ -69,7 +69,7 @@ const TypingTest = ({ onBack }) => {
         setPressedKey(null);
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
+    // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
         
@@ -79,7 +79,7 @@ const TypingTest = ({ onBack }) => {
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
         Язык: ${promptLang}. 
-        Объем текста: около 50-60 слов. 
+        Объем текста: около 30-40 слов. 
         Условия: Используй заглавные буквы, запятые и точки. 
         СТРОГО ЗАПРЕЩЕНО использовать кавычки, дефисы, тире, скобки, цифры, двоеточия, эмодзи и любые другие спецсимволы. Только буквы, пробелы, запятые и точки. 
         Сразу выведи только текст, без приветствий и пояснений.`;
@@ -96,30 +96,24 @@ const TypingTest = ({ onBack }) => {
 
             const data = await response.json();
             
-            // ВЫВОДИМ ОТВЕТ В КОНСОЛЬ. Если текст не генерируется, смотри сюда!
             console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
 
-            // Защита: проверяем, не прислал ли Google явную ошибку
             if (data.error) {
                 throw new Error(data.error.message || "Неизвестная ошибка API");
             }
 
-            // Защита: проверяем, есть ли вообще массив candidates
             if (!data.candidates || data.candidates.length === 0) {
                 throw new Error("Google не вернул текст (ответ пуст).");
             }
 
-            // Если всё хорошо, смело читаем текст
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // Дополнительная зачистка текста (на всякий случай)
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
-            aiText = aiText.replace(/\s+/g, ' '); // Убираем двойные пробелы
+            aiText = aiText.replace(/\s+/g, ' '); 
 
             resetGame(lang, aiText + " ");
             
         } catch (error) {
-            // Теперь ошибка не уронит весь сайт, а красиво выведется сюда:
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
             resetGame(lang, generateLocalText(lang));
@@ -139,7 +133,7 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (isGenerating) return; // Блокируем ввод во время загрузки
+            if (isGenerating) return; 
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
@@ -194,23 +188,20 @@ const TypingTest = ({ onBack }) => {
 
     return (
         <motion.div 
+            className="glass-panel" // <- ВОЗВРАЩЕНО ДЛЯ ПОДДЕРЖКИ ТЕМЫ
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ 
-                width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '20px', 
-                padding: '40px', background: '#1c1e29', borderRadius: '24px', 
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', fontFamily: 'sans-serif'
-            }}
+            style={{ width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
         >
             {/* ШАПКА */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.5px' }}>
+                        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
                             Pro<span style={{ color: '#3b82f6' }}>Type</span>
                         </h2>
-                        {/* ИСПРАВЛЕННЫЙ ЗНАЧОК AI POWERED: ярче, контрастнее */}
+                        {/* ЗНАЧОК AI POWERED */}
                         <span style={{
                             fontSize: '11px', 
                             fontWeight: '900', 
@@ -219,55 +210,54 @@ const TypingTest = ({ onBack }) => {
                             padding: '6px 12px', 
                             borderRadius: '12px', 
                             letterSpacing: '1px',
-                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.6)',
+                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)',
                             textTransform: 'uppercase'
                         }}>
                             AI POWERED
                         </span>
                     </div>
                     
-                    <div style={{ display: 'flex', background: '#13141c', borderRadius: '12px', padding: '6px', border: '1px solid #2e303e', width: 'fit-content' }}>
+                    <div style={{ display: 'flex', background: 'var(--bg-body)', borderRadius: '12px', padding: '6px', border: '1px solid var(--glass-border)', width: 'fit-content' }}>
                         <button 
                             onClick={() => setLang('en')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'en' ? '#334155' : 'transparent', color: lang === 'en' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
+                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'en' ? 'var(--bg-panel)' : 'transparent', color: lang === 'en' ? 'var(--text-main)' : 'var(--text-sec)', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s', boxShadow: lang === 'en' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}
                         >English</button>
                         <button 
                             onClick={() => setLang('ru')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'ru' ? '#4b5563' : 'transparent', color: lang === 'ru' ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s' }}
+                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'ru' ? 'var(--bg-panel)' : 'transparent', color: lang === 'ru' ? 'var(--text-main)' : 'var(--text-sec)', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s', boxShadow: lang === 'ru' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}
                         >Русский</button>
                     </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#fff' }}>x{combo}</span>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
+                        <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-main)' }}>x{combo}</span>
                     </div>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Точность</span>
+                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Точность</span>
                         <span style={{ fontSize: '24px', fontWeight: '900', color: stats.accuracy < 90 ? "#f43f5e" : "#10b981" }}>{stats.accuracy}%</span>
                     </div>
-                    <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px' }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Скорость</span>
+                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Скорость</span>
                         <span style={{ fontSize: '24px', fontWeight: '900', color: "#0ea5e9" }}>{stats.wpm} WPM</span>
                     </div>
                 </div>
             </header>
 
-            {/* ИСПРАВЛЕННАЯ AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
+            {/* AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
             <div style={{ 
                 display: 'flex', 
                 flexWrap: 'wrap', 
                 gap: '15px', 
                 alignItems: 'center', 
-                background: 'rgba(30, 30, 46, 0.4)', 
-                border: '1px solid rgba(139, 92, 246, 0.2)', 
+                background: 'rgba(139, 92, 246, 0.05)', 
+                border: '1px solid rgba(139, 92, 246, 0.3)', 
                 padding: '12px 16px', 
                 borderRadius: '16px' 
             }}>
                 <span style={{ fontSize: '24px' }}>✨</span>
                 
-                {/* Исправленное поле ввода: flex: '1 1 auto' и убран maxWidth */}
                 <input
                     type="text"
                     value={topic}
@@ -278,16 +268,15 @@ const TypingTest = ({ onBack }) => {
                         minWidth: '200px', 
                         padding: '14px 20px', 
                         borderRadius: '12px', 
-                        border: '1px solid #2e303e', 
+                        border: '1px solid var(--glass-border)', 
                         outline: 'none', 
-                        background: '#13141c', 
-                        color: '#fff', 
+                        background: 'var(--bg-body)', 
+                        color: 'var(--text-main)', 
                         fontSize: '16px' 
                     }}
                     disabled={isGenerating}
                 />
                 
-                {/* Исправленная кнопка: занимает размер по тексту (whiteSpace: 'nowrap') */}
                 <button 
                     onClick={fetchAIText} 
                     disabled={isGenerating}
@@ -306,7 +295,8 @@ const TypingTest = ({ onBack }) => {
                         cursor: isGenerating ? 'not-allowed' : 'pointer', 
                         transition: 'opacity 0.2s', 
                         opacity: isGenerating ? 0.7 : 1,
-                        boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)'
+                        boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)',
+                        flexGrow: window.innerWidth < 600 ? 1 : 0
                     }}
                 >
                     {isGenerating ? "Генерация..." : "Сгенерировать текст"}
@@ -314,11 +304,11 @@ const TypingTest = ({ onBack }) => {
             </div>
 
             {/* КОНТЕЙНЕР ТЕКСТА */}
-            <div style={{ background: '#13141c', border: '1px solid #2e303e', borderRadius: '16px', padding: '40px', position: 'relative', minHeight: '220px' }}>
+            <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '40px', position: 'relative', minHeight: '220px' }}>
                 {isGenerating ? (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)' }}
                     >
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>⚙️</motion.div>
                         <div style={{ fontSize: '18px' }}>Пишем уникальный текст...</div>
@@ -346,10 +336,11 @@ const TypingTest = ({ onBack }) => {
                             className="overlay"
                             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
                             animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'var(--bg-panel)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', zIndex: 10 }}
                         >
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                                <h2 style={{ fontSize: '48px', marginBottom: '10px', color: '#fff' }}>Отличный результат!</h2>
-                                <p style={{ fontSize: '20px', color: 'var(--text-main)', marginBottom: '30px' }}>
+                                <h2 style={{ fontSize: '48px', marginBottom: '10px', color: 'var(--text-main)' }}>Отличный результат!</h2>
+                                <p style={{ fontSize: '20px', color: 'var(--text-sec)', marginBottom: '30px' }}>
                                     Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
                                     Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
                                 </p>
