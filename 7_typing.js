@@ -262,7 +262,7 @@ const TypingTest = ({ onBack }) => {
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Тема для текста (напр. Пушкин)"
+                    placeholder="Тема для текста"
                     style={{ 
                         flex: '1 1 auto', 
                         minWidth: '200px', 
