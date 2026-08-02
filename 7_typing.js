@@ -74,7 +74,7 @@ const TypingTest = ({ onBack }) => {
         if (!topic.trim()) return alert("Введите тему!");
         
         setIsGenerating(true);
-        resetGame(lang, " "); // Очищаем текст перед загрузкой
+        resetGame(lang, " "); 
 
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
@@ -95,7 +95,6 @@ const TypingTest = ({ onBack }) => {
             });
 
             const data = await response.json();
-            
             console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
 
             if (data.error) {
@@ -108,7 +107,6 @@ const TypingTest = ({ onBack }) => {
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // Дополнительная зачистка текста
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
             aiText = aiText.replace(/\s+/g, ' '); 
 
@@ -268,19 +266,22 @@ const TypingTest = ({ onBack }) => {
                     </motion.div>
                 ) : (
                     <>
-                        <div ref={textContainerRef} style={{ fontSize: '26px', lineHeight: '2', fontFamily: "'Courier New', Courier, monospace", letterSpacing: '1.5px', color: '#64748b', fontWeight: '600', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div ref={textContainerRef} style={{ fontSize: '26px', lineHeight: '2', fontFamily: "'Courier New', Courier, monospace", letterSpacing: '1.5px', color: '#64748b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
                             {text.split('').map((char, index) => {
                                 let color = '#64748b'; 
                                 let borderBottom = '2px solid transparent';
+                                let background = 'transparent';
                                 
                                 if (index < currentIndex) {
                                     color = '#94a3b8'; 
                                 } else if (index === currentIndex) {
                                     color = '#0ea5e9'; 
                                     borderBottom = '3px solid #0ea5e9'; 
+                                    background = 'rgba(14, 165, 233, 0.15)'; // Подсветка текущей буквы
                                 }
                                 
-                                return <span key={index} className={index === currentIndex ? 'current' : ''} style={{ color, borderBottom, paddingBottom: '2px', whiteSpace: 'pre-wrap' }}>{char}</span>;
+                                // ВАЖНО: whiteSpace: 'pre' гарантирует, что пробелы не схлопнутся!
+                                return <span key={index} className={index === currentIndex ? 'current' : ''} style={{ color, borderBottom, background, paddingBottom: '2px', whiteSpace: 'pre', borderRadius: '3px' }}>{char}</span>;
                             })}
                         </div>
                     </>
