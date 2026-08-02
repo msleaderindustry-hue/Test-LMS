@@ -104,7 +104,8 @@ const CodePlayground = ({ onBack }) => {
     };
 
     const getFileIcon = (type) => {
-        if (type === 'html') return <span style={{color: '#e34c26', fontSize: '14px'}}><></span>;
+        // ИСПРАВЛЕНА ОШИБКА: Символы </> теперь обернуты как строка
+        if (type === 'html') return <span style={{color: '#e34c26', fontSize: '14px'}}>{'</>'}</span>;
         if (type === 'css') return <span style={{color: '#264de4', fontSize: '14px'}}>#</span>;
         return <span style={{color: '#f7df1e', fontSize: '14px'}}>JS</span>;
     };
@@ -158,7 +159,7 @@ const CodePlayground = ({ onBack }) => {
                                 {getFileIcon('js')} script.js
                             </button>
                             
-                            {/* Кнопка вызова ИИ (Стилизована под плагин Copilot) */}
+                            {/* Кнопка вызова ИИ */}
                             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '10px' }}>
                                 <button 
                                     onClick={askAI}
@@ -192,7 +193,7 @@ const CodePlayground = ({ onBack }) => {
 
                         {/* Поля ввода (Сам редактор) */}
                         <div style={{ flex: 1, display: 'flex', position: 'relative', background: '#1e1e1e' }}>
-                            {/* Фальшивая панель с номерами строк (Gutter) для красоты */}
+                            {/* Фальшивая панель с номерами строк (Gutter) */}
                             <div style={{ width: '40px', background: '#1e1e1e', borderRight: '1px solid #2d2d2d', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '20px 10px 20px 0', color: '#6e7681', fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: '15px', lineHeight: '1.6', userSelect: 'none' }}>
                                 {[...Array(15)].map((_, i) => <div key={i}>{i + 1}</div>)}
                             </div>
@@ -266,7 +267,7 @@ const CodePlayground = ({ onBack }) => {
                 {/* ПРАВАЯ ЧАСТЬ - МИНИ-БРАУЗЕР */}
                 <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #e2e8f0' }}>
                     
-                    {/* Строка браузера (Safari / Chrome style) */}
+                    {/* Строка браузера */}
                     <div style={{ background: '#f1f5f9', padding: '10px 15px', borderBottom: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ display: 'flex', gap: '6px' }}>
                             <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%' }}></div>
