@@ -133,6 +133,9 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
+            // ИСПРАВЛЕНИЕ ЗДЕСЬ: Игнорируем нажатия клавиш, если мы печатаем в инпуте
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
             if (isGenerating) return; 
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
