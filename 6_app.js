@@ -130,12 +130,6 @@ function App() {
   };
 
   useEffect(() => {
-    let intervalId = null;
-    if (view === 'test') { intervalId = setInterval(() => { captureViolation("📸 Плановая проверка (мониторинг)"); }, 90000); }
-    return () => { if (intervalId) clearInterval(intervalId); };
-  }, [view, fp]);
-
-  useEffect(() => {
       if (view !== 'test') return;
       const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
       const handleBlur = () => captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)");
