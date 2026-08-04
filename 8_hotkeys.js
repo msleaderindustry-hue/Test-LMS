@@ -2,8 +2,9 @@ const { useState, useEffect } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button, shuffleArray } = window;
 
-// Базовая база горячих клавиш (остается по умолчанию)
+// Ультимативная база горячих клавиш: ОС, Браузер, Word, Excel, PowerPoint
 const HOTKEYS_DB = [
+    // --- БАЗОВЫЕ И СИСТЕМНЫЕ ---
     { desc: "Скопировать выделенное", key: "c", visual: "Ctrl + C" },
     { desc: "Вставить из буфера", key: "v", visual: "Ctrl + V" },
     { desc: "Вырезать (удалить и скопировать)", key: "x", visual: "Ctrl + X" },
@@ -14,8 +15,31 @@ const HOTKEYS_DB = [
     { desc: "Отправить на печать", key: "p", visual: "Ctrl + P" },
     { desc: "Найти слово в тексте/на странице", key: "f", visual: "Ctrl + F" },
     { desc: "Создать новый файл или окно", key: "n", visual: "Ctrl + N" },
-    { desc: "Открыть новую вкладку браузера", key: "t", visual: "Ctrl + T" },
-    { desc: "Закрыть текущую вкладку", key: "w", visual: "Ctrl + W" }
+    { desc: "Открыть существующий файл", key: "o", visual: "Ctrl + O" },
+
+    // --- ФОРМАТИРОВАНИЕ И РАБОТА С ТЕКСТОМ (Word / Офис) ---
+    { desc: "Сделать текст жирным (Bold)", key: "b", visual: "Ctrl + B" },
+    { desc: "Сделать текст курсивом (Italic)", key: "i", visual: "Ctrl + I" },
+    { desc: "Сделать текст подчеркнутым", key: "u", visual: "Ctrl + U" },
+    { desc: "Выравнивание текста по центру", key: "e", visual: "Ctrl + E" },
+    { desc: "Выравнивание текста по левому краю", key: "l", visual: "Ctrl + L" },
+    { desc: "Выравнивание текста по правому краю", key: "r", visual: "Ctrl + R" },
+    { desc: "Выравнивание текста по ширине (Justify)", key: "j", visual: "Ctrl + J" },
+    { desc: "Вставить гиперссылку", key: "k", visual: "Ctrl + K" },
+    { desc: "Открыть окно замены текста (Replace)", key: "h", visual: "Ctrl + H" },
+
+    // --- POWERPOINT И EXCEL ---
+    { desc: "Создать новый слайд (PowerPoint)", key: "m", visual: "Ctrl + M" },
+    { desc: "Дублировать выделенный объект/слайд", key: "d", visual: "Ctrl + D" },
+    
+    // --- НАВИГАЦИЯ В БРАУЗЕРЕ (Chrome, Edge, Safari) ---
+    { desc: "Открыть новую вкладку", key: "t", visual: "Ctrl + T" },
+    { desc: "Закрыть текущую вкладку", key: "w", visual: "Ctrl + W" },
+    { desc: "Обновить страницу", key: "r", visual: "Ctrl + R" },
+    { desc: "Открыть историю браузера", key: "h", visual: "Ctrl + H" },
+    { desc: "Открыть список загрузок", key: "j", visual: "Ctrl + J" },
+    { desc: "Добавить страницу в закладки", key: "d", visual: "Ctrl + D" },
+    { desc: "Выделить адресную строку", key: "l", visual: "Ctrl + L" }
 ];
 
 const HotkeyTrainer = ({ onBack }) => {
@@ -26,35 +50,17 @@ const HotkeyTrainer = ({ onBack }) => {
     const [successPulse, setSuccessPulse] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // AI Состояния
-    const [topic, setTopic] = useState("Microsoft Excel");
+    const [topic, setTopic] = useState("Microsoft Word");
     const [isGenerating, setIsGenerating] = useState(false);
-    const [activeHotkeys, setActiveHotkeys] = useState(HOTKEYS_DB); // Текущая база (дефолтная или ИИ)
+    const [activeHotkeys, setActiveHotkeys] = useState(HOTKEYS_DB);
 
-    // Следим за состоянием полного экрана
-    useEffect(() => {
-        const handleFullscreenChange = () => {
-            if (!document.fullscreenElement) {
-                setIsFullscreen(false);
-                if (navigator.keyboard && navigator.keyboard.unlock) {
-                    navigator.keyboard.unlock();
-                }
-            } else {
-                setIsFullscreen(true);
-            }
-        };
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    }, []);
-
-    // ФУНКЦИЯ ГЕНЕРАЦИИ БАЗЫ ЧЕРЕЗ ИИ
+    // Функция генерации базы горячих клавиш через ИИ
     const generateAIHotkeys = async () => {
         if (!topic.trim()) return alert("Введите название программы!");
         setIsGenerating(true);
 
-        // Строгий промпт, чтобы ИИ отдал только JSON
         const prompt = `Сгенерируй 10 самых полезных горячих клавиш (комбинаций с Ctrl или Cmd) для программы: "${topic}". 
         Верни ТОЛЬКО чистый валидный JSON массив объектов, без форматирования markdown, без пояснений. 
         Формат строго такой:
@@ -79,7 +85,7 @@ const HotkeyTrainer = ({ onBack }) => {
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
             
-            // Вытаскиваем массив с помощью регулярки, если ИИ добавил текст или ```json
+            // Вытаскиваем массив с помощью регулярки
             const jsonMatch = aiText.match(/\[[\s\S]*\]/);
             if (!jsonMatch) throw new Error("ИИ не вернул JSON массив");
 
@@ -99,23 +105,7 @@ const HotkeyTrainer = ({ onBack }) => {
         }
     };
 
-    const startFullscreenGame = async () => {
-        try {
-            if (document.documentElement.requestFullscreen) {
-                await document.documentElement.requestFullscreen();
-            }
-            // Блокировка системных клавиш (Ctrl+T, Ctrl+W и т.д.)
-            if (navigator.keyboard && navigator.keyboard.lock) {
-                await navigator.keyboard.lock(["ControlLeft", "ControlRight", "KeyT", "KeyW", "KeyN", "KeyR", "KeyS", "KeyP"]);
-            }
-        } catch (e) {
-            console.warn("Fullscreen or Keyboard Lock API warning:", e);
-        }
-        startGame();
-    };
-
     const startGame = () => {
-        // Берем активную базу (стандартную или сгенерированную ИИ)
         setTasks(shuffleArray([...activeHotkeys]).slice(0, 10)); 
         setCurrentIndex(0);
         setScore(0);
@@ -123,25 +113,28 @@ const HotkeyTrainer = ({ onBack }) => {
         setGameStarted(true);
     };
 
+    const resetGame = () => {
+        startGame();
+    };
+
     const leaveGame = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        }
         setGameStarted(false);
-        setActiveHotkeys(HOTKEYS_DB); // Сбрасываем базу при выходе
+        setActiveHotkeys(HOTKEYS_DB);
     };
 
     useEffect(() => {
         if (!gameStarted || isFinished || tasks.length === 0) return;
 
         const handleKeyDown = (e) => {
+            // Игнорируем нажатия, если пользователь в инпуте
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             if (e.key === "Control" || e.key === "Meta" || e.key === "Shift" || e.key === "Alt") return;
 
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
             const currentTask = tasks[currentIndex];
 
             if (isCtrlOrCmd) {
-                e.preventDefault(); 
+                e.preventDefault(); // Блокируем стандартные действия браузера
 
                 if (e.key.toLowerCase() === currentTask.key) {
                     setSuccessPulse(true);
@@ -167,72 +160,66 @@ const HotkeyTrainer = ({ onBack }) => {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [currentIndex, tasks, isFinished, gameStarted]);
 
-    // ЭКРАН СТАРТА И ГЕНЕРАЦИИ
+    // === СТАРТОВЫЙ ЭКРАН С НАСТРОЙКОЙ ИИ ===
     if (!gameStarted) {
         return (
             <motion.div 
                 className="glass-panel"
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px 30px', margin: '0 auto' }}
+                style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px 30px', margin: '0 auto' }}
             >
-                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                    <div style={{fontSize: '50px'}}>⚡</div>
-                    <h2 style={{margin: 0, fontSize: '36px', color: 'var(--text-main)'}}>Хоткеи</h2>
-                    <span style={{ fontSize: '11px', fontWeight: '900', background: 'linear-gradient(90deg, #a855f7, #6d28d9)', color: '#ffffff', padding: '6px 12px', borderRadius: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                    <h2 style={{margin: 0, fontSize: '32px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                        Хоткеи ⚡
+                    </h2>
+                    <span style={{ fontSize: '10px', fontWeight: '900', background: 'linear-gradient(90deg, #a855f7, #6d28d9)', color: '#ffffff', padding: '4px 10px', borderRadius: '10px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                         AI POWERED
                     </span>
                 </div>
-                
-                <p style={{fontSize: '16px', color: 'var(--text-sec)', maxWidth: '500px', lineHeight: '1.5', textAlign: 'center'}}>
-                    Тренируй мышечную память. Можешь играть в базовом режиме (Windows/Браузер) или сгенерировать клавиши для любой программы с помощью ИИ!
+
+                <p style={{fontSize: '15px', color: 'var(--text-sec)', maxWidth: '450px', lineHeight: '1.5', textAlign: 'center'}}>
+                    Тренируй стандартную базу или введи название любой программы, и ИИ создаст для нее персональный набор горячих клавиш!
                 </p>
 
-                {/* AI ПАНЕЛЬ ГЕНЕРАЦИИ БАЗЫ */}
-                <div style={{ width: '100%', maxWidth: '500px', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '20px', marginTop: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                        <span style={{ fontSize: '20px' }}>✨</span>
-                        <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '15px' }}>Изучить новую программу</span>
-                    </div>
+                {/* ПАНЕЛЬ ГЕНЕРАЦИИ */}
+                <div style={{ width: '100%', maxWidth: '500px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '20px', marginTop: '5px' }}>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         <input
                             type="text"
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
-                            placeholder="Word, Photoshop, Figma..."
-                            style={{ flex: '1 1 200px', padding: '12px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', outline: 'none', background: 'var(--bg-body)', color: 'var(--text-main)', fontSize: '15px' }}
+                            placeholder="Напр. Word, Excel, Photoshop..."
+                            style={{ flex: '1 1 180px', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--glass-border)', outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '15px' }}
                             disabled={isGenerating}
                         />
                         <button 
                             onClick={generateAIHotkeys} 
                             disabled={isGenerating} 
-                            style={{ flex: '0 0 auto', padding: '0 25px', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', border: 'none', color: '#fff', borderRadius: '10px', fontWeight: 'bold', cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1 }}
+                            style={{ padding: '0 20px', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', border: 'none', color: '#fff', borderRadius: '10px', fontWeight: 'bold', cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1, height: '46px' }}
                         >
-                            {isGenerating ? "⏳..." : "Создать"}
+                            {isGenerating ? "⏳ Ищем..." : "Создать базу"}
                         </button>
                     </div>
                     {activeHotkeys !== HOTKEYS_DB && !isGenerating && (
-                        <div style={{marginTop: '15px', fontSize: '13px', color: '#10b981', fontWeight: 'bold', textAlign: 'center'}}>
-                            ✅ Успешно! База «{topic}» загружена.
+                        <div style={{marginTop: '12px', fontSize: '13px', color: '#10b981', fontWeight: 'bold', textAlign: 'center'}}>
+                            ✅ База «{topic}» успешно загружена!
                         </div>
                     )}
                 </div>
 
-                <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px', width: '100%', maxWidth: '320px'}}>
-                    <Button '16px'}} '54px', fontSize: onClick="{startFullscreenGame}" style="{{height:" variant="orange">
-                        🚀 Начать в полном экране
+                <div style={{display: 'flex', gap: '15px', marginTop: '15px', width: '100%', maxWidth: '400px', justifyContent: 'center'}}>
+                    <Button variant="orange" onClick={startGame} style={{flex: 1, height: '50px', fontSize: '16px'}}>
+                        🚀 Начать тренировку
                     </Button>
-                    <Button '16px'}} '54px', fontSize: onClick="{startGame}" style="{{height:" variant="muted">
-                        Обычный режим
-                    </Button>
-                    <Button #ef4444'}} '10px', '16px', '1px '54px', 'transparent', background: border: fontSize: marginTop: onClick="{onBack}" solid style="{{height:" variant="red">
-                        Назад в меню
+                    <Button variant="red" onClick={onBack} style={{flex: 1, height: '50px', fontSize: '16px', background: 'transparent', border: '1px solid #ef4444'}}>
+                        Назад
                     </Button>
                 </div>
             </motion.div>
         );
     }
 
-    // ИГРОВОЙ ЭКРАН
+    // === ИГРОВОЙ ЭКРАН ===
     if (tasks.length === 0) return null;
 
     const currentTask = tasks[currentIndex];
@@ -244,26 +231,23 @@ const HotkeyTrainer = ({ onBack }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px', margin: '0 auto', position: 'relative' }}
+            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px', margin: '0 auto' }}
         >
             <header style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', flexWrap: 'wrap', gap: '15px'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                    <h2 style={{margin: 0, fontSize: '28px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-                        {activeHotkeys !== HOTKEYS_DB ? `Хоткеи: ${topic}` : 'Хоткеи ⚡'}
-                    </h2>
-                    {isFullscreen && <span style={{fontSize: '11px', background: '#10b981', color: '#fff', padding: '4px 8px', borderRadius: '8px', fontWeight: 'bold'}}>🔒 КЛАВИАТУРА ЗАХВАЧЕНА</span>}
-                </div>
+                <h2 style={{margin: 0, fontSize: '28px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                    {activeHotkeys !== HOTKEYS_DB ? `Хоткеи: ${topic}` : 'Хоткеи ⚡'}
+                </h2>
                 <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
                     <div style={{fontSize: '18px', fontWeight: 'bold', color: 'var(--text-sec)'}}>
                         {currentIndex} / {tasks.length}
                     </div>
-                    <Button '0 '14px'}} '36px', 15px', fontSize: height: minHeight: onClick="{leaveGame}" style="{{padding:" variant="muted">Выйти</Button>
+                    <Button variant="muted" onClick={leaveGame} style={{padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '14px'}}>Выйти</Button>
                 </div>
             </header>
 
             {!isFinished ? (
                 <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', padding: '20px 0'}}>
-                    <div style={{fontSize: '20px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600', textAlign: 'center'}}>
+                    <div style={{fontSize: '20px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600'}}>
                         Зажмите Ctrl и нужную клавишу:
                     </div>
                     
@@ -279,12 +263,12 @@ const HotkeyTrainer = ({ onBack }) => {
                         «{currentTask.desc}»
                     </motion.div>
 
-                    <div style={{display: 'flex', gap: '15px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center'}}>
+                    <div style={{display: 'flex', gap: '15px', marginTop: '20px'}}>
                         <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px solid var(--glass-border)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}>
                             Ctrl
                         </div>
                         <div style={{fontSize: '30px', fontWeight: 'bold', color: 'var(--text-sec)', display: 'flex', alignItems: 'center'}}>+</div>
-                        <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px dashed var(--accent-glow, #0ea5e9)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-glow, #0ea5e9)', boxShadow: 'inset 0 0 10px rgba(14,165,233,0.1)'}}>
+                        <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px dashed var(--accent-glow, #0ea5e9)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-glow, #0ea5e9)', boxShadow: 'inset 0 0 10px rgba(14,165,233,0.2)'}}>
                             ?
                         </div>
                     </div>
@@ -305,9 +289,9 @@ const HotkeyTrainer = ({ onBack }) => {
                 >
                     <h2 style={{ fontSize: '42px', margin: 0, color: '#10b981' }}>Отличная работа!</h2>
                     <p style={{ fontSize: '18px', color: 'var(--text-sec)' }}>Вы успешно закрепили горячие клавиши в мышечной памяти.</p>
-                    <div style={{display: 'flex', gap: '15px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center'}}>
-                        <Button '200px' onClick="{startGame}" style="{{" variant="orange" width: }}>Пройти еще раз</Button>
-                        <Button '200px' onClick="{leaveGame}" style="{{" variant="muted" width: }}>Другая тема</Button>
+                    <div style={{display: 'flex', gap: '15px', marginTop: '20px'}}>
+                        <Button variant="orange" onClick={resetGame} style={{ width: '200px' }}>Пройти еще раз</Button>
+                        <Button variant="muted" onClick={leaveGame} style={{ width: '200px' }}>Другая тема</Button>
                     </div>
                 </motion.div>
             )}
