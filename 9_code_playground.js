@@ -111,7 +111,7 @@ const CodePlayground = ({ onBack }) => {
 
     return (
         <motion.div 
-            className="glass-panel" // ВЕРНУЛИ КЛАСС ДЛЯ ФОНА И ОТСТУПОВ ИЗ ТЕМЫ
+            className="glass-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
@@ -220,7 +220,7 @@ const CodePlayground = ({ onBack }) => {
                                 />
                             )}
                             
-                            {/* Окошко с ответом ИИ поверх редактора */}
+                            {/* ИСПРАВЛЕННОЕ Окошко с ответом ИИ поверх редактора */}
                             <AnimatePresence>
                                 {aiResponse && (
                                     <motion.div 
@@ -232,29 +232,31 @@ const CodePlayground = ({ onBack }) => {
                                             bottom: '20px',
                                             right: '20px',
                                             width: 'calc(100% - 60px)',
-                                            maxWidth: '500px',
-                                            background: 'var(--bg-panel)',
-                                            border: '1px solid #8b5cf6',
-                                            borderRadius: '8px',
+                                            maxWidth: '550px',
+                                            background: 'var(--bg-body)', // Плотный фон вместо прозрачного
+                                            border: '2px solid #8b5cf6', // Более четкая граница
+                                            borderRadius: '12px',
                                             padding: '0',
                                             color: 'var(--text-main)',
-                                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                                            zIndex: 10,
-                                            overflow: 'hidden'
+                                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)', // Сильная тень для отделения от кода
+                                            zIndex: 100, // Поверх всего
+                                            overflow: 'hidden',
+                                            backdropFilter: 'blur(24px)', // Размытие на случай, если тема стеклянная
+                                            WebkitBackdropFilter: 'blur(24px)'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-body)', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)' }}>
-                                            <div style={{ fontWeight: '600', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-                                                <span style={{color: '#a78bfa'}}>✨</span> Помощник (Gemini)
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(139, 92, 246, 0.15)', padding: '12px 20px', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                                            <div style={{ fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
+                                                <span style={{color: '#a78bfa', fontSize: '18px'}}>✨</span> Наставник ИИ
                                             </div>
                                             <button 
                                                 onClick={() => setAiResponse(null)}
-                                                style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '14px' }}
+                                                style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '18px', padding: '4px' }}
                                             >
                                                 ✖
                                             </button>
                                         </div>
-                                        <div style={{ padding: '15px', lineHeight: '1.5', fontSize: '14px', whiteSpace: 'pre-wrap', maxHeight: '250px', overflowY: 'auto', fontFamily: '"Segoe UI", sans-serif' }}>
+                                        <div style={{ padding: '20px', lineHeight: '1.6', fontSize: '15px', whiteSpace: 'pre-wrap', maxHeight: '300px', overflowY: 'auto', fontFamily: '"Segoe UI", sans-serif', background: 'var(--bg-body)' }}>
                                             {aiResponse}
                                         </div>
                                     </motion.div>
