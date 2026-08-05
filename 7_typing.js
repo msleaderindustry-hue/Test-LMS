@@ -2,7 +2,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-// Резервная база на случай, если API недоступно или нет интернета
+// Резервная база 
 const fallbackTextsData = {
     en: [
         "The universe is an unimaginably vast place, constantly expanding at an accelerating rate. Scientists believe that galaxies are moving further apart every second, driven by a mysterious force known as dark energy. Even with our most advanced telescopes, we have only mapped a tiny fraction of the observable cosmos.",
@@ -42,7 +42,7 @@ const TypingTest = ({ onBack }) => {
     const [isErrorKey, setIsErrorKey] = useState(false);
     const [shake, setShake] = useState(false);
 
-    // AI Состояния
+    // AI 
     const [topic, setTopic] = useState("Искусственный интеллект");
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -79,7 +79,7 @@ const TypingTest = ({ onBack }) => {
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
         Язык: ${promptLang}. 
-        Объем текста: около 90-100 слов. 
+        Объем текста: около 70-80 слов. 
         Условия: Используй заглавные буквы, запятые и точки. 
         СТРОГО ЗАПРЕЩЕНО использовать кавычки, дефисы, тире, скобки, цифры, двоеточия, эмодзи и любые другие спецсимволы. Только буквы, пробелы, запятые и точки. 
         Сразу выведи только текст, без приветствий и пояснений.`;
@@ -122,18 +122,19 @@ const TypingTest = ({ onBack }) => {
         }
     };
 
+    // ИСПРАВЛЕННЫЙ СКРОЛЛ: без 'smooth' и 'center', чтобы не трясло
     useEffect(() => {
         if (textContainerRef.current) {
             const currentElement = textContainerRef.current.querySelector('.current');
             if (currentElement) {
-                currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                currentElement.scrollIntoView({ behavior: 'auto', block: 'nearest' });
             }
         }
     }, [currentIndex]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // ИСПРАВЛЕНИЕ ЗДЕСЬ: Игнорируем нажатия клавиш, если мы печатаем в инпуте
+            // Игнорируем нажатия клавиш, если мы печатаем в инпуте
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
             if (isGenerating) return; 
@@ -191,7 +192,7 @@ const TypingTest = ({ onBack }) => {
 
     return (
         <motion.div 
-            className="glass-panel" // <- ВОЗВРАЩЕНО ДЛЯ ПОДДЕРЖКИ ТЕМЫ
+            className="glass-panel" 
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
@@ -318,7 +319,16 @@ const TypingTest = ({ onBack }) => {
                     </motion.div>
                 ) : (
                     <>
-                        <div className="text-display" ref={textContainerRef} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', display: 'block', lineHeight: '1.6' }}>
+                        {/* ИСПРАВЛЕННЫЙ КОНТЕЙНЕР С ВНУТРЕННИМ СКРОЛЛОМ */}
+                        <div className="text-display" ref={textContainerRef} style={{ 
+                            whiteSpace: 'pre-wrap', 
+                            wordBreak: 'break-word', 
+                            display: 'block', 
+                            lineHeight: '1.6',
+                            maxHeight: '200px', 
+                            overflowY: 'auto',
+                            paddingRight: '10px'
+                        }}>
                             {text.split('').map((char, index) => {
                                 let statusClass = "";
                                 if (index < currentIndex) statusClass = "correct";
@@ -327,7 +337,7 @@ const TypingTest = ({ onBack }) => {
                                 return <span key={index} className={`char ${statusClass}`} style={{ whiteSpace: 'pre-wrap' }}>{char}</span>;
                             })}
                         </div>
-                        <div className="progress-bar-container">
+                        <div className="progress-bar-container" style={{marginTop: '20px'}}>
                             <div className="progress-bar" style={{ width: `${progress || 0}%`, background: 'linear-gradient(90deg, #8e2de2, #4a00e0)' }}></div>
                         </div>
                     </>
