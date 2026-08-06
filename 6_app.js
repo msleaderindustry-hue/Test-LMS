@@ -7,7 +7,8 @@ const {
   TestQuestionCard, ReviewView, StatsView,
   TypingTest,
   HotkeyTrainer,
-  CodePlayground
+  CodePlayground,
+  FlashcardsLMS // <-- ДОБАВЛЕН ИМПОРТ КАРТОЧЕК
 } = window;
 
 // --- APP ---
@@ -371,8 +372,8 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code') && (
+      {/* ГАМБУРГЕР КНОПКА (Обновлено условие отображения) */}
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -442,6 +443,17 @@ function App() {
                           ) : (
                               <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>💻</span> VS School
+                              </Button>
+                          )}
+
+                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
+                          {view === 'flashcards' ? (
+                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>🎴</span> Умные карточки
                               </Button>
                           )}
 
@@ -639,6 +651,13 @@ function App() {
           {!isAuthLoading && user && view === 'code' && (
               <motion.div key="code_playground" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
                   <CodePlayground />
+              </motion.div>
+          )}
+
+          {/* ДОБАВЛЕНО: ЭКРАН УМНЫХ КАРТОЧЕК */}
+          {!isAuthLoading && user && view === 'flashcards' && (
+              <motion.div key="flashcards_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
+                  <FlashcardsLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
