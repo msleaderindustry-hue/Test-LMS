@@ -295,4 +295,5 @@ const FlashcardsLMS = ({ onBack }) => {
     );
 };
 
+
 Object.assign(window, { FlashcardsLMS });
