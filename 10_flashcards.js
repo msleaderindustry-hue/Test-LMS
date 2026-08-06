@@ -11,16 +11,17 @@ const DEFAULT_CARDS = [
     { q: "Что делает свойство 'display: flex' в CSS?", a: "Включает гибкую модель (Flexbox), которая позволяет легко выравнивать элементы." }
 ];
 
-// Единая палитра — не зависим от внешних CSS-переменных,
-// чтобы дизайн не "ломался", если их нет в родительском приложении
+// Палитра завязана на CSS-переменные приложения (те же, что переключает
+// ваш light/dark-тумблер), с надёжным fallback на светлую тему — если
+// переменных нет, компонент всё равно выглядит нормально.
 const THEME = {
     accentFrom: "#a855f7",
     accentTo: "#6d28d9",
-    panelBg: "#ffffff",
-    pageBg: "#f4f2fb",
-    border: "rgba(109, 40, 217, 0.14)",
-    textMain: "#1e1b3a",
-    textSec: "#6b6480",
+    panelBg: "var(--bg-panel, #ffffff)",
+    pageBg: "var(--bg-body, #f4f2fb)",
+    border: "var(--glass-border, rgba(109, 40, 217, 0.14))",
+    textMain: "var(--text-main, #1e1b3a)",
+    textSec: "var(--text-sec, #6b6480)",
     textOnAccent: "#ffffff",
 };
 
@@ -278,50 +279,20 @@ const FlashcardsLMS = ({ onBack }) => {
                 )}
             </div>
 
-            {/* НАВИГАЦИЯ */}
+            {/* НАВИГАЦИЯ — используем общий Button, он сам знает про тему приложения */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '4px', flexWrap: 'wrap' }}>
-                <button
-                    onClick={() => changeCard(-1)}
-                    disabled={isGenerating}
-                    style={navBtnStyle(THEME, false)}
-                >
+                <Button variant="muted" onClick={() => changeCard(-1)} style={{ minWidth: '140px' }} disabled={isGenerating}>
                     ← Назад
-                </button>
-                <button
-                    onClick={() => setIsFlipped(!isFlipped)}
-                    disabled={isGenerating}
-                    style={navBtnStyle(THEME, true)}
-                >
+                </Button>
+                <Button variant="primary" onClick={() => setIsFlipped(!isFlipped)} style={{ minWidth: '200px' }} disabled={isGenerating}>
                     {isFlipped ? "Скрыть ответ" : "Показать ответ"}
-                </button>
-                <button
-                    onClick={() => changeCard(1)}
-                    disabled={isGenerating}
-                    style={navBtnStyle(THEME, false)}
-                >
+                </Button>
+                <Button variant="muted" onClick={() => changeCard(1)} style={{ minWidth: '140px' }} disabled={isGenerating}>
                     Вперед →
-                </button>
+                </Button>
             </div>
         </motion.div>
     );
 };
-
-function navBtnStyle(theme, primary) {
-    return {
-        minWidth: primary ? '200px' : '140px',
-        padding: '13px 20px',
-        borderRadius: '12px',
-        border: primary ? 'none' : `1px solid ${theme.border}`,
-        background: primary
-            ? `linear-gradient(90deg, ${theme.accentFrom}, ${theme.accentTo})`
-            : theme.panelBg,
-        color: primary ? theme.textOnAccent : theme.textMain,
-        fontWeight: 700,
-        fontSize: '14px',
-        cursor: 'pointer',
-        boxShadow: primary ? '0 8px 20px rgba(109, 40, 217, 0.3)' : '0 2px 8px rgba(76, 29, 149, 0.06)',
-        transition: 'transform 0.15s ease'
-    };
-}
 
 Object.assign(window, { FlashcardsLMS });
