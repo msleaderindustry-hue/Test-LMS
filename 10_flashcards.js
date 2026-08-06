@@ -11,12 +11,12 @@ const DEFAULT_CARDS = [
     { q: "Что делает свойство 'display: flex' в CSS?", a: "Включает гибкую модель (Flexbox), которая позволяет легко выравнивать элементы." }
 ];
 
-// Умная палитра: берем переменные из LMS, но если их нет - используем резервные цвета!
+// Единая палитра с поддержкой автоматической смены темы (CSS переменные LMS + fallbacks)
 const THEME = {
     accentFrom: "#a855f7",
     accentTo: "#6d28d9",
     panelBg: "var(--bg-panel, #ffffff)",
-    pageBg: "var(--bg-body, #f4f2fb)",
+    inputBg: "var(--bg-body, #f4f2fb)",
     border: "var(--glass-border, rgba(109, 40, 217, 0.14))",
     textMain: "var(--text-main, #1e1b3a)",
     textSec: "var(--text-sec, #6b6480)",
@@ -90,23 +90,21 @@ const FlashcardsLMS = ({ onBack }) => {
 
     return (
         <motion.div
+            className="glass-panel" // <-- ИСПОЛЬЗУЕМ КЛАСС LMS ДЛЯ ИДЕАЛЬНОГО ФОНА В ЛЮБОЙ ТЕМЕ
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.5 }}
             style={{
-                width: '100%', maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '22px',
+                width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '22px',
                 padding: '32px', margin: '0 auto', borderRadius: '28px',
-                background: THEME.pageBg,
-                border: `1px solid ${THEME.border}`,
-                boxShadow: '0 24px 60px rgba(76, 29, 149, 0.12)',
                 fontFamily: "'Segoe UI', 'Inter', system-ui, sans-serif"
             }}
         >
             {/* ШАПКА */}
             <header style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                flexWrap: 'wrap', gap: '14px'
+                flexWrap: 'wrap', gap: '14px', borderBottom: `1px solid ${THEME.border}`, paddingBottom: '20px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
@@ -139,7 +137,7 @@ const FlashcardsLMS = ({ onBack }) => {
                 </div>
                 <div style={{
                     fontSize: '15px', fontWeight: 700, color: THEME.textSec,
-                    background: THEME.panelBg, border: `1px solid ${THEME.border}`,
+                    background: THEME.inputBg, border: `1px solid ${THEME.border}`,
                     padding: '8px 16px', borderRadius: '999px'
                 }}>
                     {currentIndex + 1} / {cards.length}
@@ -151,7 +149,7 @@ const FlashcardsLMS = ({ onBack }) => {
                 display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center',
                 background: THEME.panelBg, border: `1px solid ${THEME.border}`,
                 padding: '14px', borderRadius: '18px',
-                boxShadow: '0 2px 10px rgba(76, 29, 149, 0.05)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.03)'
             }}>
                 <span style={{ fontSize: '20px', lineHeight: 1 }}>✨</span>
                 <input
@@ -162,7 +160,7 @@ const FlashcardsLMS = ({ onBack }) => {
                     style={{
                         flex: '1 1 220px', padding: '12px 16px', borderRadius: '12px',
                         border: `1px solid ${THEME.border}`, outline: 'none',
-                        background: THEME.pageBg, color: THEME.textMain, fontSize: '15px',
+                        background: THEME.inputBg, color: THEME.textMain, fontSize: '15px',
                         fontFamily: 'inherit'
                     }}
                     disabled={isGenerating}
@@ -222,31 +220,31 @@ const FlashcardsLMS = ({ onBack }) => {
                         animate={{ rotateY: isFlipped ? 180 : 0 }}
                         transition={{ duration: 0.55, type: "spring", stiffness: 260, damping: 22 }}
                         style={{
-                            width: '100%', maxWidth: '600px', height: '320px', position: 'relative',
+                            width: '100%', maxWidth: '650px', height: '340px', position: 'relative',
                             transformStyle: 'preserve-3d', cursor: 'pointer', borderRadius: '22px'
                         }}
                     >
-                        {/* ВОПРОС (Лицевая сторона подстраивается под тему LMS) */}
+                        {/* ВОПРОС */}
                         <div style={{
                             position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
-                            background: THEME.panelBg, border: `1.5px solid ${THEME.border}`, borderRadius: '22px',
+                            background: THEME.panelBg, border: `2px solid ${THEME.border}`, borderRadius: '22px',
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                             padding: '40px', boxSizing: 'border-box', textAlign: 'center',
-                            boxShadow: '0 18px 40px rgba(76, 29, 149, 0.12)'
+                            boxShadow: '0 15px 35px rgba(0,0,0,0.08)'
                         }}>
                             <span style={{
                                 padding: '5px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 800,
                                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '20px',
-                                background: THEME.pageBg, color: THEME.textSec, border: `1px solid ${THEME.border}`
+                                background: THEME.inputBg, color: THEME.textSec, border: `1px solid ${THEME.border}`
                             }}>
                                 Вопрос
                             </span>
-                            <h3 style={{ fontSize: '25px', margin: 0, lineHeight: 1.45, color: THEME.textMain, fontWeight: 700 }}>
+                            <h3 style={{ fontSize: '26px', margin: 0, lineHeight: 1.45, color: THEME.textMain, fontWeight: 700, textWrap: 'balance' }}>
                                 {currentCard?.q}
                             </h3>
                             <div style={{
                                 position: 'absolute', bottom: '20px', color: THEME.textSec, fontSize: '13px',
-                                display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500
+                                display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, opacity: 0.7
                             }}>
                                 Нажми, чтобы перевернуть
                             </div>
@@ -256,7 +254,7 @@ const FlashcardsLMS = ({ onBack }) => {
                         <div style={{
                             position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
                             background: `linear-gradient(150deg, ${THEME.accentTo} 0%, #4c1d95 100%)`,
-                            border: `1.5px solid ${THEME.accentTo}`, borderRadius: '22px',
+                            border: `2px solid ${THEME.accentTo}`, borderRadius: '22px',
                             transform: 'rotateY(180deg)',
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                             padding: '40px', boxSizing: 'border-box', textAlign: 'center',
@@ -269,7 +267,7 @@ const FlashcardsLMS = ({ onBack }) => {
                             }}>
                                 Ответ
                             </span>
-                            <h3 style={{ fontSize: '22px', margin: 0, lineHeight: 1.5, color: '#ffffff', fontWeight: 600 }}>
+                            <h3 style={{ fontSize: '24px', margin: 0, lineHeight: 1.5, color: '#ffffff', fontWeight: 600, textWrap: 'balance' }}>
                                 {currentCard?.a}
                             </h3>
                         </div>
@@ -305,6 +303,7 @@ const FlashcardsLMS = ({ onBack }) => {
     );
 };
 
+// Стили для кнопок навигации, которые тоже реагируют на темы
 function navBtnStyle(theme, primary) {
     return {
         minWidth: primary ? '200px' : '140px',
@@ -313,12 +312,12 @@ function navBtnStyle(theme, primary) {
         border: primary ? 'none' : `1px solid ${theme.border}`,
         background: primary
             ? `linear-gradient(90deg, ${theme.accentFrom}, ${theme.accentTo})`
-            : theme.panelBg,
+            : theme.inputBg,
         color: primary ? theme.textOnAccent : theme.textMain,
         fontWeight: 700,
         fontSize: '14px',
         cursor: 'pointer',
-        boxShadow: primary ? '0 8px 20px rgba(109, 40, 217, 0.3)' : '0 2px 8px rgba(76, 29, 149, 0.06)',
+        boxShadow: primary ? '0 8px 20px rgba(109, 40, 217, 0.3)' : '0 4px 10px rgba(0, 0, 0, 0.05)',
         transition: 'transform 0.15s ease'
     };
 }
