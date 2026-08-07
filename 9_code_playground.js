@@ -300,4 +300,3 @@ const CodePlayground = ({ onBack }) => {
 };
 
 Object.assign(window, { CodePlayground });
-
