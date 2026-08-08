@@ -354,3 +354,32 @@ input:focus { outline: none; border-color: #C850C0 !important; }
 .overlay { position: absolute; inset: 0; background: var(--glass-bg); backdrop-filter: blur(8px); border-radius: 20px; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 20px; z-index: 10; border: 1px solid var(--glass-border);}
 .reset-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 16px 32px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 18px; transition: all 0.3s; }
 .reset-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+/* ========================================= */
+/* КАСТОМНЫЕ СКРОЛЛБАРЫ ДЛЯ ВСЕЙ ПЛАТФОРМЫ   */
+/* ========================================= */
+
+/* Для браузеров на движке WebKit (Chrome, Safari, Edge, Opera) */
+::-webkit-scrollbar {
+    width: 6px;  /* Толщина вертикального скролла */
+    height: 6px; /* Толщина горизонтального скролла */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent; /* Прозрачный фон под ползунком */
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--glass-border, rgba(255, 255, 255, 0.2)); /* Цвет самого ползунка */
+    border-radius: 10px; /* Круглые края */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 85, 247, 0.6); /* Фиолетовый акцент при наведении */
+}
+
+/* Для Firefox (он использует другой стандарт) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border, rgba(255, 255, 255, 0.2)) transparent;
+}
