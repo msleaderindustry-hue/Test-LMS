@@ -8,7 +8,8 @@ const {
   TypingTest,
   HotkeyTrainer,
   CodePlayground,
-  FlashcardsLMS // <-- ДОБАВЛЕН ИМПОРТ КАРТОЧЕК
+  FlashcardsLMS,
+  ExcelTrainerLMS // <-- ДОБАВЛЕН ИМПОРТ ТРЕНАЖЕРА EXCEL
 } = window;
 
 // --- APP ---
@@ -373,7 +374,7 @@ function App() {
       </div>
 
       {/* ГАМБУРГЕР КНОПКА (Обновлено условие отображения) */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards') && (
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -446,7 +447,7 @@ function App() {
                               </Button>
                           )}
 
-                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
+                          {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
                           {view === 'flashcards' ? (
                               <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
@@ -454,6 +455,17 @@ function App() {
                           ) : (
                               <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>🎴</span> Умные карточки
+                              </Button>
+                          )}
+
+                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
+                          {view === 'excel' ? (
+                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>📊</span> Тренажер Excel
                               </Button>
                           )}
 
@@ -654,10 +666,17 @@ function App() {
               </motion.div>
           )}
 
-          {/* ДОБАВЛЕНО: ЭКРАН УМНЫХ КАРТОЧЕК */}
+          {/* ЭКРАН УМНЫХ КАРТОЧЕК */}
           {!isAuthLoading && user && view === 'flashcards' && (
               <motion.div key="flashcards_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
                   <FlashcardsLMS onBack={() => setView('menu')} />
+              </motion.div>
+          )}
+
+          {/* ДОБАВЛЕНО: ЭКРАН ТРЕНАЖЕРА EXCEL */}
+          {!isAuthLoading && user && view === 'excel' && (
+              <motion.div key="excel_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
+                  <ExcelTrainerLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
@@ -668,6 +687,4 @@ function App() {
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);       
-
-            
+root.render(<App />);
