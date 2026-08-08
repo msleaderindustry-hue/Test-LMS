@@ -36,10 +36,8 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setShowSuccess(false);
 
         if (lessonsCache[activeFormulaName]) {
-            // Урок уже генерировался ранее, достаем из памяти
             setCurrentLesson(lessonsCache[activeFormulaName]);
         } else {
-            // Урока нет, просим ИИ создать
             generateAIFormula(activeFormulaName);
         }
     }, [activeFormulaName]);
@@ -90,21 +88,18 @@ const ExcelTrainerLMS = ({ onBack }) => {
 
             const parsedFormula = JSON.parse(jsonMatch[0]);
             
-            // Сохраняем сгенерированный урок в кэш и выводим на экран
             setLessonsCache(prev => ({ ...prev, [formulaName]: parsedFormula }));
             setCurrentLesson(parsedFormula);
             
         } catch (error) {
             console.error("Ошибка:", error);
             alert(`Не удалось сгенерировать урок для ${formulaName}. Попробуйте еще раз.`);
-            // Если ошибка - откатываемся на что-то простое
             setActiveFormulaName("СУММ");
         } finally {
             setIsGenerating(false);
         }
     };
 
-    // Обработка ручного поиска (если ввели свою функцию)
     const handleCustomSearch = () => {
         if (!customSearch.trim()) return;
         setActiveCategory("Поиск ИИ");
@@ -114,7 +109,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const checkAnswer = () => {
         if (!currentLesson) return;
         
-        // Убираем пробелы, делаем заглавными и меняем запятые на точки с запятой
         const formatFormula = (f) => String(f).trim().toUpperCase().replace(/\s/g, '').replace(/,/g, ';');
         
         const userForm = formatFormula(inputValue);
@@ -247,7 +241,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                                 return (
                                                     <tr key={rowIdx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                                         <td style={{ background: '#f8fafc', borderRight: '1px solid #cbd5e1', padding: '8px', fontWeight: 'bold', color: '#64748b' }}>
-                                                            {rowIdx + 1} // Исправлено: нумерация строк в таблице как в настоящем Excel (2, 3, 4)
+                                                            {rowIdx + 1}
                                                         </td>
                                                         {row.map((cell, colIdx) => (
                                                             <td key={colIdx} style={{ borderRight: '1px solid #e2e8f0', padding: '8px' }}>
