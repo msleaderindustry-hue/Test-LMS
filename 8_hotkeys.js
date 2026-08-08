@@ -56,15 +56,21 @@ const HotkeyTrainer = ({ onBack }) => {
         if (!topic.trim()) return alert("Введите название программы!");
         setIsGenerating(true);
 
-        const prompt = `Сгенерируй 10 самых полезных горячих клавиш (комбинаций с Ctrl или Cmd) для программы: "${topic}". 
+        // ОБНОВЛЕННЫЙ ЖЕСТКИЙ ПРОМПТ ПРОТИВ ВЫДУМОК
+        const prompt = `Ты — эксперт по официальной документации программного обеспечения.
+        Сгенерируй 10 РЕАЛЬНО СУЩЕСТВУЮЩИХ И НА 100% РАБОЧИХ горячих клавиш (комбинаций с Ctrl или Cmd) для программы: "${topic}". 
         Некоторые из них могут включать клавишу Shift (например, Ctrl+Shift+S).
-        Верни ТОЛЬКО чистый валидный JSON массив объектов, без форматирования markdown, без пояснений. 
+        
+        КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
+        1. ЗАПРЕЩЕНО ВЫДУМЫВАТЬ! Каждая комбинация должна быть официальной и общепринятой для программы "${topic}". Если это Word, используй реальные хоткеи (Ctrl+B, Ctrl+I, Ctrl+Enter и т.д.).
+        2. Поле 'key' должно содержать ТОЛЬКО ОДНУ строчную АНГЛИЙСКУЮ букву или символ (ту самую клавишу физической клавиатуры, которую нужно нажать вместе с Ctrl).
+        3. Верни ТОЛЬКО чистый валидный JSON массив объектов, без форматирования markdown, без пояснений.
+        
         Формат строго такой:
         [
           {"desc": "Описание действия на русском", "key": "c", "shift": false, "visual": "Ctrl + C"},
           {"desc": "Сохранить как", "key": "s", "shift": true, "visual": "Ctrl + Shift + S"}
-        ]
-        ВАЖНО: поле 'key' должно содержать только одну строчную английскую букву или символ (ту, которую надо нажать вместе с Ctrl/Shift).`;
+        ]`;
 
         try {
             console.log("🚀 Запрашиваем хоткеи у ИИ...");
@@ -87,8 +93,13 @@ const HotkeyTrainer = ({ onBack }) => {
 
             const parsedHotkeys = JSON.parse(jsonMatch[0]);
             
-            if (Array.isArray(parsedHotkeys) && parsedHotkeys.length > 0) {
-                setActiveHotkeys(parsedHotkeys);
+            const validatedHotkeys = parsedHotkeys.map(hk => ({
+                ...hk,
+                key: hk.key.toLowerCase() 
+            }));
+
+            if (Array.isArray(validatedHotkeys) && validatedHotkeys.length > 0) {
+                setActiveHotkeys(validatedHotkeys);
             } else {
                 throw new Error("Неверный формат данных");
             }
@@ -131,13 +142,11 @@ const HotkeyTrainer = ({ onBack }) => {
             if (isCtrlOrCmd) {
                 e.preventDefault(); 
 
-                // Проверяем, нужен ли Shift для текущей задачи
                 const requiresShift = !!currentTask.shift;
                 const isShiftPressed = e.shiftKey;
                 const pressedKey = e.key.toLowerCase();
                 const expectedKey = currentTask.key.toLowerCase();
 
-                // Засчитываем правильный ответ только если совпадает и буква, и зажатость Shift
                 if (isShiftPressed === requiresShift && pressedKey === expectedKey) {
                     setSuccessPulse(true);
                     setScore(prev => prev + 1);
