@@ -1,59 +1,57 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
 // ==========================================
-// НАСТРОЙКИ КООРДИНАТ (ДЛЯ ЛАБИРИНТА)
+// КООРДИНАТЫ И ВЕКТОРЫ ДВИЖЕНИЯ
 // ==========================================
-// Точная математика осей: [0,0] - левый верхний угол.
 const MOVES = {
     UP:    { dx: 0,  dy: -1, rotate: 0 },
     RIGHT: { dx: 1,  dy: 0,  rotate: 90 },
     DOWN:  { dx: 0,  dy: 1,  rotate: 180 },
-    LEFT:  { dx: -1, dy: 0,  rotate: -90 }
+    LEFT:  { dx: -1, dy: 0,  rotate: -90 } // Используем -90 для красивой анимации влево
 };
 const DIRS_ORDER = ["UP", "RIGHT", "DOWN", "LEFT"];
 
 // ==========================================
-// СТАРТОВЫЕ БАЗЫ (ПОКА ИИ НЕ СГЕНЕРИРОВАЛ НОВОЕ)
+// ИДЕАЛЬНЫЕ СТАРТОВЫЕ УРОВНИ
 // ==========================================
 const DEFAULT_LEVELS = {
     js: {
-        title: "JS: Основы алгоритма",
-        task: "Построй маршрут так, чтобы алгоритм довел робота до флага, обойдя препятствия.",
+        title: "JS: Змейка",
+        task: "Пройдите сложный лабиринт, используя команды движения и поворотов, чтобы добраться до финиша.",
         gridSize: 5,
         walls: [{x: 1, y: 0}, {x: 1, y: 1}, {x: 1, y: 2}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}],
         start: { x: 0, y: 0, dir: "DOWN" },
         end: { x: 4, y: 4 },
         palette: [
-            { id: 'fwd', label: 'robot.moveForward();', desc: 'Шаг вперед', color: '#0ea5e9' },
-            { id: 'left', label: 'robot.turnLeft();', desc: 'Поворот налево', color: '#8b5cf6' },
-            { id: 'right', label: 'robot.turnRight();', desc: 'Поворот направо', color: '#f59e0b' }
+            { id: 'fwd', label: 'robot.moveForward();', desc: 'ШАГ', color: '#0ea5e9' },
+            { id: 'left', label: 'robot.turnLeft();', desc: 'ВЛЕВО', color: '#8b5cf6' },
+            { id: 'right', label: 'robot.turnRight();', desc: 'ВПРАВО', color: '#f59e0b' }
         ]
     },
     html: {
-        title: "HTML: Сборка DOM",
-        task: "Собери структуру карточки пользователя. Открой контейнер, добавь картинку, заголовок и закрой контейнер.",
+        title: "HTML: Сборка карточки",
+        task: "Соберите HTML-структуру. Не забудьте открыть контейнер в начале и закрыть его в конце!",
         palette: [
-            { id: 'div_close', label: '</div>', desc: 'Закрывающий тег', color: '#475569', code: '</div>\n' },
-            { id: 'img', label: '<img src="avatar.png" />', desc: 'Изображение', color: '#10b981', code: '  <img src="avatar.png" style="width:50px; border-radius:50%;" />\n' },
-            { id: 'div_open', label: '<div class="card">', desc: 'Начало контейнера', color: '#3b82f6', code: '<div style="padding:15px; background:#1e293b; border-radius:10px; border:1px solid #334155; text-align:center;">\n' },
-            { id: 'h3', label: '<h3>Иван Иванов</h3>', desc: 'Заголовок', color: '#f43f5e', code: '  <h3 style="color:#fff; margin:10px 0 0 0;">Иван Иванов</h3>\n' }
+            { id: 'h3', label: '<h3 class="title">Товар</h3>', desc: 'ЗАГОЛОВОК КАРТОЧКИ', color: '#0ea5e9', code: '  <h3 style="color:#fff; margin:10px 0;">Товар</h3>\n' },
+            { id: 'div_close', label: '</div>', desc: 'ЗАКРЫВАЮЩИЙ ТЕГ КОНТЕЙНЕРА', color: '#ef4444', code: '</div>\n' },
+            { id: 'div_open', label: '<div class="card">', desc: 'КОНТЕЙНЕР КАРТОЧКИ', color: '#3b82f6', code: '<div style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid #334155; text-align:center;">\n' },
+            { id: 'btn', label: '<button class="buy">Купить</button>', desc: 'КНОПКА КУПИТЬ', color: '#10b981', code: '  <button style="background:#10b981; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">Купить</button>\n' }
         ],
-        expected: ['div_open', 'img', 'h3', 'div_close']
+        expected: ['div_open', 'h3', 'btn', 'div_close']
     },
     css: {
-        title: "CSS: Визуализация",
-        task: "Настрой стили для кнопки: добавь синий фон, белый текст и скругленные углы.",
-        baseHtml: `<button class="target-btn">Кнопка</button>`,
+        title: "CSS: Стилизация кнопки",
+        task: "Добавьте стили, чтобы кнопка стала зеленой, с белым текстом и без рамок.",
+        baseHtml: `<button class="target-btn">Отправить</button>`,
         palette: [
-            { id: 'color', label: 'color: white;', desc: 'Цвет текста', color: '#8b5cf6', code: 'color: white;' },
-            { id: 'bg', label: 'background: #3b82f6;', desc: 'Цвет фона', color: '#3b82f6', code: 'background: #3b82f6;' },
-            { id: 'border', label: 'border: none;', desc: 'Убрать рамку', color: '#64748b', code: 'border: none;' },
-            { id: 'radius', label: 'border-radius: 8px;', desc: 'Скругление', color: '#10b981', code: 'border-radius: 8px;' },
-            { id: 'padding', label: 'padding: 10px 20px;', desc: 'Отступы', color: '#f59e0b', code: 'padding: 10px 20px;' }
+            { id: 'color', label: 'color: #ffffff;', desc: 'ЦВЕТ ТЕКСТА', color: '#8b5cf6', code: 'color: #ffffff;' },
+            { id: 'bg', label: 'background: #10b981;', desc: 'ЦВЕТ ФОНА', color: '#10b981', code: 'background: #10b981;' },
+            { id: 'padding', label: 'padding: 12px 24px;', desc: 'ВНУТРЕННИЕ ОТСТУПЫ', color: '#f59e0b', code: 'padding: 12px 24px;' },
+            { id: 'border', label: 'border: none;', desc: 'УБРАТЬ РАМКУ', color: '#ef4444', code: 'border: none;' }
         ],
-        expected: ['bg', 'color', 'radius'] // Проверяем, что хотя бы эти 3 есть
+        expected: ['bg', 'color', 'border'] // Для победы нужны хотя бы эти 3
     }
 };
 
@@ -62,6 +60,7 @@ const AlgoMazeLMS = ({ onBack }) => {
     const [workspace, setWorkspace] = useState([]); 
     const [level, setLevel] = useState(DEFAULT_LEVELS['js']);
     
+    // Состояния робота
     const [robot, setRobot] = useState({ ...DEFAULT_LEVELS.js.start });
     const [execStatus, setExecStatus] = useState("IDLE"); // IDLE, RUNNING, WON, CRASHED
     const [showWinModal, setShowWinModal] = useState(false);
@@ -80,7 +79,7 @@ const AlgoMazeLMS = ({ onBack }) => {
         if (mode === 'js') setRobot({ ...defaultLvl.start });
     }, [mode]);
 
-    // Проверка победы (HTML / CSS) в реальном времени
+    // Проверка победы для HTML и CSS (на лету)
     useEffect(() => {
         if (mode === 'js' || execStatus === "WON" || workspace.length === 0) return;
 
@@ -104,7 +103,7 @@ const AlgoMazeLMS = ({ onBack }) => {
     }, [workspace, mode, level, execStatus]);
 
     // ==========================================
-    // ГЕНЕРАТОР ИИ (ТРИ РАЗНЫХ ПРОМПТА)
+    // ЖЕСТКИЕ ПРОМПТЫ ДЛЯ ИИ (БЕЗ ОШИБОК)
     // ==========================================
     const generateAILevel = async () => {
         if (!topic.trim()) return alert("Введите тему задачи!");
@@ -114,17 +113,26 @@ const AlgoMazeLMS = ({ onBack }) => {
 
         let prompt = "";
         if (mode === 'js') {
-            prompt = `Создай сложный лабиринт для алгоритма: "${topic}".
-            Верни JSON: {"title":"Имя","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5}, "palette":[{"id":"fwd","label":"robot.moveForward();","desc":"Шаг","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"Влево","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"Вправо","color":"#f59e0b"}]}
-            Критично: Координаты (0 до gridSize-1). Путь должен существовать.`;
+            prompt = `Создай лабиринт для игры на тему: "${topic}".
+            Верни ТОЛЬКО валидный JSON: {"title":"Имя","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5}, "palette":[{"id":"fwd","label":"robot.moveForward();","desc":"ШАГ","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"ВЛЕВО","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"ВПРАВО","color":"#f59e0b"}]}
+            КРИТИЧНО ВАЖНЫЕ ПРАВИЛА: 
+            1. Лабиринт ОБЯЗАТЕЛЬНО должен быть проходимым! Между start и end должен быть свободный путь без стен.
+            2. Координаты стен не должны перекрывать 100% проходов.
+            3. Координаты (x и y) строго от 0 до (gridSize - 1).`;
         } else if (mode === 'html') {
-            prompt = `Создай задачу на сборку HTML: "${topic}".
-            Верни JSON: {"title":"Имя","task":"Задача","expected":["id1","id2","id3"],"palette":[{"id":"id1","label":"<div class='box'>","desc":"Контейнер","code":"<div style='background:#333; padding:20px;'>\\n","color":"#3b82f6"}]}
-            Критично: В palette должно быть 4-6 блоков (вперемешку). expected - правильный порядок их id. В 'code' пиши реальный HTML (с инлайн-стилями для красоты).`;
+            prompt = `Создай задачу-пазл по HTML на тему: "${topic}".
+            Верни ТОЛЬКО валидный JSON: {"title":"Имя","task":"Задача","expected":["id1","id2","id3"],"palette":[{"id":"id1","label":"<div class='box'>","desc":"ОТКРЫТЬ КОНТЕЙНЕР","code":"<div style='background:#1e293b; padding:20px; border-radius:10px;'>\\n","color":"#3b82f6"}]}
+            КРИТИЧНО ВАЖНЫЕ ПРАВИЛА:
+            1. Если в palette есть открывающий тег <div>, то ОБЯЗАТЕЛЬНО добавь в palette отдельный блок с закрывающим тегом </div>.
+            2. Массив "expected" должен содержать правильный порядок ID блоков сверху вниз.
+            3. В поле "code" пиши реальный HTML с красивыми инлайн-стилями.`;
         } else if (mode === 'css') {
-            prompt = `Создай задачу на CSS: "${topic}".
-            Верни JSON: {"title":"Имя","task":"Задача","baseHtml":"<div class='target'>Текст</div>","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: red;","desc":"Текст","code":"color: red;","color":"#f43f5e"}]}
-            Критично: baseHtml - стартовый HTML. palette - 5-7 CSS свойств вперемешку. expected - id свойств, обязательных для победы.`;
+            prompt = `Создай задачу-пазл по CSS на тему: "${topic}".
+            Верни ТОЛЬКО валидный JSON: {"title":"Имя","task":"Задача","baseHtml":"<div class='target'>Текст</div>","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: red;","desc":"ЦВЕТ ТЕКСТА","code":"color: red;","color":"#f43f5e"}]}
+            КРИТИЧНО ВАЖНЫЕ ПРАВИЛА:
+            1. baseHtml - стартовый элемент, который мы стилизуем.
+            2. В palette дай 4-6 CSS свойств вперемешку.
+            3. В expected укажи ID тех свойств, которые решают задачу.`;
         }
 
         try {
@@ -140,14 +148,14 @@ const AlgoMazeLMS = ({ onBack }) => {
             if (mode === 'js') setRobot({ ...parsed.start });
         } catch (e) {
             console.error(e);
-            alert("Ошибка ИИ. Попробуйте еще раз.");
+            alert("ИИ немного запутался. Попробуйте еще раз или измените запрос!");
         } finally {
             setIsGenerating(false);
         }
     };
 
     // ==========================================
-    // ИНТЕРПРЕТАТОР ЛАБИРИНТА (JS)
+    // ДВИЖОК ЛАБИРИНТА (JS)
     // ==========================================
     const executeJsMaze = async () => {
         if (workspace.length === 0) return alert("Собери алгоритм!");
@@ -165,14 +173,18 @@ const AlgoMazeLMS = ({ onBack }) => {
                 currRobot.x += MOVES[currRobot.dir].dx;
                 currRobot.y += MOVES[currRobot.dir].dy;
             } else if (block.id === 'left') {
-                currRobot.dir = DIRS_ORDER[(DIRS_ORDER.indexOf(currRobot.dir) + 3) % 4];
+                const currentIndex = DIRS_ORDER.indexOf(currRobot.dir);
+                // Математика поворота влево (против часовой)
+                currRobot.dir = DIRS_ORDER[(currentIndex + 3) % 4]; 
             } else if (block.id === 'right') {
-                currRobot.dir = DIRS_ORDER[(DIRS_ORDER.indexOf(currRobot.dir) + 1) % 4];
+                const currentIndex = DIRS_ORDER.indexOf(currRobot.dir);
+                // Математика поворота вправо (по часовой)
+                currRobot.dir = DIRS_ORDER[(currentIndex + 1) % 4];
             }
 
             setRobot({ ...currRobot });
 
-            // Проверка коллизий
+            // Проверка столкновений и границ
             const outOfBounds = currRobot.x < 0 || currRobot.y < 0 || currRobot.x >= level.gridSize || currRobot.y >= level.gridSize;
             const hitWall = level.walls.some(w => w.x === currRobot.x && w.y === currRobot.y);
 
@@ -191,11 +203,12 @@ const AlgoMazeLMS = ({ onBack }) => {
                 return;
             }
         }
-        setExecStatus("CRASHED"); // Команды кончились, но финиш не достигнут
+        // Команды кончились, а флаг не достигнут
+        setExecStatus("CRASHED"); 
     };
 
     // ==========================================
-    // УПРАВЛЕНИЕ БЛОКАМИ
+    // УПРАВЛЕНИЕ БЛОКАМИ В WORKSPACE
     // ==========================================
     const addBlock = (b) => {
         if (execStatus === "RUNNING" || execStatus === "WON") return;
@@ -207,7 +220,17 @@ const AlgoMazeLMS = ({ onBack }) => {
     };
 
     // ==========================================
-    // РЕНДЕР ПРЕВЬЮ
+    // ГЕНЕРАТОР ИТОГОВОГО КОДА (Для модалки)
+    // ==========================================
+    const generateFinalCode = () => {
+        if (mode === 'html') return workspace.map(b => b.code).join('');
+        if (mode === 'css') return `.target-element {\n${workspace.map(b => "  " + b.code).join('\n')}\n}`;
+        if (mode === 'js') return `function runRobot() {\n${workspace.map(b => "  " + b.label).join('\n')}\n}`;
+        return "";
+    };
+
+    // ==========================================
+    // ОТРИСОВКА ВИЗУАЛЬНОГО РЕЗУЛЬТАТА
     // ==========================================
     const renderPreview = () => {
         if (mode === 'js') {
@@ -218,16 +241,16 @@ const AlgoMazeLMS = ({ onBack }) => {
                     const isEnd = level.end.x === x && level.end.y === y;
                     const isRobot = robot.x === x && robot.y === y;
                     cells.push(
-                        <div key={`${x}-${y}`} style={{ width: '100%', height: '100%', background: isWall ? '#334155' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRadius: '6px' }}>
+                        <div key={`${x}-${y}`} style={{ width: '100%', height: '100%', background: isWall ? '#334155' : 'transparent', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                             {isWall && <span style={{fontSize: '20px'}}>🧱</span>}
                             {isEnd && <span style={{fontSize: '20px'}}>🚩</span>}
-                            {isRobot && <motion.div animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '26px', zIndex: 10 }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.div>}
+                            {isRobot && <motion.animate animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '26px', zIndex: 10, display: 'inline-block', transition: 'rotate 0.3s ease' }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.animate>}
                         </div>
                     );
                 }
             }
             return (
-                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${level.gridSize}, 1fr)`, gridTemplateRows: `repeat(${level.gridSize}, 1fr)`, width: '250px', height: '250px', gap: '2px', background: '#0f172a', padding: '10px', borderRadius: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${level.gridSize}, 1fr)`, gridTemplateRows: `repeat(${level.gridSize}, 1fr)`, width: '250px', height: '250px', background: '#0f172a', borderRadius: '12px', overflow: 'hidden' }}>
                     {cells}
                 </div>
             );
@@ -236,7 +259,7 @@ const AlgoMazeLMS = ({ onBack }) => {
         if (mode === 'html') {
             const compiledHtml = workspace.map(b => b.code).join('');
             return (
-                <div style={{ width: '100%', padding: '20px', background: '#0f172a', borderRadius: '12px', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '100%', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div dangerouslySetInnerHTML={{ __html: compiledHtml }} />
                 </div>
             );
@@ -245,11 +268,11 @@ const AlgoMazeLMS = ({ onBack }) => {
         if (mode === 'css') {
             const compiledCss = workspace.map(b => b.code).join(' ');
             return (
-                <div style={{ width: '100%', padding: '20px', background: '#0f172a', borderRadius: '12px', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div style={{ width: '100%', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     <style>{`
                         .preview-wrap .target-element { 
                             transition: all 0.3s ease; 
-                            padding: 10px; background: #334155; color: #fff; border-radius: 4px; /* Default */
+                            padding: 10px 20px; background: #334155; color: #fff; border-radius: 4px; border: none; font-weight: bold; font-family: sans-serif;
                             ${compiledCss} 
                         }
                     `}</style>
@@ -264,8 +287,8 @@ const AlgoMazeLMS = ({ onBack }) => {
             
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, color: '#3b82f6' }}>Visual Builder</h2>
-                    <span style={{ fontSize: '10px', fontWeight: 900, background: 'linear-gradient(90deg, #3b82f6, #0ea5e9)', color: '#ffffff', padding: '4px 10px', borderRadius: '10px', letterSpacing: '1px' }}>КОНСТРУКТОР БЕЗ КОДА</span>
+                    <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, color: '#3b82f6' }}>Blockly Студия</h2>
+                    <span style={{ fontSize: '10px', fontWeight: 900, background: 'linear-gradient(90deg, #3b82f6, #0ea5e9)', color: '#ffffff', padding: '4px 10px', borderRadius: '10px', letterSpacing: '1px' }}>ВИЗУАЛЬНЫЙ КОДИНГ</span>
                 </div>
             </header>
 
@@ -276,36 +299,41 @@ const AlgoMazeLMS = ({ onBack }) => {
                 <button onClick={()=>setMode('css')} style={{flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', background: mode === 'css' ? '#f43f5e' : 'transparent', color: mode==='css'?'#fff':'var(--text-sec)', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'}}>🎨 Стили (CSS)</button>
             </div>
 
-            {/* ИИ ПАНЕЛЬ */}
+            {/* ПАНЕЛЬ ИИ */}
             <div style={{ display: 'flex', gap: '10px', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', padding: '15px', borderRadius: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Попроси ИИ создать новую задачу (напр: Лабиринт-змейка или Красивая кнопка)" style={{ flex: 1, minWidth: '200px', padding: '10px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', background: 'var(--bg-body)', color: 'var(--text-main)', outline: 'none' }} disabled={isGenerating} />
-                <Button variant="primary" onClick={generateAILevel} disabled={isGenerating} style={{ padding: '0 20px', height: '42px', background: '#3b82f6' }}>{isGenerating ? "🧠 Генерируем..." : "✨ Создать"}</Button>
+                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Напиши тему (напр: Кнопка покупки, Спираль)" style={{ flex: 1, minWidth: '200px', padding: '10px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', background: 'var(--bg-body)', color: 'var(--text-main)', outline: 'none' }} disabled={isGenerating} />
+                <Button variant="primary" onClick={generateAILevel} disabled={isGenerating} style={{ padding: '0 20px', height: '42px', background: '#3b82f6' }}>{isGenerating ? "🧠 Создаем..." : "✨ Сгенерировать"}</Button>
             </div>
 
-            <div style={{ background: 'var(--bg-body)', padding: '20px', borderRadius: '16px', border: '1px solid var(--glass-border)', marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)', fontSize: '20px' }}>{level.title}</h3>
-                <p style={{ margin: 0, color: 'var(--text-sec)', fontSize: '15px', lineHeight: '1.5', fontWeight: 'bold' }}>🎯 Задача: <span style={{fontWeight: 'normal'}}>{level.task}</span></p>
+            <div style={{ background: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', marginBottom: '20px' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: '#f8fafc', fontSize: '20px' }}>{level.title}</h3>
+                <p style={{ margin: 0, color: '#cbd5e1', fontSize: '15px', lineHeight: '1.5', fontWeight: 'bold' }}>🎯 Задача: <span style={{fontWeight: 'normal'}}>{level.task}</span></p>
             </div>
 
-            {/* ТРИ КОЛОНКИ: Блоки -> Сборка -> Результат */}
+            {/* ТРИ КОЛОНКИ */}
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'stretch' }}>
                 
                 {/* 1. ПАЛИТРА БЛОКОВ */}
-                <div style={{ flex: '1 1 250px', background: 'var(--bg-panel)', borderRadius: '16px', padding: '20px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: '10px' }}>Доступные фрагменты</div>
+                <div style={{ flex: '1 1 250px', background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Доступные фрагменты</div>
                     {level.palette.map((block) => (
                         <motion.button 
                             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
                             key={block.id} onClick={() => addBlock(block)}
-                            style={{ width: '100%', textAlign: 'left', padding: '12px 15px', background: '#1e293b', border: `1px solid ${block.color}`, borderRadius: '10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px' }}
+                            style={{ 
+                                width: '100%', textAlign: 'left', padding: '12px 15px', 
+                                background: 'transparent', border: `2px solid ${block.color}`, 
+                                borderRadius: '10px', cursor: 'pointer', display: 'flex', 
+                                flexDirection: 'column', gap: '5px' 
+                            }}
                         >
                             <span style={{ fontSize: '11px', color: block.color, fontWeight: 'bold', textTransform: 'uppercase' }}>{block.desc}</span>
-                            <span style={{ fontSize: '14px', color: '#e2e8f0', fontFamily: 'monospace', fontWeight: 'bold' }}>{block.label}</span>
+                            <span style={{ fontSize: '14px', color: '#ffffff', fontFamily: 'monospace', fontWeight: 'bold' }}>{block.label}</span>
                         </motion.button>
                     ))}
                 </div>
 
-                {/* 2. РАБОЧАЯ ЗОНА (Сборка) */}
+                {/* 2. РАБОЧАЯ ЗОНА (СБОРКА) */}
                 <div style={{ flex: '1 1 350px', background: '#0f172a', borderRadius: '16px', padding: '20px', border: '2px dashed #334155', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', display: 'flex', justifyContent: 'space-between' }}>
                         <span>Среда сборки</span>
@@ -319,10 +347,10 @@ const AlgoMazeLMS = ({ onBack }) => {
                                 <motion.div 
                                     initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, scale: 0.9}}
                                     key={`${idx}-${block.id}`} onClick={() => removeBlock(idx)}
-                                    style={{ padding: '12px 15px', background: block.color, color: '#fff', borderRadius: '10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}
+                                    style={{ padding: '12px 15px', background: 'transparent', border: `2px solid ${block.color}`, color: '#ffffff', borderRadius: '10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                 >
                                     <span style={{fontFamily: 'monospace', fontSize: '14px', fontWeight: 'bold'}}>{block.label}</span>
-                                    <span style={{opacity: 0.6, fontSize: '12px'}}>✖</span>
+                                    <span style={{opacity: 0.6, fontSize: '12px', color: '#fff'}}>✖</span>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
@@ -336,12 +364,14 @@ const AlgoMazeLMS = ({ onBack }) => {
                 </div>
 
                 {/* 3. РЕЗУЛЬТАТ (Live) */}
-                <div style={{ flex: '1 1 250px', background: '#fff', borderRadius: '16px', border: '3px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ background: '#f1f5f9', padding: '8px 15px', fontSize: '12px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%'}}></div><div style={{width: '10px', height: '10px', background: '#f59e0b', borderRadius: '50%'}}></div><div style={{width: '10px', height: '10px', background: '#10b981', borderRadius: '50%'}}></div>
-                        <span style={{marginLeft: '10px'}}>Live Preview</span>
+                <div style={{ flex: '1 1 250px', background: '#1e293b', borderRadius: '16px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ background: '#f8fafc', padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0' }}>
+                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#ef4444'}}></div>
+                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#f59e0b'}}></div>
+                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#10b981'}}></div>
+                        <span style={{marginLeft: 10, fontSize: 13, fontWeight: 'bold', color: '#475569'}}>Live Preview</span>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: mode === 'js' ? '#1e293b' : '#fff', padding: '20px' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', padding: '20px' }}>
                         {renderPreview()}
                     </div>
                 </div>
@@ -354,16 +384,14 @@ const AlgoMazeLMS = ({ onBack }) => {
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', padding: '20px' }}
                     >
-                        <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} style={{ background: 'var(--bg-panel)', padding: '40px', borderRadius: '24px', maxWidth: '600px', width: '100%', textAlign: 'center', border: '1px solid var(--glass-border)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                        <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} style={{ background: '#1e293b', padding: '40px', borderRadius: '24px', maxWidth: '600px', width: '100%', textAlign: 'center', border: '1px solid #334155', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                             <div style={{ fontSize: '60px', marginBottom: '10px' }}>🎉</div>
                             <h2 style={{ color: '#10b981', fontSize: '32px', margin: '0 0 10px 0' }}>Идеально!</h2>
-                            <p style={{ color: 'var(--text-sec)', fontSize: '16px', marginBottom: '20px' }}>Ты собрал логику визуально. А вот так это выглядит <b>в настоящем коде</b>:</p>
+                            <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '20px' }}>Ты собрал логику визуально. А вот так это выглядит <b>в настоящем коде</b>:</p>
                             
                             <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', textAlign: 'left', overflowX: 'auto', border: '1px solid #334155' }}>
                                 <pre style={{ margin: 0, color: mode === 'html' ? '#38bdf8' : mode === 'css' ? '#f43f5e' : '#fba11b', fontFamily: "'Fira Code', monospace", fontSize: '15px', lineHeight: '1.5' }}>
-                                    <code>
-                                        {mode === 'html' ? workspace.map(b => b.code).join('') : mode === 'css' ? `.element {\n${workspace.map(b => "  " + b.code).join('\n')}\n}` : `function runRobot() {\n${workspace.map(b => "  " + b.label).join('\n')}\n}`}
-                                    </code>
+                                    <code>{generateFinalCode()}</code>
                                 </pre>
                             </div>
 
