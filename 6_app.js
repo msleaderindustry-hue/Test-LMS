@@ -9,7 +9,8 @@ const {
   HotkeyTrainer,
   CodePlayground,
   FlashcardsLMS,
-  ExcelTrainerLMS // <-- ДОБАВЛЕН ИМПОРТ ТРЕНАЖЕРА EXCEL
+  ExcelTrainerLMS,
+  AlgoMazeLMS // <-- ДОБАВЛЕН ИМПОРТ НОВОЙ БЛОКЛИ-СТУДИИ
 } = window;
 
 // --- APP ---
@@ -374,7 +375,7 @@ function App() {
       </div>
 
       {/* ГАМБУРГЕР КНОПКА (Обновлено условие отображения) */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel') && (
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -393,13 +394,11 @@ function App() {
     variant="muted" 
     onClick={(e) => {
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
-        // Если браузер поддерживает новую анимацию
         if (document.startViewTransition) {
             document.startViewTransition(() => {
                 setTheme(nextTheme);
             });
         } else {
-            // Для старых браузеров просто меняем
             setTheme(nextTheme);
         }
     }} 
@@ -432,6 +431,17 @@ function App() {
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
+
+                          {/* УМНАЯ КНОПКА ДЛЯ ИГРОВОЙ СТУДИИ (BLOCKLY) */}
+                          {view === 'algo' ? (
+                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>🧩</span> Blockly Студия
+                              </Button>
+                          )}
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {view === 'typing' ? (
@@ -692,10 +702,17 @@ function App() {
               </motion.div>
           )}
 
-          {/* ДОБАВЛЕНО: ЭКРАН ТРЕНАЖЕРА EXCEL */}
+          {/* ЭКРАН ТРЕНАЖЕРА EXCEL */}
           {!isAuthLoading && user && view === 'excel' && (
               <motion.div key="excel_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
                   <ExcelTrainerLMS onBack={() => setView('menu')} />
+              </motion.div>
+          )}
+
+          {/* ЭКРАН ИГРОВОЙ СТУДИИ (BLOCKLY) */}
+          {!isAuthLoading && user && view === 'algo' && (
+              <motion.div key="algo_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
+                  <AlgoMazeLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
