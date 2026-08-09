@@ -3,7 +3,7 @@ const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
 // ==========================================
-// ЛОГИКА ДВИЖЕНИЯ
+// КООРДИНАТЫ И ВЕКТОРЫ ДВИЖЕНИЯ (JS ЛАБИРИНТ)
 // ==========================================
 const MOVES = {
     UP:    { dx: 0,  dy: -1, rotate: 0 },
@@ -14,11 +14,11 @@ const MOVES = {
 const DIRS_ORDER = ["UP", "RIGHT", "DOWN", "LEFT"];
 
 // ==========================================
-// ИДЕАЛЬНЫЕ СТАРТОВЫЕ УРОВНИ (КАК НА СКРИНШОТАХ)
+// БАЗОВЫЕ УРОВНИ (ИДЕАЛЬНЫЙ ШАБЛОН)
 // ==========================================
 const DEFAULT_LEVELS = {
     js: {
-        title: "Змейка",
+        title: "JS: Змейка",
         task: "Пройдите сложный лабиринт, используя команды движения и поворотов, чтобы добраться до финиша.",
         gridSize: 5,
         walls: [{x: 1, y: 0}, {x: 1, y: 1}, {x: 1, y: 2}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}],
@@ -31,54 +31,45 @@ const DEFAULT_LEVELS = {
         ]
     },
     html: {
-        title: "Карточка товара",
-        task: "Соберите HTML-структуру карточки (изображение, заголовок, описание) и кнопки покупки.",
-        // Скрытые стили, чтобы собранный HTML выглядел красиво в iframe
+        title: "HTML: Сборка карточки",
+        task: "Соберите HTML-структуру карточки. Не забудьте открыть контейнер в начале и закрыть его в конце!",
         hiddenCss: `body { font-family: sans-serif; background: #0f172a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; } .card { background: #1e293b; width: 280px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; } .photo { width: 100%; height: auto; display: block; } .content { padding: 20px; } h3 { margin: 0 0 10px 0; font-size: 20px; } p { color: #94a3b8; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5; } .buy { width: 100%; padding: 12px; border-radius: 8px; background: #6366f1; color: #fff; border: none; font-weight: bold; cursor: pointer; }`,
         palette: [
-            { id: 'div_card', label: "<div class='card'>", desc: 'КОНТЕЙНЕР КАРТОЧКИ', color: '#3b82f6', code: '<div class="card">\n' },
-            { id: 'close_card', label: "</div>", desc: 'ЗАКРЫТЬ КАРТОЧКУ', color: '#ef4444', code: '</div>\n' },
-            { id: 'img', label: "<img src='...'>", desc: 'ИЗОБРАЖЕНИЕ ТОВАРА', color: '#10b981', code: '  <img class="photo" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" alt="Наушники" />\n' },
-            { id: 'div_content', label: "<div class='content'>", desc: 'БЛОК КОНТЕНТА', color: '#0ea5e9', code: '  <div class="content">\n' },
-            { id: 'close_content', label: "</div>", desc: 'ЗАКРЫТЬ КОНТЕНТ', color: '#f43f5e', code: '  </div>\n' },
-            { id: 'h3', label: "<h3>", desc: 'ЗАГОЛОВОК', color: '#f59e0b', code: '    <h3>Беспроводные наушники</h3>\n' },
-            { id: 'p', label: "<p>", desc: 'ОПИСАНИЕ', color: '#8b5cf6', code: '    <p>Качественный звук и активное шумоподавление.</p>\n' },
-            { id: 'btn', label: "<button>", desc: 'КНОПКА', color: '#ec4899', code: '    <button class="buy">Купить</button>\n' }
+            { id: 'h3', label: '<h3 class="title">Товар</h3>', desc: 'ЗАГОЛОВОК', color: '#0ea5e9', code: '  <h3 class="title">Товар</h3>\n' },
+            { id: 'div_close', label: '</div>', desc: 'ЗАКРЫТЬ КОНТЕЙНЕР', color: '#ef4444', code: '</div>\n' },
+            { id: 'div_open', label: '<div class="card">', desc: 'ОТКРЫТЬ КОНТЕЙНЕР', color: '#3b82f6', code: '<div class="card">\n' },
+            { id: 'btn', label: '<button class="buy">Купить</button>', desc: 'КНОПКА', color: '#10b981', code: '  <button class="buy">Купить</button>\n' }
         ],
-        expected: ['div_card', 'img', 'div_content', 'h3', 'p', 'btn', 'close_content', 'close_card']
+        expected: ['div_open', 'h3', 'btn', 'div_close']
     },
     css: {
-        title: "Стилизация элемента",
-        task: "Сделайте круглую красную кнопку с белым текстом по центру.",
-        baseHtml: `<div class="target-btn">Push</div>`,
+        title: "CSS: Стилизация кнопки",
+        task: "Добавьте стили, чтобы кнопка стала зеленой, с белым текстом и без рамок.",
+        baseHtml: `<button class="target-btn">Отправить</button>`,
         hiddenCss: `body { font-family: sans-serif; background: #0f172a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; } .target-btn { transition: all 0.3s ease; font-weight: bold; font-size: 18px; border: 2px dashed #475569; padding: 10px; color: #94a3b8; }`,
         palette: [
-            { id: 'bg', label: 'background: #ef4444;', desc: 'ЦВЕТ ФОНА', color: '#ef4444', code: 'background: #ef4444;' },
-            { id: 'color', label: 'color: #ffffff;', desc: 'ЦВЕТ ТЕКСТА', color: '#3b82f6', code: 'color: #ffffff;' },
-            { id: 'radius', label: 'border-radius: 50%;', desc: 'ФОРМА КРУГА', color: '#10b981', code: 'border-radius: 50%;' },
-            { id: 'size', label: 'width: 100px; height: 100px;', desc: 'РАЗМЕР', color: '#f59e0b', code: 'width: 100px; height: 100px;' },
-            { id: 'flex', label: 'display: flex; justify-content: center; align-items: center;', desc: 'ЦЕНТРИРОВАНИЕ', color: '#8b5cf6', code: 'display: flex; justify-content: center; align-items: center;' },
-            { id: 'border', label: 'border: none;', desc: 'УБРАТЬ РАМКУ', color: '#64748b', code: 'border: none;' }
+            { id: 'color', label: 'color: #ffffff;', desc: 'ЦВЕТ ТЕКСТА', color: '#8b5cf6', code: 'color: #ffffff;' },
+            { id: 'bg', label: 'background: #10b981;', desc: 'ЦВЕТ ФОНА', color: '#10b981', code: 'background: #10b981;' },
+            { id: 'padding', label: 'padding: 12px 24px;', desc: 'ВНУТРЕННИЕ ОТСТУПЫ', color: '#f59e0b', code: 'padding: 12px 24px;' },
+            { id: 'border', label: 'border: none;', desc: 'УБРАТЬ РАМКУ', color: '#ef4444', code: 'border: none;' }
         ],
-        expected: ['bg', 'color', 'radius', 'size', 'flex', 'border']
+        expected: ['bg', 'color', 'border'] 
     }
 };
 
 const AlgoMazeLMS = ({ onBack }) => {
-    const [mode, setMode] = useState('js'); // js, html, css
+    const [mode, setMode] = useState('js'); 
     const [workspace, setWorkspace] = useState([]); 
     const [level, setLevel] = useState(DEFAULT_LEVELS['js']);
     
-    // Состояния исполнения
     const [robot, setRobot] = useState({ ...DEFAULT_LEVELS.js.start });
-    const [execStatus, setExecStatus] = useState("IDLE"); // IDLE, RUNNING, WON, CRASHED
+    const [execStatus, setExecStatus] = useState("IDLE"); 
     const [showWinModal, setShowWinModal] = useState(false);
 
     // AI
     const [topic, setTopic] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Смена режима
     useEffect(() => {
         const defaultLvl = DEFAULT_LEVELS[mode];
         setLevel(defaultLvl);
@@ -88,7 +79,6 @@ const AlgoMazeLMS = ({ onBack }) => {
         if (mode === 'js') setRobot({ ...defaultLvl.start });
     }, [mode]);
 
-    // Авто-проверка победы для HTML и CSS (на лету)
     useEffect(() => {
         if (mode === 'js' || execStatus === "WON" || workspace.length === 0) return;
 
@@ -113,46 +103,56 @@ const AlgoMazeLMS = ({ onBack }) => {
     }, [workspace, mode, level, execStatus]);
 
     // ==========================================
-    // ИИ ГЕНЕРАТОР (ЖЕСТКИЕ ПРАВИЛА)
+    // ЖЕСТКИЕ ПРОМПТЫ ДЛЯ ИИ (ИСПРАВЛЕНО)
     // ==========================================
     const generateAILevel = async () => {
-        if (!topic.trim()) return alert("Введите тему!");
+        if (!topic.trim()) return alert("Введите тему задачи!");
         setIsGenerating(true);
         setExecStatus("IDLE");
         setWorkspace([]);
 
         let prompt = "";
         if (mode === 'js') {
-            prompt = `Создай головоломку лабиринт: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5},"palette":[{"id":"fwd","label":"robot.moveForward();","desc":"ШАГ","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"ВЛЕВО","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"ВПРАВО","color":"#f59e0b"}]}
-            ПРАВИЛА: 1. Путь 100% проходим! 2. Координаты от 0 до gridSize-1.`;
+            prompt = `Создай уровень лабиринта: "${topic}". Верни ТОЛЬКО валидный JSON:
+            {"title":"Название","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5},"palette":[{"id":"fwd","label":"robot.moveForward();","desc":"ШАГ","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"ВЛЕВО","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"ВПРАВО","color":"#f59e0b"}]}
+            КРИТИЧНО: Лабиринт ДОЛЖЕН БЫТЬ ПРОХОДИМЫМ. Координаты от 0 до gridSize-1.`;
         } else if (mode === 'html') {
-            prompt = `Создай задачу по HTML: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","hiddenCss":"body{color:#fff;...}","expected":["id1","id2","id3"],"palette":[{"id":"id1","label":"<div class='box'>","desc":"ОТКРЫТЬ КОНТЕЙНЕР","code":"<div style='background:#1e293b;'>\\n","color":"#3b82f6"}]}
-            ПРАВИЛА: 1. ОБЯЗАТЕЛЬНО добавь отдельные блоки с закрывающими тегами (</div>). 2. В hiddenCss добавь базовые красивые стили. 3. "expected" - правильный порядок ID.`;
+            prompt = `Создай задачу по сборке HTML: "${topic}". Верни ТОЛЬКО валидный JSON:
+            {"title":"Название","task":"Собери структуру.","hiddenCss":"body{background:#0f172a; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;} .container{background:#1e293b; padding:20px; border-radius:12px;}","expected":["id_open","id_title","id_close"],"palette":[{"id":"id_open","label":"<div class='container'>","desc":"ОТКРЫТЬ БЛОК","code":"<div class='container'>\\n","color":"#3b82f6"}]}
+            КРИТИЧЕСКИЕ ПРАВИЛА:
+            1. Ты ОБЯЗАН добавлять ЗАКРЫВАЮЩИЕ ТЕГИ (</div>, </p>, </b>, </button>) как ОТДЕЛЬНЫЕ элементы в массиве palette! Это самое важное правило!
+            2. Используй ОДИНАРНЫЕ кавычки для атрибутов (class='...').
+            3. Сделай 6-8 блоков в palette в ПЕРЕМЕШАННОМ порядке.
+            4. expected - правильный порядок ID.`;
         } else if (mode === 'css') {
-            prompt = `Создай задачу по CSS: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","baseHtml":"<div class='target'>Текст</div>","hiddenCss":"body{background:#0f172a;}","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: white;","desc":"ЦВЕТ ТЕКСТА","code":"color: white;","color":"#8b5cf6"}]}
-            ПРАВИЛА: palette - 5-7 CSS свойств вперемешку. expected - ID обязательных свойств.`;
+            prompt = `Создай задачу по CSS: "${topic}". Верни ТОЛЬКО валидный JSON:
+            {"title":"Название","task":"Задача","baseHtml":"<div class='target-element'>Текст</div>","hiddenCss":"body{background:#0f172a; display:flex; justify-content:center; align-items:center; height:100vh;}","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: white;","desc":"ЦВЕТ ТЕКСТА","code":"color: white;","color":"#8b5cf6"}]}
+            КРИТИЧНО: palette должен содержать 5-7 CSS свойств. baseHtml используй с классом 'target-element'.`;
         }
 
         try {
+            console.log("Запрос к ИИ...");
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
             const data = await response.json();
-            const jsonMatch = data.candidates[0].content.parts[0].text.trim().match(/\{[\s\S]*\}/);
+            let rawText = data.candidates[0].content.parts[0].text.trim();
+            
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("JSON не найден");
+            
             const parsed = JSON.parse(jsonMatch[0]);
             setLevel(parsed);
             if (mode === 'js') setRobot({ ...parsed.start });
         } catch (e) {
-            alert("ИИ сгенерировал неверный формат. Попробуйте еще раз.");
+            console.error("Ошибка ИИ:", e);
+            alert("ИИ сгенерировал код с ошибкой формата. Попробуйте еще раз!");
         } finally {
             setIsGenerating(false);
         }
     };
 
-    // ==========================================
-    // ДВИЖОК ЛАБИРИНТА
-    // ==========================================
     const executeJsMaze = async () => {
         if (workspace.length === 0) return alert("Собери алгоритм!");
         setExecStatus("RUNNING");
@@ -209,11 +209,7 @@ const AlgoMazeLMS = ({ onBack }) => {
         setWorkspace(workspace.filter((_, i) => i !== idx));
     };
 
-    // ==========================================
-    // ИДЕАЛЬНЫЙ РЕНДЕР (КАК НА ФОТО)
-    // ==========================================
     const renderPreview = () => {
-        // ЛАБИРИНТ
         if (mode === 'js') {
             const size = level.gridSize || 5;
             const walls = level.walls || [];
@@ -229,8 +225,7 @@ const AlgoMazeLMS = ({ onBack }) => {
                         <div key={`${x}-${y}`} style={{ width: '100%', height: '100%', background: isWall ? 'rgba(255,255,255,0.05)' : 'transparent', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                             {isWall && <span style={{fontSize: '20px'}}>🧱</span>}
                             {isEnd && <span style={{fontSize: '20px', color: '#ef4444'}}>🚩</span>}
-                            {/* РОБОТ ПОЧИНЕН - ТЕПЕРЬ ОН ОТОБРАЖАЕТСЯ ЧЕТКО */}
-                            {isRobot && <motion.div animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '28px', zIndex: 10 }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.div>}
+                            {isRobot && <motion.animate animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '28px', zIndex: 10 }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.animate>}
                         </div>
                     );
                 }
@@ -242,9 +237,8 @@ const AlgoMazeLMS = ({ onBack }) => {
             );
         }
 
-        // ВЕРСТКА (HTML/CSS) - Безопасный iframe
-        const compiledHtml = mode === 'html' ? workspace.map(b => b.code).join('') : level.baseHtml;
-        const compiledCss = mode === 'css' ? `.target-btn { ${workspace.map(b => b.code).join(' ')} }` : '';
+        const compiledHtml = mode === 'html' ? workspace.map(b => b.code).join('') : (level.baseHtml || '');
+        const compiledCss = mode === 'css' ? `.target-element { ${workspace.map(b => b.code).join(' ')} }` : '';
         const safeStyles = level.hiddenCss || `body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }`;
         
         const srcDoc = `<!DOCTYPE html><html><head><style>${safeStyles} ${compiledCss}</style></head><body>${compiledHtml}</body></html>`;
@@ -271,11 +265,16 @@ const AlgoMazeLMS = ({ onBack }) => {
                 </div>
             </header>
 
-            {/* ВКЛАДКИ РЕЖИМОВ (Скрытые, если хочешь оставить только игру. Но оставил для переключения) */}
             <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
                 <Button variant="muted" onClick={()=>setMode('js')} style={{border: mode === 'js' ? '1px solid #3b82f6' : '1px solid #334155', color: mode==='js'?'#3b82f6':'#94a3b8'}}>JS Лабиринт</Button>
                 <Button variant="muted" onClick={()=>setMode('html')} style={{border: mode === 'html' ? '1px solid #0ea5e9' : '1px solid #334155', color: mode==='html'?'#0ea5e9':'#94a3b8'}}>HTML Блоки</Button>
                 <Button variant="muted" onClick={()=>setMode('css')} style={{border: mode === 'css' ? '1px solid #8b5cf6' : '1px solid #334155', color: mode==='css'?'#8b5cf6':'#94a3b8'}}>CSS Стили</Button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', background: '#0f172a', border: '1px solid #3b82f6', padding: '15px', borderRadius: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{fontSize: '20px'}}>🤖</span>
+                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Попроси ИИ создать новую задачу (напр: Кнопка покупки)" style={{ flex: 1, minWidth: '200px', padding: '10px 15px', borderRadius: '8px', border: '1px solid #334155', background: '#1e293b', color: '#f8fafc', outline: 'none' }} disabled={isGenerating} />
+                <Button variant="primary" onClick={generateAILevel} disabled={isGenerating} style={{ padding: '0 20px', height: '42px', background: '#3b82f6', border: 'none', color: '#fff', fontWeight: 'bold', borderRadius: '8px' }}>{isGenerating ? "Генерируем..." : "Создать"}</Button>
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'stretch' }}>
@@ -331,7 +330,7 @@ const AlgoMazeLMS = ({ onBack }) => {
 
                 {/* 3. РЕЗУЛЬТАТ */}
                 <div style={{ flex: '1 1 250px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ background: '#f8fafc', padding: '8px 15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ background: '#f8fafc', padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{width: 10, height: 10, borderRadius: '50%', background: '#ef4444'}}></div>
                         <div style={{width: 10, height: 10, borderRadius: '50%', background: '#f59e0b'}}></div>
                         <div style={{width: 10, height: 10, borderRadius: '50%', background: '#10b981'}}></div>
