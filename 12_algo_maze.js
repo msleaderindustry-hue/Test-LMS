@@ -3,7 +3,7 @@ const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
 // ==========================================
-// КООРДИНАТЫ И ВЕКТОРЫ ДВИЖЕНИЯ
+// ЛОГИКА ДВИЖЕНИЯ
 // ==========================================
 const MOVES = {
     UP:    { dx: 0,  dy: -1, rotate: 0 },
@@ -14,11 +14,11 @@ const MOVES = {
 const DIRS_ORDER = ["UP", "RIGHT", "DOWN", "LEFT"];
 
 // ==========================================
-// ИДЕАЛЬНЫЕ СТАРТОВЫЕ УРОВНИ
+// ИДЕАЛЬНЫЕ СТАРТОВЫЕ УРОВНИ (КАК НА СКРИНШОТАХ)
 // ==========================================
 const DEFAULT_LEVELS = {
     js: {
-        title: "JS: Змейка",
+        title: "Змейка",
         task: "Пройдите сложный лабиринт, используя команды движения и поворотов, чтобы добраться до финиша.",
         gridSize: 5,
         walls: [{x: 1, y: 0}, {x: 1, y: 1}, {x: 1, y: 2}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}],
@@ -31,27 +31,36 @@ const DEFAULT_LEVELS = {
         ]
     },
     html: {
-        title: "HTML: Сборка карточки",
-        task: "Соберите HTML-структуру. Не забудьте открыть контейнер в начале и закрыть его в конце!",
+        title: "Карточка товара",
+        task: "Соберите HTML-структуру карточки (изображение, заголовок, описание) и кнопки покупки.",
+        // Скрытые стили, чтобы собранный HTML выглядел красиво в iframe
+        hiddenCss: `body { font-family: sans-serif; background: #0f172a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; } .card { background: #1e293b; width: 280px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; } .photo { width: 100%; height: auto; display: block; } .content { padding: 20px; } h3 { margin: 0 0 10px 0; font-size: 20px; } p { color: #94a3b8; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5; } .buy { width: 100%; padding: 12px; border-radius: 8px; background: #6366f1; color: #fff; border: none; font-weight: bold; cursor: pointer; }`,
         palette: [
-            { id: 'h3', label: '<h3 class="title">Товар</h3>', desc: 'ЗАГОЛОВОК', color: '#0ea5e9', code: '  <h3 style="color:#fff; margin:10px 0;">Товар</h3>\n' },
-            { id: 'div_close', label: '</div>', desc: 'ЗАКРЫВАЮЩИЙ ТЕГ КОНТЕЙНЕРА', color: '#ef4444', code: '</div>\n' },
-            { id: 'div_open', label: '<div class="card">', desc: 'ОТКРЫТЬ КОНТЕЙНЕР', color: '#3b82f6', code: '<div style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid #334155; text-align:center;">\n' },
-            { id: 'btn', label: '<button class="buy">Купить</button>', desc: 'КНОПКА', color: '#10b981', code: '  <button style="background:#10b981; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">Купить</button>\n' }
+            { id: 'div_card', label: "<div class='card'>", desc: 'КОНТЕЙНЕР КАРТОЧКИ', color: '#3b82f6', code: '<div class="card">\n' },
+            { id: 'close_card', label: "</div>", desc: 'ЗАКРЫТЬ КАРТОЧКУ', color: '#ef4444', code: '</div>\n' },
+            { id: 'img', label: "<img src='...'>", desc: 'ИЗОБРАЖЕНИЕ ТОВАРА', color: '#10b981', code: '  <img class="photo" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" alt="Наушники" />\n' },
+            { id: 'div_content', label: "<div class='content'>", desc: 'БЛОК КОНТЕНТА', color: '#0ea5e9', code: '  <div class="content">\n' },
+            { id: 'close_content', label: "</div>", desc: 'ЗАКРЫТЬ КОНТЕНТ', color: '#f43f5e', code: '  </div>\n' },
+            { id: 'h3', label: "<h3>", desc: 'ЗАГОЛОВОК', color: '#f59e0b', code: '    <h3>Беспроводные наушники</h3>\n' },
+            { id: 'p', label: "<p>", desc: 'ОПИСАНИЕ', color: '#8b5cf6', code: '    <p>Качественный звук и активное шумоподавление.</p>\n' },
+            { id: 'btn', label: "<button>", desc: 'КНОПКА', color: '#ec4899', code: '    <button class="buy">Купить</button>\n' }
         ],
-        expected: ['div_open', 'h3', 'btn', 'div_close']
+        expected: ['div_card', 'img', 'div_content', 'h3', 'p', 'btn', 'close_content', 'close_card']
     },
     css: {
-        title: "CSS: Стилизация",
-        task: "Добавьте стили, чтобы кнопка стала зеленой, с белым текстом и без рамок.",
-        baseHtml: `<button>Отправить</button>`,
+        title: "Стилизация элемента",
+        task: "Сделайте круглую красную кнопку с белым текстом по центру.",
+        baseHtml: `<div class="target-btn">Push</div>`,
+        hiddenCss: `body { font-family: sans-serif; background: #0f172a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; } .target-btn { transition: all 0.3s ease; font-weight: bold; font-size: 18px; border: 2px dashed #475569; padding: 10px; color: #94a3b8; }`,
         palette: [
-            { id: 'color', label: 'color: #ffffff;', desc: 'ЦВЕТ ТЕКСТА', color: '#8b5cf6', code: 'color: #ffffff;' },
-            { id: 'bg', label: 'background: #10b981;', desc: 'ЦВЕТ ФОНА', color: '#10b981', code: 'background: #10b981;' },
-            { id: 'padding', label: 'padding: 12px 24px;', desc: 'ОТСТУПЫ', color: '#f59e0b', code: 'padding: 12px 24px;' },
-            { id: 'border', label: 'border: none;', desc: 'УБРАТЬ РАМКУ', color: '#ef4444', code: 'border: none;' }
+            { id: 'bg', label: 'background: #ef4444;', desc: 'ЦВЕТ ФОНА', color: '#ef4444', code: 'background: #ef4444;' },
+            { id: 'color', label: 'color: #ffffff;', desc: 'ЦВЕТ ТЕКСТА', color: '#3b82f6', code: 'color: #ffffff;' },
+            { id: 'radius', label: 'border-radius: 50%;', desc: 'ФОРМА КРУГА', color: '#10b981', code: 'border-radius: 50%;' },
+            { id: 'size', label: 'width: 100px; height: 100px;', desc: 'РАЗМЕР', color: '#f59e0b', code: 'width: 100px; height: 100px;' },
+            { id: 'flex', label: 'display: flex; justify-content: center; align-items: center;', desc: 'ЦЕНТРИРОВАНИЕ', color: '#8b5cf6', code: 'display: flex; justify-content: center; align-items: center;' },
+            { id: 'border', label: 'border: none;', desc: 'УБРАТЬ РАМКУ', color: '#64748b', code: 'border: none;' }
         ],
-        expected: ['bg', 'color', 'border']
+        expected: ['bg', 'color', 'radius', 'size', 'flex', 'border']
     }
 };
 
@@ -60,7 +69,7 @@ const AlgoMazeLMS = ({ onBack }) => {
     const [workspace, setWorkspace] = useState([]); 
     const [level, setLevel] = useState(DEFAULT_LEVELS['js']);
     
-    // Состояния робота
+    // Состояния исполнения
     const [robot, setRobot] = useState({ ...DEFAULT_LEVELS.js.start });
     const [execStatus, setExecStatus] = useState("IDLE"); // IDLE, RUNNING, WON, CRASHED
     const [showWinModal, setShowWinModal] = useState(false);
@@ -69,7 +78,7 @@ const AlgoMazeLMS = ({ onBack }) => {
     const [topic, setTopic] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Смена режима с полным сбросом
+    // Смена режима
     useEffect(() => {
         const defaultLvl = DEFAULT_LEVELS[mode];
         setLevel(defaultLvl);
@@ -79,7 +88,7 @@ const AlgoMazeLMS = ({ onBack }) => {
         if (mode === 'js') setRobot({ ...defaultLvl.start });
     }, [mode]);
 
-    // Авто-проверка победы для HTML и CSS
+    // Авто-проверка победы для HTML и CSS (на лету)
     useEffect(() => {
         if (mode === 'js' || execStatus === "WON" || workspace.length === 0) return;
 
@@ -104,24 +113,24 @@ const AlgoMazeLMS = ({ onBack }) => {
     }, [workspace, mode, level, execStatus]);
 
     // ==========================================
-    // ЖЕСТКИЕ ИИ-ПРОМПТЫ БЕЗ КОСЯКОВ
+    // ИИ ГЕНЕРАТОР (ЖЕСТКИЕ ПРАВИЛА)
     // ==========================================
     const generateAILevel = async () => {
-        if (!topic.trim()) return alert("Введите тему задачи!");
+        if (!topic.trim()) return alert("Введите тему!");
         setIsGenerating(true);
         setExecStatus("IDLE");
         setWorkspace([]);
 
         let prompt = "";
         if (mode === 'js') {
-            prompt = `Создай лабиринт на тему: "${topic}". Верни валидный JSON: {"title":"Имя","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5},"palette":[{"id":"fwd","label":"robot.moveForward();","desc":"ШАГ","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"ВЛЕВО","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"ВПРАВО","color":"#f59e0b"}]}
-            КРИТИЧНО: Путь должен быть проходимым 100%. Координаты от 0 до gridSize-1.`;
+            prompt = `Создай головоломку лабиринт: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","gridSize":6,"walls":[{"x":1,"y":1}],"start":{"x":0,"y":0,"dir":"RIGHT"},"end":{"x":5,"y":5},"palette":[{"id":"fwd","label":"robot.moveForward();","desc":"ШАГ","color":"#0ea5e9"},{"id":"left","label":"robot.turnLeft();","desc":"ВЛЕВО","color":"#8b5cf6"},{"id":"right","label":"robot.turnRight();","desc":"ВПРАВО","color":"#f59e0b"}]}
+            ПРАВИЛА: 1. Путь 100% проходим! 2. Координаты от 0 до gridSize-1.`;
         } else if (mode === 'html') {
-            prompt = `Создай задачу по HTML на тему: "${topic}". Верни валидный JSON: {"title":"Имя","task":"Задача","expected":["id1","id2","id3"],"palette":[{"id":"id1","label":"<div class='box'>","desc":"ОТКРЫТЬ КОНТЕЙНЕР","code":"<div style='background:#1e293b; padding:20px; border-radius:10px; color:white;'>\\n","color":"#3b82f6"}]}
-            КРИТИЧНО: 1. Если есть открывающий тег, ДОБАВЬ ОТДЕЛЬНЫЙ БЛОК с закрывающим тегом (</div>). 2. Цвета текста в "code" делай светлыми. 3. "expected" - правильный порядок.`;
+            prompt = `Создай задачу по HTML: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","hiddenCss":"body{color:#fff;...}","expected":["id1","id2","id3"],"palette":[{"id":"id1","label":"<div class='box'>","desc":"ОТКРЫТЬ КОНТЕЙНЕР","code":"<div style='background:#1e293b;'>\\n","color":"#3b82f6"}]}
+            ПРАВИЛА: 1. ОБЯЗАТЕЛЬНО добавь отдельные блоки с закрывающими тегами (</div>). 2. В hiddenCss добавь базовые красивые стили. 3. "expected" - правильный порядок ID.`;
         } else if (mode === 'css') {
-            prompt = `Создай задачу по CSS на тему: "${topic}". Верни валидный JSON: {"title":"Имя","task":"Задача","baseHtml":"<button>Текст</button>","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: white;","desc":"ЦВЕТ","code":"color: white;","color":"#f43f5e"}]}
-            КРИТИЧНО: baseHtml - это простой тег без классов. palette - 5-7 CSS свойств. expected - ID обязательных свойств.`;
+            prompt = `Создай задачу по CSS: "${topic}". Верни ТОЛЬКО JSON: {"title":"Имя","task":"Задача","baseHtml":"<div class='target'>Текст</div>","hiddenCss":"body{background:#0f172a;}","expected":["id1","id2"],"palette":[{"id":"id1","label":"color: white;","desc":"ЦВЕТ ТЕКСТА","code":"color: white;","color":"#8b5cf6"}]}
+            ПРАВИЛА: palette - 5-7 CSS свойств вперемешку. expected - ID обязательных свойств.`;
         }
 
         try {
@@ -142,7 +151,7 @@ const AlgoMazeLMS = ({ onBack }) => {
     };
 
     // ==========================================
-    // ЛОГИКА ДВИЖЕНИЯ ЛАБИРИНТА
+    // ДВИЖОК ЛАБИРИНТА
     // ==========================================
     const executeJsMaze = async () => {
         if (workspace.length === 0) return alert("Собери алгоритм!");
@@ -191,10 +200,20 @@ const AlgoMazeLMS = ({ onBack }) => {
         setExecStatus("CRASHED"); 
     };
 
+    const addBlock = (b) => {
+        if (execStatus === "RUNNING" || execStatus === "WON") return;
+        setWorkspace([...workspace, b]);
+    };
+    const removeBlock = (idx) => {
+        if (execStatus === "RUNNING" || execStatus === "WON") return;
+        setWorkspace(workspace.filter((_, i) => i !== idx));
+    };
+
     // ==========================================
-    // ПРЕДПРОСМОТР (ПУЛЕНЕПРОБИВАЕМЫЙ РЕНДЕР)
+    // ИДЕАЛЬНЫЙ РЕНДЕР (КАК НА ФОТО)
     // ==========================================
     const renderPreview = () => {
+        // ЛАБИРИНТ
         if (mode === 'js') {
             const size = level.gridSize || 5;
             const walls = level.walls || [];
@@ -207,10 +226,11 @@ const AlgoMazeLMS = ({ onBack }) => {
                     const isEnd = end.x === x && end.y === y;
                     const isRobot = robot.x === x && robot.y === y;
                     cells.push(
-                        <div key={`${x}-${y}`} style={{ width: '100%', height: '100%', background: isWall ? '#334155' : 'transparent', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <div key={`${x}-${y}`} style={{ width: '100%', height: '100%', background: isWall ? 'rgba(255,255,255,0.05)' : 'transparent', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                             {isWall && <span style={{fontSize: '20px'}}>🧱</span>}
-                            {isEnd && <span style={{fontSize: '20px'}}>🚩</span>}
-                            {isRobot && <motion.animate animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '26px', zIndex: 10 }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.animate>}
+                            {isEnd && <span style={{fontSize: '20px', color: '#ef4444'}}>🚩</span>}
+                            {/* РОБОТ ПОЧИНЕН - ТЕПЕРЬ ОН ОТОБРАЖАЕТСЯ ЧЕТКО */}
+                            {isRobot && <motion.div animate={{ rotate: MOVES[robot.dir].rotate }} style={{ position: 'absolute', fontSize: '28px', zIndex: 10 }}>{execStatus === "CRASHED" ? "💥" : "🤖"}</motion.div>}
                         </div>
                     );
                 }
@@ -222,41 +242,16 @@ const AlgoMazeLMS = ({ onBack }) => {
             );
         }
 
-        if (mode === 'html') {
-            const compiledHtml = workspace.map(b => b.code).join('');
-            return (
-                <div style={{ width: '100%', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                    <div dangerouslySetInnerHTML={{ __html: compiledHtml }} />
-                </div>
-            );
-        }
+        // ВЕРСТКА (HTML/CSS) - Безопасный iframe
+        const compiledHtml = mode === 'html' ? workspace.map(b => b.code).join('') : level.baseHtml;
+        const compiledCss = mode === 'css' ? `.target-btn { ${workspace.map(b => b.code).join(' ')} }` : '';
+        const safeStyles = level.hiddenCss || `body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }`;
+        
+        const srcDoc = `<!DOCTYPE html><html><head><style>${safeStyles} ${compiledCss}</style></head><body>${compiledHtml}</body></html>`;
 
-        if (mode === 'css') {
-            const compiledCss = workspace.map(b => b.code).join(' ');
-            const safeBaseHtml = level.baseHtml || '<div>Элемент</div>';
-            
-            // Здесь магия: мы не заменяем класс, а применяем стили ко всем дочерним элементам внутри preview-wrap
-            return (
-                <div style={{ width: '100%', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <style>{`
-                        .preview-wrap > * { 
-                            transition: all 0.3s ease; 
-                            padding: 15px 25px; 
-                            background: #334155; 
-                            color: #fff; 
-                            border-radius: 8px; 
-                            border: none; 
-                            font-weight: bold; 
-                            font-family: sans-serif;
-                            margin: 0 auto;
-                            display: block;
-                            ${compiledCss} 
-                        }
-                    `}</style>
-                    <div className="preview-wrap" style={{width: '100%', display: 'flex', justifyContent: 'center'}} dangerouslySetInnerHTML={{ __html: safeBaseHtml }} />
-                </div>
-            );
-        }
+        return (
+            <iframe srcDoc={srcDoc} sandbox="allow-scripts" style={{ width: '100%', height: '100%', border: 'none', background: '#0f172a' }} />
+        );
     };
 
     const generateFinalCode = () => {
@@ -267,92 +262,82 @@ const AlgoMazeLMS = ({ onBack }) => {
     };
 
     return (
-        <motion.div className="glass-panel" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '1200px', padding: '30px', margin: '0 auto', borderRadius: '24px', position: 'relative' }}>
+        <motion.div className="glass-panel" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '1200px', padding: '20px', margin: '0 auto', borderRadius: '16px', background: '#1e293b' }}>
             
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, color: '#3b82f6' }}>Blockly Студия</h2>
-                    <span style={{ fontSize: '10px', fontWeight: 900, background: 'linear-gradient(90deg, #3b82f6, #0ea5e9)', color: '#ffffff', padding: '4px 10px', borderRadius: '10px', letterSpacing: '1px' }}>КОНСТРУКТОР БЕЗ КОДА</span>
+            <header style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#f8fafc' }}>{level?.title}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '14px' }}>
+                    <span style={{color: '#ef4444'}}>🎯</span> <b>Задача:</b> {level?.task}
                 </div>
             </header>
 
-            <div style={{display: 'flex', background: 'var(--bg-panel)', borderRadius: '12px', padding: '6px', gap: '6px', marginBottom: '20px', border: '1px solid var(--glass-border)', flexWrap: 'wrap'}}>
-                <button onClick={()=>setMode('js')} style={{flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', background: mode === 'js' ? '#3b82f6' : 'transparent', color: mode==='js'?'#fff':'var(--text-sec)', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'}}>🤖 Логика (JS)</button>
-                <button onClick={()=>setMode('html')} style={{flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', background: mode === 'html' ? '#f59e0b' : 'transparent', color: mode==='html'?'#fff':'var(--text-sec)', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'}}>🏗️ Структура (HTML)</button>
-                <button onClick={()=>setMode('css')} style={{flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', background: mode === 'css' ? '#f43f5e' : 'transparent', color: mode==='css'?'#fff':'var(--text-sec)', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'}}>🎨 Стили (CSS)</button>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', padding: '15px', borderRadius: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Напиши тему (напр: Кнопка покупки, Спираль)" style={{ flex: 1, minWidth: '200px', padding: '10px 15px', borderRadius: '10px', border: '1px solid var(--glass-border)', background: 'var(--bg-body)', color: 'var(--text-main)', outline: 'none' }} disabled={isGenerating} />
-                <Button variant="primary" onClick={generateAILevel} disabled={isGenerating} style={{ padding: '0 20px', height: '42px', background: '#3b82f6' }}>{isGenerating ? "🧠 Генерируем..." : "✨ Создать"}</Button>
-            </div>
-
-            <div style={{ background: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: '#f8fafc', fontSize: '20px' }}>{level?.title}</h3>
-                <p style={{ margin: 0, color: '#cbd5e1', fontSize: '15px', lineHeight: '1.5', fontWeight: 'bold' }}>🎯 Задача: <span style={{fontWeight: 'normal'}}>{level?.task}</span></p>
+            {/* ВКЛАДКИ РЕЖИМОВ (Скрытые, если хочешь оставить только игру. Но оставил для переключения) */}
+            <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+                <Button variant="muted" onClick={()=>setMode('js')} style={{border: mode === 'js' ? '1px solid #3b82f6' : '1px solid #334155', color: mode==='js'?'#3b82f6':'#94a3b8'}}>JS Лабиринт</Button>
+                <Button variant="muted" onClick={()=>setMode('html')} style={{border: mode === 'html' ? '1px solid #0ea5e9' : '1px solid #334155', color: mode==='html'?'#0ea5e9':'#94a3b8'}}>HTML Блоки</Button>
+                <Button variant="muted" onClick={()=>setMode('css')} style={{border: mode === 'css' ? '1px solid #8b5cf6' : '1px solid #334155', color: mode==='css'?'#8b5cf6':'#94a3b8'}}>CSS Стили</Button>
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'stretch' }}>
                 
                 {/* 1. ПАЛИТРА БЛОКОВ */}
-                <div style={{ flex: '1 1 250px', background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Доступные фрагменты</div>
-                    {(level?.palette || []).map((block) => (
-                        <motion.button 
-                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
-                            key={block.id} onClick={() => {if (execStatus !== "RUNNING" && execStatus !== "WON") setWorkspace([...workspace, block])}}
-                            style={{ 
-                                width: '100%', textAlign: 'left', padding: '12px 15px', 
-                                background: 'transparent', border: `2px solid ${block.color}`, 
-                                borderRadius: '10px', cursor: 'pointer', display: 'flex', 
-                                flexDirection: 'column', gap: '5px' 
-                            }}
-                        >
-                            <span style={{ fontSize: '11px', color: block.color, fontWeight: 'bold', textTransform: 'uppercase' }}>{block.desc}</span>
-                            <span style={{ fontSize: '14px', color: '#ffffff', fontFamily: 'monospace', fontWeight: 'bold' }}>{block.label}</span>
-                        </motion.button>
-                    ))}
+                <div style={{ flex: '1 1 250px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ padding: '15px', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #1e293b' }}>Доступные фрагменты</div>
+                    <div className="modern-scroll" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '400px' }}>
+                        {(level?.palette || []).map((block) => (
+                            <motion.div 
+                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+                                key={block.id} onClick={() => addBlock(block)}
+                                style={{ width: '100%', padding: '12px 15px', background: '#1e293b', border: `1px solid ${block.color}`, borderRadius: '8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px' }}
+                            >
+                                <span style={{ fontSize: '10px', color: block.color, fontWeight: 'bold', textTransform: 'uppercase' }}>{block.desc}</span>
+                                <span style={{ fontSize: '13px', color: '#f8fafc', fontFamily: 'monospace', fontWeight: 'bold' }}>{block.label}</span>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* 2. РАБОЧАЯ ЗОНА */}
-                <div style={{ flex: '1 1 350px', background: '#0f172a', borderRadius: '16px', padding: '20px', border: '2px dashed #334155', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Среда сборки</span>
-                        <span style={{cursor: 'pointer', color: '#ef4444'}} onClick={() => {setWorkspace([]); if(mode==='js'){setRobot({...level.start}); setExecStatus("IDLE");}}}>🗑️ Очистить</span>
+                <div style={{ flex: '1 1 350px', background: '#0f172a', borderRadius: '12px', border: '1px dashed #334155', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Среда сборки</span>
+                        <span style={{cursor: 'pointer', color: '#ef4444', fontSize: '12px', fontWeight: 'bold'}} onClick={() => {setWorkspace([]); if(mode==='js'){setRobot({...level.start}); setExecStatus("IDLE");}}}>🗑️ ОЧИСТИТЬ</span>
                     </div>
                     
-                    <div className="modern-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '200px', overflowY: 'auto' }}>
+                    <div className="modern-scroll" style={{ flex: 1, padding: '15px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
                         <AnimatePresence>
-                            {workspace.length === 0 && <div style={{textAlign: 'center', color: '#64748b', marginTop: '40px', fontWeight: 'bold'}}>Кликай по фрагментам слева, чтобы собрать код 👇</div>}
+                            {workspace.length === 0 && <div style={{textAlign: 'center', color: '#475569', marginTop: '40px', fontWeight: 'bold', fontSize: '14px'}}>Кликай по фрагментам слева, чтобы собрать код 👇</div>}
                             {workspace.map((block, idx) => (
                                 <motion.div 
-                                    initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, scale: 0.9}}
-                                    key={`${idx}-${block.id}`} onClick={() => {if (execStatus !== "RUNNING" && execStatus !== "WON") setWorkspace(workspace.filter((_, i) => i !== idx))}}
-                                    style={{ padding: '12px 15px', background: 'transparent', border: `2px solid ${block.color}`, color: '#ffffff', borderRadius: '10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                    initial={{opacity: 0, scale: 0.9}} animate={{opacity: 1, scale: 1}} exit={{opacity: 0, scale: 0.9}}
+                                    key={`${idx}-${block.id}`} onClick={() => removeBlock(idx)}
+                                    style={{ padding: '12px 15px', background: '#1e293b', border: `1px solid ${block.color}`, borderRadius: '8px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                 >
-                                    <span style={{fontFamily: 'monospace', fontSize: '14px', fontWeight: 'bold'}}>{block.label}</span>
-                                    <span style={{opacity: 0.6, fontSize: '12px', color: '#fff'}}>✖</span>
+                                    <span style={{fontFamily: 'monospace', fontSize: '13px', color: '#f8fafc', fontWeight: 'bold'}}>{block.label}</span>
+                                    <span style={{color: '#64748b', fontSize: '14px'}}>✖</span>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
                     </div>
 
                     {mode === 'js' && (
-                        <Button variant="green" onClick={executeJsMaze} disabled={execStatus === "RUNNING"} style={{ marginTop: '15px', background: '#10b981', height: '50px', fontSize: '16px' }}>
-                            ▶ ЗАПУСТИТЬ АЛГОРИТМ
-                        </Button>
+                        <div style={{ padding: '15px', borderTop: '1px solid #1e293b' }}>
+                            <Button variant="green" onClick={executeJsMaze} disabled={execStatus === "RUNNING"} style={{ width: '100%', background: '#10b981', height: '44px', fontSize: '14px', borderRadius: '8px' }}>
+                                ▶ ЗАПУСТИТЬ АЛГОРИТМ
+                            </Button>
+                        </div>
                     )}
                 </div>
 
                 {/* 3. РЕЗУЛЬТАТ */}
-                <div style={{ flex: '1 1 250px', background: '#1e293b', borderRadius: '16px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ background: '#f8fafc', padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0' }}>
-                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#ef4444'}}></div>
-                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#f59e0b'}}></div>
-                        <div style={{width: 12, height: 12, borderRadius: '50%', background: '#10b981'}}></div>
-                        <span style={{marginLeft: 10, fontSize: 13, fontWeight: 'bold', color: '#475569'}}>Live Preview</span>
+                <div style={{ flex: '1 1 250px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ background: '#f8fafc', padding: '8px 15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{width: 10, height: 10, borderRadius: '50%', background: '#ef4444'}}></div>
+                        <div style={{width: 10, height: 10, borderRadius: '50%', background: '#f59e0b'}}></div>
+                        <div style={{width: 10, height: 10, borderRadius: '50%', background: '#10b981'}}></div>
+                        <span style={{marginLeft: 10, fontSize: 12, fontWeight: 'bold', color: '#475569'}}>Live Preview</span>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', padding: '20px' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
                         {renderPreview()}
                     </div>
                 </div>
@@ -361,24 +346,15 @@ const AlgoMazeLMS = ({ onBack }) => {
             {/* МОДАЛКА ПОБЕДЫ */}
             <AnimatePresence>
                 {showWinModal && (
-                    <motion.div 
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', padding: '20px' }}
-                    >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px' }}>
                         <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} style={{ background: '#1e293b', padding: '40px', borderRadius: '24px', maxWidth: '600px', width: '100%', textAlign: 'center', border: '1px solid #334155', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                             <div style={{ fontSize: '60px', marginBottom: '10px' }}>🎉</div>
                             <h2 style={{ color: '#10b981', fontSize: '32px', margin: '0 0 10px 0' }}>Идеально!</h2>
                             <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '20px' }}>Ты собрал логику визуально. А вот так это выглядит <b>в настоящем коде</b>:</p>
-                            
                             <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', textAlign: 'left', overflowX: 'auto', border: '1px solid #334155' }}>
-                                <pre style={{ margin: 0, color: mode === 'html' ? '#38bdf8' : mode === 'css' ? '#f43f5e' : '#fba11b', fontFamily: "'Fira Code', monospace", fontSize: '15px', lineHeight: '1.5' }}>
-                                    <code>{generateFinalCode()}</code>
-                                </pre>
+                                <pre style={{ margin: 0, color: mode === 'html' ? '#38bdf8' : mode === 'css' ? '#f43f5e' : '#fba11b', fontFamily: "'Fira Code', monospace", fontSize: '14px', lineHeight: '1.5' }}><code>{generateFinalCode()}</code></pre>
                             </div>
-
-                            <Button variant="primary" onClick={() => {setShowWinModal(false); setWorkspace([]); if(mode==='js') {setRobot({...level.start}); setExecStatus("IDLE");}}} style={{ marginTop: '25px', width: '200px', height: '50px', fontSize: '16px', background: '#3b82f6' }}>
-                                Продолжить
-                            </Button>
+                            <Button variant="primary" onClick={() => {setShowWinModal(false); setWorkspace([]); if(mode==='js') {setRobot({...level.start}); setExecStatus("IDLE");}}} style={{ marginTop: '25px', width: '200px', height: '50px', fontSize: '16px', background: '#3b82f6' }}>Продолжить</Button>
                         </motion.div>
                     </motion.div>
                 )}
