@@ -388,7 +388,12 @@ function App() {
                       
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
-                          <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%'}}>✖</Button>
+                          <div style={{display: 'flex', gap: '8px'}}>
+                              <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} title="Сменить тему">
+                                  {theme === 'dark' ? '☀️' : '🌙'}
+                              </Button>
+                              <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>✖</Button>
+                          </div>
                       </div>
                       
     <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
@@ -407,9 +412,7 @@ function App() {
 </div>
 
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
-                          <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                              <span style={{marginRight: 10}}>{theme === 'dark' ? '☀️' : '🌙'}</span> Сменить тему
-                          </Button>
+                          
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
@@ -458,7 +461,7 @@ function App() {
                               </Button>
                           )}
 
-                          {/* ДОБАВЛЕНО: УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
+                          {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
                           {view === 'excel' ? (
                               <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
