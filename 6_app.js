@@ -389,9 +389,25 @@ function App() {
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <div style={{display: 'flex', gap: '8px'}}>
-                              <Button variant="muted" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} title="Сменить тему">
-                                  {theme === 'dark' ? '☀️' : '🌙'}
-                              </Button>
+<Button 
+    variant="muted" 
+    onClick={(e) => {
+        const nextTheme = theme === 'dark' ? 'light' : 'dark';
+        // Если браузер поддерживает новую анимацию
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                setTheme(nextTheme);
+            });
+        } else {
+            // Для старых браузеров просто меняем
+            setTheme(nextTheme);
+        }
+    }} 
+    style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} 
+    title="Сменить тему"
+>
+    {theme === 'dark' ? '☀️' : '🌙'}
+</Button>
                               <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>✖</Button>
                           </div>
                       </div>
