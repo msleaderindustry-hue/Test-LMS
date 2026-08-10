@@ -10,7 +10,7 @@ const {
   CodePlayground,
   FlashcardsLMS,
   ExcelTrainerLMS,
-  AlgoMazeLMS // <-- ДОБАВЛЕН ИМПОРТ НОВОЙ БЛОКЛИ-СТУДИИ
+  WebBuilderLMS // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
 } = window;
 
 // --- APP ---
@@ -374,7 +374,7 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА (Обновлено условие отображения) */}
+      {/* ГАМБУРГЕР КНОПКА */}
       {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
@@ -432,14 +432,14 @@ function App() {
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
 
-                          {/* УМНАЯ КНОПКА ДЛЯ ИГРОВОЙ СТУДИИ (BLOCKLY) */}
+                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
                           {view === 'algo' ? (
                               <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                               </Button>
                           ) : (
                               <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>🧩</span> Blockly Студия
+                                  <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
                               </Button>
                           )}
                           
@@ -709,10 +709,10 @@ function App() {
               </motion.div>
           )}
 
-          {/* ЭКРАН ИГРОВОЙ СТУДИИ (BLOCKLY) */}
+          {/* ЭКРАН КОНСТРУКТОРА САЙТОВ */}
           {!isAuthLoading && user && view === 'algo' && (
               <motion.div key="algo_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
-                  <AlgoMazeLMS onBack={() => setView('menu')} />
+                  <WebBuilderLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
