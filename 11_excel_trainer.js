@@ -47,7 +47,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // ЖЕСТКИЙ ПРОМПТ НА РАЗНООБРАЗИЕ
+        // ИСПРАВЛЕННЫЙ ПРОМПТ НА СИНТАКСИС И РАЗНООБРАЗИЕ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай интерактивный урок-задачу по этой функции.
@@ -55,7 +55,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ (например SUM, IF, VLOOKUP)",
-          "syntax": "=ФУНКЦИЯ(арг1; арг2)",
+          "syntax": "ПОНЯТНЫЙ ПРИМЕР с ячейками и кавычками! Например: =ЕСЛИ(A1>50; \\"Да\\"; \\"Нет\\")",
           "def": "Понятное объяснение для ученика, что делает функция.",
           "taskDesc": "Текст практической задачи.",
           "table": [
@@ -68,9 +68,10 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "result": "Ожидаемый ответ (число или текст)"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Запрещаю всегда использовать ячейку B2! Генерируй разные сценарии. Требуй данные из C3, A4, B4, C2 или из диапазонов (A2:C4, B2:B5).
-        2. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая (СУММ, СРЗНАЧ), в указанных ячейках должны лежать ЧИСЛА. Если дата (ГОД) - должна лежать дата в формате ДД.ММ.ГГГГ. Не извлекай год из имени!
-        3. Таблица должна быть реалистичной (минимум 3-4 строки и 2-3 столбца).`;
+        1. В поле "syntax" пиши НАГЛЯДНЫЙ ПРИМЕР с реальными адресами ячеек и двойными кавычками для текста, никаких абстрактных слов типа "условие" или "значение_если_истина".
+        2. В массиве "expected" обязательно экранируй внутренние двойные кавычки (например: "=ЕСЛИ(B4>=100; \\"Бонус\\"; \\"Без бонуса\\")").
+        3. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Запрещаю всегда использовать ячейку B2! Требуй данные из C3, A4, B4, C2 или из диапазонов (A2:C4, B2:B5).
+        4. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -201,7 +202,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
                     ) : (
                         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             
-                            {/* БЛОК ТЕОРИИ */}
                             <div style={{ background: 'var(--bg-panel)', padding: '25px', borderRadius: '20px', border: '1px solid var(--glass-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                                 <h1 style={{ margin: '0 0 5px 0', fontSize: '32px', color: 'var(--text-main)' }}>{currentLesson.name}</h1>
                                 <div style={{ color: 'var(--text-sec)', fontSize: '14px', marginBottom: '20px' }}>Английская версия: <b>{currentLesson.enName}</b></div>
@@ -217,13 +217,12 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </div>
                             </div>
 
-                            {/* БЛОК ПРАКТИКИ */}
                             <div style={{ background: 'var(--bg-body)', padding: '25px', borderRadius: '20px', border: '2px dashed var(--glass-border)' }}>
                                 <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>Практическое задание</div>
                                 <p style={{ margin: '0 0 20px 0', color: 'var(--text-main)', fontSize: '16px', fontWeight: 600 }}>{currentLesson.taskDesc}</p>
                                 
-                                {/* Таблица */}
-                                <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#334155', fontFamily: 'Arial, sans-serif', marginBottom: '20px' }}>
+                                {/* ТАБЛИЦА (Убрано удаление первого ряда) */}
+                                <div className="modern-scroll" style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#334155', fontFamily: 'Arial, sans-serif', marginBottom: '20px' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '14px' }}>
                                         <thead>
                                             <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
@@ -236,26 +235,22 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {currentLesson.table.map((row, rowIdx) => {
-                                                if (rowIdx === 0) return null; // Пропускаем заголовки
-                                                return (
-                                                    <tr key={rowIdx} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                                        <td style={{ background: '#f8fafc', borderRight: '1px solid #cbd5e1', padding: '8px', fontWeight: 'bold', color: '#64748b' }}>
-                                                            {rowIdx + 1}
+                                            {currentLesson.table.map((row, rowIdx) => (
+                                                <tr key={rowIdx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                    <td style={{ background: '#f8fafc', borderRight: '1px solid #cbd5e1', padding: '8px', fontWeight: 'bold', color: '#64748b' }}>
+                                                        {rowIdx + 1}
+                                                    </td>
+                                                    {row.map((cell, colIdx) => (
+                                                        <td key={colIdx} style={{ borderRight: '1px solid #e2e8f0', padding: '8px' }}>
+                                                            {cell}
                                                         </td>
-                                                        {row.map((cell, colIdx) => (
-                                                            <td key={colIdx} style={{ borderRight: '1px solid #e2e8f0', padding: '8px' }}>
-                                                                {cell}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                );
-                                            })}
+                                                    ))}
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {/* Ввод формулы */}
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', fontWeight: 'bold', color: '#10b981', fontSize: '18px' }}>fx</div>
                                     <input
@@ -268,7 +263,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     />
                                 </div>
 
-                                {/* Результат */}
                                 <AnimatePresence>
                                     {showSuccess && (
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', padding: '15px', borderRadius: '12px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
