@@ -47,15 +47,15 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // ИСПРАВЛЕННЫЙ ПРОМПТ НА СИНТАКСИС И РАЗНООБРАЗИЕ
+        // ИСПРАВЛЕННЫЙ ПРОМПТ НА СИНТАКСИС (чтобы не сливал ответ)
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай интерактивный урок-задачу по этой функции.
         Верни ТОЛЬКО чистый валидный JSON (без markdown, без \`\`\`json) строго в таком формате:
         {
           "name": "${formulaName}",
-          "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ (например SUM, IF, VLOOKUP)",
-          "syntax": "ПОНЯТНЫЙ ПРИМЕР с ячейками и кавычками! Например: =ЕСЛИ(A1>50; \\"Да\\"; \\"Нет\\")",
+          "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
+          "syntax": "АБСТРАКТНЫЙ ПРИМЕР, КОТОРЫЙ НЕ СОВПАДАЕТ С ОТВЕТОМ!",
           "def": "Понятное объяснение для ученика, что делает функция.",
           "taskDesc": "Текст практической задачи.",
           "table": [
@@ -68,7 +68,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "result": "Ожидаемый ответ (число или текст)"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. В поле "syntax" пиши НАГЛЯДНЫЙ ПРИМЕР с реальными адресами ячеек и двойными кавычками для текста, никаких абстрактных слов типа "условие" или "значение_если_истина".
+        1. ЗАПРЕЩЕНО ВЫДАВАТЬ ОТВЕТ В СИНТАКСИСЕ! В поле "syntax" пиши пример использования с ДРУГИМИ ячейками и значениями. Например, если в задаче нужно проверить B4>=100 и выдать "Бонус", то в syntax напиши пример вроде: "=ЕСЛИ(Z99=1; \\"Да\\"; \\"Нет\\")". Ученик должен видеть структуру (где скобки, где кавычки), но НЕ должен видеть готовый ответ!
         2. В массиве "expected" обязательно экранируй внутренние двойные кавычки (например: "=ЕСЛИ(B4>=100; \\"Бонус\\"; \\"Без бонуса\\")").
         3. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Запрещаю всегда использовать ячейку B2! Требуй данные из C3, A4, B4, C2 или из диапазонов (A2:C4, B2:B5).
         4. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
@@ -212,7 +212,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </div>
 
                                 <div style={{ background: '#1e293b', padding: '15px', borderRadius: '12px' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '5px' }}>Синтаксис (Правило написания)</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '5px' }}>Наглядный пример написания</div>
                                     <code style={{ fontSize: '16px', color: '#38bdf8', fontFamily: 'monospace' }}>{currentLesson.syntax}</code>
                                 </div>
                             </div>
@@ -221,7 +221,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>Практическое задание</div>
                                 <p style={{ margin: '0 0 20px 0', color: 'var(--text-main)', fontSize: '16px', fontWeight: 600 }}>{currentLesson.taskDesc}</p>
                                 
-                                {/* ТАБЛИЦА (Убрано удаление первого ряда) */}
+                                {/* ТАБЛИЦА (С первым рядом) */}
                                 <div className="modern-scroll" style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#334155', fontFamily: 'Arial, sans-serif', marginBottom: '20px' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '14px' }}>
                                         <thead>
