@@ -431,17 +431,6 @@ function App() {
                           <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                               <span style={{marginRight: 10}}>💬</span> Открыть чат
                           </Button>
-
-                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
-                          {view === 'algo' ? (
-                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
-                              </Button>
-                          )}
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {view === 'typing' ? (
@@ -495,6 +484,17 @@ function App() {
                           ) : (
                               <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                   <span style={{marginRight: 10}}>📊</span> Тренажер Excel
+                              </Button>
+                          )}
+
+                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
+                          {view === 'algo' ? (
+                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                              </Button>
+                          ) : (
+                              <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
                               </Button>
                           )}
 
