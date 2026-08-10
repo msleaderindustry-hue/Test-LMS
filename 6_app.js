@@ -13,6 +13,7 @@ const {
   WebBuilderLMS // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
 } = window;
 
+
 // --- APP ---
 function App() {
   const [view, setView] = useState('loading'); 
