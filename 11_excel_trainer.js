@@ -232,12 +232,13 @@ const ExcelTrainerLMS = ({ onBack }) => {
                             </div>
 
                             {/* БЛОК ПРАКТИКИ */}
-                            <div style={{ background: 'var(--bg-body)', padding: '30px', borderRadius: '24px', border: '2px dashed var(--glass-border)', position: 'relative' }}>
-                                <div style={{ position: 'absolute', top: '-14px', left: '30px', background: 'var(--bg-body)', padding: '0 15px', fontSize: '13px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Практика</div>
-                                
-                                <p style={{ margin: '10px 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
-                                    {currentLesson.taskDesc}
-                                </p>
+                       {/* БЛОК ПРАКТИКИ */}
+                    <div style={{ background: 'var(--bg-body)', padding: '30px', borderRadius: '24px', border: '2px dashed var(--glass-border)', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-14px', left: '30px', background: 'var(--bg-body)', padding: '0 15px', fontSize: '13px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Практика</div>
+    
+                    <p style={{ margin: '10px 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
+                    {currentLesson.taskDesc}
+                            </p>
                                 
                                 {/* ТАБЛИЦА */}
                                 <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', marginBottom: '30px' }}>
