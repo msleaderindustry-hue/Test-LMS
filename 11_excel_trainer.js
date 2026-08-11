@@ -17,8 +17,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const [activeCategory, setActiveCategory] = useState(categories[0]);
     const [activeFormulaName, setActiveFormulaName] = useState(EXCEL_DATABASE[categories[0]][0]);
 
-    // Кэш для уроков (чтобы не генерировать дважды) и текущий урок
-    const [lessonsCache, setLessonsCache] = useState({});
+    // Текущий урок (кэширование удалено, теперь всегда новая генерация!)
     const [currentLesson, setCurrentLesson] = useState(null);
 
     // Состояния практики
@@ -30,16 +29,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // При смене функции проверяем кэш или генерируем заново
+    // При смене функции генерируем новую задачу
     useEffect(() => {
         setInputValue("=");
         setShowSuccess(false);
-
-        if (lessonsCache[activeFormulaName]) {
-            setCurrentLesson(lessonsCache[activeFormulaName]);
-        } else {
-            generateAIFormula(activeFormulaName);
-        }
+        generateAIFormula(activeFormulaName);
     }, [activeFormulaName]);
 
     // Основная функция генерации через ИИ
@@ -47,15 +41,15 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // ЖЕСТКИЙ ПРОМПТ НА ИСКЛЮЧЕНИЕ ЛИШНЕГО ТЕКСТА И ОШИБОК С ЯЧЕЙКАМИ
+        // ЖЕСТКИЙ ПРОМПТ БЕЗ СЛОВ-ПОДСКАЗОК В СИНТАКСИСЕ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
-        Создай интерактивный урок-задачу по этой функции.
+        Создай НОВУЮ уникальную интерактивную урок-задачу по этой функции.
         Верни ТОЛЬКО чистый валидный JSON (без markdown, без \`\`\`json) строго в таком формате:
         {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
-          "syntax": "=ФУНКЦИЯ(Z1:Z5)\\n=ФУНКЦИЯ(Z1; X2)",
+          "syntax": "=ФУНКЦИЯ(Z1:Z10; \\">50\\"; X1:X10)\\n=ФУНКЦИЯ(Z1; Z2)",
           "def": "Понятное объяснение для ученика, что делает функция.",
           "taskDesc": "Текст практической задачи.",
           "table": [
@@ -68,12 +62,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "result": "Ожидаемый ответ вычисления"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. СИНТАКСИС: В поле "syntax" выведи ТОЛЬКО сами примеры кода формул с абстрактными ячейками (Z1, X2), разделенные переносом строки (\\n). ЗАПРЕЩЕНО писать лишние слова вроде "Покажи способы", "Например", "Диапазоном:" и т.д. НИКАКИХ подсказок к ответу!
-        2. ЗАДАЧА: В поле "taskDesc" ЗАПРЕЩЕНО просить "написать формулу в ячейке C5" или любой другой ячейке, которой нет в таблице. Просто скажи "Напишите формулу, которая посчитает...".
-        3. ВАРИАНТЫ ОТВЕТОВ: В массив "expected" добавь все правильные варианты написания формулы для этой задачи.
-        4. В массиве "expected" обязательно экранируй внутренние двойные кавычки (например: "=ЕСЛИ(B4>=100; \\"Бонус\\"; \\"Без бонуса\\")").
-        5. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Требуй данные из C3, A4, B4, C2 или из диапазонов.
-        6. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
+        1. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО писать слова "диапазон", "критерий", "условие", "значение_если_истина". Пиши ТОЛЬКО реальные примеры кода с абстрактными ячейками (Z1, X2) и конкретными значениями (">50", "Текст"). Ученик должен видеть, как ставить кавычки и точки с запятой!
+        2. ЗАДАЧА: В поле "taskDesc" ЗАПРЕЩЕНО просить "написать формулу в ячейке C5", если её нет в таблице. Просто скажи "Напишите формулу, которая посчитает...".
+        3. ВАРИАНТЫ ОТВЕТОВ: В массив "expected" добавь ВСЕ правильные варианты написания формулы для этой задачи.
+        4. ЭКРАНИРОВАНИЕ: В массиве "expected" обязательно экранируй внутренние двойные кавычки: "=ЕСЛИ(B4>=100; \\"Да\\"; \\"Нет\\")".
+        5. ТИПЫ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -91,13 +84,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
 
             const parsedFormula = JSON.parse(jsonMatch[0]);
             
-            setLessonsCache(prev => ({ ...prev, [formulaName]: parsedFormula }));
             setCurrentLesson(parsedFormula);
             
         } catch (error) {
             console.error("Ошибка:", error);
             alert(`Не удалось сгенерировать урок для ${formulaName}. Попробуйте еще раз.`);
-            setActiveFormulaName("СУММ");
         } finally {
             setIsGenerating(false);
         }
@@ -105,8 +96,17 @@ const ExcelTrainerLMS = ({ onBack }) => {
 
     const handleCustomSearch = () => {
         if (!customSearch.trim()) return;
-        setActiveCategory("Поиск ИИ");
-        setActiveFormulaName(customSearch.toUpperCase());
+        const fName = customSearch.trim().toUpperCase();
+        
+        // Если функция та же самая, форсируем обновление
+        if (fName === activeFormulaName) {
+            setInputValue("=");
+            setShowSuccess(false);
+            generateAIFormula(fName);
+        } else {
+            setActiveCategory("Поиск ИИ");
+            setActiveFormulaName(fName);
+        }
     };
 
     const checkAnswer = () => {
@@ -160,7 +160,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-body)', color: 'var(--text-main)', marginBottom: '10px', fontSize: '13px', outline: 'none' }}
                         />
                         <Button variant="primary" onClick={handleCustomSearch} disabled={isGenerating} style={{ width: '100%', height: '36px', fontSize: '13px', background: 'linear-gradient(90deg, #a855f7, #6d28d9)' }}>
-                            {isGenerating ? "Ищем..." : "Создать урок"}
+                            {isGenerating ? "Генерируем..." : "Создать урок"}
                         </Button>
                     </div>
 
@@ -214,7 +214,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </div>
 
                                 <div style={{ background: '#1e293b', padding: '15px', borderRadius: '12px' }}>
-                                    {/* ВЕРНУЛ НАЗВАНИЕ "СИНТАКСИС" */}
                                     <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '5px' }}>Синтаксис</div>
                                     <code style={{ fontSize: '16px', color: '#38bdf8', fontFamily: 'monospace', whiteSpace: 'pre-wrap', display: 'block', lineHeight: 1.5 }}>
                                         {currentLesson.syntax}
@@ -278,7 +277,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     )}
                                 </AnimatePresence>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+                                    {/* Кнопка сброса и генерации новой задачи */}
+                                    <Button variant="muted" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating} style={{ background: 'var(--bg-panel)' }}>
+                                        🔄 Другая задача
+                                    </Button>
                                     {!showSuccess && <Button variant="green" onClick={checkAnswer} style={{ width: '150px' }}>Проверить</Button>}
                                 </div>
                             </div>
