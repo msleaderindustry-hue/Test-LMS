@@ -47,7 +47,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // ИСПРАВЛЕННЫЙ ПРОМПТ НА СИНТАКСИС (чтобы не сливал ответ)
+        // ИДЕАЛЬНЫЙ ПРОМПТ (Разнообразие ответов + правильный синтаксис + безопасность)
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай интерактивный урок-задачу по этой функции.
@@ -55,7 +55,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
-          "syntax": "АБСТРАКТНЫЙ ПРИМЕР, КОТОРЫЙ НЕ СОВПАДАЕТ С ОТВЕТОМ!",
+          "syntax": "Покажи 2-3 способа написания! Например:\\n1. Диапазоном: =ФУНКЦИЯ(Z1:Z5)\\n2. Точечно: =ФУНКЦИЯ(Z1; X2)",
           "def": "Понятное объяснение для ученика, что делает функция.",
           "taskDesc": "Текст практической задачи.",
           "table": [
@@ -64,14 +64,15 @@ const ExcelTrainerLMS = ({ onBack }) => {
             ["Текст", "Число/Дата", "Число/Дата"],
             ["Текст", "Число/Дата", "Число/Дата"]
           ],
-          "expected": ["=ФУНКЦИЯ(АДРЕС)"],
-          "result": "Ожидаемый ответ (число или текст)"
+          "expected": ["=ФУНКЦИЯ(B2:B4)", "=ФУНКЦИЯ(B2;B3;B4)", "=ФУНКЦИЯ(B4:B2)"],
+          "result": "Ожидаемый ответ вычисления"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. ЗАПРЕЩЕНО ВЫДАВАТЬ ОТВЕТ В СИНТАКСИСЕ! В поле "syntax" пиши пример использования с ДРУГИМИ ячейками и значениями. Например, если в задаче нужно проверить B4>=100 и выдать "Бонус", то в syntax напиши пример вроде: "=ЕСЛИ(Z99=1; \\"Да\\"; \\"Нет\\")". Ученик должен видеть структуру (где скобки, где кавычки), но НЕ должен видеть готовый ответ!
-        2. В массиве "expected" обязательно экранируй внутренние двойные кавычки (например: "=ЕСЛИ(B4>=100; \\"Бонус\\"; \\"Без бонуса\\")").
-        3. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Запрещаю всегда использовать ячейку B2! Требуй данные из C3, A4, B4, C2 или из диапазонов (A2:C4, B2:B5).
-        4. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
+        1. СИНТАКСИС БЕЗ ОТВЕТА: В поле "syntax" используй примеры на абстрактных ячейках (Z99, X1), чтобы ученик понял как ставить кавычки и скобки, но НЕ получил готовый ответ к задаче.
+        2. ВАРИАНТЫ ОТВЕТОВ: В массив "expected" добавь все правильные варианты написания формулы для этой конкретной задачи (диапазоном через : и точечно через ;). Ученик может использовать любой.
+        3. В массиве "expected" обязательно экранируй внутренние двойные кавычки (например: "=ЕСЛИ(B4>=100; \\"Бонус\\"; \\"Без бонуса\\")").
+        4. МАКСИМАЛЬНОЕ РАЗНООБРАЗИЕ АДРЕСОВ: Запрещаю всегда использовать ячейку B2! Требуй данные из C3, A4, B4, C2 или из диапазонов.
+        5. ЛОГИКА ТИПОВ: Формула в "expected" должна быть на 100% рабочей. Если функция математическая, в ячейках должны лежать ЧИСЛА.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -212,8 +213,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </div>
 
                                 <div style={{ background: '#1e293b', padding: '15px', borderRadius: '12px' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '5px' }}>Наглядный пример написания</div>
-                                    <code style={{ fontSize: '16px', color: '#38bdf8', fontFamily: 'monospace' }}>{currentLesson.syntax}</code>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '5px' }}>Способы написания</div>
+                                    {/* Добавлено whiteSpace: 'pre-wrap' для переносов строк в синтаксисе */}
+                                    <code style={{ fontSize: '15px', color: '#38bdf8', fontFamily: 'monospace', whiteSpace: 'pre-wrap', display: 'block', lineHeight: 1.5 }}>
+                                        {currentLesson.syntax}
+                                    </code>
                                 </div>
                             </div>
 
@@ -221,7 +225,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>Практическое задание</div>
                                 <p style={{ margin: '0 0 20px 0', color: 'var(--text-main)', fontSize: '16px', fontWeight: 600 }}>{currentLesson.taskDesc}</p>
                                 
-                                {/* ТАБЛИЦА (С первым рядом) */}
+                                {/* ТАБЛИЦА (Удалено отсечение первого ряда, теперь нумерация идет с 1) */}
                                 <div className="modern-scroll" style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#334155', fontFamily: 'Arial, sans-serif', marginBottom: '20px' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '14px' }}>
                                         <thead>
