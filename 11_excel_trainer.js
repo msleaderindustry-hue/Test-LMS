@@ -34,7 +34,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // ОБНОВЛЕННЫЙ ПРОМПТ: Учим ИИ не выдумывать ячейки для ответа
+        // ЖЕСТКИЙ ПРОМПТ ДЛЯ ИИ: Никаких "диапазонов" в синтаксисе и ячеек ответа
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -42,7 +42,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
-          "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; Z2)",
+          "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; \\"Текст\\"; X1:X10)",
           "def": "Понятное объяснение для ученика, что делает функция.",
           "taskDesc": "Напишите формулу, которая посчитает [ЧТО-ТО].",
           "table": [
@@ -54,7 +54,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "result": "Ожидаемый ответ вычисления"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" пиши ТОЛЬКО примеры формул с абстрактными ячейками (Z1, X2).
+        1. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" пиши ТОЛЬКО примеры формул с абстрактными ячейками (Z1, X2). КАТЕГОРИЧЕСКИ ЗАПРЕЩАЕТСЯ писать текстовые подсказки вроде "диапазон", "условие", "критерий". Пиши только готовый код формулы!
         2. ФОРМУЛИРОВКА ЗАДАЧИ: В поле "taskDesc" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО упоминать ячейку для вывода результата (не пиши "для ячейки C5", "в ячейке B7" и т.д.). Пиши строго по шаблону: "Напишите формулу, которая посчитает среднюю оценку студентов." И всё!
         3. ЛОГИКА ОЖИДАЕМОГО ОТВЕТА ("expected"): В массив expected добавь ВСЕ возможные правильные варианты написания формулы, которая решает задачу. Обязательно убедись, что адреса ячеек в формуле СТРОГО СОВПАДАЮТ с таблицей!
         4. ЭКРАНИРОВАНИЕ: В массиве "expected" экранируй внутренние кавычки (например: "=ЕСЛИ(B2>=500; \\"Премия\\"; \\"Оклад\\")").
@@ -90,6 +90,8 @@ const ExcelTrainerLMS = ({ onBack }) => {
         const fName = customSearch.trim().toUpperCase();
         
         if (fName === activeFormulaName) {
+            setInputValue("=");
+            setShowSuccess(false);
             generateAIFormula(fName);
         } else {
             setActiveCategory("Поиск ИИ");
@@ -100,7 +102,20 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const checkAnswer = () => {
         if (!currentLesson) return;
         
-        const formatFormula = (f) => String(f).trim().toUpperCase().replace(/\s/g, '').replace(/,/g, ';');
+        const formatFormula = (f) => {
+            // ЖЕСТКАЯ ОЧИСТКА: Убираем пробелы, меняем запятые, УДАЛЯЕМ ВСЕ КАВЫЧКИ
+            let str = String(f).trim().toUpperCase()
+                .replace(/\s/g, '') 
+                .replace(/,/g, ';') 
+                .replace(/["'«»“”]/g, ''); 
+                
+            // Синхронизация раскладки: русские буквы в английские аналоги
+            const ruToEn = {
+                'А':'A','В':'B','С':'C','Е':'E','Н':'H','К':'K',
+                'М':'M','О':'O','Р':'P','Т':'T','Х':'X','У':'Y'
+            };
+            return str.replace(/[АВСЕНКМОРТХУ]/g, match => ruToEn[match]);
+        };
         
         const userForm = formatFormula(inputValue);
         const isCorrect = currentLesson.expected.some(exp => formatFormula(exp) === userForm);
@@ -136,7 +151,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
 
             <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 
-                {/* ЛЕВАЯ КОЛОНКА: Навигация */}
+                {/* ЛЕВАЯ КОЛОНКА */}
                 <div className="modern-scroll" style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '700px', overflowY: 'auto', paddingRight: '10px' }}>
                     
                     {/* ПОИСК */}
@@ -233,14 +248,16 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </div>
                             </div>
 
-                            {/* БЛОК ПРАКТИКИ */}
-                       {/* БЛОК ПРАКТИКИ */}
-                    <div style={{ background: 'var(--bg-body)', padding: '30px', borderRadius: '24px', border: '2px dashed var(--glass-border)', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '-14px', left: '30px', background: 'var(--bg-body)', padding: '0 15px', fontSize: '13px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Практика</div>
-    
-                    <p style={{ margin: '10px 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
-                    {currentLesson.taskDesc}
-                            </p>
+                            {/* БЛОК ПРАКТИКИ (ФИКС "НАЕЗДА" ТЕКСТА НА ЛИНИЮ) */}
+                            <div style={{ background: 'var(--bg-body)', padding: '30px', borderRadius: '24px', border: '2px dashed var(--glass-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                    <span style={{ fontSize: '20px' }}>🎯</span>
+                                    <span style={{ fontSize: '15px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Практика</span>
+                                </div>
+                                
+                                <p style={{ margin: '0 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
+                                    {currentLesson.taskDesc}
+                                </p>
                                 
                                 {/* ТАБЛИЦА */}
                                 <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', marginBottom: '30px' }}>
@@ -314,14 +331,19 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 </AnimatePresence>
 
                                 {/* КНОПКИ ДЕЙСТВИЙ */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)' }}>
-                                    <Button variant="muted" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating} style={{ background: 'var(--bg-panel)', height: '48px', borderRadius: '12px', fontWeight: 700, padding: '0 20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)', flexWrap: 'wrap', gap: '10px' }}>
+                                    <Button variant="muted" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating} style={{ background: 'var(--bg-panel)', height: '48px', borderRadius: '12px', fontWeight: 700, padding: '0 20px', flex: '1 1 auto' }}>
                                         🔄 Другая задача
                                     </Button>
                                     {!showSuccess && (
-                                        <Button variant="green" onClick={checkAnswer} style={{ width: '160px', height: '48px', borderRadius: '12px', fontSize: '16px', fontWeight: 800, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
-                                            Проверить
-                                        </Button>
+                                        <div style={{ display: 'flex', gap: '10px', flex: '1 1 auto' }}>
+                                            <Button variant="muted" onClick={() => setInputValue(currentLesson.expected[0] || currentLesson.expected)} style={{ height: '48px', borderRadius: '12px', fontSize: '14px', fontWeight: 800, flex: '1 1 auto' }}>
+                                                👀 Подсказка
+                                            </Button>
+                                            <Button variant="green" onClick={checkAnswer} style={{ height: '48px', borderRadius: '12px', fontSize: '16px', fontWeight: 800, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', flex: '2 1 auto' }}>
+                                                Проверить
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
