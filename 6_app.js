@@ -36,6 +36,9 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
   const [teacherTests, setTeacherTests] = useState([]); 
+  
+  // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
+  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -68,6 +71,9 @@ function App() {
                           } else {
                               setTeacherTests([]);
                           }
+                          
+                          // Обновляем доступы в реальном времени
+                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
                       }
                   });
               return () => unsubscribeBan();
@@ -428,80 +434,100 @@ function App() {
 
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
                           
-                          <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                              <span style={{marginRight: 10}}>💬</span> Открыть чат
-                          </Button>
+                          {allowedModules.includes('chat') && (
+                              <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                  <span style={{marginRight: 10}}>💬</span> Открыть чат
+                              </Button>
+                          )}
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
-                          {view === 'typing' ? (
-                              <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                                  <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
-                              </Button>
+                          {allowedModules.includes('typing') && (
+                              view === 'typing' ? (
+                                  <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
+                                  </Button>
+                              )
                           )}
 
                           {/* УМНАЯ КНОПКА: Хоткеи */}
-                          {view === 'hotkeys' ? (
-                              <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                                  <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
-                              </Button>
+                          {allowedModules.includes('hotkeys') && (
+                              view === 'hotkeys' ? (
+                                  <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
+                                  </Button>
+                              )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
-                          {view === 'code' ? (
-                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>💻</span> VS School
-                              </Button>
+                          {allowedModules.includes('code') && (
+                              view === 'code' ? (
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>💻</span> VS School
+                                  </Button>
+                              )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
-                          {view === 'flashcards' ? (
-                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>🎴</span> Умные карточки
-                              </Button>
+                          {allowedModules.includes('flashcards') && (
+                              view === 'flashcards' ? (
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>🎴</span> Умные карточки
+                                  </Button>
+                              )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
-                          {view === 'excel' ? (
-                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>📊</span> Тренажер Excel
-                              </Button>
+                          {allowedModules.includes('excel') && (
+                              view === 'excel' ? (
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>📊</span> Тренажер Excel
+                                  </Button>
+                              )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
-                          {view === 'algo' ? (
-                              <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                              </Button>
-                          ) : (
-                              <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                  <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
-                              </Button>
+                          {allowedModules.includes('algo') && (
+                              view === 'algo' ? (
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
+                                  </Button>
+                              )
                           )}
 
                           {isAdmin && (
-                              <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
-                                  <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
-                              </Button>
+                              view === 'admin' ? (
+                                  <Button variant="red" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
+                              ) : (
+                                  <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
+                                  </Button>
+                              )
                           )}
                       </div>
 
