@@ -289,10 +289,7 @@ function App() {
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       
       try {
-          // 1. Ищем вопросы, на которые ответили неправильно
           const failedQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-
-          // 2. Базовые поля карточки
           let embedFields = [
               { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
               { name: "📧 Email", value: `**${user ? user.email : "Неизвестно"}**`, inline: true },
@@ -302,37 +299,32 @@ function App() {
               { name: "🆔 Fingerprint", value: `\`${fp}\``, inline: false }
           ];
 
-          // 3. Добавляем список ошибок, если они есть
           if (failedQuestions.length > 0) {
               embedFields.push({ name: "▬▬▬ ОШИБКИ ▬▬▬", value: "Список неверных ответов:", inline: false });
-              
               failedQuestions.forEach(q => {
                   const originalIndex = testSession.questions.indexOf(q);
                   const userAnsIdx = testSession.answers[originalIndex];
-                  
                   const userAnsText = userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил";
                   const correctAnsText = q.variants[q.correctIndex].text;
 
                   embedFields.push({
-                      name: `❓ ${q.question.replace(/<[^>]+>/g, '')}`, // Очищаем от HTML тегов
+                      name: `❓ ${q.question.replace(/<[^>]+>/g, '')}`, 
                       value: `❌ Ответил: ${userAnsText}\n✅ Правильный: ${correctAnsText}`,
                       inline: false
                   });
               });
           }
 
-          // 4. Формируем данные
           let payload = {
               username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
               embeds: [{
                   title: "📊 Новый результат теста", 
-                  color: failedQuestions.length > 0 ? 16711680 : 3066993, // Красный (ошибки) или Зеленый (100%)
+                  color: failedQuestions.length > 0 ? 16711680 : 3066993, 
                   fields: embedFields,
                   timestamp: new Date().toISOString()
               }]
           };
 
-          // 5. Отправляем через FormData
           let formData = new FormData(); 
           formData.append('payload_json', JSON.stringify(payload));
           await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
@@ -341,7 +333,6 @@ function App() {
           console.error("Ошибка при отправке в Discord:", e);
       }
       
-      // 6. Сохранение в локальную историю
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
       const newHistory = [...history, newRecord]; 
       setHistory(newHistory); 
@@ -380,8 +371,8 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
-      {/* ГАМБУРГЕР КНОПКА */}
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo') && (
+      {/* ФИКС: ТЕПЕРЬ БУРГЕР МЕНЮ РАБОТАЕТ И В АДМИНКЕ */}
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -565,7 +556,7 @@ function App() {
           {!isAuthLoading && !user && <AuthScreen />}
 
           {!isAuthLoading && user && view === 'admin' && (
-              <AdminPanel onBack={() => setView('menu')} />
+              <AdminPanel />
           )}
 
           {!isAuthLoading && user && view === 'menu' && (
