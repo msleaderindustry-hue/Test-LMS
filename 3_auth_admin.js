@@ -177,6 +177,7 @@ const AdminPanel = ({ onKicked }) => {
         e.target.value = null; 
     };
 
+    
     const removeTest = async (uid, testId) => {
         if(confirm("Удалить этот тест у студента?")) {
             try {
