@@ -1,7 +1,10 @@
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
+const { useState, useEffect } = React;
+const { motion, AnimatePresence } = window.Motion;
+const { Button } = window;
 
-// ЭКРАН АВТОРИЗАЦИИ
-const AuthScreen = memo(() => {
+// ЭКРАН АВТОРИЗАЦИИ (Слегка освежен дизайн)
+const AuthScreen = React.memo(() => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -20,7 +23,9 @@ const AuthScreen = memo(() => {
                     email: user.email,
                     role: 'student',
                     isBanned: false,
-                    registeredAt: new Date().toISOString()
+                    registeredAt: new Date().toISOString(),
+                    // По умолчанию открываем базовые модули при регистрации, если захочешь
+                    allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']
                 });
             }
         } catch (err) {
@@ -39,8 +44,9 @@ const AuthScreen = memo(() => {
     };
 
     return (
-        <motion.div key="auth" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="glass-panel" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
-            <h2 style={{marginTop:0, marginBottom: 30}}>Вход в систему</h2>
+        <motion.div key="auth" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="glass-panel" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+            <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔐</div>
+            <h2 style={{marginTop:0, marginBottom: '30px', fontSize: '24px', fontWeight: 900, color: 'var(--text-main)'}}>Вход в систему</h2>
             
             <AnimatePresence>
                 {error && (
@@ -48,7 +54,7 @@ const AuthScreen = memo(() => {
                         initial={{opacity: 0, height: 0, overflow: 'hidden'}} 
                         animate={{opacity: 1, height: 'auto', marginBottom: '15px'}} 
                         exit={{opacity: 0, height: 0, marginBottom: 0}} 
-                        style={{ color: '#ef4444', fontSize: '0.95rem', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '500' }}>
+                        style={{ color: '#ef4444', fontSize: '14px', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '600' }}>
                         ⚠️ {error}
                     </motion.div>
                 )}
@@ -61,20 +67,31 @@ const AuthScreen = memo(() => {
                 disabled={isLoading}
                 style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                    width: '100%', height: '54px', borderRadius: '14px', border: '1px solid var(--glass-border)',
-                    background: 'var(--glass-bg)', color: 'var(--text-main)', fontSize: '16px', fontWeight: '600',
-                    cursor: isLoading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', opacity: isLoading ? 0.7 : 1
+                    width: '100%', height: '54px', borderRadius: '16px', border: '1px solid var(--glass-border)',
+                    background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '16px', fontWeight: '800',
+                    cursor: isLoading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', opacity: isLoading ? 0.7 : 1, transition: '0.2s'
                 }}
             >
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{width: 24, height: 24}} />
                 {isLoading ? 'Загрузка...' : 'Продолжить с Google'}
             </motion.button>
-            <div style={{ marginTop: '20px', fontSize: '12px', color: 'var(--text-sec)', opacity: 0.7 }}>
+            <div style={{ marginTop: '25px', fontSize: '12px', color: 'var(--text-sec)', opacity: 0.8, fontWeight: 600 }}>
                 Доступ разрешен только для подтвержденных аккаунтов.
             </div>
         </motion.div>
     );
 });
+
+// СПИСОК ВСЕХ МОДУЛЕЙ ДЛЯ ВЫДАЧИ ДОСТУПА
+const AVAILABLE_MODULES = [
+    { id: 'chat', icon: '💬', label: 'Чат', color: '#06b6d4' },
+    { id: 'typing', icon: '⌨️', label: 'Печать', color: '#818cf8' },
+    { id: 'hotkeys', icon: '⚡', label: 'Хоткеи', color: '#fbbf24' },
+    { id: 'code', icon: '💻', label: 'VS School', color: '#2dd4bf' },
+    { id: 'flashcards', icon: '🎴', label: 'Карточки', color: '#3b82f6' },
+    { id: 'excel', icon: '📊', label: 'Excel', color: '#10b981' },
+    { id: 'algo', icon: '🧩', label: 'Конструктор', color: '#0ea5e9' }
+];
 
 // --- АДМИН-ПАНЕЛЬ ---
 const AdminPanel = ({ onBack }) => {
@@ -87,6 +104,18 @@ const AdminPanel = ({ onBack }) => {
         });
         return () => unsub();
     }, []);
+
+    // ФИКС БАГА: Проверка потери прав администратора в реальном времени
+    useEffect(() => {
+        if (users.length === 0) return;
+        const currentUserId = window.auth?.currentUser?.uid;
+        const currentUserData = users.find(u => u.id === currentUserId);
+        
+        if (currentUserData && currentUserData.role !== 'admin') {
+            alert("Ваши права администратора были отозваны! Вы будете перемещены в меню.");
+            onBack();
+        }
+    }, [users, onBack]);
 
     const toggleBan = async (uid, currentStatus) => {
         try {
@@ -103,6 +132,37 @@ const AdminPanel = ({ onBack }) => {
         } catch (e) {
             alert("Ошибка при изменении роли");
         }
+    };
+
+    // ФУНКЦИЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ ДОСТУПА К МОДУЛЮ
+    const toggleModuleAccess = async (uid, user, moduleId) => {
+        // Если у пользователя еще нет поля allowedModules (старый аккаунт), считаем, что ему открыто всё
+        let currentModules = user.allowedModules;
+        if (!currentModules) {
+            currentModules = AVAILABLE_MODULES.map(m => m.id);
+        }
+
+        let newModules;
+        if (currentModules.includes(moduleId)) {
+            // Забираем доступ
+            newModules = currentModules.filter(id => id !== moduleId);
+        } else {
+            // Выдаем доступ
+            newModules = [...currentModules, moduleId];
+        }
+
+        try {
+            await window.db.collection('users').doc(uid).update({ allowedModules: newModules });
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка при обновлении доступов.");
+        }
+    };
+
+    // Проверка, есть ли у пользователя доступ к модулю
+    const hasAccess = (user, moduleId) => {
+        if (!user.allowedModules) return true; // Если поля нет, по умолчанию всё открыто
+        return user.allowedModules.includes(moduleId);
     };
 
     const handleAssignTestFile = (e, uid) => {
@@ -159,51 +219,104 @@ const AdminPanel = ({ onBack }) => {
     };
 
     return (
-        <motion.div initial={{opacity:0}} animate={{opacity:1}} className="glass-panel" style={{width:'100%', maxWidth:'800px', maxHeight:'90vh', overflowY:'auto'}}>
-            <Button variant="muted" onClick={onBack} style={{marginBottom: 20}}>⬅ В меню</Button>
-            <h2 style={{color:'#ef4444', textAlign:'center', marginTop:0}}>Панель Администратора</h2>
+        <motion.div initial={{opacity:0, scale: 0.98}} animate={{opacity:1, scale: 1}} className="glass-panel" style={{width:'100%', maxWidth:'1000px', maxHeight:'90vh', overflowY:'auto', padding: '30px', borderRadius: '24px'}}>
+            
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', marginBottom: '30px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ fontSize: '32px' }}>🛡️</div>
+                    <div>
+                        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#ef4444', letterSpacing: '-0.5px' }}>Панель Управления</h2>
+                        <div style={{ fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600 }}>Настройка доступов и тестов</div>
+                    </div>
+                </div>
+                <Button variant="muted" onClick={onBack} style={{ borderRadius: '12px', fontWeight: 'bold' }}>⬅ В меню</Button>
+            </header>
 
-            <div style={{background:'rgba(128,128,128,0.05)', padding:20, borderRadius:15, border: '1px solid var(--glass-border)'}}>
-                <h3 style={{marginTop: 0}}>👥 Управление студентами</h3>
-                {users.length === 0 && <div style={{textAlign: 'center', color: 'var(--text-sec)'}}>Загрузка пользователей...</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {users.length === 0 && <div style={{textAlign: 'center', color: 'var(--text-sec)', padding: '40px', fontWeight: 600}}>Загрузка пользователей базы данных...</div>}
+                
                 {users.map(u => (
-                    <div key={u.id} style={{display:'flex', flexWrap: 'wrap', gap: '15px', justifyContent:'space-between', alignItems: 'center', padding:'15px 0', borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
+                    <div key={u.id} style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)' }}>
                         
-                        {/* --- Блок с текстом: почта и статус --- */}
-                        <div style={{overflow: 'hidden', flex: '1 1 200px'}}>
-                            <div style={{fontWeight:'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{u.email}</div>
-                            <div style={{fontSize:12, color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 'bold', marginTop: '5px'}}>
-                                {u.isBanned ? ' ЗАБЛОКИРОВАН' : ' АКТИВЕН'}
-                                {u.role === 'admin' ? ' | 🛡️ АДМИН' : ''}
+                        {/* ШАПКА КАРТОЧКИ ПОЛЬЗОВАТЕЛЯ */}
+                        <div style={{ display:'flex', flexWrap: 'wrap', gap: '20px', justifyContent:'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: u.isBanned ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-panel)', border: `2px solid ${u.isBanned ? '#ef4444' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                                    {u.isBanned ? '🚫' : '👤'}
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--text-main)', marginBottom: '2px' }}>{u.nickname || u.email}</div>
+                                    <div style={{ fontSize: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ color: u.isBanned ? '#ef4444' : '#10b981', fontWeight: 800, textTransform: 'uppercase' }}>
+                                            {u.isBanned ? 'Заблокирован' : 'Активен'}
+                                        </span>
+                                        {u.role === 'admin' && <span style={{ background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '6px', fontWeight: 800, fontSize: '10px' }}>АДМИН</span>}
+                                        <span style={{ color: 'var(--text-sec)' }}>{u.email}</span>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            {u.assignedTests && u.assignedTests.length > 0 && (
-                                <div style={{marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                                    {u.assignedTests.map(test => (
-                                        <div key={test.id} style={{fontSize:12, color: '#3b82f6', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(59, 130, 246, 0.1)', padding: '5px 10px', borderRadius: '8px', marginRight: '10px'}}>
-                                            <span>☁️ {test.title}</span>
-                                            <span style={{cursor: 'pointer', color: '#ef4444', fontSize: '14px', padding: '0 5px'}} onClick={() => removeTest(u.id, test.id)}>✖</span>
-                                        </div>
-                                    ))}
+
+                            {/* КНОПКИ УПРАВЛЕНИЯ */}
+                            {u.id !== window.auth.currentUser?.uid && (
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ height: '38px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', fontWeight: 800 }} onClick={() => toggleAdmin(u.id, u.role)}>
+                                        {u.role === 'admin' ? "Снять админа" : "Дать права админа"}
+                                    </Button>
+                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '10px', padding: '0 15px', height: '38px', fontSize: '12px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)' }}>
+                                        📁 Назначить тест
+                                        <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
+                                    </label>
+                                    <Button variant={u.isBanned ? "green" : "red"} style={{ height: '38px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', fontWeight: 800 }} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                        {u.isBanned ? "Разбанить" : "Забанить"}
+                                    </Button>
                                 </div>
                             )}
                         </div>
-                        
-                        {/* --- Блок с кнопками управления --- */}
-                        {u.id !== window.auth.currentUser?.uid && (
-                            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-start'}}>
-                                <Button variant={u.role === 'admin' ? "orange" : "teal"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleAdmin(u.id, u.role)}>
-                                    {u.role === 'admin' ? "Снять админа" : "Дать админа"}
-                                </Button>
-                                <label style={{cursor: 'pointer', flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '14px', padding: '0 12px', height: '36px', fontSize: '11px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(50,50,93,0.11)', textTransform: 'uppercase', margin: 0}}>
-                                    📁 Загрузить
-                                    <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
-                                </label>
-                                <Button variant={u.isBanned ? "green" : "red"} style={{flex: '1 1 auto', padding:'0 12px', height:36, minHeight:36, fontSize:11, margin:0}} onClick={() => toggleBan(u.id, u.isBanned)}>
-                                    {u.isBanned ? "Разбанить" : "Забанить"}
-                                </Button>
+
+                        {/* НАСТРОЙКА ДОСТУПОВ К МОДУЛЯМ (НОВАЯ ФИЧА) */}
+                        <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '15px', border: '1px solid var(--glass-border)' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Доступ к модулям платформы:</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {AVAILABLE_MODULES.map(module => {
+                                    const access = hasAccess(u, module.id);
+                                    return (
+                                        <div 
+                                            key={module.id} 
+                                            onClick={() => toggleModuleAccess(u.id, u, module.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px', 
+                                                padding: '6px 12px', borderRadius: '10px', 
+                                                cursor: 'pointer', transition: 'all 0.2s',
+                                                background: access ? `${module.color}15` : 'transparent',
+                                                border: `1px solid ${access ? module.color : 'var(--glass-border)'}`,
+                                                color: access ? module.color : 'var(--text-sec)',
+                                                opacity: access ? 1 : 0.5
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '14px', filter: access ? 'none' : 'grayscale(100%)' }}>{module.icon}</span>
+                                            <span style={{ fontSize: '12px', fontWeight: 800 }}>{module.label}</span>
+                                            {access && <span style={{ fontSize: '10px' }}>✓</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* НАЗНАЧЕННЫЕ ТЕСТЫ */}
+                        {u.assignedTests && u.assignedTests.length > 0 && (
+                            <div style={{ marginTop: '15px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', paddingLeft: '5px' }}>Назначенные персональные тесты:</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                    {u.assignedTests.map(test => (
+                                        <div key={test.id} style={{ background: 'var(--bg-panel)', border: '1px dashed #3b82f6', color: '#3b82f6', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 15px', borderRadius: '12px' }}>
+                                            <span>☁️ {test.title}</span>
+                                            <div style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '12px' }} onClick={() => removeTest(u.id, test.id)}>✖</div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
+
                     </div>
                 ))}
             </div>
