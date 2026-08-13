@@ -104,7 +104,7 @@ const AdminPanel = ({ onKicked }) => {
         return () => unsub();
     }, []);
 
-    // Выкидываем из админки, если права отозвали
+    // Выкидываем из админки, если права отозвали в реальном времени!
     useEffect(() => {
         if (users.length === 0) return;
         const currentUserId = window.auth?.currentUser?.uid;
@@ -206,7 +206,6 @@ const AdminPanel = ({ onKicked }) => {
                 {users.map(u => (
                     <div key={u.id} style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)' }}>
                         
-                        {/* ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: u.isBanned ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-panel)', border: `2px solid ${u.isBanned ? '#ef4444' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
                                 {u.isBanned ? '🚫' : '👤'}
@@ -225,17 +224,17 @@ const AdminPanel = ({ onKicked }) => {
                             </div>
                         </div>
 
-                        {/* КНОПКИ УПРАВЛЕНИЯ (ИДЕАЛЬНАЯ АДАПТИВНОСТЬ НА МОБИЛКЕ ЧЕРЕЗ GRID) */}
+                        {/* КНОПКИ УПРАВЛЕНИЯ - Добавлен запрет переноса текста (whiteSpace: 'nowrap') */}
                         {u.id !== window.auth.currentUser?.uid && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-                                <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ width: '100%', height: '40px', padding: '0', borderRadius: '10px', fontSize: '12px', fontWeight: 800, margin: 0 }} onClick={() => toggleAdmin(u.id, u.role)}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', width: '100%' }}>
+                                <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ flex: '1 1 auto', minWidth: '130px', whiteSpace: 'nowrap', height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => toggleAdmin(u.id, u.role)}>
                                     {u.role === 'admin' ? "Снять админа" : "Дать админа"}
                                 </Button>
-                                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '10px', padding: '0', height: '40px', fontSize: '12px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0 }}>
+                                <label style={{ flex: '1 1 auto', minWidth: '130px', whiteSpace: 'nowrap', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '10px', padding: '0 15px', height: '40px', fontSize: '12px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0, textAlign: 'center' }}>
                                     📁 Назначить тест
                                     <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                 </label>
-                                <Button variant={u.isBanned ? "green" : "red"} style={{ width: '100%', height: '40px', padding: '0', borderRadius: '10px', fontSize: '12px', fontWeight: 800, margin: 0 }} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                <Button variant={u.isBanned ? "green" : "red"} style={{ flex: '1 1 auto', minWidth: '130px', whiteSpace: 'nowrap', height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => toggleBan(u.id, u.isBanned)}>
                                     {u.isBanned ? "Разбанить" : "Забанить"}
                                 </Button>
                             </div>
@@ -258,7 +257,8 @@ const AdminPanel = ({ onKicked }) => {
                                                 background: access ? `${module.color}15` : 'transparent',
                                                 border: `1px solid ${access ? module.color : 'var(--glass-border)'}`,
                                                 color: access ? module.color : 'var(--text-sec)',
-                                                opacity: access ? 1 : 0.5
+                                                opacity: access ? 1 : 0.5,
+                                                width: 'auto'
                                             }}
                                         >
                                             <span style={{ fontSize: '14px', filter: access ? 'none' : 'grayscale(100%)' }}>{module.icon}</span>
@@ -276,7 +276,7 @@ const AdminPanel = ({ onKicked }) => {
                                 <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', paddingLeft: '5px' }}>Назначенные персональные тесты:</div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                     {u.assignedTests.map(test => (
-                                        <div key={test.id} style={{ background: 'var(--bg-panel)', border: '1px dashed #3b82f6', color: '#3b82f6', fontSize: '13px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '10px' }}>
+                                        <div key={test.id} style={{ background: 'var(--bg-panel)', border: '1px dashed #3b82f6', color: '#3b82f6', fontSize: '13px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '10px', width: 'auto' }}>
                                             <span>☁️ {test.title}</span>
                                             <div style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '10px' }} onClick={() => removeTest(u.id, test.id)}>✖</div>
                                         </div>
