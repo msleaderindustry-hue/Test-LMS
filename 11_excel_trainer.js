@@ -278,29 +278,66 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     )}
                                 </AnimatePresence>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', flexWrap: 'wrap', gap: '10px' }}>
-                                    <Button variant="muted" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating} style={{ background: 'var(--bg-panel)' }}>
+                                {/* ИДЕАЛЬНОЕ РАСПОЛОЖЕНИЕ КНОПОК ДЕЙСТВИЙ */}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)' }}>
+                                    <Button 
+                                        onClick={() => generateAIFormula(activeFormulaName)} 
+                                        disabled={isGenerating} 
+                                        style={{ 
+                                            flex: '1 1 150px', 
+                                            height: '50px', 
+                                            borderRadius: '12px', 
+                                            background: 'rgba(56, 189, 248, 0.15)', 
+                                            border: '1px solid rgba(56, 189, 248, 0.4)', 
+                                            color: '#38bdf8', 
+                                            fontWeight: 800, 
+                                            fontSize: '13px',
+                                            textTransform: 'uppercase',
+                                            margin: 0
+                                        }}
+                                    >
                                         🔄 Другая задача
                                     </Button>
+                                    
                                     {!showSuccess && (
-                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                        <div style={{ display: 'flex', gap: '15px', flex: '2 1 300px' }}>
                                             <Button 
                                                 variant="muted" 
                                                 onClick={() => {
-                                                    // ЖЕЛЕЗОБЕТОННАЯ ПРОВЕРКА: клик сработает, только если подсказки разрешены
                                                     if (hintsEnabled && currentLesson) {
                                                         setInputValue(currentLesson.expected[0] || currentLesson.expected);
                                                     }
                                                 }} 
                                                 disabled={!hintsEnabled}
                                                 style={{ 
+                                                    flex: '1 1 50%',
+                                                    height: '50px', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '13px', 
+                                                    fontWeight: 800, 
                                                     opacity: hintsEnabled ? 1 : 0.5,
-                                                    cursor: hintsEnabled ? 'pointer' : 'not-allowed'
+                                                    cursor: hintsEnabled ? 'pointer' : 'not-allowed',
+                                                    textTransform: 'uppercase',
+                                                    margin: 0,
+                                                    padding: '0 5px'
                                                 }}
                                             >
-                                                {hintsEnabled ? '👀 Подсказка' : '🔒 Режим Экзамена'}
+                                                {hintsEnabled ? '👀 Подсказка' : '🔒 Экзамен'}
                                             </Button>
-                                            <Button variant="green" onClick={checkAnswer} style={{ width: '150px' }}>
+                                            <Button 
+                                                variant="green" 
+                                                onClick={checkAnswer} 
+                                                style={{ 
+                                                    flex: '1 1 50%',
+                                                    height: '50px', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '14px', 
+                                                    fontWeight: 800, 
+                                                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+                                                    textTransform: 'uppercase',
+                                                    margin: 0
+                                                }}
+                                            >
                                                 Проверить
                                             </Button>
                                         </div>
