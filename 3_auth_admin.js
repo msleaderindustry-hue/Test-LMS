@@ -93,7 +93,8 @@ const AVAILABLE_MODULES = [
     { id: 'algo', icon: '🧩', label: 'Конструктор', color: '#0ea5e9' }
 ];
 
-// --- КАРТОЧКА ПОЛЬЗОВАТЕЛЯ С ВКЛАДКАМИ ---
+
+// --- НОВЫЙ КОМПОНЕНТ: КАРТОЧКА ПОЛЬЗОВАТЕЛЯ С ВКЛАДКАМИ ---
 const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssignTestFile, toggleExcelHints, toggleModuleAccess, hasAccess, removeTest }) => {
     // Состояние для управления активной вкладкой
     const [activeTab, setActiveTab] = useState('control'); // 'control', 'settings', 'tests'
@@ -149,18 +150,24 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                 {activeTab === 'control' && (
                     <div>
                         {u.id !== currentUserUid ? (
-                            /* ИДЕАЛЬНАЯ СЕТКА КНОПОК БЕЗ РАСТЯГИВАНИЯ */
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', width: '100%' }}>
-                                <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleAdmin(u.id, u.role)}>
-                                    {u.role === 'admin' ? "Снять админа" : "Дать админа"}
-                                </Button>
-                                <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '12px', padding: '0 15px', height: '42px', fontSize: '11px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0, textAlign: 'center', textTransform: 'uppercase' }}>
-                                    📁 Назначить тест
-                                    <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
-                                </label>
-                                <Button variant={u.isBanned ? "green" : "red"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleBan(u.id, u.isBanned)}>
-                                    {u.isBanned ? "Разбанить" : "Забанить"}
-                                </Button>
+                            /* БРОНЕБОЙНАЯ СЕТКА КНОПОК: Изолируем элементы в div, чтобы CSS не склеивал их */
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', width: '100%' }}>
+                                <div>
+                                    <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleAdmin(u.id, u.role)}>
+                                        {u.role === 'admin' ? "Снять админа" : "Дать админа"}
+                                    </Button>
+                                </div>
+                                <div>
+                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '10px', padding: '0 15px', height: '42px', fontSize: '11px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0, textAlign: 'center', textTransform: 'uppercase' }}>
+                                        📁 Назначить тест
+                                        <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
+                                    </label>
+                                </div>
+                                <div>
+                                    <Button variant={u.isBanned ? "green" : "red"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                        {u.isBanned ? "Разбанить" : "Забанить"}
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div style={{ padding: '15px', background: 'rgba(245, 158, 11, 0.1)', border: '1px dashed #f59e0b', borderRadius: '12px', color: '#d97706', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
@@ -179,7 +186,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                             <Button 
                                 variant={u.excelHintsEnabled !== false ? "green" : "red"} 
                                 onClick={() => toggleExcelHints(u.id, u)}
-                                style={{ width: '100%', maxWidth: '350px', height: '42px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, margin: 0, textTransform: 'uppercase' }}
+                                style={{ width: '100%', maxWidth: '350px', height: '42px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textTransform: 'uppercase' }}
                             >
                                 {u.excelHintsEnabled !== false ? "💡 Подсказки Excel: ВКЛЮЧЕНЫ" : "🔒 Подсказки Excel: ЭКЗАМЕН"}
                             </Button>
@@ -293,8 +300,9 @@ const AdminPanel = ({ onKicked }) => {
         catch (e) { alert("Ошибка при обновлении доступов."); }
     };
 
-    // Управление подсказками (режим экзамена)
+    // НОВАЯ ФУНКЦИЯ: Управление подсказками (режим экзамена)
     const toggleExcelHints = async (uid, user) => {
+        // Если поля нет, считаем что подсказки включены (true)
         const currentStatus = user.excelHintsEnabled !== false; 
         try { 
             await window.db.collection('users').doc(uid).update({ excelHintsEnabled: !currentStatus }); 
