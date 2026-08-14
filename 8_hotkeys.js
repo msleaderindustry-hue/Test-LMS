@@ -56,16 +56,19 @@ const HotkeyTrainer = ({ onBack }) => {
         if (!topic.trim()) return alert("Введите название программы!");
         setIsGenerating(true);
 
-        // ОБНОВЛЕННЫЙ ЖЕСТКИЙ ПРОМПТ ПРОТИВ ВЫДУМОК
-        const prompt = `Ты — эксперт по официальной документации программного обеспечения.
-        Сгенерируй 10 РЕАЛЬНО СУЩЕСТВУЮЩИХ И НА 100% РАБОЧИХ горячих клавиш (комбинаций с Ctrl или Cmd) для программы: "${topic}". 
-        Некоторые из них могут включать клавишу Shift (например, Ctrl+Shift+S).
-        
-        КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. ЗАПРЕЩЕНО ВЫДУМЫВАТЬ! Каждая комбинация должна быть официальной и общепринятой для программы "${topic}". Если это Word, используй реальные хоткеи (Ctrl+B, Ctrl+I, Ctrl+Enter и т.д.).
-        2. Поле 'key' должно содержать ТОЛЬКО ОДНУ строчную АНГЛИЙСКУЮ букву или символ (ту самую клавишу физической клавиатуры, которую нужно нажать вместе с Ctrl).
-        3. Верни ТОЛЬКО чистый валидный JSON массив объектов, без форматирования markdown, без пояснений.
-        
+        // ЖЁСТКИЙ ПРОМПТ ПРОТИВ ВЫДУМОК: минимум творчества, максимум проверяемых фактов
+        const prompt = `Ты — техническая справочная система, а не творческий помощник. Твоя единственная задача — точно воспроизвести ОФИЦИАЛЬНО ЗАДОКУМЕНТИРОВАННЫЕ горячие клавиши программы "${topic}", без каких-либо фантазий, догадок или "правдоподобных" комбинаций.
+
+        Верни 10 горячих клавиш (с Ctrl или Cmd, некоторые могут дополнительно включать Shift) для программы "${topic}".
+
+        СТРОГИЕ ПРАВИЛА (нарушение недопустимо):
+        1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${topic}". Если не уверен, что комбинация существует именно в этой программе — не включай её.
+        2. Если для "${topic}" в принципе не существует 10 разных официальных комбинаций с Ctrl/Cmd — верни столько, сколько действительно существует (не меньше 5, не выдумывая недостающие).
+        3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей.
+        4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или символ (физическая клавиша, которая нажимается вместе с Ctrl).
+        5. Не повторяй одну и ту же комбинацию дважды.
+        6. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива.
+
         Формат строго такой:
         [
           {"desc": "Описание действия на русском", "key": "c", "shift": false, "visual": "Ctrl + C"},
@@ -87,15 +90,15 @@ const HotkeyTrainer = ({ onBack }) => {
             if (!data.candidates || data.candidates.length === 0) throw new Error("Пустой ответ от ИИ");
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
-            
+
             const jsonMatch = aiText.match(/\[[\s\S]*\]/);
             if (!jsonMatch) throw new Error("ИИ не вернул JSON массив");
 
             const parsedHotkeys = JSON.parse(jsonMatch[0]);
-            
+
             const validatedHotkeys = parsedHotkeys.map(hk => ({
                 ...hk,
-                key: hk.key.toLowerCase() 
+                key: hk.key.toLowerCase()
             }));
 
             if (Array.isArray(validatedHotkeys) && validatedHotkeys.length > 0) {
@@ -113,7 +116,7 @@ const HotkeyTrainer = ({ onBack }) => {
     };
 
     const startGame = () => {
-        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10)); 
+        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10));
         setCurrentIndex(0);
         setScore(0);
         setIsFinished(false);
@@ -140,7 +143,7 @@ const HotkeyTrainer = ({ onBack }) => {
             const currentTask = tasks[currentIndex];
 
             if (isCtrlOrCmd) {
-                e.preventDefault(); 
+                e.preventDefault();
 
                 const requiresShift = !!currentTask.shift;
                 const isShiftPressed = e.shiftKey;
@@ -174,55 +177,104 @@ const HotkeyTrainer = ({ onBack }) => {
     // === СТАРТОВЫЙ ЭКРАН ===
     if (!gameStarted) {
         return (
-            <motion.div 
+            <motion.div
                 className="glass-panel"
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px 30px', margin: '0 auto' }}
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                    width: '100%', maxWidth: '820px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: '22px', padding: '46px 34px', margin: '0 auto', position: 'relative', overflow: 'hidden'
+                }}
             >
-                <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                    <h2 style={{margin: 0, fontSize: '32px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-                        Хоткеи ⚡
+                <div style={{
+                    position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)', width: '320px', height: '220px',
+                    background: 'radial-gradient(ellipse, rgba(253,160,133,0.18), transparent 70%)', pointerEvents: 'none'
+                }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
+                    <div style={{
+                        width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '24px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', boxShadow: '0 10px 24px -8px rgba(253,160,133,0.6)'
+                    }}>
+                        ⚡
+                    </div>
+                    <h2 style={{ margin: 0, fontSize: '30px', fontWeight: 900, letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        Хоткеи
                     </h2>
-                    <span style={{ fontSize: '10px', fontWeight: '900', background: 'linear-gradient(90deg, #a855f7, #6d28d9)', color: '#ffffff', padding: '4px 10px', borderRadius: '10px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                        AI POWERED
+                    <span style={{ fontSize: '10px', fontWeight: '900', background: 'linear-gradient(90deg, #a855f7, #6d28d9)', color: '#ffffff', padding: '5px 11px', borderRadius: '10px', letterSpacing: '1px', textTransform: 'uppercase', boxShadow: '0 6px 16px -6px rgba(109,40,217,0.6)' }}>
+                        AI powered
                     </span>
                 </div>
 
-                <p style={{fontSize: '15px', color: 'var(--text-sec)', maxWidth: '450px', lineHeight: '1.5', textAlign: 'center'}}>
-                    Тренируй стандартную базу из твоих конспектов (Word, Система) или создай персональную для любой другой программы!
+                <p style={{ fontSize: '14.5px', color: 'var(--text-sec)', maxWidth: '460px', lineHeight: '1.6', textAlign: 'center', fontWeight: 500, margin: 0 }}>
+                    Тренируй стандартную базу из твоих конспектов (Word, Система) или создай персональную для любой другой программы
                 </p>
 
                 {/* ПАНЕЛЬ ГЕНЕРАЦИИ */}
-                <div style={{ width: '100%', maxWidth: '500px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '20px', marginTop: '5px' }}>
+                <div style={{
+                    width: '100%', maxWidth: '520px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
+                    borderRadius: '20px', padding: '22px', marginTop: '4px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)'
+                }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                        Своя база для другой программы
+                    </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         <input
                             type="text"
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder="Напр. Word, Excel, Photoshop..."
-                            style={{ flex: '1 1 180px', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--glass-border)', outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '15px' }}
+                            style={{
+                                flex: '1 1 180px', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--glass-border)',
+                                outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '15px', fontWeight: 600
+                            }}
                             disabled={isGenerating}
                         />
-                        <button 
-                            onClick={generateAIHotkeys} 
-                            disabled={isGenerating} 
-                            style={{ padding: '0 20px', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', border: 'none', color: '#fff', borderRadius: '10px', fontWeight: 'bold', cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1, height: '46px' }}
+                        <motion.button
+                            whileHover={{ scale: isGenerating ? 1 : 1.02 }}
+                            whileTap={{ scale: isGenerating ? 1 : 0.97 }}
+                            onClick={generateAIHotkeys}
+                            disabled={isGenerating}
+                            style={{
+                                padding: '0 22px', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', border: 'none', color: '#fff',
+                                borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: isGenerating ? 'not-allowed' : 'pointer',
+                                opacity: isGenerating ? 0.7 : 1, height: '48px', boxShadow: '0 8px 20px -8px rgba(109,40,217,0.6)',
+                                display: 'flex', alignItems: 'center', gap: '8px'
+                            }}
                         >
-                            {isGenerating ? "⏳ Ищем..." : "Создать базу"}
-                        </button>
+                            {isGenerating && (
+                                <motion.span
+                                    animate={{ rotate: 360 }}
+                                    transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                    style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', display: 'inline-block' }}
+                                />
+                            )}
+                            {isGenerating ? "Ищем…" : "Создать базу"}
+                        </motion.button>
                     </div>
-                    {activeHotkeys !== HOTKEYS_DB && !isGenerating && (
-                        <div style={{marginTop: '12px', fontSize: '13px', color: '#10b981', fontWeight: 'bold', textAlign: 'center'}}>
-                            ✅ База «{topic}» успешно загружена!
-                        </div>
-                    )}
+                    <AnimatePresence>
+                        {activeHotkeys !== HOTKEYS_DB && !isGenerating && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                style={{
+                                    fontSize: '13px', color: '#10b981', fontWeight: 700, textAlign: 'center',
+                                    background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '10px', padding: '9px'
+                                }}
+                            >
+                                ✅ База «{topic}» успешно загружена
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
-                <div style={{display: 'flex', gap: '15px', marginTop: '15px', width: '100%', maxWidth: '400px', justifyContent: 'center'}}>
-                    <Button variant="orange" onClick={startGame} style={{flex: 1, height: '50px', fontSize: '16px'}}>
+                <div style={{ display: 'flex', gap: '14px', marginTop: '10px', width: '100%', maxWidth: '420px', justifyContent: 'center' }}>
+                    <Button variant="orange" onClick={startGame} style={{ flex: 1, height: '52px', fontSize: '16px', borderRadius: '14px' }}>
                         🚀 Начать тренировку
                     </Button>
-                    <Button variant="red" onClick={onBack} style={{flex: 1, height: '50px', fontSize: '16px', background: 'transparent', border: '1px solid #ef4444'}}>
+                    <Button variant="red" onClick={onBack} style={{ flex: 1, height: '52px', fontSize: '16px', borderRadius: '14px', background: 'transparent', border: '1px solid #ef4444' }}>
                         Назад
                     </Button>
                 </div>
@@ -236,81 +288,110 @@ const HotkeyTrainer = ({ onBack }) => {
     const progress = (currentIndex / tasks.length) * 100;
 
     return (
-        <motion.div 
+        <motion.div
             className="glass-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px', margin: '0 auto' }}
+            transition={shake ? { duration: 0.3 } : { duration: 0.5, ease: "easeOut" }}
+            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '26px', padding: '32px', margin: '0 auto' }}
         >
-            <header style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', flexWrap: 'wrap', gap: '15px'}}>
-                <h2 style={{margin: 0, fontSize: '28px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '18px', flexWrap: 'wrap', gap: '15px' }}>
+                <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, letterSpacing: '-0.4px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     {activeHotkeys !== HOTKEYS_DB ? `Хоткеи: ${topic}` : 'Хоткеи ⚡'}
                 </h2>
-                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                    <div style={{fontSize: '18px', fontWeight: 'bold', color: 'var(--text-sec)'}}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                        fontSize: '15px', fontWeight: 800, color: 'var(--text-sec)', background: 'var(--bg-body)',
+                        border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '7px 14px'
+                    }}>
                         {currentIndex} / {tasks.length}
                     </div>
-                    <Button variant="muted" onClick={leaveGame} style={{padding: '0 15px', height: '36px', minHeight: '36px', fontSize: '14px'}}>Выйти</Button>
+                    <Button variant="muted" onClick={leaveGame} style={{ padding: '0 16px', height: '38px', minHeight: '38px', fontSize: '13px', borderRadius: '10px' }}>Выйти</Button>
                 </div>
             </header>
 
             {!isFinished ? (
-                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', padding: '20px 0'}}>
-                    <div style={{fontSize: '20px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600', textAlign: 'center'}}>
-                        Выполните комбинацию:
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', padding: '10px 0' }}>
+                    <div style={{ fontSize: '12.5px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: '800', textAlign: 'center' }}>
+                        Выполните комбинацию
                     </div>
-                    
-                    <motion.div 
+
+                    <motion.div
                         key={currentIndex}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: successPulse ? 1.05 : 1 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, scale: 0.85, y: 6 }}
+                        animate={{ opacity: 1, scale: successPulse ? 1.04 : 1, y: 0 }}
+                        transition={{ duration: 0.22 }}
                         style={{
-                            fontSize: '32px', fontWeight: '800', textAlign: 'center', color: successPulse ? '#10b981' : 'var(--text-main)', maxWidth: '80%'
+                            fontSize: '30px', fontWeight: '800', textAlign: 'center', color: successPulse ? '#10b981' : 'var(--text-main)',
+                            maxWidth: '85%', letterSpacing: '-0.3px'
                         }}
                     >
                         «{currentTask.desc}»
                     </motion.div>
 
-                    <div style={{display: 'flex', gap: '15px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center'}}>
-                        <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px solid var(--glass-border)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}>
+                    <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                        <div style={{
+                            padding: '16px 26px', background: 'var(--bg-body)', border: '1.5px solid var(--glass-border)', borderRadius: '14px',
+                            fontSize: '22px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)'
+                        }}>
                             Ctrl
                         </div>
-                        <div style={{fontSize: '30px', fontWeight: 'bold', color: 'var(--text-sec)', display: 'flex', alignItems: 'center'}}>+</div>
-                        
+                        <div style={{ fontSize: '26px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.6 }}>+</div>
+
                         {/* Динамически показываем карточку Shift, если нужно */}
                         {currentTask.shift && (
                             <>
-                                <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px solid var(--glass-border)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}>
+                                <div style={{
+                                    padding: '16px 26px', background: 'var(--bg-body)', border: '1.5px solid var(--glass-border)', borderRadius: '14px',
+                                    fontSize: '22px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)'
+                                }}>
                                     Shift
                                 </div>
-                                <div style={{fontSize: '30px', fontWeight: 'bold', color: 'var(--text-sec)', display: 'flex', alignItems: 'center'}}>+</div>
+                                <div style={{ fontSize: '26px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.6 }}>+</div>
                             </>
                         )}
 
-                        <div style={{padding: '15px 25px', background: 'var(--bg-body)', border: '2px dashed var(--accent-glow, #0ea5e9)', borderRadius: '12px', fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-glow, #0ea5e9)', boxShadow: 'inset 0 0 10px rgba(14,165,233,0.2)'}}>
+                        <motion.div
+                            animate={{ opacity: [0.55, 1, 0.55] }}
+                            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+                            style={{
+                                padding: '16px 26px', background: 'var(--bg-body)', border: '2px dashed var(--accent-glow, #0ea5e9)', borderRadius: '14px',
+                                fontSize: '22px', fontWeight: '800', color: 'var(--accent-glow, #0ea5e9)', boxShadow: 'inset 0 0 14px rgba(14,165,233,0.15)'
+                            }}
+                        >
                             ?
-                        </div>
+                        </motion.div>
                     </div>
-                    
-                    <div style={{width: '100%', height: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', overflow: 'hidden', marginTop: '10px'}}>
-                        <motion.div 
+
+                    <div style={{ width: '100%', height: '7px', background: 'rgba(0,0,0,0.08)', borderRadius: '8px', overflow: 'hidden', marginTop: '6px' }}>
+                        <motion.div
                             initial={{ width: `${progress}%` }}
                             animate={{ width: `${(currentIndex / tasks.length) * 100}%` }}
-                            style={{ height: '100%', background: 'linear-gradient(90deg, #f6d365, #fda085)' }}
+                            transition={{ duration: 0.35, ease: 'easeOut' }}
+                            style={{ height: '100%', background: 'linear-gradient(90deg, #f6d365, #fda085)', borderRadius: '8px' }}
                         />
                     </div>
                 </div>
             ) : (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    style={{ textAlign: 'center', padding: '40px 0', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}
+                    transition={{ duration: 0.35 }}
+                    style={{ textAlign: 'center', padding: '46px 0', display: 'flex', flexDirection: 'column', gap: '18px', alignItems: 'center' }}
                 >
-                    <h2 style={{ fontSize: '42px', margin: 0, color: '#10b981' }}>Отличная работа!</h2>
-                    <p style={{ fontSize: '18px', color: 'var(--text-sec)' }}>Вы успешно закрепили {score} горячих клавиш в мышечной памяти.</p>
-                    <Button variant="orange" onClick={resetGame} style={{ width: '250px', marginTop: '20px' }}>Пройти еще раз</Button>
+                    <div style={{
+                        width: '70px', height: '70px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '32px', background: 'linear-gradient(135deg, #34d399, #10b981)', boxShadow: '0 12px 30px -10px rgba(16,185,129,0.6)'
+                    }}>
+                        🎉
+                    </div>
+                    <h2 style={{ fontSize: '38px', margin: 0, fontWeight: 900, color: '#10b981', letterSpacing: '-0.5px' }}>Отличная работа!</h2>
+                    <p style={{ fontSize: '16px', color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
+                        Вы успешно закрепили {score} горячих клавиш в мышечной памяти
+                    </p>
+                    <Button variant="orange" onClick={resetGame} style={{ width: '260px', marginTop: '18px', height: '50px', borderRadius: '14px', fontSize: '15px' }}>
+                        Пройти ещё раз
+                    </Button>
                 </motion.div>
             )}
         </motion.div>
