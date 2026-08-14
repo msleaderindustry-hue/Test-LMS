@@ -93,7 +93,6 @@ const AVAILABLE_MODULES = [
     { id: 'algo', icon: '🧩', label: 'Конструктор', color: '#0ea5e9' }
 ];
 
-
 // --- НОВЫЙ КОМПОНЕНТ: КАРТОЧКА ПОЛЬЗОВАТЕЛЯ С ВКЛАДКАМИ ---
 const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssignTestFile, toggleExcelHints, toggleModuleAccess, hasAccess, removeTest }) => {
     // Состояние для управления активной вкладкой
@@ -150,21 +149,21 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                 {activeTab === 'control' && (
                     <div>
                         {u.id !== currentUserUid ? (
-                            /* БРОНЕБОЙНАЯ СЕТКА КНОПОК: Изолируем элементы в div, чтобы CSS не склеивал их */
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', width: '100%' }}>
-                                <div>
-                                    <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleAdmin(u.id, u.role)}>
+                            /* ЖЕЛЕЗОБЕТОННАЯ СЕТКА: div'ы вокруг кнопок не дают внешнему CSS склеить их вместе */
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px', width: '100%' }}>
+                                <div style={{ display: 'flex' }}>
+                                    <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ width: '100%', whiteSpace: 'nowrap', height: '42px', padding: '0 15px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleAdmin(u.id, u.role)}>
                                         {u.role === 'admin' ? "Снять админа" : "Дать админа"}
                                     </Button>
                                 </div>
-                                <div>
-                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '10px', padding: '0 15px', height: '42px', fontSize: '11px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0, textAlign: 'center', textTransform: 'uppercase' }}>
+                                <div style={{ display: 'flex' }}>
+                                    <label style={{ width: '100%', whiteSpace: 'nowrap', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '12px', padding: '0 15px', height: '42px', fontSize: '11px', fontWeight: 800, transition: '0.2s', boxShadow: '0 4px 10px rgba(0, 242, 254, 0.2)', margin: 0, textAlign: 'center', textTransform: 'uppercase' }}>
                                         📁 Назначить тест
                                         <input type="file" accept=".json" style={{display: 'none'}} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                     </label>
                                 </div>
-                                <div>
-                                    <Button variant={u.isBanned ? "green" : "red"} style={{ width: '100%', height: '42px', padding: '0 15px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleBan(u.id, u.isBanned)}>
+                                <div style={{ display: 'flex' }}>
+                                    <Button variant={u.isBanned ? "green" : "red"} style={{ width: '100%', whiteSpace: 'nowrap', height: '42px', padding: '0 15px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', textTransform: 'uppercase' }} onClick={() => toggleBan(u.id, u.isBanned)}>
                                         {u.isBanned ? "Разбанить" : "Забанить"}
                                     </Button>
                                 </div>
@@ -188,7 +187,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                                 onClick={() => toggleExcelHints(u.id, u)}
                                 style={{ width: '100%', maxWidth: '350px', height: '42px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, margin: 0, textTransform: 'uppercase' }}
                             >
-                                {u.excelHintsEnabled !== false ? "💡 Подсказки Excel: ВКЛЮЧЕНЫ" : "🔒 Подсказки Excel: ЭКЗАМЕН"}
+                                {u.excelHintsEnabled !== false ? "💡 Подсказки Excel: ВКЛЮЧЕНЫ" : "🔒 Подсказки Excel: РЕЖИМ ЭКЗАМЕНА"}
                             </Button>
                         </div>
 
