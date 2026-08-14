@@ -24,7 +24,8 @@ const AuthScreen = React.memo(() => {
                     role: 'student',
                     isBanned: false,
                     registeredAt: new Date().toISOString(),
-                    allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']
+                    allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo'],
+                    excelHintsEnabled: true // По умолчанию подсказки включены
                 });
             }
         } catch (err) {
@@ -143,6 +144,17 @@ const AdminPanel = ({ onKicked }) => {
         catch (e) { alert("Ошибка при обновлении доступов."); }
     };
 
+    // НОВАЯ ФУНКЦИЯ: Управление подсказками (режим экзамена)
+    const toggleExcelHints = async (uid, user) => {
+        // Если поля нет, считаем что подсказки включены (true)
+        const currentStatus = user.excelHintsEnabled !== false; 
+        try { 
+            await window.db.collection('users').doc(uid).update({ excelHintsEnabled: !currentStatus }); 
+        } catch (e) { 
+            alert("Ошибка при обновлении настроек тренажера."); 
+        }
+    };
+
     const hasAccess = (user, moduleId) => {
         if (!user.allowedModules) return true; 
         return user.allowedModules.includes(moduleId);
@@ -177,7 +189,6 @@ const AdminPanel = ({ onKicked }) => {
         e.target.value = null; 
     };
 
-    
     const removeTest = async (uid, testId) => {
         if(confirm("Удалить этот тест у студента?")) {
             try {
@@ -207,6 +218,7 @@ const AdminPanel = ({ onKicked }) => {
                 {users.map(u => (
                     <div key={u.id} style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)' }}>
                         
+                        {/* ИНФО О ПОЛЬЗОВАТЕЛЕ */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: u.isBanned ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-panel)', border: `2px solid ${u.isBanned ? '#ef4444' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
                                 {u.isBanned ? '🚫' : '👤'}
@@ -225,7 +237,7 @@ const AdminPanel = ({ onKicked }) => {
                             </div>
                         </div>
 
-                        {/* КНОПКИ УПРАВЛЕНИЯ - Добавлен запрет переноса текста (whiteSpace: 'nowrap') */}
+                        {/* КНОПКИ УПРАВЛЕНИЯ БАЗОВЫЕ */}
                         {u.id !== window.auth.currentUser?.uid && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', width: '100%' }}>
                                 <Button variant={u.role === 'admin' ? "orange" : "muted"} style={{ flex: '1 1 auto', minWidth: '130px', whiteSpace: 'nowrap', height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, margin: 0, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => toggleAdmin(u.id, u.role)}>
@@ -241,7 +253,19 @@ const AdminPanel = ({ onKicked }) => {
                             </div>
                         )}
 
-                        {/* НАСТРОЙКА ДОСТУПОВ */}
+                        {/* НАСТРОЙКИ ЭКЗАМЕНОВ И ТРЕНАЖЕРОВ (НОВЫЙ БЛОК) */}
+                        <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '15px', border: '1px solid var(--glass-border)', marginBottom: '15px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>⚙️ Настройки режимов:</div>
+                            <Button 
+                                variant={u.excelHintsEnabled !== false ? "green" : "red"} 
+                                onClick={() => toggleExcelHints(u.id, u)}
+                                style={{ width: '100%', height: '40px', borderRadius: '10px', fontSize: '12px', fontWeight: 800 }}
+                            >
+                                {u.excelHintsEnabled !== false ? "💡 Подсказки Excel: ВКЛЮЧЕНЫ" : "🔒 Подсказки Excel: РЕЖИМ ЭКЗАМЕНА"}
+                            </Button>
+                        </div>
+
+                        {/* НАСТРОЙКА ДОСТУПОВ К МОДУЛЯМ */}
                         <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '15px', border: '1px solid var(--glass-border)' }}>
                             <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Доступ к модулям платформы:</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
