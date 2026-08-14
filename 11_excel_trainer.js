@@ -23,6 +23,24 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    
+    // СТЕЙТ ДЛЯ РЕЖИМА ЭКЗАМЕНА (Управление подсказками)
+    const [hintsEnabled, setHintsEnabled] = useState(true);
+
+    // СЛУШАЕМ БАЗУ ДАННЫХ В РЕАЛЬНОМ ВРЕМЕНИ
+    useEffect(() => {
+        const uid = window.auth?.currentUser?.uid;
+        if (!uid || !window.db) return;
+
+        const unsub = window.db.collection('users').doc(uid).onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                // Если админ отключил подсказки (false), блокируем их
+                setHintsEnabled(data.excelHintsEnabled !== false); 
+            }
+        });
+        return () => unsub();
+    }, []);
 
     useEffect(() => {
         generateAIFormula(activeFormulaName);
@@ -34,7 +52,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setIsGenerating(true);
         setCurrentLesson(null);
 
-        // Расширенный список РЕАЛЬНЫХ тем
         const themes = [
             "успеваемость и оценки студентов на экзаменах",
             "статистика забитых голов в футбольном турнире",
@@ -55,7 +72,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
         ];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-        // ПРОМПТ С ЗАЩИТОЙ ОТ СМЕШИВАНИЯ ТЕМ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -361,8 +377,22 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     </Button>
                                     {!showSuccess && (
                                         <div style={{ display: 'flex', gap: '10px', flex: '1 1 auto' }}>
-                                            <Button variant="muted" onClick={() => setInputValue(currentLesson.expected[0] || currentLesson.expected)} style={{ height: '48px', borderRadius: '12px', fontSize: '14px', fontWeight: 800, flex: '1 1 auto' }}>
-                                                👀 Подсказка
+                                            {/* КНОПКА ПОДСКАЗКИ С ПРОВЕРКОЙ РЕЖИМА ЭКЗАМЕНА */}
+                                            <Button 
+                                                variant="muted" 
+                                                onClick={() => setInputValue(currentLesson.expected[0] || currentLesson.expected)} 
+                                                disabled={!hintsEnabled}
+                                                style={{ 
+                                                    height: '48px', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '14px', 
+                                                    fontWeight: 800, 
+                                                    flex: '1 1 auto',
+                                                    opacity: hintsEnabled ? 1 : 0.5,
+                                                    cursor: hintsEnabled ? 'pointer' : 'not-allowed'
+                                                }}
+                                            >
+                                                {hintsEnabled ? '👀 Подсказка' : '🔒 Режим Экзамена'}
                                             </Button>
                                             <Button variant="green" onClick={checkAnswer} style={{ height: '48px', borderRadius: '12px', fontSize: '16px', fontWeight: 800, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', flex: '2 1 auto' }}>
                                                 Проверить
