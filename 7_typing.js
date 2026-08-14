@@ -2,7 +2,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-// Резервная база 
+// Резервная база
 const fallbackTextsData = {
     en: [
         "The universe is an unimaginably vast place, constantly expanding at an accelerating rate. Scientists believe that galaxies are moving further apart every second, driven by a mysterious force known as dark energy. Even with our most advanced telescopes, we have only mapped a tiny fraction of the observable cosmos.",
@@ -29,6 +29,253 @@ const layouts = {
     ]
 };
 
+// ---------------------------------------------------------------------------
+// Design: "Mechanical keycap / terminal desk" theme.
+// Self-contained palette + fonts injected once, scoped under .pt-app so this
+// component no longer depends on external CSS variables or classes.
+// Signature element: keys and stat readouts rendered as physical keycaps
+// (bevel + drop shadow), with the active target key lit up like a
+// backlit switch, and a blinking block cursor on the current character.
+// ---------------------------------------------------------------------------
+
+let fontsInjected = false;
+const injectFonts = () => {
+    if (fontsInjected || document.getElementById("pt-fonts")) return;
+    fontsInjected = true;
+    const link = document.createElement("link");
+    link.id = "pt-fonts";
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap";
+    document.head.appendChild(link);
+};
+
+const ptStyles = `
+.pt-app {
+    --pt-bg: #14151f;
+    --pt-panel: #1a1c29;
+    --pt-panel-alt: #232538;
+    --pt-border: rgba(255,255,255,0.08);
+    --pt-border-soft: rgba(255,255,255,0.05);
+    --pt-text: #eef0f7;
+    --pt-text-dim: #888ca6;
+    --pt-text-faint: #565a72;
+    --pt-amber: #ffb84a;
+    --pt-violet: #8b7cff;
+    --pt-violet-soft: #a78bfa;
+    --pt-teal: #2dd4bf;
+    --pt-coral: #ff6b7a;
+    --pt-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --pt-display: 'Space Grotesk', system-ui, sans-serif;
+    font-family: var(--pt-display);
+    color: var(--pt-text);
+}
+.pt-panel {
+    background: linear-gradient(180deg, var(--pt-panel), #16171f);
+    border: 1px solid var(--pt-border);
+    border-radius: 20px;
+}
+.pt-eyebrow {
+    font-family: var(--pt-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--pt-text-faint);
+}
+.pt-tab {
+    padding: 10px 22px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--pt-display);
+    font-weight: 600;
+    font-size: 14px;
+    transition: background .15s ease, color .15s ease;
+    background: transparent;
+    color: var(--pt-text-dim);
+}
+.pt-tab.pt-tab-active {
+    background: var(--pt-panel-alt);
+    color: var(--pt-text);
+    box-shadow: inset 0 0 0 1px var(--pt-border);
+}
+.pt-stat {
+    background: var(--pt-panel-alt);
+    border: 1px solid var(--pt-border-soft);
+    border-radius: 14px;
+    padding: 14px 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 116px;
+    flex: 1;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.pt-stat-label {
+    font-family: var(--pt-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--pt-text-faint);
+    margin-bottom: 6px;
+}
+.pt-stat-value {
+    font-family: var(--pt-mono);
+    font-size: 22px;
+    font-weight: 700;
+}
+.pt-ai-badge {
+    font-family: var(--pt-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #14151f;
+    padding: 5px 11px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: linear-gradient(110deg, var(--pt-amber), #ffd98a, var(--pt-amber));
+    background-size: 220% 100%;
+    animation: pt-shimmer 4s linear infinite;
+}
+@keyframes pt-shimmer { to { background-position: -220% 0; } }
+.pt-ai-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(139,124,255,0.08), rgba(139,124,255,0.03));
+    border: 1px solid rgba(139,124,255,0.25);
+    padding: 14px 18px;
+    border-radius: 16px;
+}
+.pt-ai-input {
+    flex: 1 1 auto;
+    min-width: 200px;
+    padding: 13px 18px;
+    border-radius: 11px;
+    border: 1px solid var(--pt-border);
+    outline: none;
+    background: var(--pt-bg);
+    color: var(--pt-text);
+    font-family: var(--pt-display);
+    font-size: 15px;
+}
+.pt-ai-input::placeholder { color: var(--pt-text-faint); }
+.pt-ai-input:focus { border-color: var(--pt-violet-soft); }
+.pt-btn-ai {
+    white-space: nowrap;
+    padding: 0 26px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--pt-violet), #6d5ae0);
+    color: #fff;
+    border: none;
+    border-radius: 11px;
+    font-family: var(--pt-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .4px;
+    cursor: pointer;
+    transition: filter .15s ease, transform .1s ease;
+    box-shadow: 0 6px 18px rgba(109,90,224,0.35);
+}
+.pt-btn-ai:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.pt-btn-ai:disabled { cursor: not-allowed; opacity: .6; }
+.pt-text-well {
+    background: radial-gradient(120% 140% at 0% 0%, #1c1e2c 0%, #15161f 70%);
+    border: 1px solid var(--pt-border);
+    border-radius: 18px;
+    padding: 36px 38px;
+    position: relative;
+    min-height: 220px;
+}
+.pt-text-display {
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: block;
+    line-height: 1.9;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px;
+    font-family: var(--pt-mono);
+    font-size: 19px;
+}
+.pt-char { color: var(--pt-text-faint); transition: color .1s ease; }
+.pt-char-correct { color: var(--pt-text-dim); }
+.pt-char-current {
+    color: #17181f;
+    background: var(--pt-amber);
+    border-radius: 3px;
+    box-shadow: 0 0 0 3px rgba(255,184,74,0.22);
+    animation: pt-cursor-pulse 1.1s ease-in-out infinite;
+}
+@keyframes pt-cursor-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+.pt-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--pt-panel-alt);
+    overflow: hidden;
+    margin-top: 22px;
+}
+.pt-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--pt-amber), var(--pt-violet));
+    transition: width .15s ease;
+}
+.pt-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15,16,24,0.86);
+    backdrop-filter: blur(10px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 18px;
+    z-index: 10;
+    text-align: center;
+}
+.pt-keyboard { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.pt-key-row { display: flex; gap: 6px; }
+.pt-key {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 4px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #262838, #1b1d2a);
+    border-radius: 8px;
+    border: 1px solid var(--pt-border-soft);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    color: var(--pt-text-dim);
+    font-family: var(--pt-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    transition: transform .08s ease, box-shadow .08s ease, background .15s ease, color .15s ease;
+    user-select: none;
+}
+.pt-key-space { min-width: 260px; }
+.pt-key-target {
+    background: linear-gradient(180deg, #4a3a1c, #33280f);
+    border-color: rgba(255,184,74,0.5);
+    color: var(--pt-amber);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 0 16px rgba(255,184,74,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.pt-key-hit {
+    transform: translateY(3px);
+    background: linear-gradient(180deg, #2f5a44, #1e3c2d);
+    color: #7de8b6;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.pt-key-miss {
+    transform: translateY(3px);
+    background: linear-gradient(180deg, #5c2733, #3c1720);
+    color: #ff98a2;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+`;
+
+const StatCard = ({ label, value, color }) => (
+    <div className="pt-stat">
+        <span className="pt-stat-label">{label}</span>
+        <span className="pt-stat-value" style={{ color }}>{value}</span>
+    </div>
+);
+
 const TypingTest = ({ onBack }) => {
     const [lang, setLang] = useState('en');
     const [text, setText] = useState("");
@@ -42,11 +289,15 @@ const TypingTest = ({ onBack }) => {
     const [isErrorKey, setIsErrorKey] = useState(false);
     const [shake, setShake] = useState(false);
 
-    // AI 
+    // AI
     const [topic, setTopic] = useState("Искусственный интеллект");
     const [isGenerating, setIsGenerating] = useState(false);
 
     const textContainerRef = useRef(null);
+
+    useEffect(() => {
+        injectFonts();
+    }, []);
 
     const generateLocalText = useCallback((currentLang) => {
         const list = fallbackTextsData[currentLang];
@@ -72,7 +323,7 @@ const TypingTest = ({ onBack }) => {
     // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
-        
+
         setIsGenerating(true);
         resetGame(lang, " "); // Очищаем текст перед загрузкой
 
@@ -95,8 +346,8 @@ const TypingTest = ({ onBack }) => {
             });
 
             const data = await response.json();
-            
-            console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
+
+            console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data);
 
             if (data.error) {
                 throw new Error(data.error.message || "Неизвестная ошибка API");
@@ -109,10 +360,10 @@ const TypingTest = ({ onBack }) => {
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
             aiText = aiText.replace(/[*#_"«»()\[\]\-—0-9]/g, '');
-            aiText = aiText.replace(/\s+/g, ' '); 
+            aiText = aiText.replace(/\s+/g, ' ');
 
             resetGame(lang, aiText + " ");
-            
+
         } catch (error) {
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
@@ -122,10 +373,10 @@ const TypingTest = ({ onBack }) => {
         }
     };
 
-    // ИСПРАВЛЕННЫЙ СКРОЛЛ: без 'smooth' и 'center', чтобы не трясло
+    // Скролл к текущему символу без 'smooth'/'center', чтобы не трясло
     useEffect(() => {
         if (textContainerRef.current) {
-            const currentElement = textContainerRef.current.querySelector('.current');
+            const currentElement = textContainerRef.current.querySelector('.pt-char-current');
             if (currentElement) {
                 currentElement.scrollIntoView({ behavior: 'auto', block: 'nearest' });
             }
@@ -137,16 +388,16 @@ const TypingTest = ({ onBack }) => {
             // Игнорируем нажатия клавиш, если мы печатаем в инпуте
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            if (isGenerating) return; 
+            if (isGenerating) return;
             if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
 
-            const actualKey = e.key; 
-            const visualKey = e.key.toLowerCase(); 
-            
+            const actualKey = e.key;
+            const visualKey = e.key.toLowerCase();
+
             setPressedKey(visualKey);
-            
+
             if (!startTime) setStartTime(Date.now());
 
             const expectedChar = text[currentIndex];
@@ -156,18 +407,18 @@ const TypingTest = ({ onBack }) => {
                 const newCombo = combo + 1;
                 setCombo(newCombo);
                 if (newCombo > maxCombo) setMaxCombo(newCombo);
-                
+
                 const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
                 if (nextIndex === text.length) setEndTime(Date.now());
             } else {
                 setIsErrorKey(true);
                 setErrors(prev => prev + 1);
-                setCombo(0); 
+                setCombo(0);
                 setShake(true);
                 setTimeout(() => setShake(false), 300);
             }
-            
+
             setTimeout(() => { setPressedKey(null); setIsErrorKey(false); }, 150);
         };
 
@@ -186,181 +437,120 @@ const TypingTest = ({ onBack }) => {
     };
 
     const stats = calculateStats();
-    const expectedKey = text[currentIndex]?.toLowerCase(); 
+    const expectedKey = text[currentIndex]?.toLowerCase();
     const currentLayout = layouts[lang];
     const progress = (currentIndex / text.length) * 100;
 
     return (
-        <motion.div 
-            className="glass-panel" 
+        <motion.div
+            className="pt-app pt-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.6, ease: "easeOut" }}
-            style={{ width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '30px' }}
+            style={{ width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '25px', padding: '32px' }}
         >
+            <style>{ptStyles}</style>
+
             {/* ШАПКА */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
-                            Pro<span style={{ color: '#3b82f6' }}>Type</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <h2 style={{ margin: 0, fontFamily: 'var(--pt-display)', fontSize: '34px', fontWeight: '700', color: 'var(--pt-text)', letterSpacing: '-0.5px', display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                            Pro<span style={{ color: 'var(--pt-amber)' }}>Type</span>
+                            <motion.span
+                                animate={{ opacity: [1, 0, 1] }}
+                                transition={{ duration: 1.1, repeat: Infinity }}
+                                style={{ display: 'inline-block', width: '4px', height: '26px', background: 'var(--pt-amber)', marginLeft: '4px', borderRadius: '1px' }}
+                            />
                         </h2>
-                        {/* ЗНАЧОК AI POWERED */}
-                        <span style={{
-                            fontSize: '11px', 
-                            fontWeight: '900', 
-                            background: 'linear-gradient(90deg, #a855f7, #6d28d9)', 
-                            color: '#ffffff', 
-                            padding: '6px 12px', 
-                            borderRadius: '12px', 
-                            letterSpacing: '1px',
-                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)',
-                            textTransform: 'uppercase'
-                        }}>
-                            AI POWERED
-                        </span>
+                        <span className="pt-ai-badge">AI Powered</span>
                     </div>
-                    
-                    <div style={{ display: 'flex', background: 'var(--bg-body)', borderRadius: '12px', padding: '6px', border: '1px solid var(--glass-border)', width: 'fit-content' }}>
-                        <button 
+
+                    <div style={{ display: 'flex', background: 'var(--pt-bg)', borderRadius: '12px', padding: '5px', border: '1px solid var(--pt-border)', width: 'fit-content' }}>
+                        <button
                             onClick={() => setLang('en')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'en' ? 'var(--bg-panel)' : 'transparent', color: lang === 'en' ? 'var(--text-main)' : 'var(--text-sec)', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s', boxShadow: lang === 'en' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}
+                            className={`pt-tab ${lang === 'en' ? 'pt-tab-active' : ''}`}
                         >English</button>
-                        <button 
+                        <button
                             onClick={() => setLang('ru')}
-                            style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: lang === 'ru' ? 'var(--bg-panel)' : 'transparent', color: lang === 'ru' ? 'var(--text-main)' : 'var(--text-sec)', cursor: 'pointer', fontWeight: '600', fontSize: '15px', transition: '0.2s', boxShadow: lang === 'ru' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}
+                            className={`pt-tab ${lang === 'ru' ? 'pt-tab-active' : ''}`}
                         >Русский</button>
                     </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-main)' }}>x{combo}</span>
-                    </div>
-                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Точность</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: stats.accuracy < 90 ? "#f43f5e" : "#10b981" }}>{stats.accuracy}%</span>
-                    </div>
-                    <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Скорость</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: "#0ea5e9" }}>{stats.wpm} WPM</span>
-                    </div>
+                    <StatCard label="Комбо" value={`x${combo}`} color="var(--pt-text)" />
+                    <StatCard label="Точность" value={`${stats.accuracy}%`} color={stats.accuracy < 90 ? "var(--pt-coral)" : "var(--pt-teal)"} />
+                    <StatCard label="Скорость" value={`${stats.wpm} WPM`} color="var(--pt-amber)" />
                 </div>
             </header>
 
             {/* AI ПАНЕЛЬ ГЕНЕРАЦИИ ТЕКСТА */}
-            <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: '15px', 
-                alignItems: 'center', 
-                background: 'rgba(139, 92, 246, 0.05)', 
-                border: '1px solid rgba(139, 92, 246, 0.3)', 
-                padding: '12px 16px', 
-                borderRadius: '16px' 
-            }}>
-                <span style={{ fontSize: '24px' }}>✨</span>
-                
+            <div className="pt-ai-panel">
+                <span style={{ fontSize: '22px' }}>✨</span>
+
                 <input
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="Тема для текста"
-                    style={{ 
-                        flex: '1 1 auto', 
-                        minWidth: '200px', 
-                        padding: '14px 20px', 
-                        borderRadius: '12px', 
-                        border: '1px solid var(--glass-border)', 
-                        outline: 'none', 
-                        background: 'var(--bg-body)', 
-                        color: 'var(--text-main)', 
-                        fontSize: '16px' 
-                    }}
+                    className="pt-ai-input"
                     disabled={isGenerating}
                 />
-                
-                <button 
-                    onClick={fetchAIText} 
+
+                <button
+                    onClick={fetchAIText}
                     disabled={isGenerating}
-                    style={{ 
-                        whiteSpace: 'nowrap',
-                        padding: '0 30px', 
-                        height: '50px', 
-                        background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '12px', 
-                        fontWeight: '800', 
-                        fontSize: '14px', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '1px', 
-                        cursor: isGenerating ? 'not-allowed' : 'pointer', 
-                        transition: 'opacity 0.2s', 
-                        opacity: isGenerating ? 0.7 : 1,
-                        boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)',
-                        flexGrow: window.innerWidth < 600 ? 1 : 0
-                    }}
+                    className="pt-btn-ai"
+                    style={{ flexGrow: window.innerWidth < 600 ? 1 : 0 }}
                 >
                     {isGenerating ? "Генерация..." : "Сгенерировать текст"}
                 </button>
             </div>
 
             {/* КОНТЕЙНЕР ТЕКСТА */}
-            <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '40px', position: 'relative', minHeight: '220px' }}>
+            <div className="pt-text-well">
                 {isGenerating ? (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)' }}
+                        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--pt-text-dim)' }}
                     >
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '40px', marginBottom: '15px' }}>⚙️</motion.div>
-                        <div style={{ fontSize: '18px' }}>Пишем уникальный текст...</div>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} style={{ fontSize: '36px', marginBottom: '14px' }}>⚙️</motion.div>
+                        <div style={{ fontFamily: 'var(--pt-display)', fontSize: '17px' }}>Пишем уникальный текст...</div>
                     </motion.div>
                 ) : (
                     <>
-                        {/* ИСПРАВЛЕННЫЙ КОНТЕЙНЕР С ВНУТРЕННИМ СКРОЛЛОМ */}
-                        <div className="text-display" ref={textContainerRef} style={{ 
-                            whiteSpace: 'pre-wrap', 
-                            wordBreak: 'break-word', 
-                            display: 'block', 
-                            lineHeight: '1.6',
-                            maxHeight: '200px', 
-                            overflowY: 'auto',
-                            paddingRight: '10px'
-                        }}>
+                        <div className="pt-text-display" ref={textContainerRef}>
                             {text.split('').map((char, index) => {
-                                let statusClass = "";
-                                if (index < currentIndex) statusClass = "correct";
-                                else if (index === currentIndex) statusClass = "current";
-                                
-                                return <span key={index} className={`char ${statusClass}`} style={{ whiteSpace: 'pre-wrap' }}>{char}</span>;
+                                let statusClass = "pt-char";
+                                if (index < currentIndex) statusClass = "pt-char pt-char-correct";
+                                else if (index === currentIndex) statusClass = "pt-char pt-char-current";
+
+                                return <span key={index} className={statusClass}>{char}</span>;
                             })}
                         </div>
-                        <div className="progress-bar-container" style={{marginTop: '20px'}}>
-                            <div className="progress-bar" style={{ width: `${progress || 0}%`, background: 'linear-gradient(90deg, #8e2de2, #4a00e0)' }}></div>
+                        <div className="pt-progress-track">
+                            <div className="pt-progress-fill" style={{ width: `${progress || 0}%` }}></div>
                         </div>
                     </>
                 )}
 
                 <AnimatePresence>
                     {currentIndex === text.length && text.length > 5 && !isGenerating && (
-                        <motion.div 
-                            className="overlay"
-                            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                            animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'var(--bg-panel)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', zIndex: 10 }}
+                        <motion.div
+                            className="pt-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                         >
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                                <h2 style={{ fontSize: '48px', marginBottom: '10px', color: 'var(--text-main)' }}>Отличный результат!</h2>
-                                <p style={{ fontSize: '20px', color: 'var(--text-sec)', marginBottom: '30px' }}>
-                                    Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
-                                    Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
-                                </p>
-                                <div style={{ display: 'flex', gap: '15px' }}>
-                                    <Button variant="primary" onClick={() => fetchAIText()} style={{ width: '200px' }}>Новый AI-текст</Button>
-                                    <Button variant="muted" onClick={() => resetGame(lang, generateLocalText(lang))} style={{ width: '200px' }}>Обычный текст</Button>
-                                </div>
+                            <div className="pt-eyebrow" style={{ marginBottom: '10px' }}>Готово</div>
+                            <h2 style={{ fontFamily: 'var(--pt-display)', fontSize: '44px', margin: '0 0 10px', color: 'var(--pt-text)' }}>Отличный результат!</h2>
+                            <p style={{ fontFamily: 'var(--pt-mono)', fontSize: '17px', color: 'var(--pt-text-dim)', marginBottom: '28px' }}>
+                                Скорость: <strong style={{ color: "var(--pt-amber)" }}>{stats.wpm} WPM</strong> &nbsp;·&nbsp;
+                                Макс. комбо: <strong style={{ color: "var(--pt-violet-soft)" }}>x{maxCombo}</strong>
+                            </p>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <Button variant="primary" onClick={() => fetchAIText()} style={{ width: '200px' }}>Новый AI-текст</Button>
+                                <Button variant="muted" onClick={() => resetGame(lang, generateLocalText(lang))} style={{ width: '200px' }}>Обычный текст</Button>
                             </div>
                         </motion.div>
                     )}
@@ -368,18 +558,18 @@ const TypingTest = ({ onBack }) => {
             </div>
 
             {/* КЛАВИАТУРА */}
-            <div className="keyboard" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', flexShrink: 0, opacity: isGenerating ? 0.5 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
+            <div className="pt-keyboard" style={{ opacity: isGenerating ? 0.5 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
                 {currentLayout.map((row, rIndex) => (
-                    <div key={`${lang}-${rIndex}`} className="key-row">
+                    <div key={`${lang}-${rIndex}`} className="pt-key-row">
                         {row.map((key, kIndex) => {
                             const isSpace = key === " ";
                             const isTarget = key === expectedKey;
                             const isActive = key === pressedKey;
-                            
-                            let classNames = "key";
-                            if (isSpace) classNames += " space";
-                            if (isTarget) classNames += " target";
-                            if (isActive) classNames += isErrorKey ? " error-active" : " active";
+
+                            let classNames = "pt-key";
+                            if (isSpace) classNames += " pt-key-space";
+                            if (isTarget) classNames += " pt-key-target";
+                            if (isActive) classNames += isErrorKey ? " pt-key-miss" : " pt-key-hit";
 
                             return (
                                 <div key={`${lang}-${key}-${kIndex}`} className={classNames}>
