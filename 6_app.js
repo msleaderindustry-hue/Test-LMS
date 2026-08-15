@@ -365,34 +365,27 @@ function App() {
 
   return (
     <>
-      {/* ФОН: усилены цвета, добавлен доп. блик, техника прежняя */}
       <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
-         <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(129, 140, 248, 0.35) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
-         <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
-         <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(244, 114, 182, 0.28) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
-         <motion.div animate={{ opacity: [0.15, 0.35, 0.15], scale: [1, 1.15, 1] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'50%', left:'50%', width:'30vw', height:'30vw', transform:'translate(-50%,-50%)', background:'radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(70px)', borderRadius:'50%' }} />
+         <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
+         <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
+         <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
       {/* ФИКС: ТЕПЕРЬ БУРГЕР МЕНЮ РАБОТАЕТ И В АДМИНКЕ */}
       {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
           <div className="mobile-burger-fixed">
-              <motion.div whileHover={{ scale: 1.06, rotate: 3 }} whileTap={{ scale: 0.94 }}>
-                <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(102,126,234,0.25)', border: '1px solid rgba(255,255,255,0.4)'}}>☰</Button>
-              </motion.div>
+              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
       )}
 
       <AnimatePresence>
           {isSidebarOpen && (
               <>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(15,15,30,0.5)', backdropFilter:'blur(6px)', zIndex:2000}} />
-                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ display: 'flex', flexDirection: 'column', padding: '20px', boxShadow: '10px 0 40px rgba(0,0,0,0.15)' }}>
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsSidebarOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
+                  <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring', damping:25, stiffness:200}} className="glass-sidebar" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
                       
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-                          <h2 style={{
-                             margin:0, fontSize: 22, fontWeight: 800,
-                             background: 'linear-gradient(90deg, #667eea, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                          }}>Меню</h2>
+                          <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <div style={{display: 'flex', gap: '8px'}}>
 <Button 
     variant="muted" 
@@ -416,21 +409,16 @@ function App() {
                       </div>
                       
     <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-    <div style={{
-        width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, #667eea, #a78bfa)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '20px', boxShadow: '0 6px 16px rgba(102,126,234,0.35)'
-    }}>👤</div>
+    <span style={{ fontSize: '30px' }}>👤</span>
     <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.08em' }}>Аккаунт</div>
+        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
         <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                 {userNickname || user?.email}
             </span>
-            <motion.span whileHover={{ scale: 1.2, rotate: -8 }} onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
+            <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
                 ✏️
-            </motion.span>
+            </span>
         </div>
     </div>
 </div>
@@ -438,138 +426,106 @@ function App() {
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
                           
                           {allowedModules.includes('chat') && (
-                              <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                              <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, width: '100%'}}>
+                              <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>💬</span> Открыть чат
                               </Button>
-                              </motion.div>
                           )}
                           
                           {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {allowedModules.includes('typing') && (
                               view === 'typing' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase', width: '100%'}}>
+                                  <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, width: '100%'}}>
+                                  <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                       <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {/* УМНАЯ КНОПКА: Хоткеи */}
                           {allowedModules.includes('hotkeys') && (
                               view === 'hotkeys' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase', width: '100%'}}>
+                                  <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, width: '100%'}}>
+                                  <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                       <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
                           {allowedModules.includes('code') && (
                               view === 'code' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(79,172,254,0.3)'}}>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(79,172,254,0.3)'}}>
+                                  <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>💻</span> VS School
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
                           {allowedModules.includes('flashcards') && (
                               view === 'flashcards' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(168,85,247,0.3)'}}>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(168,85,247,0.3)'}}>
+                                  <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>🎴</span> Умные карточки
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
                           {allowedModules.includes('excel') && (
                               view === 'excel' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(16,185,129,0.3)'}}>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(16,185,129,0.3)'}}>
+                                  <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>📊</span> Тренажер Excel
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
                           {allowedModules.includes('algo') && (
                               view === 'algo' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(59,130,246,0.3)'}}>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase', width: '100%', boxShadow: '0 8px 20px rgba(59,130,246,0.3)'}}>
+                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
                                   </Button>
-                                  </motion.div>
                               )
                           )}
 
                           {isAdmin && (
                               view === 'admin' ? (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="red" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, width: '100%'}}>
+                                  <Button variant="red" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                       <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
                                   </Button>
-                                  </motion.div>
                               ) : (
-                                  <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                                  <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, width: '100%'}}>
+                                  <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                       <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
                                   </Button>
-                                  </motion.div>
                               )
                           )}
                       </div>
 
                       <div style={{paddingTop: '15px', paddingBottom: '10px', flexShrink: 0}}>
-                          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54, width: '100%'}}>
+                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>
                               ВЫЙТИ
                           </Button>
-                          </motion.div>
                       </div>
                   </motion.div>
               </>
@@ -579,7 +535,7 @@ function App() {
       <AnimatePresence>
           {isChatOpen && (
               <>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsChatOpen(false)} style={{position:'fixed', inset:0, background:'rgba(15,15,30,0.5)', backdropFilter:'blur(6px)', zIndex:2000}} />
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsChatOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
                   <ChatPanel user={user} onClose={() => setIsChatOpen(false)} />
               </>
           )}
@@ -589,15 +545,11 @@ function App() {
         <AnimatePresence mode="wait">
           
           {isAuthLoading && (
-              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px', border: '1px solid rgba(255,255,255,0.35)', boxShadow: '0 20px 60px rgba(102,126,234,0.15)'}}>
-                  <div style={{
-                     fontSize: 15, fontWeight: 700, marginBottom: 20,
-                     background: 'linear-gradient(90deg, #667eea, #a78bfa, #667eea)', backgroundSize: '200% auto',
-                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                  }}>Загрузка системы</div>
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'linear-gradient(90deg, var(--text-sec), rgba(102,126,234,0.4))', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'linear-gradient(90deg, var(--text-sec), rgba(102,126,234,0.4))', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'linear-gradient(90deg, var(--text-sec), rgba(102,126,234,0.4))', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
+              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
+                  <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
               </motion.div>
           )}
 
@@ -608,86 +560,62 @@ function App() {
           )}
 
           {!isAuthLoading && user && view === 'menu' && (
-            <motion.div key="menu" initial={{opacity:0, y: 10}} animate={{opacity:1, y: 0}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', border: '1px solid rgba(255,255,255,0.35)', boxShadow: '0 20px 60px rgba(102,126,234,0.15)', position: 'relative', overflow: 'hidden'}}>
-
-              <div style={{position:'absolute', top:-80, right:-80, width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(102,126,234,0.18), transparent 70%)', filter:'blur(20px)', pointerEvents:'none'}} />
-
+            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+              
               <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
               
               <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
-                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} style={{maxWidth:300, width: '100%'}}>
-                 <Button variant="orange" style={{maxWidth:300, width: '100%', boxShadow: '0 10px 26px rgba(251,146,60,0.3)'}} onClick={() => setView('stats')}>📊 Статистика</Button>
-                 </motion.div>
+                 <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
               </div>
 
-              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5, position: 'relative'}}>
+              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
-                {teacherTests.map((test, ti) => (
-                  <motion.div key={test.id} initial={{opacity:0, x:-8}} animate={{opacity:1, x:0}} transition={{delay: ti*0.04}} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <motion.div whileHover={{ scale: 1.01, x: 3 }} whileTap={{ scale: 0.99 }} style={{flex:1, minWidth:0}}>
-                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ width: '100%', justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff', boxShadow: '0 4px 14px rgba(0,198,255,0.15)' }}>
+                {teacherTests.map(test => (
+                  <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
                       <span style={{marginRight:8}}>☁️</span>
                       <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
                     </Button>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0, height: '100%'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
-                    </motion.div>
-                  </motion.div>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                  </div>
                 ))}
 
-                {sets.map((name, si) => (
-                  <motion.div key={name} initial={{opacity:0, x:-8}} animate={{opacity:1, x:0}} transition={{delay: si*0.04}} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <motion.div whileHover={{ scale: 1.01, x: 3 }} whileTap={{ scale: 0.99 }} style={{flex:1, minWidth:0}}>
-                    <Button variant="muted" onClick={() => openSet(name)} style={{ width: '100%', justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                {sets.map(name => (
+                  <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
                       <span style={{marginRight:8}}>📂</span>
                       <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
                     </Button>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0, height: '100%'}} onClick={() => deleteSet(name)}>🗑</Button>
-                    </motion.div>
-                  </motion.div>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                  </div>
                 ))}
               </div>
               <div style={{display:'flex', gap:10, alignItems: 'center'}}>
                  <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                 <motion.div whileHover={{ scale: 1.08, rotate: 90 }} whileTap={{ scale: 0.9 }}>
-                 <Button style={{width:60, padding:0, margin:0, boxShadow: '0 8px 20px rgba(102,126,234,0.3)'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
-                 </motion.div>
+                 <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
               </div>
               <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
             </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'set_menu' && (
-            <motion.div key="set" initial={{opacity:0, y: 10}} animate={{opacity:1, y: 0}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', border: '1px solid rgba(255,255,255,0.35)', boxShadow: '0 20px 60px rgba(102,126,234,0.15)'}}>
+            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
-              <h2 style={{
-                 textAlign:'center', margin:'20px 0', fontSize:24, fontWeight: 800,
-                 background: 'linear-gradient(90deg, #667eea, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-              }}>{currentSet}</h2>
+              <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                 <Button variant="primary" onClick={handlePrint} style={{width: '100%', height: '100%'}}>🖨️ Печать</Button>
-                 </motion.div>
-                 <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white', boxShadow: '0 8px 20px rgba(79,172,254,0.3)'}}>
+                 <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
+                 <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
                     📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
-                 </motion.label>
+                 </label>
               </div>
-              <motion.div whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={startTest} style={{fontSize:18, height:60, width: '100%', boxShadow: '0 12px 30px rgba(102,126,234,0.35)'}}>▶ НАЧАТЬ ТЕСТ</Button>
-              </motion.div>
+              <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
               <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
             </motion.div>
           )}
           
           {!isAuthLoading && user && view === 'timer_setup' && (
-              <motion.div key="timer" initial={{scale:0.9, opacity: 0}} animate={{scale:1, opacity: 1}} transition={{type:'spring', stiffness:260, damping:22}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center', border: '1px solid rgba(255,255,255,0.35)', boxShadow: '0 20px 60px rgba(102,126,234,0.15)'}}>
-                  <h2 style={{
-                     marginTop:0, fontWeight: 800,
-                     background: 'linear-gradient(90deg, #667eea, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                  }}>⚙️ Параметры теста</h2>
+              <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
+                  <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
                   <div style={{marginBottom:15, textAlign:'left'}}>
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
                       <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
@@ -696,10 +624,8 @@ function App() {
                       <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
                       <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                   </div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                  <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20, width: '100%', boxShadow: '0 10px 26px rgba(16,185,129,0.3)'}}>Начать</Button>
-                  </motion.div>
-                  <Button variant="muted" onClick={() => setView('set_menu')} style={{width: '100%'}}>Отмена</Button>
+                  <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
+                  <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
               </motion.div>
           )}
 
@@ -712,7 +638,7 @@ function App() {
                </div>
                <div className="sidebar-column">
                    <div className="sidebar-content">
-                      <motion.div animate={timeLeft <= 30 ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 1, repeat: timeLeft <= 30 ? Infinity : 0 }} className="sidebar-timer" style={timeLeft <= 30 ? { color: '#ef4444' } : {}}>⏳ {formatTime(timeLeft)}</motion.div>
+                      <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
                       <div className="nav-grid-wrapper">
                           <div className="nav-grid-compact">
                               {testSession.questions.map((_, i) => {
@@ -720,24 +646,22 @@ function App() {
                                  if(i===testSession.currentIdx) { c='#764ba2'; txt='white'; }
                                  else if(testSession.answers[i]!==null) { c = testSession.answers[i]===testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt='white'; }
                                  const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                 return ( <motion.div whileHover={!isAnimating ? { scale: 1.1 } : {}} whileTap={!isAnimating ? { scale: 0.9 } : {}} key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</motion.div> )
+                                 return ( <div key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</div> )
                               })}
                           </div>
                       </div>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                      <Button variant="green" onClick={finishTest} style={{marginTop:10, width: '100%', boxShadow: '0 10px 26px rgba(16,185,129,0.3)'}}>Завершить</Button>
-                      </motion.div>
+                      <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                    </div>
                </div>
             </div>
           )}
 
           {!isAuthLoading && user && view === 'result' && (
-            <motion.div key="res" initial={{scale:0.95, opacity: 0}} animate={{scale:1, opacity: 1}} transition={{type:'spring', stiffness:220, damping:20}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500, border: '1px solid rgba(255,255,255,0.35)', boxShadow: '0 20px 60px rgba(102,126,234,0.18)'}}>
+            <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                <h2 style={{marginBottom:5}}>{testSession.score/testSession.questions.length>=0.5?'Отлично!':'Результат'}</h2>
-               <motion.h1 initial={{scale:0.6, opacity:0}} animate={{scale:1, opacity:1}} transition={{delay:0.15, type:'spring', stiffness:200, damping:14}} style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
+               <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
                   {Math.round(testSession.score/testSession.questions.length*100)}%
-               </motion.h1>
+               </h1>
                <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
                    <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                </div>
@@ -745,26 +669,16 @@ function App() {
                   {!isResultSaved ? (
                       <>
                           <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
-                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                          <Button variant="teal" onClick={()=>saveResult(document.getElementById('sName').value)} style={{width: '100%'}}>💾 Сохранить</Button>
-                          </motion.div>
+                          <Button variant="teal" onClick={()=>saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
                       </>
                   ) : (
-                      <motion.div initial={{scale:0.8, opacity:0}} animate={{scale:1, opacity:1}} transition={{type:'spring', stiffness:260, damping:16}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
+                      <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
                   )}
                </div>
                <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                   <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
-                  </motion.div>
-                  {testSession.score < testSession.questions.length && (
-                     <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                     <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>
-                     </motion.div>
-                  )}
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                  {testSession.score < testSession.questions.length && ( <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button> )}
                   <Button onClick={()=>setView('menu')}>🏠 Меню</Button>
-                  </motion.div>
                </div>
             </motion.div>
           )}
