@@ -559,42 +559,141 @@ function App() {
               <AdminPanel />
           )}
 
+          {/* ========================================================= */}
+          {/* --- ОБНОВЛЕННЫЙ ПРЕМИАЛЬНЫЙ БЛОК ГЛАВНОГО МЕНЮ --- */}
+          {/* ========================================================= */}
           {!isAuthLoading && user && view === 'menu' && (
-            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+            <motion.div 
+                key="menu" 
+                initial={{opacity: 0, scale: 0.95}} 
+                animate={{opacity: 1, scale: 1}} 
+                exit={{opacity: 0}} 
+                className="glass-panel" 
+                style={{
+                    width: '100%', 
+                    maxWidth: '600px', 
+                    padding: '40px 30px', 
+                    borderRadius: '28px', 
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
+                    background: 'var(--bg-panel)'
+                }}
+            >
               
-              <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+              <div style={{ marginBottom: '35px' }}>
+                <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0', paddingTop: 10}} morphTime={1.2} cooldownTime={1.5} />
+              </div>
               
-              <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
-                 <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '35px' }}>
+                 <button
+                    onClick={() => setView('stats')}
+                    style={{
+                        width: '100%', maxWidth: '320px', padding: '16px', display: 'block',
+                        background: 'linear-gradient(135deg, #fcd34d 0%, #fca5a5 100%)',
+                        color: '#450a0a', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 800,
+                        letterSpacing: '0.5px', cursor: 'pointer', boxShadow: '0 8px 20px -6px rgba(252, 165, 165, 0.5)',
+                        transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 25px -6px rgba(252, 165, 165, 0.6)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px -6px rgba(252, 165, 165, 0.5)'; }}
+                >
+                    📊 СТАТИСТИКА
+                </button>
               </div>
 
-              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+              <div style={{ maxHeight: 280, overflowY: 'auto', margin: '0 0 20px 0', paddingRight: 8 }}>
                 
                 {teacherTests.map(test => (
-                  <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
-                      <span style={{marginRight:8}}>☁️</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
-                    </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                  <div key={test.id} style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <button 
+                        onClick={() => openTeacherAssignedTest(test)} 
+                        style={{
+                            flex: 1, textAlign: 'left', padding: '16px 20px', background: 'var(--bg-body)',
+                            border: '1.5px solid #0ea5e9', borderRadius: '14px', color: '#38bdf8',
+                            fontSize: '14px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                            transition: 'all 0.2s', wordBreak: 'break-word', textTransform: 'uppercase', letterSpacing: '0.5px'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(14, 165, 233, 0.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-body)'; }}
+                    >
+                      <span style={{fontSize: '18px'}}>☁️</span> {test.title}
+                    </button>
+                    <button 
+                        onClick={() => removeTeacherTestStudent(test.id, test.title)}
+                        style={{
+                            width: '54px', flexShrink: 0, background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
+                            border: 'none', borderRadius: '14px', color: '#991b1b', fontSize: '20px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                    >
+                      🗑
+                    </button>
                   </div>
                 ))}
 
                 {sets.map(name => (
-                  <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
-                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
-                      <span style={{marginRight:8}}>📂</span>
-                      <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
-                    </Button>
-                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                  <div key={name} style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <button 
+                        onClick={() => openSet(name)} 
+                        style={{
+                            flex: 1, textAlign: 'left', padding: '16px 20px', background: 'var(--bg-body)',
+                            border: '1.5px solid var(--glass-border)', borderRadius: '14px', color: 'var(--text-main)',
+                            fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                            transition: 'all 0.2s', wordBreak: 'break-word', letterSpacing: '0.3px'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = '#8b5cf6'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-body)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+                    >
+                      <span style={{fontSize: '18px', opacity: 0.8}}>📂</span> {name}
+                    </button>
+                    <button 
+                        onClick={() => deleteSet(name)}
+                        style={{
+                            width: '54px', flexShrink: 0, background: 'var(--bg-body)',
+                            border: '1.5px solid var(--glass-border)', borderRadius: '14px', color: '#ef4444', fontSize: '20px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.borderColor = '#ef4444'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-body)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+                    >
+                      🗑
+                    </button>
                   </div>
                 ))}
               </div>
-              <div style={{display:'flex', gap:10, alignItems: 'center'}}>
-                 <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                 <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
+
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '15px' }}>
+                 <input 
+                    id="newSetName" 
+                    placeholder="Новый тест" 
+                    style={{
+                        flex: 1, height: '54px', background: 'rgba(0, 0, 0, 0.15)',
+                        border: '1px solid var(--glass-border)', borderRadius: '14px',
+                        padding: '0 20px', color: 'var(--text-main)', fontSize: '15px', outline: 'none',
+                        transition: 'border-color 0.2s'
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = '#a855f7'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
+                 />
+                 <button 
+                    onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}
+                    style={{
+                        width: '54px', height: '54px', flexShrink: 0, background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+                        border: 'none', borderRadius: '14px', color: '#fff', fontSize: '26px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
+                        boxShadow: '0 8px 15px -5px rgba(168, 85, 247, 0.4)'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                 >
+                    +
+                 </button>
               </div>
-              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
+
+              <div style={{ marginTop: 35, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.6, fontWeight: 500 }}>
+                 © 2026 Alisher. All Rights Reserved.
+              </div>
             </motion.div>
           )}
 
