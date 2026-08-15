@@ -45,7 +45,7 @@ const injectFonts = () => {
     document.head.appendChild(link);
 };
 
-// ОБНОВЛЕНО: Исправлены селекторы для светлой темы.
+// ОБНОВЛЕНО: Исправлены селекторы для светлой темы и улучшена контрастность текста.
 const ptStyles = `
 .pt-app {
     /* DARK THEME (DEFAULT) */
@@ -96,7 +96,7 @@ const ptStyles = `
     color: var(--pt-text);
 }
 
-/* LIGHT THEME VARIABLES - убраны невалидные псевдоклассы */
+/* LIGHT THEME VARIABLES */
 .light .pt-app,
 .light-theme .pt-app,
 .theme-light .pt-app,
@@ -320,8 +320,10 @@ const ptStyles = `
     font-family: var(--pt-mono);
     font-size: 19px;
 }
-.pt-char { color: var(--pt-text-faint); transition: color .1s ease; }
-.pt-char-correct { color: var(--pt-text-dim); }
+
+/* ОБНОВЛЕНО: Повышена контрастность цветов текста */
+.pt-char { color: var(--pt-text-dim); transition: color .1s ease; }
+.pt-char-correct { color: var(--pt-text); }
 .pt-char-current {
     color: var(--pt-char-current-text);
     background: var(--pt-char-current-bg);
@@ -329,6 +331,13 @@ const ptStyles = `
     box-shadow: var(--pt-char-current-shadow);
     animation: pt-cursor-pulse 1.1s ease-in-out infinite;
 }
+/* ДОБАВЛЕНО: Класс для отображения ошибки в самом тексте */
+.pt-char-error {
+    background: var(--pt-coral) !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.3) !important;
+}
+
 @keyframes pt-cursor-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
 .pt-progress-track {
     height: 6px;
@@ -645,8 +654,14 @@ const TypingTest = ({ onBack }) => {
                         <div className="pt-text-display" ref={textContainerRef}>
                             {text.split('').map((char, index) => {
                                 let statusClass = "pt-char";
-                                if (index < currentIndex) statusClass = "pt-char pt-char-correct";
-                                else if (index === currentIndex) statusClass = "pt-char pt-char-current";
+                                
+                                // ОБНОВЛЕНО: Логика присвоения классов для курсора и ошибки
+                                if (index < currentIndex) {
+                                    statusClass = "pt-char pt-char-correct";
+                                } else if (index === currentIndex) {
+                                    statusClass = "pt-char pt-char-current";
+                                    if (isErrorKey) statusClass += " pt-char-error";
+                                }
 
                                 return <span key={index} className={statusClass}>{char}</span>;
                             })}
