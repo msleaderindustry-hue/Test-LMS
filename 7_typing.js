@@ -31,11 +31,7 @@ const layouts = {
 
 // ---------------------------------------------------------------------------
 // Design: "Mechanical keycap / terminal desk" theme.
-// Self-contained palette + fonts injected once, scoped under .pt-app so this
-// component no longer depends on external CSS variables or classes.
-// Signature element: keys and stat readouts rendered as physical keycaps
-// (bevel + drop shadow), with the active target key lit up like a
-// backlit switch, and a blinking block cursor on the current character.
+// Self-contained palette + fonts injected once, scoped under .pt-app.
 // ---------------------------------------------------------------------------
 
 let fontsInjected = false;
@@ -49,7 +45,7 @@ const injectFonts = () => {
     document.head.appendChild(link);
 };
 
-// ОБНОВЛЕНО: Все цвета вынесены в переменные с поддержкой светлой темы
+// ОБНОВЛЕНО: Исправлены селекторы для светлой темы.
 const ptStyles = `
 .pt-app {
     /* DARK THEME (DEFAULT) */
@@ -100,9 +96,7 @@ const ptStyles = `
     color: var(--pt-text);
 }
 
-/* LIGHT THEME VARIABLES */
-:global(.light) .pt-app,
-:global([data-theme="light"]) .pt-app,
+/* LIGHT THEME VARIABLES - убраны невалидные псевдоклассы */
 .light .pt-app,
 .light-theme .pt-app,
 .theme-light .pt-app,
@@ -145,10 +139,56 @@ const ptStyles = `
     --pt-key-miss-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 
     --pt-char-current-bg: var(--pt-amber);
-    --pt-char-current-text: #17181f; /* Remains dark for contrast on yellow */
+    --pt-char-current-text: #17181f;
     --pt-char-current-shadow: 0 0 0 3px rgba(245,158,11,0.2);
     
     --pt-stat-shadow: 0 2px 0 rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1);
+}
+
+/* Переключение по настройкам системы ОС (если нет жестких темных классов на body) */
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]):not([data-bs-theme="dark"]) body:not(.dark):not(.dark-theme):not(.dark-mode) .pt-app {
+        --pt-bg: #f3f4f6;
+        --pt-panel: #ffffff;
+        --pt-panel-bot: #f9fafb;
+        --pt-panel-alt: #f3f4f6;
+        --pt-border: rgba(0,0,0,0.08);
+        --pt-border-soft: rgba(0,0,0,0.04);
+        --pt-text: #111827;
+        --pt-text-dim: #4b5563;
+        --pt-text-faint: #9ca3af;
+        --pt-amber: #f59e0b;
+        --pt-violet: #6d5ae0;
+        --pt-violet-soft: #8b7cff;
+        --pt-teal: #0d9488;
+        --pt-coral: #e11d48;
+
+        --pt-well-bg: radial-gradient(120% 140% at 0% 0%, #ffffff 0%, #f3f4f6 70%);
+        --pt-ai-panel-bg: linear-gradient(180deg, rgba(109,90,224,0.06), rgba(109,90,224,0.02));
+        --pt-ai-panel-border: rgba(109,90,224,0.2);
+        --pt-overlay-bg: rgba(255,255,255,0.85);
+
+        --pt-key-bg: linear-gradient(180deg, #ffffff, #f3f4f6);
+        --pt-key-shadow: 0 3px 0 rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,1);
+        
+        --pt-key-target-bg: linear-gradient(180deg, #fffbeb, #fef3c7);
+        --pt-key-target-border: rgba(245,158,11,0.5);
+        --pt-key-target-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 0 12px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+
+        --pt-key-hit-bg: linear-gradient(180deg, #ecfdf5, #d1fae5);
+        --pt-key-hit-text: #065f46;
+        --pt-key-hit-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+
+        --pt-key-miss-bg: linear-gradient(180deg, #fff1f2, #ffe4e6);
+        --pt-key-miss-text: #be123c;
+        --pt-key-miss-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+
+        --pt-char-current-bg: var(--pt-amber);
+        --pt-char-current-text: #17181f;
+        --pt-char-current-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+        
+        --pt-stat-shadow: 0 2px 0 rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1);
+    }
 }
 
 .pt-panel {
