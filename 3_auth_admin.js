@@ -1,407 +1,9 @@
 // --- ВЫНЕСЕННЫЕ КОМПОНЕНТЫ ---
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-// ============================================================================
-// --- ТИТУЛЬНЫЙ ЭКРАН (WELCOME SCREEN) ---
-// ============================================================================
-const WelcomeScreen = ({ onEnter }) => {
-    const stageRef = useRef(null);
-    const canvasRef = useRef(null);
-    const contentRef = useRef(null);
-    const cgRef = useRef(null);
-    const cdRef = useRef(null);
-    const c1Ref = useRef(null);
-    const c2Ref = useRef(null);
-    const c3Ref = useRef(null);
-
-    useEffect(() => {
-        let mouse = { x: -9999, y: -9999 };
-        
-        const handleMouseMove = (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-            
-            if (cgRef.current && cdRef.current) {
-                cgRef.current.style.left = e.clientX + 'px';
-                cgRef.current.style.top = e.clientY + 'px';
-                cdRef.current.style.left = e.clientX + 'px';
-                cdRef.current.style.top = e.clientY + 'px';
-            }
-            if (contentRef.current) {
-                const x = (e.clientX / window.innerWidth - 0.5) * 2;
-                const y = (e.clientY / window.innerHeight - 0.5) * 2;
-                contentRef.current.style.transform = `rotateY(${x * 3}deg) rotateX(${-y * 3}deg)`;
-            }
-        };
-        
-        const handleMouseLeave = () => {
-            mouse.x = -9999;
-            mouse.y = -9999;
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseleave', handleMouseLeave);
-
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        let w, h, particles = [];
-        const COUNT = 70;
-        const MAXDIST = 140;
-        let animationId;
-
-        const resize = () => {
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
-        };
-        window.addEventListener('resize', resize);
-        resize();
-
-        const initParticles = () => {
-            particles = [];
-            for(let i = 0; i < COUNT; i++) {
-                particles.push({
-                    x: Math.random() * w,
-                    y: Math.random() * h,
-                    vx: (Math.random() - 0.5) * 0.35,
-                    vy: (Math.random() - 0.5) * 0.35,
-                    r: 1 + Math.random() * 1.6
-                });
-            }
-        };
-        initParticles();
-
-        const step = () => {
-            ctx.clearRect(0, 0, w, h);
-
-            for(const p of particles){
-                p.x += p.vx; p.y += p.vy;
-                if(p.x < 0 || p.x > w) p.vx *= -1;
-                if(p.y < 0 || p.y > h) p.vy *= -1;
-
-                const dx = mouse.x - p.x, dy = mouse.y - p.y;
-                const d = Math.sqrt(dx*dx + dy*dy);
-                if(d < 160){
-                    p.x -= dx * 0.0016; p.y -= dy * 0.0016;
-                }
-            }
-
-            for(let i = 0; i < particles.length; i++){
-                for(let j = i + 1; j < particles.length; j++){
-                    const a = particles[i], b = particles[j];
-                    const dx = a.x - b.x, dy = a.y - b.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if(dist < MAXDIST){
-                        const op = (1 - dist / MAXDIST) * 0.5;
-                        ctx.strokeStyle = `rgba(139,92,246,${op*0.5})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                        ctx.stroke();
-                    }
-                }
-                const dxm = particles[i].x - mouse.x, dym = particles[i].y - mouse.y;
-                const dm = Math.sqrt(dxm*dxm + dym*dym);
-                if(dm < 180){
-                    ctx.strokeStyle = `rgba(34,211,238,${(1 - dm/180) * 0.6})`;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y);
-                    ctx.stroke();
-                }
-            }
-
-            for(const p of particles){
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(219,213,255,0.85)';
-                ctx.fill();
-            }
-
-            animationId = requestAnimationFrame(step);
-        };
-        step();
-
-        const animateCount = (el, target, dur) => {
-            if (!el) return;
-            const start = performance.now();
-            const tick = (now) => {
-                const p = Math.min(1, (now - start) / dur);
-                const eased = 1 - Math.pow(1 - p, 3);
-                el.textContent = Math.round(eased * target).toLocaleString('ru-RU');
-                if(p < 1) requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-        };
-
-        const timeoutId = setTimeout(() => {
-            animateCount(c1Ref.current, 12480, 1400);
-            animateCount(c2Ref.current, 3200, 1400);
-            animateCount(c3Ref.current, 87, 1200);
-        }, 1250);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseleave', handleMouseLeave);
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationId);
-            clearTimeout(timeoutId);
-        };
-    }, []);
-
-    const handleEnterClick = () => {
-        if (stageRef.current) {
-            stageRef.current.style.transition = 'opacity .5s ease, transform .5s ease';
-            stageRef.current.style.opacity = '0';
-            stageRef.current.style.transform = 'scale(1.03)';
-            
-            setTimeout(() => {
-                if (onEnter) onEnter();
-            }, 500);
-        }
-    };
-
-    return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, background: '#08070f' }}>
-            <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
-                
-                :root{
-                    --bg: #08070f;
-                    --bg-2: #0e0c1c;
-                    --card: rgba(20,18,34,0.55);
-                    --card-border: rgba(255,255,255,0.09);
-                    --text-main: #f3f1fb;
-                    --text-sec: #9b97b8;
-                    --violet: #8b5cf6;
-                    --violet-2: #b767f0;
-                    --cyan: #22d3ee;
-                    --amber-a: #f7c948;
-                    --amber-b: #f98b4a;
-                }
-                
-                .welcome-wrapper {
-                    height:100%;
-                    background: var(--bg);
-                    overflow: hidden;
-                    font-family:'Inter', system-ui, sans-serif;
-                    cursor: none;
-                }
-
-                .stage{ position:relative; width:100%; height:100vh; }
-                canvas#net{ position:absolute; inset:0; display:block; }
-
-                .glow{ position:absolute; border-radius:50%; filter: blur(90px); pointer-events:none; opacity:.55; }
-                .glow.g1{ width:520px; height:520px; background: radial-gradient(circle, var(--violet), transparent 70%); top:-140px; left:-120px; animation: drift1 14s ease-in-out infinite; }
-                .glow.g2{ width:480px; height:480px; background: radial-gradient(circle, var(--cyan), transparent 70%); bottom:-160px; right:-100px; animation: drift2 16s ease-in-out infinite; }
-                .glow.g3{ width:360px; height:360px; background: radial-gradient(circle, var(--amber-b), transparent 70%); top:40%; right:15%; opacity:.28; animation: drift1 20s ease-in-out infinite reverse; }
-                @keyframes drift1{ 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(60px,40px); } }
-                @keyframes drift2{ 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(-50px,-50px); } }
-
-                .cursor-glow{
-                    position: fixed; width: 320px; height: 320px; border-radius:50%;
-                    background: radial-gradient(circle, rgba(139,92,246,0.14), transparent 65%);
-                    pointer-events:none; z-index: 3;
-                    transform: translate(-50%,-50%);
-                    transition: opacity .3s ease;
-                }
-                .cursor-dot{
-                    position: fixed; width: 8px; height: 8px; border-radius: 50%;
-                    background: var(--cyan); box-shadow: 0 0 14px 3px rgba(34,211,238,0.7);
-                    pointer-events:none; z-index: 4; transform: translate(-50%,-50%);
-                }
-
-                .menu-btn{
-                    position:absolute; top:26px; left:26px; z-index:5;
-                    width:46px; height:46px; border-radius:14px;
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid var(--card-border);
-                    backdrop-filter: blur(6px);
-                    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-                    opacity:0; animation: fadeIn .6s ease .9s forwards;
-                }
-                .menu-btn span{ width:18px; height:2px; background:#e8e6f5; border-radius:2px; }
-
-                .content{
-                    position:relative; z-index: 2;
-                    height:100%;
-                    display:flex; flex-direction:column; align-items:center; justify-content:center;
-                    text-align:center;
-                    padding: 20px;
-                    perspective: 1200px;
-                }
-
-                .eyebrow{
-                    font-family:'Space Grotesk', sans-serif;
-                    font-size: 12px; letter-spacing: 4px; text-transform:uppercase;
-                    color: var(--text-sec);
-                    display:flex; align-items:center; gap:10px;
-                    margin-bottom: 26px;
-                    opacity:0; animation: fadeUp .7s ease .1s forwards;
-                }
-                .eyebrow .pulse{
-                    width:6px; height:6px; border-radius:50%; background: var(--cyan);
-                    box-shadow: 0 0 10px 2px rgba(34,211,238,0.8);
-                    animation: pulse 1.6s ease-in-out infinite;
-                }
-                @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1);} 50%{ opacity:.4; transform:scale(1.6);} }
-
-                .title{
-                    font-family:'Space Grotesk', sans-serif;
-                    font-weight: 800;
-                    font-size: clamp(42px, 8vw, 88px);
-                    line-height: 1.02;
-                    letter-spacing: -1.5px;
-                    margin-bottom: 22px;
-                    color: var(--text-main);
-                }
-                .title .line{ overflow:hidden; display:block; }
-                .title .line span{
-                    display:inline-block;
-                    background: linear-gradient(100deg, #ffffff 10%, var(--violet-2) 55%, var(--cyan) 100%);
-                    -webkit-background-clip:text; background-clip:text; color:transparent;
-                    transform: translateY(110%);
-                    animation: riseWord .8s cubic-bezier(.16,1,.3,1) forwards;
-                }
-                @keyframes riseWord{ to{ transform: translateY(0); } }
-
-                .subtitle{
-                    max-width: 480px;
-                    font-size: 17px; line-height: 1.65;
-                    color: var(--text-sec);
-                    margin-bottom: 42px;
-                    opacity:0; animation: fadeUp .7s ease .85s forwards;
-                }
-
-                .cta-row{
-                    display:flex; align-items:center; gap:18px; flex-wrap:wrap; justify-content:center;
-                    opacity:0; animation: fadeUp .7s ease 1s forwards;
-                }
-
-                .cta{
-                    position:relative;
-                    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-                    padding: 18px 44px;
-                    border-radius: 999px;
-                    border: none;
-                    cursor: none;
-                    font-family:'Space Grotesk', sans-serif;
-                    font-weight:700; font-size:16px; letter-spacing:.3px;
-                    color:#1c1206;
-                    background: linear-gradient(100deg, var(--amber-a), var(--amber-b));
-                    box-shadow: 0 0 0 rgba(249,139,74,0.0);
-                    transition: transform .12s ease, box-shadow .25s ease;
-                    overflow: hidden;
-                }
-                .cta::before{
-                    content:''; position:absolute; inset:-2px; border-radius: 999px;
-                    background: conic-gradient(from 0deg, var(--amber-a), var(--amber-b), var(--violet-2), var(--cyan), var(--amber-a));
-                    z-index:-1; opacity:0; filter: blur(10px);
-                    transition: opacity .3s ease;
-                }
-                .cta:hover::before{ opacity:.9; }
-                .cta:hover{ box-shadow: 0 16px 40px rgba(249,139,74,0.35); }
-                .cta svg{ width:18px; height:18px; transition: transform .2s ease; }
-                .cta:hover svg{ transform: translateX(4px); }
-
-                .ghost-btn{
-                    padding: 18px 30px;
-                    border-radius: 999px;
-                    border: 1px solid var(--card-border);
-                    background: rgba(255,255,255,0.03);
-                    color: var(--text-main);
-                    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px;
-                    cursor:none;
-                    backdrop-filter: blur(6px);
-                    transition: background .2s ease, border-color .2s ease, transform .12s ease;
-                }
-                .ghost-btn:hover{ background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); }
-
-                .stat-row{
-                    display:flex; gap:46px; margin-top: 64px;
-                    opacity:0; animation: fadeUp .7s ease 1.15s forwards;
-                }
-                .stat{ text-align:center; }
-                .stat b{
-                    display:block; font-family:'Space Grotesk', sans-serif; font-weight:700;
-                    font-size: 30px;
-                    background: linear-gradient(100deg, var(--cyan), var(--violet-2));
-                    -webkit-background-clip:text; background-clip:text; color:transparent;
-                }
-                .stat span{ font-size: 12px; letter-spacing:1px; text-transform:uppercase; color: var(--text-sec); }
-
-                @keyframes fadeUp{ from{ opacity:0; transform: translateY(16px);} to{ opacity:1; transform: translateY(0);} }
-                @keyframes fadeIn{ to{ opacity:1; } }
-
-                .scanline{
-                    position:absolute; left:0; right:0; height:2px;
-                    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-                    top: 0; z-index: 6; opacity:.8;
-                    animation: scan 2.4s ease-in-out .2s 1;
-                }
-                @keyframes scan{
-                    0%{ top: 30%; opacity:0; }
-                    10%{ opacity:.9; }
-                    90%{ opacity:.9; }
-                    100%{ top: 72%; opacity:0; }
-                }
-
-                .footer-note{
-                    position:absolute; bottom: 22px; left:0; right:0; text-align:center;
-                    font-size: 11px; color: var(--text-sec); opacity:0;
-                    animation: fadeIn .6s ease 1.3s forwards;
-                    letter-spacing:.5px;
-                }
-            `}} />
-
-            <div className="welcome-wrapper">
-                <div className="stage" id="stage" ref={stageRef}>
-                    <canvas id="net" ref={canvasRef}></canvas>
-                    <div className="glow g1"></div>
-                    <div className="glow g2"></div>
-                    <div className="glow g3"></div>
-                    <div className="scanline"></div>
-
-                    <div className="menu-btn"><span></span><span></span><span></span></div>
-
-                    <div className="content" id="content" ref={contentRef}>
-                        <div className="eyebrow"><span className="pulse"></span> ULTIMATE LMS · EXAM MODE</div>
-                        <h1 className="title">
-                            <span className="line"><span style={{animationDelay: '.15s'}}>Знания.</span></span>
-                            <span className="line"><span style={{animationDelay: '.3s'}}>Проверка.</span></span>
-                            <span className="line"><span style={{animationDelay: '.45s'}}>Результат.</span></span>
-                        </h1>
-                        <p className="subtitle">Платформа для тестов и тренажёров, которая помнит твой прогресс — и умеет удивлять с первой секунды.</p>
-
-                        <div className="cta-row">
-                            <button className="cta" id="enterBtn" onClick={handleEnterClick}>
-                                Войти в платформу
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
-                            </button>
-                            <button className="ghost-btn">Как это работает</button>
-                        </div>
-
-                        <div className="stat-row">
-                            <div className="stat"><b ref={c1Ref}>0</b><span>тестов пройдено</span></div>
-                            <div className="stat"><b ref={c2Ref}>0</b><span>учеников</span></div>
-                            <div className="stat"><b ref={c3Ref}>0</b><span>% средняя точность</span></div>
-                        </div>
-                    </div>
-
-                    <div className="footer-note">© 2026 Alisher. All Rights Reserved.</div>
-                </div>
-
-                <div className="cursor-glow" id="cg" ref={cgRef}></div>
-                <div className="cursor-dot" id="cd" ref={cdRef}></div>
-            </div>
-        </div>
-    );
-};
-
-// ============================================================================
-// --- ЭКРАН АВТОРИЗАЦИИ ---
-// ============================================================================
+// ЭКРАН АВТОРИЗАЦИИ
 const AuthScreen = React.memo(() => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -545,7 +147,8 @@ const TABS = [
 
 // --- КОМПОНЕНТ: КАРТОЧКА ПОЛЬЗОВАТЕЛЯ С ВКЛАДКАМИ ---
 const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssignTestFile, toggleExcelHints, toggleModuleAccess, hasAccess, removeTest }) => {
-    const [activeTab, setActiveTab] = useState('control');
+    // Состояние для управления активной вкладкой
+    const [activeTab, setActiveTab] = useState('control'); // 'control', 'settings', 'tests'
     const testCount = (u.assignedTests && u.assignedTests.length) || 0;
 
     return (
@@ -559,6 +162,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                 padding: '22px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
             }}
         >
+            {/* ИНФО О ПОЛЬЗОВАТЕЛЕ (Шапка карточки) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
                 <div style={{
                     width: '50px', height: '50px', borderRadius: '16px', flexShrink: 0,
@@ -590,6 +194,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                 </div>
             </div>
 
+            {/* НАВИГАЦИЯ ПО ВКЛАДКАМ */}
             <div className="modern-scroll" style={{ display: 'flex', gap: '6px', marginBottom: '20px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', overflowX: 'auto' }}>
                 {TABS.map(tab => {
                     const isActive = activeTab === tab.id;
@@ -621,6 +226,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                 })}
             </div>
 
+            {/* КОНТЕНТ ВКЛАДОК */}
             <AnimatePresence mode="wait">
                 <motion.div
                     key={activeTab}
@@ -629,6 +235,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
                 >
+                    {/* 1. ВКЛАДКА "УПРАВЛЕНИЕ" */}
                     {activeTab === 'control' && (
                         <div>
                             {u.id !== currentUserUid ? (
@@ -673,8 +280,10 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                         </div>
                     )}
 
+                    {/* 2. ВКЛАДКА "НАСТРОЙКИ" */}
                     {activeTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            {/* НАСТРОЙКИ ЭКЗАМЕНОВ И ТРЕНАЖЕРОВ */}
                             <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)' }}>
                                 <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                                     ⚙️ Настройки режимов
@@ -688,6 +297,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                                 </Button>
                             </div>
 
+                            {/* НАСТРОЙКА ДОСТУПОВ К МОДУЛЯМ */}
                             <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)' }}>
                                 <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                                     Доступ к модулям платформы
@@ -723,6 +333,7 @@ const UserAdminCard = ({ u, currentUserUid, toggleAdmin, toggleBan, handleAssign
                         </div>
                     )}
 
+                    {/* 3. ВКЛАДКА "ТЕСТЫ" */}
                     {activeTab === 'tests' && (
                         <div>
                             {testCount === 0 ? (
@@ -774,6 +385,7 @@ const AdminPanel = ({ onKicked }) => {
         return () => unsub();
     }, []);
 
+    // Выкидываем из админки, если права отозвали в реальном времени!
     useEffect(() => {
         if (users.length === 0) return;
         const currentUserId = window.auth?.currentUser?.uid;
@@ -812,7 +424,9 @@ const AdminPanel = ({ onKicked }) => {
         catch (e) { alert("Ошибка при обновлении доступов."); }
     };
 
+    // Управление подсказками (режим экзамена)
     const toggleExcelHints = async (uid, user) => {
+        // Если поля нет, считаем что подсказки включены (true)
         const currentStatus = user.excelHintsEnabled !== false;
         try {
             await window.db.collection('users').doc(uid).update({ excelHintsEnabled: !currentStatus });
@@ -942,5 +556,4 @@ const AdminPanel = ({ onKicked }) => {
     );
 };
 
-// Экспортируем все три компонента, включая новый WelcomeScreen
-Object.assign(window, { WelcomeScreen, AuthScreen, AdminPanel });
+Object.assign(window, { AuthScreen, AdminPanel });
