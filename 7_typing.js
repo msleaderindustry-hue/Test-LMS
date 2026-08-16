@@ -72,17 +72,17 @@ const TypingTest = ({ onBack }) => {
     // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
-        
+
         setIsGenerating(true);
         resetGame(lang, " "); // Очищаем текст перед загрузкой
 
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
-        // ОБНОВЛЕНО: Новый промпт с запросом разнообразной пунктуации
+        // ОБНОВЛЕНО: Промпт просит ставить базовую пунктуацию, но запрещает сложные знаки
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
         Язык: ${promptLang}. 
         Объем текста: около 70-80 слов. 
-        Условия: Активно используй разнообразную пунктуацию: запятые, точки, вопросительные и восклицательные знаки, скобки, тире, двоеточия и кавычки. 
-        ЗАПРЕЩЕНО использовать эмодзи и нечитаемые спецсимволы. 
+        Условия: Используй базовую пунктуацию: запятые, точки, вопросительные и восклицательные знаки, двоеточия. 
+        СТРОГО ЗАПРЕЩЕНО использовать длинные тире, кавычки-елочки, квадратные скобки, цифры, эмодзи и нечитаемые спецсимволы. 
         Сразу выведи только текст, без приветствий и пояснений.`;
 
         try {
@@ -96,7 +96,7 @@ const TypingTest = ({ onBack }) => {
             });
 
             const data = await response.json();
-            
+
             console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
 
             if (data.error) {
@@ -109,12 +109,12 @@ const TypingTest = ({ onBack }) => {
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // ОБНОВЛЕНО: Удалил жесткую чистку знаков препинания. Оставляем только чистку Markdown.
-            aiText = aiText.replace(/[*#_]/g, ''); 
+            // ОБНОВЛЕНО: Жестко вырезаем все неудобные для набора символы
+            aiText = aiText.replace(/[*#_«»\[\]—0-9]/g, ''); 
             aiText = aiText.replace(/\s+/g, ' '); 
 
             resetGame(lang, aiText + " ");
-            
+
         } catch (error) {
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
@@ -146,9 +146,9 @@ const TypingTest = ({ onBack }) => {
 
             const actualKey = e.key; 
             const visualKey = e.key.toLowerCase(); 
-            
+
             setPressedKey(visualKey);
-            
+
             if (!startTime) setStartTime(Date.now());
 
             const expectedChar = text[currentIndex];
@@ -158,7 +158,7 @@ const TypingTest = ({ onBack }) => {
                 const newCombo = combo + 1;
                 setCombo(newCombo);
                 if (newCombo > maxCombo) setMaxCombo(newCombo);
-                
+
                 const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
                 if (nextIndex === text.length) setEndTime(Date.now());
@@ -169,7 +169,7 @@ const TypingTest = ({ onBack }) => {
                 setShake(true);
                 setTimeout(() => setShake(false), 300);
             }
-            
+
             setTimeout(() => { setPressedKey(null); setIsErrorKey(false); }, 150);
         };
 
@@ -222,7 +222,7 @@ const TypingTest = ({ onBack }) => {
                             AI POWERED
                         </span>
                     </div>
-                    
+
                     <div style={{ display: 'flex', background: 'var(--bg-body)', borderRadius: '12px', padding: '6px', border: '1px solid var(--glass-border)', width: 'fit-content' }}>
                         <button 
                             onClick={() => setLang('en')}
@@ -234,7 +234,7 @@ const TypingTest = ({ onBack }) => {
                         >Русский</button>
                     </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     <div style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '15px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '130px', flex: 1 }}>
                         <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-sec)', fontWeight: '800', letterSpacing: '1px', marginBottom: '5px' }}>Комбо</span>
@@ -263,7 +263,7 @@ const TypingTest = ({ onBack }) => {
                 borderRadius: '16px' 
             }}>
                 <span style={{ fontSize: '24px' }}>✨</span>
-                
+
                 <input
                     type="text"
                     value={topic}
@@ -282,7 +282,7 @@ const TypingTest = ({ onBack }) => {
                     }}
                     disabled={isGenerating}
                 />
-                
+
                 <button 
                     onClick={fetchAIText} 
                     disabled={isGenerating}
@@ -335,7 +335,7 @@ const TypingTest = ({ onBack }) => {
                                 let statusClass = "";
                                 if (index < currentIndex) statusClass = "correct";
                                 else if (index === currentIndex) statusClass = "current";
-                                
+
                                 return <span key={index} className={`char ${statusClass}`} style={{ whiteSpace: 'pre-wrap' }}>{char}</span>;
                             })}
                         </div>
@@ -377,7 +377,7 @@ const TypingTest = ({ onBack }) => {
                             const isSpace = key === " ";
                             const isTarget = key === expectedKey;
                             const isActive = key === pressedKey;
-                            
+
                             let classNames = "key";
                             if (isSpace) classNames += " space";
                             if (isTarget) classNames += " target";
