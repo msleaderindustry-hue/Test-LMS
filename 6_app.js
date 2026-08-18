@@ -33,6 +33,9 @@ function App() {
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
+  // Стейт для показа окна авторизации после Landing Page
+  const [showAuth, setShowAuth] = useState(false);
+  
   const [teacherTests, setTeacherTests] = useState([]); 
   
   // ФИКС ДОСТУПОВ
@@ -40,9 +43,6 @@ function App() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-
-  // --- НОВЫЙ СТЕЙТ: показывать форму входа поверх лендинга ---
-  const [showAuth, setShowAuth] = useState(false);
 
   const isAdmin = userRole === 'admin';
 
@@ -136,7 +136,7 @@ function App() {
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
 
-  // --- ЛОГИКА АНТИЧИТА (осталась на своем месте) ---
+  // --- ЛОГИКА АНТИЧИТА ---
   useEffect(() => {
       if (view !== 'test') return;
       const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
@@ -149,7 +149,7 @@ function App() {
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
 
-  // --- ТАЙМЕР (остался на своем месте) ---
+  // --- ТАЙМЕР ---
   useEffect(() => {
       if(view !== 'test') return;
       const timer = setInterval(() => {
@@ -162,14 +162,14 @@ function App() {
 
   const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0'+sec : sec}`; };
 
-useEffect(() => {
+  useEffect(() => {
     async function check() {
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
       const f = await computeFingerprint(); 
       setFp(f);
       loadData(); 
       
-      // Искусственная задержка в 1.5 секунды (1500 мс), чтобы экран загрузки точно был виден
+      // Искусственная задержка в 1.5 секунды
       setTimeout(() => {
           setView('menu');
       }, 1500);
@@ -177,7 +177,7 @@ useEffect(() => {
     check();
   }, []);
   
- const loadData = () => {
+  const loadData = () => {
     const raw = localStorage.getItem('test_sets_list'); 
     setSets(raw ? JSON.parse(raw) : []); 
     if(!raw) { 
@@ -259,7 +259,7 @@ useEffect(() => {
     setView('result');
   };
 
-  // --- УПРАВЛЕНИЕ КЛАВИАТУРОЙ ВО ВРЕМЯ ТЕСТА (осталось на своем месте) ---
+  // --- УПРАВЛЕНИЕ КЛАВИАТУРОЙ ВО ВРЕМЯ ТЕСТА ---
   useEffect(() => {
       if (view !== 'test') return;
       const handleKeyDown = (e) => {
@@ -494,39 +494,29 @@ useEffect(() => {
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
           
-          {/* --- ИСПОЛЬЗУЕМ НАШИ ВЫДЕЛЕННЫЕ КОМПОНЕНТЫ СО ВСЕМИ ПРОПСАМИ ИЗ ОРИГИНАЛА --- */}
-          {isAuthLoading && <LoadingView key="loading" />}
+          {/* --- НАСТРОЙКИ ОТОБРАЖЕНИЯ ЭКРАНОВ С УНИКАЛЬНЫМИ KEYS --- */}
+          {isAuthLoading && <LoadingView key="loading_screen" />}
 
-          {/* Лендинг: показывается неавторизованным до нажатия "Вход / Регистрация" */}
+          {/* ПОКАЗЫВАЕМ ПРИВЕТСТВЕННЫЙ ЭКРАН (LANDING) */}
           {!isAuthLoading && !user && !showAuth && (
-              <LandingView key="landing" onLogin={() => setShowAuth(true)} />
+              <LandingView key="landing_screen" onLogin={() => setShowAuth(true)} />
           )}
 
-          {/* Форма входа: открывается только после клика на лендинге, с кнопкой "Назад" */}
+          {/* ПОКАЗЫВАЕМ ОКНО АВТОРИЗАЦИИ (ЕСЛИ НАЖАЛИ ВХОД) */}
           {!isAuthLoading && !user && showAuth && (
-              <motion.div
-                  key="auth"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 15 }}
-              >
-                  <Button
-                      variant="muted"
-                      onClick={() => setShowAuth(false)}
-                      style={{ width: 'auto', alignSelf: 'flex-start', padding: '0 25px', height: 40, minHeight: 40, fontSize: 13 }}
-                  >
-                      ⬅ Назад
-                  </Button>
+              <motion.div key="auth_screen" initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                  <div style={{width: '100%', maxWidth: '400px', marginBottom: '15px'}}>
+                      <Button variant="muted" onClick={() => setShowAuth(false)} style={{fontWeight: 'bold'}}>⬅ Назад на главную</Button>
+                  </div>
                   <AuthScreen />
               </motion.div>
           )}
 
-          {!isAuthLoading && user && view === 'admin' && <AdminPanel key="admin" />}
+          {!isAuthLoading && user && view === 'admin' && <AdminPanel key="admin_panel" />}
 
           {!isAuthLoading && user && view === 'menu' && (
               <MainMenu 
-                  key="menu"
+                  key="main_menu"
                   setView={setView} 
                   teacherTests={teacherTests} 
                   openTeacherAssignedTest={openTeacherAssignedTest} 
@@ -565,7 +555,7 @@ useEffect(() => {
 
           {!isAuthLoading && user && view === 'test' && (
               <ActiveTestView 
-                  key="test"
+                  key="active_test"
                   testSession={testSession} 
                   handleAnswer={handleAnswer} 
                   formatTime={formatTime} 
@@ -578,7 +568,7 @@ useEffect(() => {
 
           {!isAuthLoading && user && view === 'result' && (
               <TestResultView 
-                  key="result"
+                  key="test_result"
                   testSession={testSession} 
                   isResultSaved={isResultSaved} 
                   saveResult={saveResult} 
@@ -588,11 +578,11 @@ useEffect(() => {
           )}
 
           {!isAuthLoading && user && view === 'review' && (
-              <ReviewView key="review" questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
+              <ReviewView key="review_view" questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {!isAuthLoading && user && view === 'stats' && (
-             <StatsView key="stats" history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
+             <StatsView key="stats_view" history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
           )}
 
           {/* Экран тренажера печати */}
