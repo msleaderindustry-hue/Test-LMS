@@ -8,7 +8,7 @@ const {
   TestQuestionCard, ReviewView, StatsView,
   TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, WebBuilderLMS,
   // --- ИМПОРТ НАШИХ ВЫДЕЛЕННЫХ КОМПОНЕНТОВ ---
-  LoadingView, MainMenu, SetMenu, TimerSetup, ActiveTestView, TestResultView
+  LandingView, LoadingView, MainMenu, SetMenu, TimerSetup, ActiveTestView, TestResultView
 } = window;
 
 // --- APP ---
@@ -40,6 +40,9 @@ function App() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // --- НОВЫЙ СТЕЙТ: показывать форму входа поверх лендинга ---
+  const [showAuth, setShowAuth] = useState(false);
 
   const isAdmin = userRole === 'admin';
 
@@ -492,14 +495,38 @@ useEffect(() => {
         <AnimatePresence mode="wait">
           
           {/* --- ИСПОЛЬЗУЕМ НАШИ ВЫДЕЛЕННЫЕ КОМПОНЕНТЫ СО ВСЕМИ ПРОПСАМИ ИЗ ОРИГИНАЛА --- */}
-          {isAuthLoading && <LoadingView />}
+          {isAuthLoading && <LoadingView key="loading" />}
 
-          {!isAuthLoading && !user && <AuthScreen />}
+          {/* Лендинг: показывается неавторизованным до нажатия "Вход / Регистрация" */}
+          {!isAuthLoading && !user && !showAuth && (
+              <LandingView key="landing" onLogin={() => setShowAuth(true)} />
+          )}
 
-          {!isAuthLoading && user && view === 'admin' && <AdminPanel />}
+          {/* Форма входа: открывается только после клика на лендинге, с кнопкой "Назад" */}
+          {!isAuthLoading && !user && showAuth && (
+              <motion.div
+                  key="auth"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 15 }}
+              >
+                  <Button
+                      variant="muted"
+                      onClick={() => setShowAuth(false)}
+                      style={{ width: 'auto', alignSelf: 'flex-start', padding: '0 25px', height: 40, minHeight: 40, fontSize: 13 }}
+                  >
+                      ⬅ Назад
+                  </Button>
+                  <AuthScreen />
+              </motion.div>
+          )}
+
+          {!isAuthLoading && user && view === 'admin' && <AdminPanel key="admin" />}
 
           {!isAuthLoading && user && view === 'menu' && (
               <MainMenu 
+                  key="menu"
                   setView={setView} 
                   teacherTests={teacherTests} 
                   openTeacherAssignedTest={openTeacherAssignedTest} 
@@ -513,6 +540,7 @@ useEffect(() => {
 
           {!isAuthLoading && user && view === 'set_menu' && (
               <SetMenu 
+                  key="set_menu"
                   setView={setView} 
                   currentSet={currentSet} 
                   handlePrint={handlePrint} 
@@ -524,6 +552,7 @@ useEffect(() => {
           
           {!isAuthLoading && user && view === 'timer_setup' && (
               <TimerSetup 
+                  key="timer_setup"
                   customTime={customTime} 
                   setCustomTime={setCustomTime} 
                   customQCount={customQCount} 
@@ -536,6 +565,7 @@ useEffect(() => {
 
           {!isAuthLoading && user && view === 'test' && (
               <ActiveTestView 
+                  key="test"
                   testSession={testSession} 
                   handleAnswer={handleAnswer} 
                   formatTime={formatTime} 
@@ -548,6 +578,7 @@ useEffect(() => {
 
           {!isAuthLoading && user && view === 'result' && (
               <TestResultView 
+                  key="result"
                   testSession={testSession} 
                   isResultSaved={isResultSaved} 
                   saveResult={saveResult} 
@@ -557,11 +588,11 @@ useEffect(() => {
           )}
 
           {!isAuthLoading && user && view === 'review' && (
-              <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
+              <ReviewView key="review" questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {!isAuthLoading && user && view === 'stats' && (
-             <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
+             <StatsView key="stats" history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
           )}
 
           {/* Экран тренажера печати */}
