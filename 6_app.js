@@ -1,4 +1,3 @@
-// --- 6_app.js ---
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
 const { 
   useState, useEffect, motion, AnimatePresence,
@@ -6,9 +5,12 @@ const {
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
-  TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, WebBuilderLMS,
-  // --- ИМПОРТ НАШИХ ВЫДЕЛЕННЫХ КОМПОНЕНТОВ ---
-  LandingView, LoadingView, MainMenu, SetMenu, TimerSetup, ActiveTestView, TestResultView
+  TypingTest,
+  HotkeyTrainer,
+  CodePlayground,
+  FlashcardsLMS,
+  ExcelTrainerLMS,
+  WebBuilderLMS // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
 } = window;
 
 // --- APP ---
@@ -33,12 +35,9 @@ function App() {
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
-  // Стейт для показа окна авторизации после Landing Page
-  const [showAuth, setShowAuth] = useState(false);
-  
   const [teacherTests, setTeacherTests] = useState([]); 
   
-  // ФИКС ДОСТУПОВ
+  // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
   const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -72,6 +71,8 @@ function App() {
                           } else {
                               setTeacherTests([]);
                           }
+                          
+                          // Обновляем доступы в реальном времени
                           setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
                       }
                   });
@@ -120,6 +121,7 @@ function App() {
 
   useEffect(() => { logVisitor(); }, []);
 
+
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
       const isPlanned = title.includes("Плановая");
@@ -136,7 +138,6 @@ function App() {
       try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
   };
 
-  // --- ЛОГИКА АНТИЧИТА ---
   useEffect(() => {
       if (view !== 'test') return;
       const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
@@ -149,7 +150,6 @@ function App() {
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
 
-  // --- ТАЙМЕР ---
   useEffect(() => {
       if(view !== 'test') return;
       const timer = setInterval(() => {
@@ -165,19 +165,14 @@ function App() {
   useEffect(() => {
     async function check() {
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
-      const f = await computeFingerprint(); 
-      setFp(f);
+      const f = await computeFingerprint(); setFp(f);
       loadData(); 
-      
-      // Искусственная задержка в 1.5 секунды
-      setTimeout(() => {
-          setView('menu');
-      }, 1500);
+      setView('menu');
     }
     check();
   }, []);
   
-  const loadData = () => {
+ const loadData = () => {
     const raw = localStorage.getItem('test_sets_list'); 
     setSets(raw ? JSON.parse(raw) : []); 
     if(!raw) { 
@@ -259,7 +254,6 @@ function App() {
     setView('result');
   };
 
-  // --- УПРАВЛЕНИЕ КЛАВИАТУРОЙ ВО ВРЕМЯ ТЕСТА ---
   useEffect(() => {
       if (view !== 'test') return;
       const handleKeyDown = (e) => {
@@ -377,6 +371,7 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
+      {/* ФИКС: ТЕПЕРЬ БУРГЕР МЕНЮ РАБОТАЕТ И В АДМИНКЕ */}
       {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
@@ -392,90 +387,145 @@ function App() {
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <div style={{display: 'flex', gap: '8px'}}>
-                              <Button variant="muted" onClick={(e) => { const nextTheme = theme === 'dark' ? 'light' : 'dark'; if (document.startViewTransition) { document.startViewTransition(() => { setTheme(nextTheme); }); } else { setTheme(nextTheme); } }} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} title="Сменить тему">
-                                  {theme === 'dark' ? '☀️' : '🌙'}
-                              </Button>
+<Button 
+    variant="muted" 
+    onClick={(e) => {
+        const nextTheme = theme === 'dark' ? 'light' : 'dark';
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                setTheme(nextTheme);
+            });
+        } else {
+            setTheme(nextTheme);
+        }
+    }} 
+    style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} 
+    title="Сменить тему"
+>
+    {theme === 'dark' ? '☀️' : '🌙'}
+</Button>
                               <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>✖</Button>
                           </div>
                       </div>
                       
-                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-                          <span style={{ fontSize: '30px' }}>👤</span>
-                          <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{userNickname || user?.email}</span>
-                                  <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">✏️</span>
-                              </div>
-                          </div>
-                      </div>
+    <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
+    <span style={{ fontSize: '30px' }}>👤</span>
+    <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+        <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {userNickname || user?.email}
+            </span>
+            <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
+                ✏️
+            </span>
+        </div>
+    </div>
+</div>
 
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
+                          
                           {allowedModules.includes('chat') && (
                               <Button variant="teal" onClick={() => { setIsChatOpen(true); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
                                   <span style={{marginRight: 10}}>💬</span> Открыть чат
                               </Button>
                           )}
                           
+                          {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {allowedModules.includes('typing') && (
                               view === 'typing' ? (
-                                  <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}><span style={{marginRight: 10}}>⌨️</span> Тренажер печати</Button>
+                                  <Button variant="primary" onClick={() => { setView('typing'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⌨️</span> Тренажер печати
+                                  </Button>
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА: Хоткеи */}
                           {allowedModules.includes('hotkeys') && (
                               view === 'hotkeys' ? (
-                                  <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}><span style={{marginRight: 10}}>⚡</span> Горячие клавиши</Button>
+                                  <Button variant="orange" onClick={() => { setView('hotkeys'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⚡</span> Горячие клавиши
+                                  </Button>
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
                           {allowedModules.includes('code') && (
                               view === 'code' ? (
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>💻</span> VS School</Button>
+                                  <Button onClick={() => { setView('code'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>💻</span> VS School
+                                  </Button>
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
                           {allowedModules.includes('flashcards') && (
                               view === 'flashcards' ? (
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>🎴</span> Умные карточки</Button>
+                                  <Button onClick={() => { setView('flashcards'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>🎴</span> Умные карточки
+                                  </Button>
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
                           {allowedModules.includes('excel') && (
                               view === 'excel' ? (
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>📊</span> Тренажер Excel</Button>
+                                  <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>📊</span> Тренажер Excel
+                                  </Button>
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
                           {allowedModules.includes('algo') && (
                               view === 'algo' ? (
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}><span style={{marginRight: 10}}>🧩</span> Конструктор сайтов</Button>
+                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
+                                      <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
+                                  </Button>
                               )
                           )}
 
                           {isAdmin && (
                               view === 'admin' ? (
-                                  <Button variant="red" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}><span style={{marginRight: 10}}>⬅</span> В МЕНЮ</Button>
+                                  <Button variant="red" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
+                                  </Button>
                               ) : (
-                                  <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}><span style={{marginRight: 10}}>🛡️</span> АДМИНКА</Button>
+                                  <Button variant="red" onClick={() => { setView('admin'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54}}>
+                                      <span style={{marginRight: 10}}>🛡️</span> АДМИНКА
+                                  </Button>
                               )
                           )}
                       </div>
 
                       <div style={{paddingTop: '15px', paddingBottom: '10px', flexShrink: 0}}>
-                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>ВЫЙТИ</Button>
+                          <Button variant="muted" onClick={() => { window.auth.signOut(); setIsSidebarOpen(false); }} style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', height: 54}}>
+                              ВЫЙТИ
+                          </Button>
                       </div>
                   </motion.div>
               </>
@@ -494,95 +544,151 @@ function App() {
       <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
         <AnimatePresence mode="wait">
           
-          {/* --- НАСТРОЙКИ ОТОБРАЖЕНИЯ ЭКРАНОВ С УНИКАЛЬНЫМИ KEYS --- */}
-          {isAuthLoading && <LoadingView key="loading_screen" />}
-
-          {/* ПОКАЗЫВАЕМ ПРИВЕТСТВЕННЫЙ ЭКРАН (LANDING) */}
-          {!isAuthLoading && !user && !showAuth && (
-              <LandingView key="landing_screen" onLogin={() => setShowAuth(true)} />
-          )}
-
-          {/* ПОКАЗЫВАЕМ ОКНО АВТОРИЗАЦИИ (ЕСЛИ НАЖАЛИ ВХОД) */}
-          {!isAuthLoading && !user && showAuth && (
-              <motion.div key="auth_screen" initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                  <div style={{width: '100%', maxWidth: '400px', marginBottom: '15px'}}>
-                      <Button variant="muted" onClick={() => setShowAuth(false)} style={{fontWeight: 'bold'}}>⬅ Назад на главную</Button>
-                  </div>
-                  <AuthScreen />
+          {isAuthLoading && (
+              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
+                  <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
               </motion.div>
           )}
 
-          {!isAuthLoading && user && view === 'admin' && <AdminPanel key="admin_panel" />}
+          {!isAuthLoading && !user && <AuthScreen />}
+
+          {!isAuthLoading && user && view === 'admin' && (
+              <AdminPanel />
+          )}
 
           {!isAuthLoading && user && view === 'menu' && (
-              <MainMenu 
-                  key="main_menu"
-                  setView={setView} 
-                  teacherTests={teacherTests} 
-                  openTeacherAssignedTest={openTeacherAssignedTest} 
-                  removeTeacherTestStudent={removeTeacherTestStudent} 
-                  sets={sets} 
-                  openSet={openSet} 
-                  deleteSet={deleteSet} 
-                  addSet={addSet} 
-              />
+            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+              
+              <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+              
+              <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
+                 <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
+              </div>
+
+              <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                
+                {teacherTests.map(test => (
+                  <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                      <span style={{marginRight:8}}>☁️</span>
+                      <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                    </Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                  </div>
+                ))}
+
+                {sets.map(name => (
+                  <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                      <span style={{marginRight:8}}>📂</span>
+                      <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                    </Button>
+                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                 <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                 <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
+              </div>
+              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
+            </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'set_menu' && (
-              <SetMenu 
-                  key="set_menu"
-                  setView={setView} 
-                  currentSet={currentSet} 
-                  handlePrint={handlePrint} 
-                  importJSON={importJSON} 
-                  startTest={startTest} 
-                  testsLength={tests.length} 
-              />
+            <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
+              <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
+              <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
+                 <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
+                 <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
+                    📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                 </label>
+              </div>
+              <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
+              <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+            </motion.div>
           )}
           
           {!isAuthLoading && user && view === 'timer_setup' && (
-              <TimerSetup 
-                  key="timer_setup"
-                  customTime={customTime} 
-                  setCustomTime={setCustomTime} 
-                  customQCount={customQCount} 
-                  setCustomQCount={setCustomQCount} 
-                  testsLength={tests.length} 
-                  launchTestWithTimer={launchTestWithTimer} 
-                  setView={setView} 
-              />
+              <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
+                  <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
+                  <div style={{marginBottom:15, textAlign:'left'}}>
+                      <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
+                      <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+                  </div>
+                  <div style={{marginBottom:15, textAlign:'left'}}>
+                      <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
+                      <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+                  </div>
+                  <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
+                  <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
+              </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'test' && (
-              <ActiveTestView 
-                  key="active_test"
-                  testSession={testSession} 
-                  handleAnswer={handleAnswer} 
-                  formatTime={formatTime} 
-                  timeLeft={timeLeft} 
-                  isAnimating={isAnimating} 
-                  handleNavClick={handleNavClick} 
-                  finishTest={finishTest} 
-              />
+            <div key="test-wrapper" className="test-layout">
+               <div className="question-column">
+                   <AnimatePresence mode="wait">
+                      <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
+                   </AnimatePresence>
+               </div>
+               <div className="sidebar-column">
+                   <div className="sidebar-content">
+                      <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
+                      <div className="nav-grid-wrapper">
+                          <div className="nav-grid-compact">
+                              {testSession.questions.map((_, i) => {
+                                 let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
+                                 if(i===testSession.currentIdx) { c='#764ba2'; txt='white'; }
+                                 else if(testSession.answers[i]!==null) { c = testSession.answers[i]===testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt='white'; }
+                                 const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
+                                 return ( <div key={i} className={itemClass} style={{background:c, color:txt}} onClick={()=>handleNavClick(i)}>{i+1}</div> )
+                              })}
+                          </div>
+                      </div>
+                      <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
+                   </div>
+               </div>
+            </div>
           )}
 
           {!isAuthLoading && user && view === 'result' && (
-              <TestResultView 
-                  key="test_result"
-                  testSession={testSession} 
-                  isResultSaved={isResultSaved} 
-                  saveResult={saveResult} 
-                  setView={setView} 
-                  restartMistakes={restartMistakes} 
-              />
+            <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
+               <h2 style={{marginBottom:5}}>{testSession.score/testSession.questions.length>=0.5?'Отлично!':'Результат'}</h2>
+               <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
+                  {Math.round(testSession.score/testSession.questions.length*100)}%
+               </h1>
+               <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
+                   <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+               </div>
+               <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
+                  {!isResultSaved ? (
+                      <>
+                          <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
+                          <Button variant="teal" onClick={()=>saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
+                      </>
+                  ) : (
+                      <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
+                  )}
+               </div>
+               <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
+                  <Button variant="orange" onClick={()=>setView('review')}>🧐 Ошибки</Button>
+                  {testSession.score < testSession.questions.length && ( <Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button> )}
+                  <Button onClick={()=>setView('menu')}>🏠 Меню</Button>
+               </div>
+            </motion.div>
           )}
 
           {!isAuthLoading && user && view === 'review' && (
-              <ReviewView key="review_view" questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
+              <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
           {!isAuthLoading && user && view === 'stats' && (
-             <StatsView key="stats_view" history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
+             <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
           )}
 
           {/* Экран тренажера печати */}
