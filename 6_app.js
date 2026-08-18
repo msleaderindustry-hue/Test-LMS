@@ -159,12 +159,17 @@ function App() {
 
   const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0'+sec : sec}`; };
 
-  useEffect(() => {
+useEffect(() => {
     async function check() {
       document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
-      const f = await computeFingerprint(); setFp(f);
+      const f = await computeFingerprint(); 
+      setFp(f);
       loadData(); 
-      setView('menu');
+      
+      // Искусственная задержка в 1.5 секунды (1500 мс), чтобы экран загрузки точно был виден
+      setTimeout(() => {
+          setView('menu');
+      }, 1500);
     }
     check();
   }, []);
