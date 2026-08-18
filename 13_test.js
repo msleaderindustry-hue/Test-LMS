@@ -1,4 +1,4 @@
-const { React, window } = window;
+const { React } = window;
 const { motion, AnimatePresence } = window.Motion;
 const { Button, Input, GooeyText, TestQuestionCard } = window;
 
