@@ -2,11 +2,11 @@
 const { 
   useState, useEffect, motion, AnimatePresence,
   computeFingerprint, DISCORD_WEBHOOK, shuffleArray,
-  Button, Input,
+  GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
-  ReviewView, StatsView,
+  TestQuestionCard, ReviewView, StatsView,
   TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, WebBuilderLMS,
-  // Импорты вырезанных экранов из 12_app_views.js
+  // Подключаем экраны из 13_test.js
   LoadingView, MainMenu, SetMenu, TimerSetup, ActiveTestView, TestResultView
 } = window;
 
@@ -34,7 +34,6 @@ function App() {
   
   const [teacherTests, setTeacherTests] = useState([]); 
   
-  // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
   const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -69,7 +68,6 @@ function App() {
                               setTeacherTests([]);
                           }
                           
-                          // Обновляем доступы в реальном времени
                           setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
                       }
                   });
@@ -250,6 +248,23 @@ function App() {
     setView('result');
   };
 
+  useEffect(() => {
+      if (view !== 'test') return;
+      const handleKeyDown = (e) => {
+          if (isAnimating) return; 
+          const { currentIdx, questions, answers } = testSession;
+          if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
+          else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
+          else if (e.key >= '1' && e.key <= '9') {
+              const variantIndex = parseInt(e.key) - 1; 
+              if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
+                  if (answers[currentIdx] === null) handleAnswer(variantIndex);
+              }
+          }
+      };
+      window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view, testSession, isAnimating]);
+  
   const restartMistakes = async () => {
     const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
     if(wrongQuestionsRaw.length === 0) return; 
@@ -350,6 +365,7 @@ function App() {
          <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
       </div>
 
+      {/* ФИКС: ТЕПЕРЬ БУРГЕР МЕНЮ РАБОТАЕТ И В АДМИНКЕ */}
       {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
@@ -409,6 +425,7 @@ function App() {
                               </Button>
                           )}
                           
+                          {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {allowedModules.includes('typing') && (
                               view === 'typing' ? (
                                   <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -421,6 +438,7 @@ function App() {
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА: Хоткеи */}
                           {allowedModules.includes('hotkeys') && (
                               view === 'hotkeys' ? (
                                   <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -433,6 +451,7 @@ function App() {
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
                           {allowedModules.includes('code') && (
                               view === 'code' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -445,6 +464,7 @@ function App() {
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
                           {allowedModules.includes('flashcards') && (
                               view === 'flashcards' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -457,6 +477,7 @@ function App() {
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
                           {allowedModules.includes('excel') && (
                               view === 'excel' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -469,6 +490,7 @@ function App() {
                               )
                           )}
 
+                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
                           {allowedModules.includes('algo') && (
                               view === 'algo' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -542,7 +564,7 @@ function App() {
                   handlePrint={handlePrint} 
                   importJSON={importJSON} 
                   startTest={startTest} 
-                  questionsCount={tests.length} 
+                  testsLength={tests.length} 
               />
           )}
           
@@ -552,7 +574,7 @@ function App() {
                   setCustomTime={setCustomTime} 
                   customQCount={customQCount} 
                   setCustomQCount={setCustomQCount} 
-                  questionsCount={tests.length} 
+                  testsLength={tests.length} 
                   launchTestWithTimer={launchTestWithTimer} 
                   setView={setView} 
               />
