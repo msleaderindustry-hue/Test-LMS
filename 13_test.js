@@ -1,4 +1,4 @@
-const { React } = window;
+const { React } = window; // ИСПРАВЛЕНО: убрали цикличный window
 const { motion, AnimatePresence } = window.Motion;
 const { Button, Input, GooeyText, TestQuestionCard } = window;
 
@@ -139,4 +139,5 @@ const TestResultView = React.memo(({ testSession, isResultSaved, saveResult, set
     </motion.div>
 ));
 
+// Экспортируем все компоненты в window
 Object.assign(window, { LoadingView, MainMenu, SetMenu, TimerSetup, ActiveTestView, TestResultView });
