@@ -2,99 +2,101 @@
 // Импортируем нужные библиотеки напрямую из window (как в оригинале)
 const { motion, AnimatePresence, Button, Input, GooeyText, TestQuestionCard } = window;
 
-// --- 0. ЛЕНДИНГ / ПРИВЕТСТВЕННАЯ СТРАНИЦА ---
-const LandingView = React.forwardRef((props, ref) => {
-    const { onLogin } = props;
-
-    const features = [
-        { icon: '📝', title: 'Тесты', desc: 'Гибкие тесты с таймером, навигацией по вопросам и разбором ошибок' },
-        { icon: '⌨️', title: 'Тренажер печати', desc: 'Прокачивайте скорость и точность набора текста' },
-        { icon: '💻', title: 'VS School', desc: 'Пишите и запускайте код прямо в браузере' },
-        { icon: '🎴', title: 'Умные карточки', desc: 'Запоминайте материал с помощью интервальных повторений' },
-    ];
-
-    return (
-        <motion.div
-            ref={ref}
-            key="landing"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="glass-panel"
-            style={{ width: '100%', maxWidth: '760px', textAlign: 'center', padding: '50px 35px' }}
-        >
-            <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-                style={{ fontSize: 56, marginBottom: 10 }}
-            >
-                🎓
-            </motion.div>
-
-            <h1
+// --- 0. LANDING VIEW (ПРИВЕТСТВЕННЫЙ ЭКРАН) ---
+const LandingView = window.React.forwardRef(({ onLogin }, ref) => (
+    <motion.div 
+        ref={ref} 
+        key="landing" 
+        initial={{opacity: 0, y: 30, scale: 0.98}} 
+        animate={{opacity: 1, y: 0, scale: 1}} 
+        exit={{opacity: 0, y: -30, scale: 0.98}} 
+        transition={{duration: 0.4, ease: "easeOut"}} 
+        className="glass-panel" 
+        style={{
+            width: '100%', 
+            maxWidth: '900px', 
+            textAlign: 'center', 
+            padding: '50px 30px', 
+            margin: '20px', 
+            borderRadius: '24px'
+        }}
+    >
+        <h1 style={{
+            fontSize: '48px', 
+            margin: '0 0 15px 0', 
+            background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent', 
+            fontWeight: 800
+        }}>
+            Ultimate LMS Platform
+        </h1>
+        <p style={{
+            fontSize: '18px', 
+            color: 'var(--text-sec)', 
+            marginBottom: '45px', 
+            lineHeight: '1.6', 
+            maxWidth: '650px', 
+            margin: '0 auto 45px auto'
+        }}>
+            Инновационная образовательная платформа для быстрого и эффективного обучения. Оттачивайте навыки, решайте тесты и пишите код в единой современной экосистеме.
+        </p>
+        
+        <div style={{
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: '20px', 
+            marginBottom: '45px'
+        }}>
+            {[
+                {icon: '📝', title: 'Умные тесты', desc: 'Интерактивные задания с глубокой аналитикой ошибок'},
+                {icon: '⌨️', title: 'Тренажер печати', desc: 'Развивайте скорость и точность набора текста'},
+                {icon: '💻', title: 'Редактор кода', desc: 'Полноценная среда для программирования (VS School)'},
+                {icon: '🎴', title: 'Flash Карточки', desc: 'Запоминайте сложную информацию в 2 раза быстрее'}
+            ].map((feature, i) => (
+                <motion.div 
+                    key={i} 
+                    whileHover={{scale: 1.05, y: -5}} 
+                    style={{
+                        background: 'rgba(128,128,128,0.05)', 
+                        padding: '25px 20px', 
+                        borderRadius: '20px', 
+                        border: '1px solid var(--glass-border)', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+                    }}
+                >
+                    <div style={{fontSize: '46px', marginBottom: '15px'}}>{feature.icon}</div>
+                    <h3 style={{margin: '0 0 10px 0', fontSize: '18px', color: 'var(--text-main)'}}>{feature.title}</h3>
+                    <p style={{margin: 0, fontSize: '14px', color: 'var(--text-sec)'}}>{feature.desc}</p>
+                </motion.div>
+            ))}
+        </div>
+        
+        <motion.div whileHover={{scale: 1.05}} whileTap={{scale: 0.95}} style={{display: 'inline-block'}}>
+            <Button 
+                onClick={onLogin} 
                 style={{
-                    fontSize: 40,
-                    margin: '0 0 15px 0',
-                    fontWeight: 900,
-                    background: 'var(--primary-grad)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    lineHeight: 1.2,
+                    fontSize: '20px', 
+                    padding: '18px 50px', 
+                    height: 'auto', 
+                    background: 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)', 
+                    border: 'none', 
+                    borderRadius: '30px', 
+                    color: '#fff', 
+                    boxShadow: '0 10px 25px rgba(168, 85, 247, 0.4)', 
+                    fontWeight: 'bold', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px'
                 }}
             >
-                Ultimate LMS Platform
-            </h1>
-
-            <p style={{ fontSize: 17, color: 'var(--text-sec)', maxWidth: 520, margin: '0 auto 35px auto', lineHeight: 1.6 }}>
-                Единая образовательная платформа: тесты, тренажеры и инструменты для обучения —
-                всё в одном месте, красиво и без лишних кликов.
-            </p>
-
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                    gap: 15,
-                    marginBottom: 40,
-                    textAlign: 'left',
-                }}
-            >
-                {features.map((f, i) => (
-                    <motion.div
-                        key={f.title}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + i * 0.08 }}
-                        style={{
-                            background: 'rgba(128,128,128,0.07)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: 16,
-                            padding: '18px 16px',
-                            display: 'flex',
-                            gap: 12,
-                            alignItems: 'flex-start',
-                        }}
-                    >
-                        <span style={{ fontSize: 26, lineHeight: 1 }}>{f.icon}</span>
-                        <div>
-                            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: 'var(--text-main)' }}>{f.title}</div>
-                            <div style={{ fontSize: 13, color: 'var(--text-sec)', lineHeight: 1.4 }}>{f.desc}</div>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
-
-            <Button onClick={onLogin} style={{ fontSize: 18, height: 62, maxWidth: 340, margin: '0 auto', fontWeight: 800 }}>
                 🚀 Вход / Регистрация
             </Button>
-
-            <div style={{ marginTop: 30, fontSize: 12, color: 'var(--text-sec)', opacity: 0.7 }}>
-                © 2025 Alisher. All Rights Reserved.
-            </div>
         </motion.div>
-    );
-});
+    </motion.div>
+));
 
 // --- 1. ЭКРАН ЗАГРУЗКИ ---
 const LoadingView = () => (
