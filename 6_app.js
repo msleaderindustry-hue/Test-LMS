@@ -10,7 +10,8 @@ const {
   CodePlayground,
   FlashcardsLMS,
   ExcelTrainerLMS,
-  WebBuilderLMS // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
+  WebBuilderLMS, // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
+  LandingView
 } = window;
 
 // --- APP ---
@@ -34,7 +35,7 @@ function App() {
   const [userRole, setUserRole] = useState('student');
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  
+  const [showAuth, setShowAuth] = useState(false);
   const [teacherTests, setTeacherTests] = useState([]); 
   
   // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
@@ -553,7 +554,21 @@ function App() {
               </motion.div>
           )}
 
-          {!isAuthLoading && !user && <AuthScreen />}
+          {/* ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН */}
+          {!isAuthLoading && !user && (
+              showAuth ? (
+                  // ПОКАЗЫВАЕМ ОКНО АВТОРИЗАЦИИ (ЕСЛИ ОН НАЖАЛ КНОПКУ НА ЛЕНДИНГЕ)
+                  <div key="auth-wrapper" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '400px', margin: '0 auto'}}>
+                      <Button variant="muted" onClick={() => setShowAuth(false)} style={{marginBottom: 20, width: '100%'}}>⬅ Назад на главную</Button>
+                      <AuthScreen />
+                  </div>
+              ) : (
+                  // ИНАЧЕ ПОКАЗЫВАЕМ СТАРТОВУЮ СТРАНИЦУ (ЛЕНДИНГ)
+                  <div key="landing-wrapper" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 5000, background: '#050308' }}>
+                      <LandingView onLogin={() => setShowAuth(true)} />
+                  </div>
+              )
+          )}
 
           {!isAuthLoading && user && view === 'admin' && (
               <AdminPanel />
