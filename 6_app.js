@@ -363,7 +363,7 @@ function App() {
     if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
-  // --- ФУНКЦИЯ МГНОВЕННОГО ВХОДА ЧЕРЕЗ GOOGLE ---
+// --- ФУНКЦИЯ МГНОВЕННОГО ВХОДА ЧЕРЕЗ GOOGLE ---
   const handleDirectLogin = async () => {
       try {
           const provider = new window.firebase.auth.GoogleAuthProvider();
@@ -385,10 +385,18 @@ function App() {
               });
           }
       } catch (err) {
-          console.error(err);
-          // Игнорируем ошибку, если пользователь просто закрыл окошко
-          if (err.code !== 'auth/popup-closed-by-user') {
-              alert("Ошибка авторизации. Проверьте интернет-соединение.");
+          console.error("Ошибка Firebase Auth:", err);
+          
+          // Список безопасных ошибок окон, при которых мы НЕ показываем alert
+          const ignoredErrors = [
+              'auth/popup-closed-by-user',
+              'auth/cancelled-popup-request',
+              'auth/popup-blocked'
+          ];
+
+          // Показываем alert только если это реально серьезная ошибка (например, нет интернета)
+          if (!ignoredErrors.includes(err.code)) {
+              alert("Произошла ошибка при входе. Попробуйте обновить страницу.");
           }
       }
   };
