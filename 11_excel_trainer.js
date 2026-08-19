@@ -229,7 +229,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
             style={{ width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', padding: '30px', margin: '0 auto', borderRadius: '24px' }}
         >
-            {/* ШАПКА + КНОПКИ ЯЗЫКА */}
+            {/* ШАПКА + НОВЫЕ КНОПКИ ЯЗЫКА */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)' }}>📊</div>
@@ -239,24 +239,34 @@ const ExcelTrainerLMS = ({ onBack }) => {
                     </div>
                 </div>
 
-                {/* Блок переключения языков */}
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    {[ { id: 'en', label: 'A' }, { id: 'ru', label: 'Р' }, { id: 'uz', label: 'У' } ].map(item => (
-                        <button
-                            key={item.id}
-                            onClick={() => setLang(item.id)}
-                            style={{
-                                width: '38px', height: '38px', borderRadius: '10px',
-                                background: lang === item.id ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
-                                border: `2px solid ${lang === item.id ? '#ef4444' : '#ef4444'}`,
-                                color: '#ef4444', fontWeight: 900, fontSize: '18px', cursor: 'pointer',
-                                transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                outline: 'none', opacity: lang === item.id ? 1 : 0.6
-                            }}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
+                {/* СТИЛЬНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА (Segmented Control) */}
+                <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.15)', padding: '6px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                    {[ { id: 'ru', label: 'RU' }, { id: 'en', label: 'EN' }, { id: 'uz', label: 'UZ' } ].map(item => {
+                        const isActive = lang === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => setLang(item.id)}
+                                style={{
+                                    padding: '8px 16px', 
+                                    borderRadius: '12px',
+                                    background: isActive ? '#10b981' : 'transparent',
+                                    border: 'none',
+                                    color: isActive ? '#ffffff' : 'var(--text-sec)',
+                                    fontWeight: 800, 
+                                    fontSize: '13px', 
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s', 
+                                    outline: 'none',
+                                    boxShadow: isActive ? '0 4px 12px rgba(16, 185, 129, 0.4)' : 'none',
+                                }}
+                                onMouseEnter={(e) => { if (!isActive) e.target.style.color = 'var(--text-main)'; }}
+                                onMouseLeave={(e) => { if (!isActive) e.target.style.color = 'var(--text-sec)'; }}
+                            >
+                                {item.label}
+                            </button>
+                        );
+                    })}
                 </div>
             </header>
 
@@ -285,7 +295,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                         </Button>
                     </div>
 
-                    {/* СПИСКИ КАТЕГОРИЙ (оставляем ключи из EXCEL_DATABASE как есть, чтобы не ломать логику) */}
+                    {/* СПИСКИ КАТЕГОРИЙ */}
                     {categories.map(category => (
                         <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1px', paddingLeft: '5px' }}>
@@ -348,7 +358,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 
                                 <div style={{ background: 'var(--bg-body)', padding: '20px', borderRadius: '16px', borderLeft: '4px solid #10b981', marginBottom: '20px' }}>
                                     <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px', letterSpacing: '0.5px' }}>{UI_DICT[lang].defTitle}</div>
-                                    {/* ДОСТАЕМ ТЕОРИЮ НА НУЖНОМ ЯЗЫКЕ */}
                                     <div style={{ fontSize: '16px', color: 'var(--text-main)', lineHeight: 1.6 }}>{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
@@ -367,7 +376,6 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     <span style={{ fontSize: '15px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{UI_DICT[lang].practice}</span>
                                 </div>
                                 
-                                {/* ДОСТАЕМ ЗАДАНИЕ НА НУЖНОМ ЯЗЫКЕ */}
                                 <p style={{ margin: '0 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
                                     {getTranslatedText(currentLesson.taskDesc, lang)}
                                 </p>
