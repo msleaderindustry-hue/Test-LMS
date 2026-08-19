@@ -35,7 +35,6 @@ function App() {
   const [userRole, setUserRole] = useState('student');
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [showAuth, setShowAuth] = useState(false);
   const [teacherTests, setTeacherTests] = useState([]); 
   
   // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
@@ -364,6 +363,36 @@ function App() {
     if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
+  // --- ФУНКЦИЯ МГНОВЕННОГО ВХОДА ЧЕРЕЗ GOOGLE ---
+  const handleDirectLogin = async () => {
+      try {
+          const provider = new window.firebase.auth.GoogleAuthProvider();
+          // Мгновенно вызываем окно Google
+          const result = await window.auth.signInWithPopup(provider);
+          const loggedInUser = result.user;
+
+          // Проверяем, есть ли пользователь в базе (регистрация)
+          const userDoc = await window.db.collection('users').doc(loggedInUser.uid).get();
+
+          if (!userDoc.exists) {
+              await window.db.collection('users').doc(loggedInUser.uid).set({
+                  email: loggedInUser.email,
+                  role: 'student',
+                  isBanned: false,
+                  registeredAt: new Date().toISOString(),
+                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo'],
+                  excelHintsEnabled: true
+              });
+          }
+      } catch (err) {
+          console.error(err);
+          // Игнорируем ошибку, если пользователь просто закрыл окошко
+          if (err.code !== 'auth/popup-closed-by-user') {
+              alert("Ошибка авторизации. Проверьте интернет-соединение.");
+          }
+      }
+  };
+
   return (
     <>
       <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
@@ -556,18 +585,10 @@ function App() {
 
           {/* ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН */}
           {!isAuthLoading && !user && (
-              showAuth ? (
-                  // ПОКАЗЫВАЕМ ОКНО АВТОРИЗАЦИИ (ЕСЛИ ОН НАЖАЛ КНОПКУ НА ЛЕНДИНГЕ)
-                  <div key="auth-wrapper" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '400px', margin: '0 auto'}}>
-                      <Button variant="muted" onClick={() => setShowAuth(false)} style={{marginBottom: 20, width: '100%'}}>⬅ Назад на главную</Button>
-                      <AuthScreen />
-                  </div>
-              ) : (
-                  // ИНАЧЕ ПОКАЗЫВАЕМ СТАРТОВУЮ СТРАНИЦУ (ЛЕНДИНГ)
-                  <div key="landing-wrapper" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 5000, background: '#050308' }}>
-                      <LandingView onLogin={() => setShowAuth(true)} />
-                  </div>
-              )
+              <div key="landing-wrapper" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 5000, background: '#050308' }}>
+                  {/* Передаем функцию прямого входа в лендинг */}
+                  <LandingView onLogin={handleDirectLogin} />
+              </div>
           )}
 
           {!isAuthLoading && user && view === 'admin' && (
