@@ -12,6 +12,40 @@ const EXCEL_DATABASE = {
     "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТОЛБЕЦ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП"]
 };
 
+// СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА
+const UI_DICT = {
+    ru: {
+        title: "Энциклопедия Excel", subtitle: "Умный тренажер функций с ИИ",
+        magic: "Магия ИИ", search: "Поиск функции (напр. ВПР)...",
+        genLoading: "Создаем магию...", genBtn: "Сгенерировать урок",
+        aiTitle: "Готовим материалы для", aiSub: "ИИ пишет уникальную задачу и таблицу",
+        theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
+        syntaxTitle: "Примеры синтаксиса", practice: "Практика",
+        successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
+        btnAnother: "🔄 Другая задача", btnHint: "👀 Подсказка", btnExam: "🔒 Экзамен", btnCheck: "Проверить"
+    },
+    en: {
+        title: "Excel Encyclopedia", subtitle: "Smart AI function trainer",
+        magic: "AI Magic", search: "Search function (e.g. VLOOKUP)...",
+        genLoading: "Creating magic...", genBtn: "Generate lesson",
+        aiTitle: "Preparing materials for", aiSub: "AI is writing a unique task and table",
+        theory: "Theory", defTitle: "Definition", enVersion: "English version:",
+        syntaxTitle: "Syntax examples", practice: "Practice",
+        successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
+        btnAnother: "🔄 Another task", btnHint: "👀 Hint", btnExam: "🔒 Exam", btnCheck: "Check"
+    },
+    uz: {
+        title: "Excel Энциклопедияси", subtitle: "ИИ ёрдамида ақлли функция тренажёри",
+        magic: "ИИ Сеҳри", search: "Функцияни қидириш (мас. ВПР)...",
+        genLoading: "Сеҳр яратилмоқда...", genBtn: "Дарсни яратиш",
+        aiTitle: "Материаллар тайёрланмоқда:", aiSub: "ИИ ноёб вазифа ва жадвал ёзмоқда",
+        theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
+        syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
+        successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
+        btnAnother: "🔄 Бошқа вазифа", btnHint: "👀 Ёрдам", btnExam: "🔒 Имтиҳон", btnCheck: "Текшириш"
+    }
+};
+
 const ExcelTrainerLMS = ({ onBack }) => {
     const categories = Object.keys(EXCEL_DATABASE);
     const [activeCategory, setActiveCategory] = useState(categories[0]);
@@ -23,6 +57,9 @@ const ExcelTrainerLMS = ({ onBack }) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // СОСТОЯНИЕ ЯЗЫКА ПЕРЕВОДА
+    const [lang, setLang] = useState('ru');
 
     // СТЕЙТ ДЛЯ РЕЖИМА ЭКЗАМЕНА
     const [hintsEnabled, setHintsEnabled] = useState(true);
@@ -72,7 +109,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         ];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-        // ПРОМПТ С ЗАЩИТОЙ ОТ СМЕШИВАНИЯ ТЕМ
+        // ПРОМПТ С ЗАЩИТОЙ ОТ СМЕШИВАНИЯ ТЕМ + МНОГОЯЗЫЧНОСТЬЮ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -81,8 +118,16 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
           "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; \\"Текст\\"; X1:X10)",
-          "def": "Подробное, простое и живое объяснение работы функции. Обязательно приведи короткий пример из жизни, который СТРОГО СВЯЗАН с темой задачи.",
-          "taskDesc": "Напишите формулу, которая посчитает [ЧТО-ТО].",
+          "def": {
+             "ru": "Подробное, простое объяснение функции на русском. Обязательно короткий пример из жизни, связанный с темой.",
+             "en": "The exact same explanation and life example translated to English.",
+             "uz": "Функциянинг ишлаши ҳақида батафсил тушунтириш ва ҳаётдан мисол (Кирилл алифбосида)."
+          },
+          "taskDesc": {
+             "ru": "Напишите формулу, которая посчитает [ЧТО-ТО].",
+             "en": "Write a formula that calculates [SOMETHING].",
+             "uz": "Формула ёзинг, у [НИМАНИДИР] ҳисоблайди (Кирилл алифбосида)."
+          },
           "table": [
             ["Заголовок1", "Заголовок2", "Заголовок3"],
             ["Значение", 100, "Значение"],
@@ -92,15 +137,13 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "result": "Ожидаемый ответ вычисления"
         }
         КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-        1. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" пиши ТОЛЬКО примеры формул с абстрактными ячейками (Z1, X2). КАТЕГОРИЧЕСКИ ЗАПРЕЩАЕТСЯ писать текстовые подсказки вроде "диапазон", "условие". Пиши только готовый код!
-        2. ФОРМУЛИРОВКА ЗАДАЧИ: В поле "taskDesc" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО упоминать ячейку для вывода результата (не пиши "в ячейке B7"). Пиши просто суть задания.
-        3. ЛОГИКА ОЖИДАЕМОГО ОТВЕТА ("expected"): Добавь ВСЕ правильные варианты. Адреса ячеек должны СТРОГО СОВПАДАТЬ с таблицей!
-        4. ЭКРАНИРОВАНИЕ: В массиве "expected" экранируй внутренние кавычки (например: "=ЕСЛИ(B2>=500; \\"Да\\"; \\"Нет\\")").
+        1. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" пиши ТОЛЬКО примеры формул с абстрактными ячейками (Z1, X2).
+        2. ФОРМУЛИРОВКА ЗАДАЧИ: В поле "taskDesc" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО упоминать ячейку для вывода результата.
+        3. ЛОГИКА ОЖИДАЕМОГО ОТВЕТА ("expected"): Добавь ВСЕ правильные варианты.
+        4. ЭКРАНИРОВАНИЕ: В массиве "expected" экранируй внутренние кавычки.
         5. ЕДИНАЯ ТЕМА (САМОЕ ВАЖНОЕ): Я задаю тебе тему задачи: "${randomTheme}". 
-           - Поле "def" (определение и пример) должно быть ИМЕННО на эту тему!
-           - Поле "table" должно содержать данные ИМЕННО на эту тему!
-           - Поле "taskDesc" должно быть ИМЕННО на эту тему!
-           Категорически запрещено смешивать темы (например, если тема зоопарк, не делай таблицу про ресторан). Всё должно быть в одном контексте!
+           - Поля "def", "table" и "taskDesc" должны быть ИМЕННО на эту тему!
+           Категорически запрещено смешивать темы.
         6. ЗАПРЕТ ШАБЛОНОВ: Не используй слова "Иванов", "Петров", "Товар", "Цена", "Категория", если они не подходят к выбранной теме.`;
 
         try {
@@ -171,6 +214,13 @@ const ExcelTrainerLMS = ({ onBack }) => {
 
     const getColumnLetter = (colIndex) => String.fromCharCode(65 + colIndex);
 
+    // Вспомогательная функция для безопасного доставания перевода из объекта ИИ
+    const getTranslatedText = (obj, currentLang) => {
+        if (!obj) return "";
+        if (typeof obj === 'string') return obj; // Запасной вариант, если ИИ вернул просто строку
+        return obj[currentLang] || obj.ru || "";
+    };
+
     return (
         <motion.div 
             className="glass-panel"
@@ -179,14 +229,34 @@ const ExcelTrainerLMS = ({ onBack }) => {
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
             style={{ width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', padding: '30px', margin: '0 auto', borderRadius: '24px' }}
         >
-            {/* ШАПКА */}
+            {/* ШАПКА + КНОПКИ ЯЗЫКА */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)' }}>📊</div>
                     <div>
-                        <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>Энциклопедия Excel</h2>
-                        <div style={{ fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600, marginTop: '2px' }}>Умный тренажер функций с ИИ</div>
+                        <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>{UI_DICT[lang].title}</h2>
+                        <div style={{ fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600, marginTop: '2px' }}>{UI_DICT[lang].subtitle}</div>
                     </div>
+                </div>
+
+                {/* Блок переключения языков */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    {[ { id: 'en', label: 'A' }, { id: 'ru', label: 'Р' }, { id: 'uz', label: 'У' } ].map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => setLang(item.id)}
+                            style={{
+                                width: '38px', height: '38px', borderRadius: '10px',
+                                background: lang === item.id ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                                border: `2px solid ${lang === item.id ? '#ef4444' : '#ef4444'}`,
+                                color: '#ef4444', fontWeight: 900, fontSize: '18px', cursor: 'pointer',
+                                transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                outline: 'none', opacity: lang === item.id ? 1 : 0.6
+                            }}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
             </header>
 
@@ -199,23 +269,23 @@ const ExcelTrainerLMS = ({ onBack }) => {
                     <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
                             <span style={{ fontSize: '18px' }}>✨</span>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Магия ИИ</span>
+                            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{UI_DICT[lang].magic}</span>
                         </div>
                         <input
                             type="text"
                             value={customSearch}
                             onChange={(e) => setCustomSearch(e.target.value)}
-                            placeholder="Поиск функции (напр. ВПР)..."
+                            placeholder={UI_DICT[lang].search}
                             style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'var(--bg-body)', color: 'var(--text-main)', marginBottom: '15px', fontSize: '14px', outline: 'none', transition: 'all 0.2s' }}
                             onFocus={(e) => e.target.style.borderColor = '#10b981'}
                             onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
                         />
                         <Button variant="green" onClick={handleCustomSearch} disabled={isGenerating} style={{ width: '100%', height: '44px', fontSize: '14px', borderRadius: '12px', fontWeight: 'bold' }}>
-                            {isGenerating ? "Создаем магию..." : "Сгенерировать урок"}
+                            {isGenerating ? UI_DICT[lang].genLoading : UI_DICT[lang].genBtn}
                         </Button>
                     </div>
 
-                    {/* СПИСКИ КАТЕГОРИЙ */}
+                    {/* СПИСКИ КАТЕГОРИЙ (оставляем ключи из EXCEL_DATABASE как есть, чтобы не ломать логику) */}
                     {categories.map(category => (
                         <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '1px', paddingLeft: '5px' }}>
@@ -260,8 +330,8 @@ const ExcelTrainerLMS = ({ onBack }) => {
                     {isGenerating || !currentLesson ? (
                         <div style={{ height: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)', background: 'var(--bg-panel)', borderRadius: '24px', border: '1px dashed var(--glass-border)' }}>
                             <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ fontSize: '50px', marginBottom: '20px' }}>🤖</motion.div>
-                            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)' }}>Готовим материалы для {activeFormulaName}...</div>
-                            <div style={{ fontSize: '14px', marginTop: '10px', opacity: 0.7 }}>ИИ пишет уникальную задачу и таблицу</div>
+                            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)' }}>{UI_DICT[lang].aiTitle} {activeFormulaName}...</div>
+                            <div style={{ fontSize: '14px', marginTop: '10px', opacity: 0.7 }}>{UI_DICT[lang].aiSub}</div>
                         </div>
                     ) : (
                         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
@@ -271,18 +341,19 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                                     <div>
                                         <h1 style={{ margin: '0 0 5px 0', fontSize: '36px', color: 'var(--text-main)', fontWeight: 900 }}>{currentLesson.name}</h1>
-                                        <div style={{ color: 'var(--text-sec)', fontSize: '15px', fontWeight: 600 }}>Английская версия: <span style={{ color: '#10b981' }}>{currentLesson.enName}</span></div>
+                                        <div style={{ color: 'var(--text-sec)', fontSize: '15px', fontWeight: 600 }}>{UI_DICT[lang].enVersion} <span style={{ color: '#10b981' }}>{currentLesson.enName}</span></div>
                                     </div>
-                                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px 16px', borderRadius: '12px', color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}>Теория</div>
+                                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px 16px', borderRadius: '12px', color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}>{UI_DICT[lang].theory}</div>
                                 </div>
                                 
                                 <div style={{ background: 'var(--bg-body)', padding: '20px', borderRadius: '16px', borderLeft: '4px solid #10b981', marginBottom: '20px' }}>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px', letterSpacing: '0.5px' }}>Определение</div>
-                                    <div style={{ fontSize: '16px', color: 'var(--text-main)', lineHeight: 1.6 }}>{currentLesson.def}</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px', letterSpacing: '0.5px' }}>{UI_DICT[lang].defTitle}</div>
+                                    {/* ДОСТАЕМ ТЕОРИЮ НА НУЖНОМ ЯЗЫКЕ */}
+                                    <div style={{ fontSize: '16px', color: 'var(--text-main)', lineHeight: 1.6 }}>{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
                                 <div style={{ background: '#0f172a', padding: '20px', borderRadius: '16px', border: '1px solid #1e293b' }}>
-                                    <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px', letterSpacing: '0.5px' }}>Примеры синтаксиса</div>
+                                    <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px', letterSpacing: '0.5px' }}>{UI_DICT[lang].syntaxTitle}</div>
                                     <code style={{ fontSize: '15px', color: '#38bdf8', fontFamily: "'Fira Code', monospace", whiteSpace: 'pre-wrap', display: 'block', lineHeight: 1.6 }}>
                                         {currentLesson.syntax}
                                     </code>
@@ -293,11 +364,12 @@ const ExcelTrainerLMS = ({ onBack }) => {
                             <div style={{ background: 'var(--bg-body)', padding: '30px', borderRadius: '24px', border: '2px dashed var(--glass-border)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                     <span style={{ fontSize: '20px' }}>🎯</span>
-                                    <span style={{ fontSize: '15px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Практика</span>
+                                    <span style={{ fontSize: '15px', color: '#10b981', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{UI_DICT[lang].practice}</span>
                                 </div>
                                 
+                                {/* ДОСТАЕМ ЗАДАНИЕ НА НУЖНОМ ЯЗЫКЕ */}
                                 <p style={{ margin: '0 0 25px 0', color: 'var(--text-main)', fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
-                                    {currentLesson.taskDesc}
+                                    {getTranslatedText(currentLesson.taskDesc, lang)}
                                 </p>
                                 
                                 {/* ТАБЛИЦА */}
@@ -363,15 +435,15 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                     {showSuccess && (
                                         <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 15 }} style={{ background: '#ecfdf5', border: '2px solid #10b981', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', overflow: 'hidden' }}>
                                             <div>
-                                                <h4 style={{ margin: '0 0 5px 0', color: '#059669', fontSize: '18px', fontWeight: 800 }}>Формула написана верно! 🎉</h4>
-                                                <span style={{ color: '#0f766e', fontSize: '15px', fontWeight: 600 }}>Результат вычисления: <b style={{color: '#047857'}}>{currentLesson.result}</b></span>
+                                                <h4 style={{ margin: '0 0 5px 0', color: '#059669', fontSize: '18px', fontWeight: 800 }}>{UI_DICT[lang].successMsg}</h4>
+                                                <span style={{ color: '#0f766e', fontSize: '15px', fontWeight: 600 }}>{UI_DICT[lang].resultMsg} <b style={{color: '#047857'}}>{currentLesson.result}</b></span>
                                             </div>
                                             <div style={{ fontSize: '40px' }}>✅</div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
 
-                                {/* КНОПКИ ДЕЙСТВИЙ (ИДЕАЛЬНОЕ РАСПОЛОЖЕНИЕ) */}
+                                {/* КНОПКИ ДЕЙСТВИЙ */}
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)' }}>
                                     
                                     <Button 
@@ -390,12 +462,11 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                             margin: 0
                                         }}
                                     >
-                                        🔄 Другая задача
+                                        {UI_DICT[lang].btnAnother}
                                     </Button>
                                     
                                     {!showSuccess && (
                                         <div style={{ display: 'flex', gap: '15px', flex: '2 1 300px' }}>
-                                            {/* БРОНЕБОЙНАЯ КНОПКА ПОДСКАЗКИ */}
                                             <Button 
                                                 variant="muted" 
                                                 onClick={() => {
@@ -417,7 +488,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                                     padding: '0 5px'
                                                 }}
                                             >
-                                                {hintsEnabled ? '👀 Подсказка' : '🔒 Экзамен'}
+                                                {hintsEnabled ? UI_DICT[lang].btnHint : UI_DICT[lang].btnExam}
                                             </Button>
                                             
                                             <Button 
@@ -434,7 +505,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
                                                     margin: 0
                                                 }}
                                             >
-                                                Проверить
+                                                {UI_DICT[lang].btnCheck}
                                             </Button>
                                         </div>
                                     )}
