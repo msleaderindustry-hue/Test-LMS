@@ -1,8 +1,8 @@
 const { useState, useEffect } = React;
 const { motion, AnimatePresence } = window.Motion;
-const { Button, Input, shuffleArray } = window;
+const { Button, Input, shuffleArray } = window; // Убедись, что Input импортируется!
 
-// СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА (С УЗБЕКСКОЙ КИРИЛЛИЦЕЙ)
+// СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА
 const UI_DICT = {
     ru: {
         title: "Тренажер Хоткеев", subtitle: "Умная практика горячих клавиш",
@@ -36,7 +36,7 @@ const UI_DICT = {
     }
 };
 
-// БАЗА ДАННЫХ ХОТКЕЕВ (ПЕРЕВЕДЕНА НА 3 ЯЗЫКА И ДОПОЛНЕНА ТЕОРИЕЙ)
+// БАЗА ДАННЫХ ХОТКЕЕВ (ПЕРЕВЕДЕНА И ДОПОЛНЕНА ТЕОРИЕЙ)
 const HOTKEYS_DB = [
     { key: "c", shift: false, visual: "Ctrl + C", desc: { ru: "Копировать", en: "Copy", uz: "Нусха олиш" }, theory: { ru: "Копирует выделенный элемент в буфер обмена.", en: "Copies the selected item to the clipboard.", uz: "Танланган элементни вақтинчалик хотирага нусхалайди." } },
     { key: "v", shift: false, visual: "Ctrl + V", desc: { ru: "Вставить", en: "Paste", uz: "Жойлаш" }, theory: { ru: "Вставляет скопированный элемент из буфера обмена.", en: "Pastes the copied item from the clipboard.", uz: "Нусхаланган элементни хотирадан жойлайди." } },
@@ -76,7 +76,6 @@ const HotkeyTrainer = ({ onBack }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [activeHotkeys, setActiveHotkeys] = useState(HOTKEYS_DB);
 
-    // Достаем нужный перевод
     const t = (obj) => {
         if (!obj) return "";
         if (typeof obj === 'string') return obj;
@@ -105,7 +104,7 @@ const HotkeyTrainer = ({ onBack }) => {
         ПРАВИЛА:
         1. Только реальные хоткеи (с Ctrl или Cmd, иногда с Shift).
         2. "key" — ОДНА строчная буква или символ.
-        3. Все переводы должны быть точными. Узбекский писать СТРОГО НА КИРИЛЛИЦЕ.`;
+        3. Все переводы должны быть точными. Узбекский писать на КИРИЛЛИЦЕ.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -175,9 +174,9 @@ const HotkeyTrainer = ({ onBack }) => {
             <motion.div
                 className="glass-panel"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '22px', padding: '34px', margin: '0 auto' }}
+                style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '22px', padding: '34px', margin: '0 auto', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '24px' }}
             >
-                {/* ШАПКА И ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ (Точно как на твоем скриншоте) */}
+                {/* ШАПКА И ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ */}
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', boxShadow: '0 4px 10px rgba(253, 160, 133, 0.3)' }}>⚡</div>
@@ -187,69 +186,66 @@ const HotkeyTrainer = ({ onBack }) => {
                         </div>
                     </div>
 
-                    {/* Идеальный переключатель (RU EN UZ) в стиле iOS */}
-                    <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-body)', padding: '4px', borderRadius: '14px', border: '1px solid var(--glass-border)' }}>
+                    {/* СТИЛЬНЫЙ СЕГМЕНТНЫЙ ПЕРЕКЛЮЧАТЕЛЬ КАК НА СКРИНШОТЕ */}
+                    <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-body)', padding: '4px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                         {[ { id: 'ru', label: 'RU' }, { id: 'en', label: 'EN' }, { id: 'uz', label: 'UZ' } ].map(item => {
                             const isActive = lang === item.id;
                             return (
-                                <button
+                                <div
                                     key={item.id}
                                     onClick={() => setLang(item.id)}
                                     style={{
-                                        padding: '6px 12px', borderRadius: '10px', 
+                                        padding: '6px 14px', 
+                                        borderRadius: '8px', 
                                         background: isActive ? '#10b981' : 'transparent', 
-                                        border: 'none',
                                         color: isActive ? '#ffffff' : 'var(--text-sec)', 
-                                        fontWeight: 800, fontSize: '13px', cursor: 'pointer',
-                                        transition: 'all 0.2s ease', outline: 'none',
-                                        boxShadow: isActive ? '0 2px 8px rgba(16, 185, 129, 0.4)' : 'none',
+                                        fontWeight: 800, 
+                                        fontSize: '12px', 
+                                        textTransform: 'uppercase',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: isActive ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none'
                                     }}
                                 >
                                     {item.label}
-                                </button>
+                                </div>
                             );
                         })}
                     </div>
                 </header>
 
                 {/* ПАНЕЛЬ ГЕНЕРАЦИИ ИИ */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--bg-panel)', padding: '20px', borderRadius: '20px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--bg-body)', padding: '20px', borderRadius: '20px', border: '1px solid var(--glass-border)' }}>
                     <div style={{ flexShrink: 0, fontSize: '24px' }}>🤖</div>
                     <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.5px' }}>
-                            {UI_DICT[lang].magic}
-                        </div>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            {/* Используем твой родной Input */}
+                        <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: '8px' }}>{UI_DICT[lang].magic}</div>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             <Input
                                 type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
                                 placeholder={UI_DICT[lang].searchPlaceholder}
                                 style={{ flex: '1 1 200px', margin: 0 }}
                                 disabled={isGenerating}
                             />
-                            {/* Используем твой родной Button */}
-                            <Button variant="orange" onClick={generateAIHotkeys} disabled={isGenerating} style={{ padding: '0 25px', borderRadius: '12px', height: '46px', margin: 0 }}>
+                            <Button variant="orange" onClick={generateAIHotkeys} disabled={isGenerating} style={{ padding: '0 25px', height: '46px', margin: 0 }}>
                                 {isGenerating ? UI_DICT[lang].btnLoading : UI_DICT[lang].btnGen}
                             </Button>
                         </div>
                     </div>
                 </div>
 
-                {/* БЛОК ТЕОРИИ (Родные карточки) */}
-                <div style={{ marginTop: '10px' }}>
-                    <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: 'var(--text-main)', fontWeight: 700 }}>
-                        📚 {UI_DICT[lang].theoryTitle} {activeHotkeys !== HOTKEYS_DB ? `(${topic})` : ''}
-                    </h3>
-                    <div className="modern-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', maxHeight: '420px', overflowY: 'auto', paddingRight: '10px' }}>
+                {/* БЛОК ТЕОРИИ */}
+                <div>
+                    <h3 style={{ margin: '10px 0 15px 0', fontSize: '18px', color: 'var(--text-main)', fontWeight: 700 }}>📚 {UI_DICT[lang].theoryTitle} {activeHotkeys !== HOTKEYS_DB ? `(${topic})` : ''}</h3>
+                    <div className="modern-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
                         {activeHotkeys.map((hk, idx) => (
-                            <div key={idx} style={{ background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div key={idx} style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '15px' }}>{t(hk.desc)}</span>
-                                    <span style={{ background: 'var(--bg-body)', color: '#fda085', border: '1px solid var(--glass-border)', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 800, fontFamily: "'Fira Code', monospace" }}>
+                                    <span style={{ background: 'var(--bg-panel)', color: 'var(--text-main)', border: '1px solid var(--glass-border)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800, fontFamily: 'monospace' }}>
                                         {hk.visual}
                                     </span>
                                 </div>
-                                <div style={{ fontSize: '14px', color: 'var(--text-sec)', lineHeight: 1.5 }}>
+                                <div style={{ fontSize: '13px', color: 'var(--text-sec)', lineHeight: 1.5 }}>
                                     {t(hk.theory)}
                                 </div>
                             </div>
@@ -257,12 +253,12 @@ const HotkeyTrainer = ({ onBack }) => {
                     </div>
                 </div>
 
-                {/* КНОПКИ СТАРТА (Твои родные Button) */}
-                <div style={{ display: 'flex', gap: '14px', width: '100%', maxWidth: '450px', justifyContent: 'center', margin: '0 auto', marginTop: '15px', borderTop: '1px solid var(--glass-border)', paddingTop: '25px' }}>
-                    <Button variant="green" onClick={startGame} style={{ flex: 1, height: '54px', fontSize: '16px', borderRadius: '14px', margin: 0 }}>
+                {/* КНОПКА СТАРТА */}
+                <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '15px', borderTop: '1px solid var(--glass-border)', paddingTop: '25px' }}>
+                    <Button variant="green" onClick={startGame} style={{ width: '280px', height: '54px', fontSize: '16px', borderRadius: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {UI_DICT[lang].startPractice}
                     </Button>
-                    <Button variant="muted" onClick={onBack} style={{ flex: 1, height: '54px', fontSize: '16px', borderRadius: '14px', margin: 0 }}>
+                    <Button variant="muted" onClick={onBack} style={{ height: '54px', borderRadius: '14px', margin: 0 }}>
                         {UI_DICT[lang].exit}
                     </Button>
                 </div>
@@ -281,7 +277,7 @@ const HotkeyTrainer = ({ onBack }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5, ease: "easeOut" }}
-            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '26px', padding: '32px', margin: '0 auto' }}
+            style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '26px', padding: '32px', margin: '0 auto', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '24px' }}
         >
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '18px', flexWrap: 'wrap', gap: '15px' }}>
                 <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -314,14 +310,14 @@ const HotkeyTrainer = ({ onBack }) => {
                     </motion.div>
 
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}>
-                        <div style={{ padding: '18px 28px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }}>
+                        <div style={{ padding: '16px 26px', background: 'var(--bg-body)', border: '1.5px solid var(--glass-border)', borderRadius: '14px', fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.05)' }}>
                             Ctrl
                         </div>
                         <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-sec)' }}>+</div>
 
                         {currentTask.shift && (
                             <>
-                                <div style={{ padding: '18px 28px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '16px', fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }}>
+                                <div style={{ padding: '16px 26px', background: 'var(--bg-body)', border: '1.5px solid var(--glass-border)', borderRadius: '14px', fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', boxShadow: '0 6px 16px rgba(0,0,0,0.05)' }}>
                                     Shift
                                 </div>
                                 <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-sec)' }}>+</div>
@@ -331,7 +327,7 @@ const HotkeyTrainer = ({ onBack }) => {
                         <motion.div
                             animate={{ opacity: [0.55, 1, 0.55] }}
                             transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-                            style={{ padding: '18px 28px', background: 'var(--bg-body)', border: '2px dashed #0ea5e9', borderRadius: '16px', fontSize: '24px', fontWeight: '800', color: '#0ea5e9', boxShadow: 'inset 0 0 14px rgba(14,165,233,0.15)' }}
+                            style={{ padding: '16px 26px', background: 'var(--bg-body)', border: '2px dashed #10b981', borderRadius: '14px', fontSize: '24px', fontWeight: '800', color: '#10b981', boxShadow: 'inset 0 0 14px rgba(16,185,129,0.1)' }}
                         >
                             ?
                         </motion.div>
@@ -357,7 +353,7 @@ const HotkeyTrainer = ({ onBack }) => {
                     <p style={{ fontSize: '18px', color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
                         {UI_DICT[lang].successSub} <strong style={{color: 'var(--text-main)'}}>{score}</strong>
                     </p>
-                    <Button variant="orange" onClick={startGame} style={{ width: '280px', marginTop: '20px', height: '56px', borderRadius: '16px', fontSize: '16px', margin: '0 auto' }}>
+                    <Button variant="orange" onClick={startGame} style={{ width: '280px', marginTop: '20px', height: '56px', borderRadius: '14px', fontSize: '16px', margin: '0 auto' }}>
                         {UI_DICT[lang].playAgain}
                     </Button>
                 </motion.div>
