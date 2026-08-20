@@ -2,6 +2,16 @@ const { useState, useEffect } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button, shuffleArray } = window;
 
+// Соответствие "цифра/символ" -> тот символ, который реально приходит в e.key,
+// когда клавиша нажата вместе с Shift (US-раскладка). Нужно, чтобы можно было
+// хранить key как обычную цифру ("9"), а не гадать, что пришлёт браузер.
+const SHIFT_SYMBOL_MAP = {
+    '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+    '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+    '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|',
+    ';': ':', "'": '"', ',': '<', '.': '>', '/': '?', '`': '~'
+};
+
 // Ультимативная база горячих клавиш: перенесено из твоих рукописных конспектов!
 const HOTKEYS_DB = [
     // --- БАЗОВЫЕ И СИСТЕМНЫЕ ---
@@ -25,10 +35,9 @@ const HOTKEYS_DB = [
     { desc: "Вставить гиперссылку", key: "k", shift: false, visual: "Ctrl + K" },
 
     // --- ТРОЙНЫЕ КОМБИНАЦИИ С SHIFT (ИЗ КОНСПЕКТА) ---
-    // Важно: физически это Ctrl+Shift+1 и Ctrl+Shift+9, но браузер при зажатом Shift
-    // присылает в событии уже сам символ "!" и "(", а не цифру — поэтому key хранит именно его
-    { desc: "Уменьшить размер шрифта", key: "!", shift: true, visual: "Ctrl + Shift + 1" },
-    { desc: "Увеличить размер шрифта", key: "(", shift: true, visual: "Ctrl + Shift + 9" },
+    // key хранит обычную цифру — сопоставление с "!" / "(" и т.д. делает SHIFT_SYMBOL_MAP в handleKeyDown
+    { desc: "Уменьшить размер шрифта", key: "1", shift: true, visual: "Ctrl + Shift + 1" },
+    { desc: "Увеличить размер шрифта", key: "9", shift: true, visual: "Ctrl + Shift + 9" },
     { desc: "Двойное подчёркивание", key: "d", shift: true, visual: "Ctrl + Shift + D" },
     { desc: "Все прописные", key: "a", shift: true, visual: "Ctrl + Shift + A" },
     { desc: "Подчёркивание только слов", key: "w", shift: true, visual: "Ctrl + Shift + W" },
@@ -68,7 +77,7 @@ const HotkeyTrainer = ({ onBack }) => {
         1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${topic}". Если не уверен, что комбинация существует именно в этой программе — не включай её.
         2. Если для "${topic}" в принципе не существует 10 разных официальных комбинаций с Ctrl/Cmd — верни столько, сколько действительно существует (не меньше 5, не выдумывая недостающие).
         3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей.
-        4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или символ (физическая клавиша, которая нажимается вместе с Ctrl).
+        4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или цифра (физическая клавиша, которая нажимается вместе с Ctrl, без символов вроде "!" или "(" — если нужна цифра, пиши саму цифру).
         5. Не повторяй одну и ту же комбинацию дважды.
         6. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива.
 
@@ -163,8 +172,12 @@ const HotkeyTrainer = ({ onBack }) => {
                 const isShiftPressed = e.shiftKey;
                 const pressedKey = e.key.toLowerCase();
                 const expectedKey = currentTask.key.toLowerCase();
+                // При зажатом Shift браузер может прислать не саму цифру/символ, а её "сдвинутую"
+                // версию (например "!" вместо "1") — проверяем совпадение в обеих формах.
+                const expectedShiftedKey = SHIFT_SYMBOL_MAP[expectedKey] || expectedKey;
+                const keyMatches = pressedKey === expectedKey || pressedKey === expectedShiftedKey;
 
-                if (isShiftPressed === requiresShift && pressedKey === expectedKey) {
+                if (isShiftPressed === requiresShift && keyMatches) {
                     setSuccessPulse(true);
                     setScore(prev => prev + 1);
                     setTimeout(() => setSuccessPulse(false), 200);
@@ -419,23 +432,41 @@ const HotkeyTrainer = ({ onBack }) => {
             transition={shake ? { duration: 0.3 } : { duration: 0.5, ease: "easeOut" }}
             style={{ width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: '28px', padding: '34px', margin: '0 auto' }}
         >
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+            <header style={{
+                display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '18px',
+                borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px'
+            }}>
+                {/* Выйти — отдельно, слева, тихой ghost-кнопкой, как обычно и располагают выход */}
+                <motion.button
+                    whileHover={{ x: -2, opacity: 1 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={leaveGame}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
+                        cursor: 'pointer', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700,
+                        padding: '8px 6px', opacity: 0.85, justifySelf: 'start'
+                    }}
+                >
+                    <span style={{ fontSize: '17px', lineHeight: 1 }}>←</span> Выйти
+                </motion.button>
+
                 <h2 style={{
-                    margin: 0, fontSize: '27px', fontWeight: 900, letterSpacing: '-0.5px',
+                    margin: 0, fontSize: '25px', fontWeight: 900, letterSpacing: '-0.5px', textAlign: 'center',
                     background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
                 }}>
                     {activeHotkeys !== HOTKEYS_DB ? `Хоткеи: ${topic}` : 'Хоткеи ⚡'}
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{
-                        fontSize: '15px', fontWeight: 800, color: 'var(--text-sec)', background: 'var(--bg-body)',
-                        border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '8px 15px',
-                        fontFamily: "ui-monospace, monospace"
-                    }}>
-                        {currentIndex} / {tasks.length}
-                    </div>
-                    <Button variant="muted" onClick={leaveGame} style={{ padding: '0 16px', height: '38px', minHeight: '38px', fontSize: '13px', borderRadius: '10px', fontWeight: 700 }}>Выйти</Button>
+
+                {/* Счётчик — отдельный элемент справа, currentIndex+1 вместо "сырого" индекса */}
+                <div style={{
+                    display: 'flex', alignItems: 'baseline', gap: '6px', justifySelf: 'end',
+                    padding: '9px 18px', borderRadius: '999px', background: 'var(--bg-body)',
+                    border: '1px solid var(--glass-border)', fontFamily: "ui-monospace, monospace"
+                }}>
+                    <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>{currentIndex + 1}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-sec)', opacity: 0.5 }}>/</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-sec)' }}>{tasks.length}</span>
                 </div>
             </header>
 
