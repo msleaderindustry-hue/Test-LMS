@@ -25,8 +25,10 @@ const HOTKEYS_DB = [
     { desc: "Вставить гиперссылку", key: "k", shift: false, visual: "Ctrl + K" },
 
     // --- ТРОЙНЫЕ КОМБИНАЦИИ С SHIFT (ИЗ КОНСПЕКТА) ---
-    { desc: "Увеличить размер шрифта", key: ">", shift: true, visual: "Ctrl + Shift + >" },
-    { desc: "Уменьшить размер шрифта", key: "<", shift: true, visual: "Ctrl + Shift + <" },
+    // Важно: физически это Ctrl+Shift+1 и Ctrl+Shift+9, но браузер при зажатом Shift
+    // присылает в событии уже сам символ "!" и "(", а не цифру — поэтому key хранит именно его
+    { desc: "Уменьшить размер шрифта", key: "!", shift: true, visual: "Ctrl + Shift + 1" },
+    { desc: "Увеличить размер шрифта", key: "(", shift: true, visual: "Ctrl + Shift + 9" },
     { desc: "Двойное подчёркивание", key: "d", shift: true, visual: "Ctrl + Shift + D" },
     { desc: "Все прописные", key: "a", shift: true, visual: "Ctrl + Shift + A" },
     { desc: "Подчёркивание только слов", key: "w", shift: true, visual: "Ctrl + Shift + W" },
