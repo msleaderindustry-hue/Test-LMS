@@ -344,20 +344,17 @@ const HotkeyTrainer = ({ onBack }) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 style={{ width: '100%', maxWidth: '860px', display: 'flex', flexDirection: 'column', gap: '24px', padding: '34px', margin: '0 auto' }}
             >
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                    <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
-                            Шаг 1 из 2
-                        </div>
-                        <h2 style={{
-                            margin: 0, fontSize: '27px', fontWeight: 900, letterSpacing: '-0.5px',
-                            background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                        }}>
-                            Теория{activeHotkeys !== HOTKEYS_DB ? `: ${topic}` : ''}
-                        </h2>
+                <header style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
+                        Шаг 1 из 2
                     </div>
-                    <Button variant="muted" onClick={leaveGame} style={{ padding: '0 16px', height: '38px', minHeight: '38px', fontSize: '13px', borderRadius: '10px', fontWeight: 700 }}>Выйти</Button>
+                    <h2 style={{
+                        margin: 0, fontSize: '27px', fontWeight: 900, letterSpacing: '-0.5px',
+                        background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+                    }}>
+                        Теория{activeHotkeys !== HOTKEYS_DB ? `: ${topic}` : ''}
+                    </h2>
                 </header>
 
                 <p style={{ fontSize: '14px', color: 'var(--text-sec)', fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
@@ -395,9 +392,14 @@ const HotkeyTrainer = ({ onBack }) => {
                     ))}
                 </div>
 
-                <Button variant="orange" onClick={startGame} style={{ width: '100%', height: '53px', fontSize: '16px', borderRadius: '14px', fontWeight: 800, marginTop: '4px' }}>
-                    Перейти к практике →
-                </Button>
+                <div style={{ display: 'flex', gap: '14px', marginTop: '4px' }}>
+                    <Button variant="muted" onClick={leaveGame} style={{ flex: '0 0 150px', height: '53px', fontSize: '15px', borderRadius: '14px', fontWeight: 800 }}>
+                        Выйти
+                    </Button>
+                    <Button variant="orange" onClick={startGame} style={{ flex: 1, height: '53px', fontSize: '16px', borderRadius: '14px', fontWeight: 800 }}>
+                        Перейти к практике →
+                    </Button>
+                </div>
             </motion.div>
         );
     }
