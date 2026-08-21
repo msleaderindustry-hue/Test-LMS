@@ -411,7 +411,10 @@ const HotkeyTrainer = ({ onBack }) => {
         textAlign: 'center'
     });
 
-    // Переключатель языка интерфейса — рендерится на всех экранах
+    // Переключатель языка интерфейса — рендерится на всех экранах.
+    // Всегда идёт отдельной строкой (flex-контейнер вызывающего кода решает выравнивание),
+    // никогда не позиционируется абсолютно — так он не может наехать на заголовок/бейдж
+    // независимо от длины текста (например, длинного названия кастомной темы).
     const LanguageSwitcher = ({ style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => (
@@ -464,7 +467,10 @@ const HotkeyTrainer = ({ onBack }) => {
                     background: 'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)', pointerEvents: 'none'
                 }} />
 
-                <LanguageSwitcher style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 2 }} />
+                {/* Переключатель — отдельной строкой сверху, а не поверх заголовка */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', position: 'relative', zIndex: 2 }}>
+                    <LanguageSwitcher />
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative' }}>
                     <motion.div
@@ -585,8 +591,11 @@ const HotkeyTrainer = ({ onBack }) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 style={{ width: '100%', maxWidth: '860px', display: 'flex', flexDirection: 'column', gap: '24px', padding: '34px', margin: '0 auto' }}
             >
-                <header style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px', position: 'relative' }}>
-                    <LanguageSwitcher style={{ position: 'absolute', top: 0, right: 0 }} />
+                <header style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px' }}>
+                    {/* Переключатель — отдельной строкой над "Шаг 1 из 2", не наезжает на заголовок */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
+                        <LanguageSwitcher />
+                    </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
                         {t.theoryStep}
                     </div>
