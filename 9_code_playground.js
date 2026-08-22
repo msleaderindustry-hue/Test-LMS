@@ -81,8 +81,6 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
-/* Своя палитра — независимая от темы хост-страницы, чтобы виджет всегда
-   выглядел одинаково, где бы его ни встроили. */
 const TOKENS = {
     '--cq-bg-deep': '#120f22',
     '--cq-bg-panel': '#1b1733',
@@ -99,7 +97,7 @@ const TOKENS = {
 };
 
 /* =====================================================================
-   ПАНЕЛЬ ОДНОГО ФАЙЛА (гаттер + подсветка + textarea)
+   ПАНЕЛЬ ОДНОГО ФАЙЛА
    ===================================================================== */
 
 const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCursor, taRef, preRef, gutterRef }) => {
@@ -113,7 +111,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                 style={{
                     width: '44px', flexShrink: 0, background: 'var(--cq-bg-deep)', color: 'var(--cq-text-dim2)',
                     fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
-                    fontSize: '13px', lineHeight: '1.65', padding: '14px 10px 14px 0',
+                    fontSize: '13px', lineHeight: '1.65', padding: '16px 10px 16px 0',
                     textAlign: 'right', overflow: 'hidden', userSelect: 'none'
                 }}
             >
@@ -124,9 +122,9 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                 <pre
                     ref={preRef}
                     style={{
-                        position: 'absolute', inset: 0, margin: 0, padding: '14px 16px',
+                        position: 'absolute', inset: 0, margin: 0, padding: '16px',
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
-                        fontSize: '13.5px', lineHeight: '1.65', whiteSpace: 'pre',
+                        fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
                         overflow: 'auto', color: '#e7e3f7', pointerEvents: 'none', background: 'transparent'
                     }}
                     dangerouslySetInnerHTML={{ __html: highlighted }}
@@ -145,9 +143,9 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                     autoCapitalize="off"
                     autoComplete="off"
                     style={{
-                        position: 'absolute', inset: 0, margin: 0, padding: '14px 16px',
+                        position: 'absolute', inset: 0, margin: 0, padding: '16px',
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
-                        fontSize: '13.5px', lineHeight: '1.65', whiteSpace: 'pre',
+                        fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
                         border: 'none', resize: 'none', outline: 'none', overflow: 'auto',
                         background: 'transparent', color: 'transparent', caretColor: '#ffffff'
                     }}
@@ -162,6 +160,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
    ===================================================================== */
 
 const CodePlayground = ({ onBack }) => {
+    const [mode, setMode] = useState('code'); // 'code' | 'preview' — только ОДИН режим виден целиком
     const [activeTab, setActiveTab] = useState('html');
     const [code, setCode] = useState({ ...DEFAULT_CODE });
     const [srcDoc, setSrcDoc] = useState('');
@@ -173,22 +172,6 @@ const CodePlayground = ({ onBack }) => {
     const taRefs = useRef({});
     const preRefs = useRef({});
     const gutterRefs = useRef({});
-
-    // Ширина СВОЕГО контейнера (не окна) — компонент встраивается в чужую
-    // страницу произвольной ширины, поэтому меряем себя через ResizeObserver.
-    const splitRef = useRef(null);
-    const [splitWidth, setSplitWidth] = useState(1200);
-
-    useEffect(() => {
-        if (!splitRef.current || typeof ResizeObserver === 'undefined') return;
-        const ro = new ResizeObserver((entries) => {
-            for (const entry of entries) setSplitWidth(entry.contentRect.width);
-        });
-        ro.observe(splitRef.current);
-        return () => ro.disconnect();
-    }, []);
-
-    const stacked = splitWidth < 720;
 
     const buildDoc = (c) => `
         <!DOCTYPE html>
@@ -214,6 +197,9 @@ const CodePlayground = ({ onBack }) => {
     }, [activeTab]);
 
     const runNow = () => setSrcDoc(buildDoc(code));
+
+    const goPreview = () => { runNow(); setMode('preview'); };
+    const goCode = () => setMode('code');
 
     const updateCode = (lang, value) => {
         setCode((prev) => ({ ...prev, [lang]: value }));
@@ -350,11 +336,12 @@ const CodePlayground = ({ onBack }) => {
         }
     };
 
-    const circleBtnStyle = (color) => ({
-        width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
+    const fabStyle = (color) => ({
+        width: '46px', height: '46px', borderRadius: '50%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: 'none', background: `${color}22`, color,
-        fontSize: '14px', cursor: 'pointer'
+        border: 'none', background: color, color: '#120f22',
+        fontSize: '17px', fontWeight: 700, cursor: 'pointer',
+        boxShadow: `0 10px 22px ${color}66`
     });
 
     const ThinkingDots = () => (
@@ -372,9 +359,8 @@ const CodePlayground = ({ onBack }) => {
             transition={{ duration: 0.5 }}
             style={{
                 ...TOKENS,
-                width: '100%', maxWidth: '1400px', display: 'flex', flexDirection: 'column', gap: '16px',
-                padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif",
-                position: 'relative'
+                width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '16px',
+                padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif", position: 'relative'
             }}
         >
             <style>{`
@@ -395,24 +381,23 @@ const CodePlayground = ({ onBack }) => {
                 .cq-tok-identifier{ color:#e7e3f7; }
                 .cq-code-textarea::selection{ background: rgba(139,92,246,0.35); }
 
-                .cq-pill:hover{ filter: brightness(1.15); }
-                .cq-circle-btn:hover{ filter: brightness(1.3); transform: translateY(-1px); }
-                .cq-circle-btn:active{ transform: translateY(0); }
+                .cq-fab:hover{ filter: brightness(1.15); transform: translateY(-2px) scale(1.04); }
+                .cq-fab:active{ transform: translateY(0) scale(0.97); }
+                .cq-fab{ transition: transform .15s ease, filter .15s ease; }
+
+                .cq-seg-btn{ transition: background .2s ease, color .2s ease; }
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
                 .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: #fff !important; }
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
-                .cq-refresh-btn:hover{ transform: rotate(45deg); }
+                .cq-mode-switch{ transition: background .25s ease; }
 
                 @keyframes cq-bounce{ 0%,80%,100%{ transform: translateY(0); opacity:.5; } 40%{ transform: translateY(-4px); opacity:1; } }
                 .cq-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; animation: cq-bounce 1s infinite ease-in-out; }
                 .cq-dot:nth-child(2){ animation-delay:.15s; }
                 .cq-dot:nth-child(3){ animation-delay:.3s; }
-
-                @keyframes cq-glow{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
             `}</style>
 
-            {/* декоративное свечение фона */}
             <div style={{ position: 'absolute', top: '-60px', left: '5%', width: '260px', height: '260px', background: 'var(--cq-violet)', opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', top: '10%', right: '5%', width: '220px', height: '220px', background: 'var(--cq-sky)', opacity: 0.14, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
 
@@ -450,87 +435,142 @@ const CodePlayground = ({ onBack }) => {
                 </button>
             </div>
 
-            {/* ==================== РЕДАКТОР + ПРЕВЬЮ ==================== */}
-            <div ref={splitRef} style={{ display: 'flex', flexDirection: stacked ? 'column' : 'row', gap: '16px', height: stacked ? 'auto' : '68vh', minHeight: stacked ? 'auto' : '520px' }}>
+            {/* ==================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ==================== */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div className="cq-mode-switch" style={{ position: 'relative', display: 'flex', background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px', gap: '4px' }}>
+                    <div style={{
+                        position: 'absolute', top: '5px', bottom: '5px', width: 'calc(50% - 4px)',
+                        left: mode === 'code' ? '5px' : 'calc(50% + 3px)',
+                        background: 'linear-gradient(135deg, var(--cq-violet), var(--cq-pink))',
+                        borderRadius: '999px', transition: 'left .25s cubic-bezier(.4,0,.2,1)',
+                        boxShadow: '0 6px 16px rgba(139,92,246,0.4)'
+                    }} />
+                    <button onClick={goCode} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'code' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
+                        🛠️ Пишу код
+                    </button>
+                    <button onClick={goPreview} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'preview' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
+                        🚀 Смотрю сайт
+                    </button>
+                </div>
+            </div>
 
-                {/* ---- КАРТОЧКА РЕДАКТОРА ---- */}
-                <div style={{ flex: stacked ? 'none' : 1.15, height: stacked ? '440px' : 'auto', display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 50px rgba(0,0,0,0.45)' }}>
+            {/* ==================== ГЛАВНАЯ СЦЕНА (один режим на весь экран) ==================== */}
+            <div style={{ position: 'relative', height: '64vh', minHeight: '480px' }}>
+                <AnimatePresence mode="wait">
+                    {mode === 'code' ? (
+                        <motion.div
+                            key="code"
+                            initial={{ opacity: 0, x: -16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -16 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
+                        >
+                            {/* Полноширинный сегмент-переключатель файлов */}
+                            <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
+                                {LANGS.map((lang) => {
+                                    const active = activeTab === lang;
+                                    return (
+                                        <button
+                                            key={lang}
+                                            className="cq-seg-btn"
+                                            onClick={() => setActiveTab(lang)}
+                                            style={{
+                                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                                padding: '13px 8px', border: 'none', cursor: 'pointer',
+                                                background: active ? 'var(--cq-bg-panel)' : 'transparent',
+                                                color: active ? '#fff' : 'var(--cq-text-dim)',
+                                                borderBottom: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent',
+                                                fontWeight: 800, fontSize: '13.5px'
+                                            }}
+                                        >
+                                            <span style={{ fontFamily: "'Cascadia Code', monospace", color: LANG_META[lang].accent }}>{LANG_META[lang].icon}</span>
+                                            {LANG_META[lang].short}
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
-                    {/* Заголовок карточки: переключатель языка + действия */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', padding: '12px 14px', borderBottom: '1px solid var(--cq-border)', background: 'var(--cq-bg-panel)' }}>
-                        <div style={{ display: 'flex', gap: '6px', background: 'var(--cq-bg-deep)', padding: '4px', borderRadius: '999px', border: '1px solid var(--cq-border)' }}>
-                            {LANGS.map((lang) => {
-                                const active = activeTab === lang;
-                                return (
-                                    <button
+                            {/* Тело редактора */}
+                            <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                                {LANGS.map((lang) => (
+                                    <EditorPane
                                         key={lang}
-                                        className="cq-pill"
-                                        onClick={() => setActiveTab(lang)}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '999px',
-                                            border: 'none', cursor: 'pointer', fontSize: '12.5px', fontWeight: 700,
-                                            fontFamily: "'Nunito', sans-serif",
-                                            background: active ? LANG_META[lang].accent : 'transparent',
-                                            color: active ? '#1b1733' : 'var(--cq-text-dim)'
-                                        }}
-                                    >
-                                        <span style={{ fontFamily: "'Cascadia Code', monospace" }}>{LANG_META[lang].icon}</span> {LANG_META[lang].short}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                        lang={lang}
+                                        value={code[lang]}
+                                        isActive={activeTab === lang}
+                                        onChange={(v) => updateCode(lang, v)}
+                                        onKeyDown={(e) => handleKeyDown(e, lang)}
+                                        onScroll={() => handleScrollSync(lang)}
+                                        onCursor={(ta) => updateCursor(ta)}
+                                        taRef={(el) => { taRefs.current[lang] = el; }}
+                                        preRef={(el) => { preRefs.current[lang] = el; }}
+                                        gutterRef={(el) => { gutterRefs.current[lang] = el; }}
+                                    />
+                                ))}
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                Стр. {cursor.line}:{cursor.col}
-                            </span>
-                            <button className="cq-circle-btn" onClick={runNow} title="Запустить" style={circleBtnStyle(TOKENS['--cq-mint'])}>▶</button>
-                            <button className="cq-circle-btn" onClick={resetCurrent} title="Сбросить файл" style={circleBtnStyle(TOKENS['--cq-rose'])}>↺</button>
-                            <button className="cq-circle-btn" onClick={downloadSite} title="Скачать сайт" style={circleBtnStyle(TOKENS['--cq-sky'])}>⬇</button>
-                        </div>
-                    </div>
+                                {/* Плавающая колонка действий — сбоку, а не в шапке */}
+                                <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
+                                    <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}>▶</button>
+                                    <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}>↺</button>
+                                    <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}>⬇</button>
+                                </div>
 
-                    {/* Тело редактора */}
-                    <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-                        {LANGS.map((lang) => (
-                            <EditorPane
-                                key={lang}
-                                lang={lang}
-                                value={code[lang]}
-                                isActive={activeTab === lang}
-                                onChange={(v) => updateCode(lang, v)}
-                                onKeyDown={(e) => handleKeyDown(e, lang)}
-                                onScroll={() => handleScrollSync(lang)}
-                                onCursor={(ta) => updateCursor(ta)}
-                                taRef={(el) => { taRefs.current[lang] = el; }}
-                                preRef={(el) => { preRefs.current[lang] = el; }}
-                                gutterRef={(el) => { gutterRefs.current[lang] = el; }}
+                                {/* Индикатор курсора — тихо, снизу слева */}
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'rgba(0,0,0,0.35)', padding: '3px 9px', borderRadius: '999px' }}>
+                                    Стр. {cursor.line}:{cursor.col}
+                                </div>
+
+                                {/* Кнопка-мостик к результату */}
+                                <button
+                                    className="cq-fab"
+                                    onClick={goPreview}
+                                    title="Посмотреть сайт"
+                                    style={{ ...fabStyle('linear-gradient(135deg, #8b5cf6, #f472b6)'), position: 'absolute', bottom: '14px', right: '14px', width: '54px', height: '54px', fontSize: '20px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #f472b6)' }}
+                                >
+                                    🚀
+                                </button>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="preview"
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 16 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.4)' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
+                                    <span style={{ fontSize: '13px', color: '#fff', fontWeight: 800 }}>Твой сайт готов!</span>
+                                </div>
+                                <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px', fontSize: '13px' }}>⟳</button>
+                            </div>
+                            <div style={{ padding: '8px 16px', background: '#f5f3fb', borderBottom: '1px solid #e7e2f5', flexShrink: 0 }}>
+                                <div style={{ background: '#ffffff', border: '1px solid #e2ddef', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: '#6b6488', textAlign: 'center', fontWeight: 700 }}>
+                                    🔒 мой-сайт.детский-код
+                                </div>
+                            </div>
+                            <iframe
+                                srcDoc={srcDoc}
+                                title="output"
+                                sandbox="allow-scripts"
+                                style={{ flex: 1, width: '100%', border: 'none', background: '#fff' }}
                             />
-                        ))}
-                    </div>
-                </div>
 
-                {/* ---- КАРТОЧКА ПРЕВЬЮ ---- */}
-                <div style={{ flex: stacked ? 'none' : 0.85, height: stacked ? '320px' : 'auto', display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 50px rgba(0,0,0,0.35)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', background: 'var(--cq-bg-panel)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', flexShrink: 0, boxShadow: '0 0 8px var(--cq-mint)' }} />
-                            <span style={{ fontSize: '12.5px', color: 'var(--cq-text-hi)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Живой сайт</span>
-                        </div>
-                        <button className="cq-refresh-btn" onClick={runNow} title="Обновить" style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '15px', transition: 'transform .2s ease' }}>⟳</button>
-                    </div>
-                    <div style={{ padding: '6px 12px', background: '#f5f3fb', borderBottom: '1px solid #e7e2f5' }}>
-                        <div style={{ background: '#ffffff', border: '1px solid #e2ddef', borderRadius: '999px', padding: '4px 12px', fontSize: '11.5px', color: '#6b6488', textAlign: 'center', fontWeight: 600 }}>
-                            🔒 мой-сайт.детский-код
-                        </div>
-                    </div>
-                    <iframe
-                        srcDoc={srcDoc}
-                        title="output"
-                        sandbox="allow-scripts"
-                        style={{ flex: 1, width: '100%', border: 'none', background: '#fff' }}
-                    />
-                </div>
+                            <button
+                                className="cq-fab"
+                                onClick={goCode}
+                                title="Редактировать код"
+                                style={{ position: 'absolute', bottom: '18px', right: '18px', width: '54px', height: '54px', fontSize: '19px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #38bdf8)' }}
+                            >
+                                ✏️
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* ==================== ИИ-НАСТАВНИК ==================== */}
@@ -552,7 +592,7 @@ const CodePlayground = ({ onBack }) => {
                             }}>🤖</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
+                                    <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
                                     <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '16px', padding: '5px', borderRadius: '7px' }}>✖</button>
                                 </div>
                                 <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: '#e9e7f5' }}>
