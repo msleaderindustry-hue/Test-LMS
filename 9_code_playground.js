@@ -3,7 +3,7 @@ const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
 /* =====================================================================
-   ПОДСВЕТКА СИНТАКСИСА — цвета максимально близки к теме VS Code Dark+
+   ПОДСВЕТКА СИНТАКСИСА
    ===================================================================== */
 
 function escapeHtml(str) {
@@ -81,16 +81,22 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
-/* Токены нового визуального стиля "обёртки" приложения (не трогают саму
-   имитацию VS Code внутри — она остаётся аутентичной). Задаются как
-   CSS-переменные на корневом узле компонента. */
+/* Единая палитра нового дизайна — "мастерская юного программиста" в
+   тёмных космических тонах. Задана как CSS-переменные на корне
+   компонента, чтобы всё оформление ниже было согласовано. */
 const TOKENS = {
     '--vs-nebula': '#7c5cff',
     '--vs-nebula-soft': '#a78bfa',
     '--vs-comet': '#ff7a45',
     '--vs-signal': '#22c58b',
     '--vs-sky': '#3aa9f0',
-    '--vs-star': '#ffc93c'
+    '--vs-star': '#ffc93c',
+    '--vs-bg-deep': '#14111f',
+    '--vs-bg-mid': '#1b1830',
+    '--vs-bg-soft': '#221d3d',
+    '--vs-border': '#332c56',
+    '--vs-text-dim': '#9791bd',
+    '--vs-text-dim2': '#6f6a95'
 };
 
 /* =====================================================================
@@ -106,7 +112,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
             <div
                 ref={gutterRef}
                 style={{
-                    width: '50px', flexShrink: 0, background: '#1e1e1e', color: '#6e7681',
+                    width: '50px', flexShrink: 0, background: 'var(--vs-bg-deep)', color: 'var(--vs-text-dim2)',
                     fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                     fontSize: '13px', lineHeight: '1.6', padding: '10px 12px 10px 0',
                     textAlign: 'right', overflow: 'hidden', userSelect: 'none'
@@ -115,7 +121,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                 {Array.from({ length: lineCount }, (_, i) => <div key={i}>{i + 1}</div>)}
             </div>
 
-            <div style={{ position: 'relative', flex: 1, overflow: 'hidden', borderLeft: '1px solid #2d2d2d' }}>
+            <div style={{ position: 'relative', flex: 1, overflow: 'hidden', borderLeft: '1px solid var(--vs-border)' }}>
                 <pre
                     ref={preRef}
                     style={{
@@ -149,15 +155,15 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                 />
             </div>
 
-            {/* Мини-карта, как в настоящем VS Code */}
-            <div className="vsc-minimap" style={{ width: '64px', flexShrink: 0, background: '#1e1e1e', borderLeft: '1px solid #2d2d2d', position: 'relative', overflow: 'hidden' }}>
+            {/* Мини-карта */}
+            <div className="vsc-minimap" style={{ width: '64px', flexShrink: 0, background: 'var(--vs-bg-deep)', borderLeft: '1px solid var(--vs-border)', position: 'relative', overflow: 'hidden' }}>
                 <div
                     style={{ transform: 'scale(0.2)', transformOrigin: 'top left', width: '500%', padding: '10px 16px' }}
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                 />
                 <div
                     ref={minimapRef}
-                    style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '30%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '30%', background: 'rgba(124,92,255,0.14)', border: '1px solid rgba(124,92,255,0.3)', pointerEvents: 'none' }}
                 />
             </div>
         </div>
@@ -200,7 +206,6 @@ const CodePlayground = ({ onBack }) => {
         return () => clearTimeout(timeout);
     }, [code]);
 
-    // держим мини-карту и статус-бар в актуальном состоянии при смене вкладки
     useEffect(() => {
         const ta = taRefs.current[activeTab];
         if (ta) {
@@ -362,10 +367,20 @@ const CodePlayground = ({ onBack }) => {
 
     const iconBtnStyle = (color) => ({
         display: 'flex', alignItems: 'center', gap: '5px',
-        padding: '5px 11px', borderRadius: '8px',
+        padding: '6px 12px', borderRadius: '9px',
         border: `1px solid ${color}55`, background: `${color}1f`,
         color, fontWeight: '700', fontSize: '11.5px', letterSpacing: '0.1px',
         cursor: 'pointer', fontFamily: "'Nunito', 'Segoe UI', sans-serif"
+    });
+
+    const activityIconStyle = (active) => ({
+        width: '36px', height: '36px', borderRadius: '10px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '16px',
+        color: active ? '#ffffff' : 'var(--vs-text-dim)',
+        background: active ? 'var(--vs-nebula)' : 'transparent',
+        boxShadow: active ? '0 4px 14px rgba(124,92,255,0.45)' : 'none',
+        cursor: 'pointer'
     });
 
     const ThinkingDots = () => (
@@ -390,36 +405,39 @@ const CodePlayground = ({ onBack }) => {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
 
-                .vsc-tok-comment{ color:#6a9955; font-style: italic; }
-                .vsc-tok-string{ color:#ce9178; }
-                .vsc-tok-tag{ color:#569cd6; }
+                .vsc-tok-comment{ color:#8a86b0; font-style: italic; }
+                .vsc-tok-string{ color:#f0b88f; }
+                .vsc-tok-tag{ color:#7ea6f2; }
                 .vsc-tok-attr{ color:#9cdcfe; }
                 .vsc-tok-punct{ color:#d4d4d4; }
-                .vsc-tok-entity{ color:#d7ba7d; }
+                .vsc-tok-entity{ color:#e0c088; }
                 .vsc-tok-property{ color:#9cdcfe; }
-                .vsc-tok-selector{ color:#d7ba7d; }
-                .vsc-tok-number{ color:#b5cea8; }
-                .vsc-tok-keyword{ color:#569cd6; }
-                .vsc-tok-func{ color:#dcdcaa; }
+                .vsc-tok-selector{ color:#e0c088; }
+                .vsc-tok-number{ color:#a3e0b8; }
+                .vsc-tok-keyword{ color:#c39cf7; }
+                .vsc-tok-func{ color:#f0dca0; }
                 .vsc-tok-operator{ color:#d4d4d4; }
                 .vsc-tok-identifier{ color:#d4d4d4; }
-                .vsc-code-textarea::selection{ background: rgba(38,79,120,0.6); }
-                .vsc-menu-item:hover{ background:#4a4a4a; }
-                .vsc-activity-icon:hover{ opacity: 1 !important; }
-                .vsc-sidebar-item:hover{ background:#2a2d2e !important; }
+                .vsc-code-textarea::selection{ background: rgba(124,92,255,0.35); }
+
+                .vsc-menu-item:hover{ background: rgba(124,92,255,0.16) !important; }
+                .vsc-activity-icon:hover{ background: rgba(124,92,255,0.16) !important; }
+                .vsc-sidebar-item:hover{ background: rgba(124,92,255,0.12) !important; }
 
                 .vsc-back-btn{ transition: all .15s ease; }
-                .vsc-back-btn:hover{ background: var(--bg-body) !important; border-color: var(--vs-nebula) !important; color: var(--text-main) !important; }
+                .vsc-back-btn:hover{ background: var(--vs-bg-soft) !important; border-color: var(--vs-nebula) !important; color: #ffffff !important; }
 
                 .vsc-ai-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .vsc-ai-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 26px rgba(124,92,255,0.45) !important; }
                 .vsc-ai-btn:not(:disabled):active{ transform: translateY(0); }
 
                 .vsc-tab-action{ transition: filter .15s ease, transform .15s ease; }
-                .vsc-tab-action:hover{ filter: brightness(1.18); transform: translateY(-1px); }
+                .vsc-tab-action:hover{ filter: brightness(1.2); transform: translateY(-1px); }
+
+                .vsc-tab-btn:hover{ color: #ffffff !important; }
 
                 .vsc-close-btn{ transition: background .15s ease, color .15s ease; border-radius:7px; }
-                .vsc-close-btn:hover{ background: rgba(124,92,255,0.14); color: var(--vs-nebula) !important; }
+                .vsc-close-btn:hover{ background: rgba(124,92,255,0.18); color: var(--vs-nebula) !important; }
 
                 @keyframes vsc-bounce{ 0%,80%,100%{ transform: translateY(0); opacity:.5; } 40%{ transform: translateY(-4px); opacity:1; } }
                 .vsc-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; animation: vsc-bounce 1s infinite ease-in-out; }
@@ -429,16 +447,16 @@ const CodePlayground = ({ onBack }) => {
                 @media (max-width: 980px){
                     .vsc-sidebar{ display:none !important; }
                     .vsc-body{ flex-direction: column !important; }
-                    .vsc-preview{ height: 260px !important; border-left:none !important; border-top:1px solid #2d2d2d !important; }
+                    .vsc-preview{ height: 260px !important; border-left:none !important; border-top:1px solid var(--vs-border) !important; }
                     .vsc-minimap{ display:none !important; }
                 }
             `}</style>
 
-            {/* Шапка хост-приложения (не часть окна VS Code) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--bg-panel)', padding: '14px 22px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+            {/* Шапка хост-приложения */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--vs-bg-mid)', padding: '14px 22px', borderRadius: '16px', border: '1px solid var(--vs-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     {onBack && (
-                        <button className="vsc-back-btn" onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '9px', padding: '7px 13px', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '13px', fontWeight: '700', fontFamily: "'Nunito', sans-serif" }}>
+                        <button className="vsc-back-btn" onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--vs-border)', borderRadius: '9px', padding: '7px 13px', color: 'var(--vs-text-dim)', cursor: 'pointer', fontSize: '13px', fontWeight: '700', fontFamily: "'Nunito', sans-serif" }}>
                             ← Назад
                         </button>
                     )}
@@ -447,20 +465,20 @@ const CodePlayground = ({ onBack }) => {
                         width: '38px', height: '38px', borderRadius: '11px', flexShrink: 0,
                         background: 'linear-gradient(135deg, var(--vs-nebula), var(--vs-sky))',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 6px 16px rgba(124,92,255,0.35)'
+                        boxShadow: '0 6px 16px rgba(124,92,255,0.4)'
                     }}>
                         <span style={{ fontSize: '18px', lineHeight: 1 }}>🚀</span>
                     </div>
 
-                    <h2 style={{ margin: 0, fontSize: '21px', fontWeight: '700', color: 'var(--text-main)', fontFamily: "'Unbounded', 'Nunito', sans-serif", letterSpacing: '-0.01em' }}>
+                    <h2 style={{ margin: 0, fontSize: '21px', fontWeight: '700', color: '#ffffff', fontFamily: "'Unbounded', 'Nunito', sans-serif", letterSpacing: '-0.01em' }}>
                         VS School
                     </h2>
 
                     <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '6px',
-                        background: 'var(--bg-body)', color: 'var(--text-sec)', padding: '5px 12px',
+                        background: 'var(--vs-bg-soft)', color: 'var(--vs-text-dim)', padding: '5px 12px',
                         borderRadius: '999px', fontSize: '12px', fontWeight: '700',
-                        border: '1px solid var(--glass-border)', fontFamily: "'Nunito', sans-serif"
+                        border: '1px solid var(--vs-border)', fontFamily: "'Nunito', sans-serif"
                     }}>
                         📁 Мой первый сайт
                     </span>
@@ -473,38 +491,38 @@ const CodePlayground = ({ onBack }) => {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '9px',
                         padding: '10px 19px', borderRadius: '12px',
-                        background: isAsking ? 'var(--bg-body)' : 'linear-gradient(135deg, var(--vs-nebula-soft), var(--vs-nebula))',
-                        color: isAsking ? 'var(--text-sec)' : '#fff',
-                        border: isAsking ? '1px solid var(--glass-border)' : 'none',
+                        background: isAsking ? 'var(--vs-bg-soft)' : 'linear-gradient(135deg, var(--vs-nebula-soft), var(--vs-nebula))',
+                        color: isAsking ? 'var(--vs-text-dim)' : '#fff',
+                        border: isAsking ? '1px solid var(--vs-border)' : 'none',
                         fontWeight: '700', fontSize: '14px', cursor: isAsking ? 'not-allowed' : 'pointer',
                         fontFamily: "'Nunito', sans-serif",
-                        boxShadow: isAsking ? 'none' : '0 8px 18px rgba(124,92,255,0.35)'
+                        boxShadow: isAsking ? 'none' : '0 8px 18px rgba(124,92,255,0.4)'
                     }}
                 >
                     {isAsking ? (<>Анализирую код <ThinkingDots /></>) : '✨ Спросить ИИ-наставника'}
                 </button>
             </div>
 
-            {/* ===================== ОКНО VS CODE ===================== */}
-            <div style={{ background: '#1e1e1e', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 30px 70px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', height: '74vh', minHeight: '580px', border: '1px solid #3c3c3c' }}>
+            {/* ===================== ОКНО РЕДАКТОРА ===================== */}
+            <div style={{ background: 'var(--vs-bg-deep)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(124,92,255,0.08)', display: 'flex', flexDirection: 'column', height: '74vh', minHeight: '580px', border: '1px solid var(--vs-border)' }}>
 
                 {/* Title bar */}
-                <div style={{ height: '34px', background: '#323233', display: 'flex', alignItems: 'center', padding: '0 12px', flexShrink: 0, borderBottom: '1px solid #2d2d2d' }}>
+                <div style={{ height: '36px', background: 'var(--vs-bg-mid)', display: 'flex', alignItems: 'center', padding: '0 12px', flexShrink: 0, borderBottom: '1px solid var(--vs-border)' }}>
                     <div style={{ display: 'flex', gap: '8px', width: '54px' }}>
                         <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ff5f57', display: 'block' }} />
                         <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#febc2e', display: 'block' }} />
                         <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#28c840', display: 'block' }} />
                     </div>
-                    <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: '#a0a0a0', fontFamily: "'Nunito', 'Segoe UI', sans-serif", fontWeight: 600 }}>
+                    <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: 'var(--vs-text-dim)', fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
                         {LANG_META[activeTab].file} — Мой-первый-сайт — VS School
                     </div>
                     <div style={{ width: '54px' }} />
                 </div>
 
                 {/* Menu bar */}
-                <div style={{ height: '28px', background: '#3c3c3c', display: 'flex', alignItems: 'center', gap: '4px', padding: '0 10px', fontSize: '12.5px', color: '#cccccc', flexShrink: 0 }}>
+                <div style={{ height: '30px', background: 'var(--vs-bg-soft)', display: 'flex', alignItems: 'center', gap: '4px', padding: '0 10px', fontSize: '12.5px', color: 'var(--vs-text-dim)', flexShrink: 0, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
                     {['Файл', 'Правка', 'Выделение', 'Вид', 'Переход', 'Выполнить', 'Справка'].map((m) => (
-                        <span key={m} className="vsc-menu-item" style={{ padding: '3px 8px', borderRadius: '4px', cursor: 'default' }}>{m}</span>
+                        <span key={m} className="vsc-menu-item" style={{ padding: '4px 9px', borderRadius: '6px', cursor: 'default' }}>{m}</span>
                     ))}
                 </div>
 
@@ -512,37 +530,43 @@ const CodePlayground = ({ onBack }) => {
                 <div className="vsc-body" style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
                     {/* Activity bar */}
-                    <div style={{ width: '48px', background: '#333333', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '12px', gap: '22px', flexShrink: 0, borderRight: '1px solid #2d2d2d' }}>
-                        <div className="vsc-activity-icon" style={{ color: '#ffffff', fontSize: '20px', cursor: 'pointer', opacity: 1, borderLeft: '2px solid #ffffff', paddingLeft: '9px', marginLeft: '-2px' }}>📄</div>
-                        <div className="vsc-activity-icon" style={{ color: '#ffffff', fontSize: '20px', cursor: 'pointer', opacity: 0.5 }}>🔍</div>
-                        <div className="vsc-activity-icon" style={{ color: '#ffffff', fontSize: '18px', cursor: 'pointer', opacity: 0.5 }}>⎇</div>
-                        <div className="vsc-activity-icon" style={{ color: '#ffffff', fontSize: '18px', cursor: 'pointer', opacity: 0.5 }} onClick={runNow} title="Запустить">▶</div>
-                        <div className="vsc-activity-icon" style={{ color: '#ffffff', fontSize: '18px', cursor: 'pointer', opacity: 0.5 }}>🧩</div>
-                        <div style={{ marginTop: 'auto', marginBottom: '14px', color: '#ffffff', fontSize: '18px', opacity: 0.5 }}>⚙️</div>
+                    <div style={{ width: '52px', background: 'var(--vs-bg-mid)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '12px', gap: '8px', flexShrink: 0, borderRight: '1px solid var(--vs-border)' }}>
+                        <div className="vsc-activity-icon" style={activityIconStyle(true)}>📄</div>
+                        <div className="vsc-activity-icon" style={activityIconStyle(false)}>🔍</div>
+                        <div className="vsc-activity-icon" style={activityIconStyle(false)}>⎇</div>
+                        <div className="vsc-activity-icon" style={activityIconStyle(false)} onClick={runNow} title="Запустить">▶</div>
+                        <div className="vsc-activity-icon" style={activityIconStyle(false)}>🧩</div>
+                        <div className="vsc-activity-icon" style={{ ...activityIconStyle(false), marginTop: 'auto', marginBottom: '14px' }}>⚙️</div>
                     </div>
 
                     {/* Sidebar — Проводник */}
-                    <div className="vsc-sidebar" style={{ width: '190px', background: '#252526', flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid #2d2d2d' }}>
-                        <div style={{ padding: '10px 14px 6px', fontSize: '10.5px', letterSpacing: '0.8px', color: '#bbbbbb', fontWeight: 700, textTransform: 'uppercase' }}>Проводник</div>
-                        <div style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', color: '#cccccc', fontSize: '12.5px', fontWeight: 700 }}>
+                    <div className="vsc-sidebar" style={{ width: '190px', background: 'var(--vs-bg-mid)', flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--vs-border)' }}>
+                        <div style={{ padding: '12px 14px 6px', fontSize: '10.5px', letterSpacing: '0.8px', color: 'var(--vs-text-dim2)', fontWeight: 700, textTransform: 'uppercase', fontFamily: "'Nunito', sans-serif" }}>Проводник</div>
+                        <div style={{ padding: '4px 14px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--vs-text-dim)', fontSize: '12.5px', fontWeight: 700, fontFamily: "'Nunito', sans-serif" }}>
                             <span style={{ fontSize: '9px' }}>▾</span> МОЙ-ПЕРВЫЙ-САЙТ
                         </div>
-                        <div style={{ paddingLeft: '10px' }}>
-                            {LANGS.map((lang) => (
-                                <div
-                                    key={lang}
-                                    className="vsc-sidebar-item"
-                                    onClick={() => setActiveTab(lang)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 10px 4px 16px',
-                                        fontSize: '13px', cursor: 'pointer',
-                                        background: activeTab === lang ? '#37373d' : 'transparent',
-                                        color: activeTab === lang ? '#ffffff' : '#cccccc'
-                                    }}
-                                >
-                                    {getFileIcon(lang)} {LANG_META[lang].file}
-                                </div>
-                            ))}
+                        <div style={{ padding: '4px 8px' }}>
+                            {LANGS.map((lang) => {
+                                const active = activeTab === lang;
+                                return (
+                                    <div
+                                        key={lang}
+                                        className="vsc-sidebar-item"
+                                        onClick={() => setActiveTab(lang)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '7px 10px 7px 12px', margin: '1px 0',
+                                            fontSize: '13px', cursor: 'pointer', borderRadius: '8px',
+                                            fontFamily: "'Nunito', sans-serif", fontWeight: active ? 700 : 500,
+                                            background: active ? `${LANG_META[lang].accent}22` : 'transparent',
+                                            color: active ? '#ffffff' : 'var(--vs-text-dim)',
+                                            borderLeft: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent'
+                                        }}
+                                    >
+                                        {getFileIcon(lang)} {LANG_META[lang].file}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -550,22 +574,24 @@ const CodePlayground = ({ onBack }) => {
                     <div style={{ flex: 1.3, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
                         {/* Tab bar */}
-                        <div style={{ display: 'flex', alignItems: 'center', background: '#252526', borderBottom: '1px solid #2d2d2d', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', flex: 1, overflowX: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', background: 'var(--vs-bg-mid)', borderBottom: '1px solid var(--vs-border)', flexShrink: 0, padding: '6px 6px 0' }}>
+                            <div style={{ display: 'flex', flex: 1, overflowX: 'auto', gap: '4px' }}>
                                 {LANGS.map((lang) => {
                                     const isActiveTab = activeTab === lang;
                                     return (
                                         <button
                                             key={lang}
+                                            className="vsc-tab-btn"
                                             onClick={() => setActiveTab(lang)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '7px',
-                                                padding: '8px 14px', minWidth: '130px',
-                                                background: isActiveTab ? '#1e1e1e' : '#2d2d2d',
-                                                color: isActiveTab ? '#ffffff' : '#969696',
-                                                border: 'none', borderTop: isActiveTab ? `2px solid ${LANG_META[lang].accent}` : '2px solid transparent',
-                                                borderRight: '1px solid #2d2d2d',
-                                                fontSize: '13px', cursor: 'pointer', fontFamily: '"Segoe UI", sans-serif'
+                                                padding: '9px 16px', minWidth: '128px',
+                                                background: isActiveTab ? 'var(--vs-bg-deep)' : 'transparent',
+                                                color: isActiveTab ? '#ffffff' : 'var(--vs-text-dim)',
+                                                border: 'none', borderRadius: '10px 10px 0 0',
+                                                boxShadow: isActiveTab ? `inset 0 -2px 0 ${LANG_META[lang].accent}` : 'none',
+                                                fontSize: '13px', cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+                                                fontWeight: isActiveTab ? 700 : 600
                                             }}
                                         >
                                             {getFileIcon(lang)} {LANG_META[lang].file}
@@ -573,7 +599,7 @@ const CodePlayground = ({ onBack }) => {
                                     );
                                 })}
                             </div>
-                            <div style={{ display: 'flex', gap: '6px', padding: '0 10px' }}>
+                            <div style={{ display: 'flex', gap: '6px', padding: '0 4px 6px' }}>
                                 <button className="vsc-tab-action" onClick={runNow} style={iconBtnStyle(TOKENS['--vs-signal'])}>▶ Запуск</button>
                                 <button className="vsc-tab-action" onClick={resetCurrent} style={iconBtnStyle(TOKENS['--vs-comet'])}>↺ Сброс</button>
                                 <button className="vsc-tab-action" onClick={downloadSite} style={iconBtnStyle(TOKENS['--vs-sky'])}>⬇ Скачать</button>
@@ -581,13 +607,13 @@ const CodePlayground = ({ onBack }) => {
                         </div>
 
                         {/* Breadcrumb */}
-                        <div style={{ background: '#1e1e1e', padding: '4px 15px', fontSize: '12px', color: '#8a8a8a', borderBottom: '1px solid #2d2d2d', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+                        <div style={{ background: 'var(--vs-bg-deep)', padding: '5px 15px', fontSize: '12px', color: 'var(--vs-text-dim2)', borderBottom: '1px solid var(--vs-border)', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0, fontFamily: "'Nunito', sans-serif" }}>
                             <span>мой-первый-сайт</span> <span>›</span>
-                            <span style={{ color: '#d4d4d4' }}>{LANG_META[activeTab].file}</span>
+                            <span style={{ color: 'var(--vs-text-dim)' }}>{LANG_META[activeTab].file}</span>
                         </div>
 
                         {/* Editor body */}
-                        <div style={{ flex: 1, position: 'relative', background: '#1e1e1e', minHeight: 0 }}>
+                        <div style={{ flex: 1, position: 'relative', background: 'var(--vs-bg-deep)', minHeight: 0 }}>
                             {LANGS.map((lang) => (
                                 <EditorPane
                                     key={lang}
@@ -607,14 +633,14 @@ const CodePlayground = ({ onBack }) => {
                         </div>
                     </div>
 
-                    {/* Simple Browser — предпросмотр как вкладка VS Code */}
-                    <div className="vsc-preview" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#ffffff', borderLeft: '1px solid #2d2d2d', minWidth: 0 }}>
-                        <div style={{ background: '#252526', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #2d2d2d', flexShrink: 0 }}>
-                            <span style={{ fontSize: '12px', color: '#cccccc' }}>🌐</span>
-                            <span style={{ fontSize: '12px', color: '#cccccc', fontWeight: 600 }}>Simple Browser</span>
+                    {/* Simple Browser — предпросмотр */}
+                    <div className="vsc-preview" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#ffffff', borderLeft: '1px solid var(--vs-border)', minWidth: 0 }}>
+                        <div style={{ background: 'var(--vs-bg-mid)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--vs-border)', flexShrink: 0 }}>
+                            <span style={{ fontSize: '12px' }}>🌐</span>
+                            <span style={{ fontSize: '12px', color: 'var(--vs-text-dim)', fontWeight: 700, fontFamily: "'Nunito', sans-serif" }}>Simple Browser</span>
                         </div>
-                        <div style={{ background: '#f3f3f3', padding: '6px 12px', borderBottom: '1px solid #2d2d2d', flexShrink: 0 }}>
-                            <div style={{ background: '#ffffff', border: '1px solid #d0d0d0', borderRadius: '14px', padding: '4px 12px', fontSize: '12px', color: '#555555', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <div style={{ background: 'var(--vs-bg-soft)', padding: '7px 12px', borderBottom: '1px solid var(--vs-border)', flexShrink: 0 }}>
+                            <div style={{ background: 'var(--vs-bg-deep)', border: '1px solid var(--vs-border)', borderRadius: '14px', padding: '4px 12px', fontSize: '12px', color: 'var(--vs-text-dim)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: "'Nunito', sans-serif" }}>
                                 <span style={{ fontSize: '10px' }}>🔒</span> localhost:3000/мой-сайт
                             </div>
                         </div>
@@ -628,7 +654,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
 
                 {/* Status bar */}
-                <div style={{ height: '24px', background: '#007acc', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', fontSize: '11.5px', color: '#ffffff', flexShrink: 0, fontFamily: "'Nunito', 'Segoe UI', sans-serif" }}>
+                <div style={{ height: '25px', background: 'linear-gradient(90deg, var(--vs-nebula), var(--vs-sky))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '11.5px', color: '#ffffff', flexShrink: 0, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                         <span>⎇ main</span>
                         <span>⊗ 0  ⚠ 0</span>
@@ -643,7 +669,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* Панель ИИ-наставника — теперь в виде диалогового окна с аватаром */}
+            {/* Панель ИИ-наставника */}
             <AnimatePresence>
                 {aiResponse && (
                     <motion.div
@@ -651,30 +677,30 @@ const CodePlayground = ({ onBack }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--bg-panel)', border: '1px solid rgba(124,92,255,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(124,92,255,0.18)' }}
+                        style={{ background: 'var(--vs-bg-mid)', border: '1px solid rgba(124,92,255,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(124,92,255,0.22)' }}
                     >
                         <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
                             <div style={{
                                 width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
                                 background: 'linear-gradient(135deg, var(--vs-nebula), var(--vs-comet))',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '19px', boxShadow: '0 0 0 3px rgba(124,92,255,0.15)'
+                                fontSize: '19px', boxShadow: '0 0 0 3px rgba(124,92,255,0.2)'
                             }}>
                                 🤖
                             </div>
 
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: '800', fontSize: '14.5px', color: 'var(--text-main)' }}>
+                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: '800', fontSize: '14.5px', color: '#ffffff' }}>
                                         Наставник ИИ
                                     </span>
-                                    <button className="vsc-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '16px', padding: '5px' }}>✖</button>
+                                    <button className="vsc-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--vs-text-dim)', cursor: 'pointer', fontSize: '16px', padding: '5px' }}>✖</button>
                                 </div>
                                 <div style={{
-                                    background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
+                                    background: 'var(--vs-bg-deep)', border: '1px solid var(--vs-border)',
                                     borderRadius: '14px', borderTopLeftRadius: '4px',
                                     padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px',
-                                    fontFamily: "'Nunito', sans-serif", whiteSpace: 'pre-wrap', color: 'var(--text-main)'
+                                    fontFamily: "'Nunito', sans-serif", whiteSpace: 'pre-wrap', color: '#e9e7f5'
                                 }}>
                                     {aiResponse}
                                 </div>
@@ -688,7 +714,7 @@ const CodePlayground = ({ onBack }) => {
                 <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     fontFamily: "'Nunito', sans-serif", fontSize: '12.5px', fontWeight: '700',
-                    color: 'var(--text-sec)', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)',
+                    color: 'var(--vs-text-dim)', background: 'var(--vs-bg-mid)', border: '1px solid var(--vs-border)',
                     padding: '6px 16px', borderRadius: '999px'
                 }}>
                     💡 Нажимай <b>Tab</b> для отступа — скобки и кавычки закрываются сами, совсем как в настоящей IDE
