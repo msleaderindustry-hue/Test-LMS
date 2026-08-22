@@ -81,6 +81,18 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
+/* Токены нового визуального стиля "обёртки" приложения (не трогают саму
+   имитацию VS Code внутри — она остаётся аутентичной). Задаются как
+   CSS-переменные на корневом узле компонента. */
+const TOKENS = {
+    '--vs-nebula': '#7c5cff',
+    '--vs-nebula-soft': '#a78bfa',
+    '--vs-comet': '#ff7a45',
+    '--vs-signal': '#22c58b',
+    '--vs-sky': '#3aa9f0',
+    '--vs-star': '#ffc93c'
+};
+
 /* =====================================================================
    ПАНЕЛЬ ОДНОГО ФАЙЛА (гаттер + подсветка + textarea + мини-карта)
    ===================================================================== */
@@ -350,11 +362,17 @@ const CodePlayground = ({ onBack }) => {
 
     const iconBtnStyle = (color) => ({
         display: 'flex', alignItems: 'center', gap: '5px',
-        padding: '4px 9px', borderRadius: '5px',
-        border: `1px solid ${color}66`, background: `${color}1a`,
-        color, fontWeight: '600', fontSize: '11.5px',
-        cursor: 'pointer', fontFamily: "'Segoe UI', sans-serif"
+        padding: '5px 11px', borderRadius: '8px',
+        border: `1px solid ${color}55`, background: `${color}1f`,
+        color, fontWeight: '700', fontSize: '11.5px', letterSpacing: '0.1px',
+        cursor: 'pointer', fontFamily: "'Nunito', 'Segoe UI', sans-serif"
     });
+
+    const ThinkingDots = () => (
+        <span style={{ display: 'inline-flex', gap: '3px', color: '#ffffff' }}>
+            <span className="vsc-dot" /><span className="vsc-dot" /><span className="vsc-dot" />
+        </span>
+    );
 
     return (
         <motion.div
@@ -364,11 +382,14 @@ const CodePlayground = ({ onBack }) => {
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.5 }}
             style={{
+                ...TOKENS,
                 width: '100%', maxWidth: '1440px', display: 'flex', flexDirection: 'column', gap: '16px',
-                padding: '20px', margin: '0 auto', fontFamily: '"Segoe UI", sans-serif'
+                padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif"
             }}
         >
             <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
                 .vsc-tok-comment{ color:#6a9955; font-style: italic; }
                 .vsc-tok-string{ color:#ce9178; }
                 .vsc-tok-tag{ color:#569cd6; }
@@ -386,6 +407,25 @@ const CodePlayground = ({ onBack }) => {
                 .vsc-menu-item:hover{ background:#4a4a4a; }
                 .vsc-activity-icon:hover{ opacity: 1 !important; }
                 .vsc-sidebar-item:hover{ background:#2a2d2e !important; }
+
+                .vsc-back-btn{ transition: all .15s ease; }
+                .vsc-back-btn:hover{ background: var(--bg-body) !important; border-color: var(--vs-nebula) !important; color: var(--text-main) !important; }
+
+                .vsc-ai-btn{ transition: transform .15s ease, box-shadow .15s ease; }
+                .vsc-ai-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 26px rgba(124,92,255,0.45) !important; }
+                .vsc-ai-btn:not(:disabled):active{ transform: translateY(0); }
+
+                .vsc-tab-action{ transition: filter .15s ease, transform .15s ease; }
+                .vsc-tab-action:hover{ filter: brightness(1.18); transform: translateY(-1px); }
+
+                .vsc-close-btn{ transition: background .15s ease, color .15s ease; border-radius:7px; }
+                .vsc-close-btn:hover{ background: rgba(124,92,255,0.14); color: var(--vs-nebula) !important; }
+
+                @keyframes vsc-bounce{ 0%,80%,100%{ transform: translateY(0); opacity:.5; } 40%{ transform: translateY(-4px); opacity:1; } }
+                .vsc-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; animation: vsc-bounce 1s infinite ease-in-out; }
+                .vsc-dot:nth-child(2){ animation-delay:.15s; }
+                .vsc-dot:nth-child(3){ animation-delay:.3s; }
+
                 @media (max-width: 980px){
                     .vsc-sidebar{ display:none !important; }
                     .vsc-body{ flex-direction: column !important; }
@@ -395,36 +435,53 @@ const CodePlayground = ({ onBack }) => {
             `}</style>
 
             {/* Шапка хост-приложения (не часть окна VS Code) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'var(--bg-panel)', padding: '15px 25px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--bg-panel)', padding: '14px 22px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     {onBack && (
-                        <button onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '6px 12px', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                        <button className="vsc-back-btn" onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '9px', padding: '7px 13px', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '13px', fontWeight: '700', fontFamily: "'Nunito', sans-serif" }}>
                             ← Назад
                         </button>
                     )}
-                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#0ea5e9' }}>{'</>'}</span> VS School
+
+                    <div style={{
+                        width: '38px', height: '38px', borderRadius: '11px', flexShrink: 0,
+                        background: 'linear-gradient(135deg, var(--vs-nebula), var(--vs-sky))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 6px 16px rgba(124,92,255,0.35)'
+                    }}>
+                        <span style={{ fontSize: '18px', lineHeight: 1 }}>🚀</span>
+                    </div>
+
+                    <h2 style={{ margin: 0, fontSize: '21px', fontWeight: '700', color: 'var(--text-main)', fontFamily: "'Unbounded', 'Nunito', sans-serif", letterSpacing: '-0.01em' }}>
+                        VS School
                     </h2>
-                    <span style={{ background: 'var(--bg-body)', color: 'var(--text-sec)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--glass-border)' }}>
-                        Проект: Мой первый сайт
+
+                    <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        background: 'var(--bg-body)', color: 'var(--text-sec)', padding: '5px 12px',
+                        borderRadius: '999px', fontSize: '12px', fontWeight: '700',
+                        border: '1px solid var(--glass-border)', fontFamily: "'Nunito', sans-serif"
+                    }}>
+                        📁 Мой первый сайт
                     </span>
                 </div>
 
                 <button
+                    className="vsc-ai-btn"
                     onClick={askAI}
                     disabled={isAsking}
                     style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '10px 18px', borderRadius: '10px',
-                        background: isAsking ? 'var(--bg-body)' : 'linear-gradient(135deg, #a78bfa, #7c5cff)',
+                        display: 'flex', alignItems: 'center', gap: '9px',
+                        padding: '10px 19px', borderRadius: '12px',
+                        background: isAsking ? 'var(--bg-body)' : 'linear-gradient(135deg, var(--vs-nebula-soft), var(--vs-nebula))',
                         color: isAsking ? 'var(--text-sec)' : '#fff',
                         border: isAsking ? '1px solid var(--glass-border)' : 'none',
                         fontWeight: '700', fontSize: '14px', cursor: isAsking ? 'not-allowed' : 'pointer',
-                        boxShadow: isAsking ? 'none' : '0 8px 18px rgba(124,92,255,0.35)',
-                        transition: 'all 0.2s'
+                        fontFamily: "'Nunito', sans-serif",
+                        boxShadow: isAsking ? 'none' : '0 8px 18px rgba(124,92,255,0.35)'
                     }}
                 >
-                    {isAsking ? '⏳ Анализ кода...' : '✨ Спросить ИИ-наставника'}
+                    {isAsking ? (<>Анализирую код <ThinkingDots /></>) : '✨ Спросить ИИ-наставника'}
                 </button>
             </div>
 
@@ -438,7 +495,7 @@ const CodePlayground = ({ onBack }) => {
                         <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#febc2e', display: 'block' }} />
                         <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#28c840', display: 'block' }} />
                     </div>
-                    <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: '#a0a0a0' }}>
+                    <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: '#a0a0a0', fontFamily: "'Nunito', 'Segoe UI', sans-serif", fontWeight: 600 }}>
                         {LANG_META[activeTab].file} — Мой-первый-сайт — VS School
                     </div>
                     <div style={{ width: '54px' }} />
@@ -517,9 +574,9 @@ const CodePlayground = ({ onBack }) => {
                                 })}
                             </div>
                             <div style={{ display: 'flex', gap: '6px', padding: '0 10px' }}>
-                                <button onClick={runNow} style={iconBtnStyle('#4ec9b0')}>▶ Запуск</button>
-                                <button onClick={resetCurrent} style={iconBtnStyle('#f48771')}>↺ Сброс</button>
-                                <button onClick={downloadSite} style={iconBtnStyle('#569cd6')}>⬇ Скачать</button>
+                                <button className="vsc-tab-action" onClick={runNow} style={iconBtnStyle(TOKENS['--vs-signal'])}>▶ Запуск</button>
+                                <button className="vsc-tab-action" onClick={resetCurrent} style={iconBtnStyle(TOKENS['--vs-comet'])}>↺ Сброс</button>
+                                <button className="vsc-tab-action" onClick={downloadSite} style={iconBtnStyle(TOKENS['--vs-sky'])}>⬇ Скачать</button>
                             </div>
                         </div>
 
@@ -571,7 +628,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
 
                 {/* Status bar */}
-                <div style={{ height: '24px', background: '#007acc', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', fontSize: '11.5px', color: '#ffffff', flexShrink: 0 }}>
+                <div style={{ height: '24px', background: '#007acc', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', fontSize: '11.5px', color: '#ffffff', flexShrink: 0, fontFamily: "'Nunito', 'Segoe UI', sans-serif" }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                         <span>⎇ main</span>
                         <span>⊗ 0  ⚠ 0</span>
@@ -586,7 +643,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* Панель ИИ-наставника */}
+            {/* Панель ИИ-наставника — теперь в виде диалогового окна с аватаром */}
             <AnimatePresence>
                 {aiResponse && (
                     <motion.div
@@ -594,23 +651,48 @@ const CodePlayground = ({ onBack }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--bg-panel)', border: '1px solid #c4b5fd', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(124,92,255,0.15)' }}
+                        style={{ background: 'var(--bg-panel)', border: '1px solid rgba(124,92,255,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(124,92,255,0.18)' }}
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(139, 92, 246, 0.12)', padding: '12px 20px', borderBottom: '1px solid rgba(139, 92, 246, 0.25)' }}>
-                            <div style={{ fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
-                                <span style={{ color: '#8b5cf6', fontSize: '18px' }}>✨</span> Наставник ИИ
+                        <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
+                                background: 'linear-gradient(135deg, var(--vs-nebula), var(--vs-comet))',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '19px', boxShadow: '0 0 0 3px rgba(124,92,255,0.15)'
+                            }}>
+                                🤖
                             </div>
-                            <button onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '18px', padding: '4px' }}>✖</button>
-                        </div>
-                        <div style={{ padding: '18px 20px', lineHeight: '1.6', fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--text-main)' }}>
-                            {aiResponse}
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
+                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: '800', fontSize: '14.5px', color: 'var(--text-main)' }}>
+                                        Наставник ИИ
+                                    </span>
+                                    <button className="vsc-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '16px', padding: '5px' }}>✖</button>
+                                </div>
+                                <div style={{
+                                    background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
+                                    borderRadius: '14px', borderTopLeftRadius: '4px',
+                                    padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px',
+                                    fontFamily: "'Nunito', sans-serif", whiteSpace: 'pre-wrap', color: 'var(--text-main)'
+                                }}>
+                                    {aiResponse}
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-sec)' }}>
-                Совет: нажимай <b>Tab</b> для отступа, а скобки и кавычки закрываются сами — совсем как в настоящей IDE 🚀
+            <div style={{ textAlign: 'center' }}>
+                <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    fontFamily: "'Nunito', sans-serif", fontSize: '12.5px', fontWeight: '700',
+                    color: 'var(--text-sec)', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)',
+                    padding: '6px 16px', borderRadius: '999px'
+                }}>
+                    💡 Нажимай <b>Tab</b> для отступа — скобки и кавычки закрываются сами, совсем как в настоящей IDE
+                </span>
             </div>
         </motion.div>
     );
