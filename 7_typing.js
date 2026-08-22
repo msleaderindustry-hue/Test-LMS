@@ -81,16 +81,14 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
-// ИСПРАВЛЕНО: теперь ссылается на глобальные переменные темы сайта,
-// а не задаёт свои фиксированные цвета
 const TOKENS = {
-    '--cq-bg-deep': 'var(--bg-body)',
-    '--cq-bg-panel': 'var(--bg-panel)',
-    '--cq-bg-soft': 'var(--bg-panel)',
-    '--cq-border': 'var(--glass-border)',
-    '--cq-text-hi': 'var(--text-main)',
-    '--cq-text-dim': 'var(--text-sec)',
-    '--cq-text-dim2': 'var(--text-sec)',
+    '--cq-bg-deep': '#120f22',
+    '--cq-bg-panel': '#1b1733',
+    '--cq-bg-soft': '#241f42',
+    '--cq-border': '#332c58',
+    '--cq-text-hi': '#ffffff',
+    '--cq-text-dim': '#a79fd1',
+    '--cq-text-dim2': '#736a9c',
     '--cq-violet': '#8b5cf6',
     '--cq-pink': '#f472b6',
     '--cq-mint': '#34d399',
@@ -127,7 +125,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         position: 'absolute', inset: 0, margin: 0, padding: '16px',
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
-                        overflow: 'auto', color: 'var(--cq-text-hi)', pointerEvents: 'none', background: 'transparent'
+                        overflow: 'auto', color: '#e7e3f7', pointerEvents: 'none', background: 'transparent'
                     }}
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                 />
@@ -149,7 +147,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
                         border: 'none', resize: 'none', outline: 'none', overflow: 'auto',
-                        background: 'transparent', color: 'transparent', caretColor: 'var(--cq-text-hi)'
+                        background: 'transparent', color: 'transparent', caretColor: '#ffffff'
                     }}
                 />
             </div>
