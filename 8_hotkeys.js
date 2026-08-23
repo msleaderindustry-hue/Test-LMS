@@ -108,6 +108,7 @@ const HOTKEY_DESC_TRANSLATIONS = {
         newFile: "Create a new file or window",
         bold: "Bold text"
     },
+    
     uz: {
         alignRight: "Матнни ўнг томонга текислаш",
         alignLeft: "Матнни чап томонга текислаш",
