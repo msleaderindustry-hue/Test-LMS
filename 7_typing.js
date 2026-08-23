@@ -81,17 +81,18 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
+// ИСПРАВЛЕННЫЕ ТОКЕНЫ: ТЕПЕРЬ ПОДДЕРЖИВАЮТ СВЕТЛУЮ ТЕМУ
 const TOKENS = {
-    '--cq-bg-deep': '#120f22',
-    '--cq-bg-panel': '#1b1733',
-    '--cq-bg-soft': '#241f42',
-    '--cq-border': '#332c58',
-    '--cq-text-hi': '#ffffff',
-    '--cq-text-dim': '#a79fd1',
-    '--cq-text-dim2': '#736a9c',
+    '--cq-bg-deep': 'var(--bg-body)',
+    '--cq-bg-panel': 'var(--bg-panel)',
+    '--cq-bg-soft': 'rgba(128,128,128,0.1)',
+    '--cq-border': 'var(--glass-border)',
+    '--cq-text-hi': 'var(--text-main)',
+    '--cq-text-dim': 'var(--text-sec)',
+    '--cq-text-dim2': 'var(--text-sec)',
     '--cq-violet': '#8b5cf6',
     '--cq-pink': '#f472b6',
-    '--cq-mint': '#34d399',
+    '--cq-mint': '#10b981',
     '--cq-rose': '#fb7185',
     '--cq-sky': '#38bdf8'
 };
@@ -125,7 +126,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         position: 'absolute', inset: 0, margin: 0, padding: '16px',
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
-                        overflow: 'auto', color: '#e7e3f7', pointerEvents: 'none', background: 'transparent'
+                        overflow: 'auto', color: 'var(--cq-text-hi)', pointerEvents: 'none', background: 'transparent'
                     }}
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                 />
@@ -147,7 +148,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
                         border: 'none', resize: 'none', outline: 'none', overflow: 'auto',
-                        background: 'transparent', color: 'transparent', caretColor: '#ffffff'
+                        background: 'transparent', color: 'transparent', caretColor: 'var(--cq-text-hi)'
                     }}
                 />
             </div>
@@ -160,7 +161,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
    ===================================================================== */
 
 const CodePlayground = ({ onBack }) => {
-    const [mode, setMode] = useState('code'); // 'code' | 'preview' — только ОДИН режим виден целиком
+    const [mode, setMode] = useState('code'); 
     const [activeTab, setActiveTab] = useState('html');
     const [code, setCode] = useState({ ...DEFAULT_CODE });
     const [srcDoc, setSrcDoc] = useState('');
@@ -197,13 +198,9 @@ const CodePlayground = ({ onBack }) => {
     }, [activeTab]);
 
     const runNow = () => setSrcDoc(buildDoc(code));
-
     const goPreview = () => { runNow(); setMode('preview'); };
     const goCode = () => setMode('code');
-
-    const updateCode = (lang, value) => {
-        setCode((prev) => ({ ...prev, [lang]: value }));
-    };
+    const updateCode = (lang, value) => setCode((prev) => ({ ...prev, [lang]: value }));
 
     const resetCurrent = () => {
         const label = LANG_META[activeTab].file;
@@ -363,23 +360,24 @@ const CodePlayground = ({ onBack }) => {
                 padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif", position: 'relative'
             }}
         >
+            {/* АДАПТИВНАЯ ПОДСВЕТКА ДЛЯ СВЕТЛОЙ ТЕМЫ */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
 
-                .cq-tok-comment{ color:#847ea8; font-style: italic; }
-                .cq-tok-string{ color:#facc7d; }
-                .cq-tok-tag{ color:#7cc4ff; }
-                .cq-tok-attr{ color:#a5e6c6; }
-                .cq-tok-punct{ color:#cfc9ec; }
-                .cq-tok-entity{ color:#facc7d; }
-                .cq-tok-property{ color:#a5e6c6; }
-                .cq-tok-selector{ color:#f0a8d0; }
-                .cq-tok-number{ color:#b9f0c8; }
-                .cq-tok-keyword{ color:#c39cf7; font-weight:600; }
-                .cq-tok-func{ color:#ffd68a; }
-                .cq-tok-operator{ color:#cfc9ec; }
-                .cq-tok-identifier{ color:#e7e3f7; }
-                .cq-code-textarea::selection{ background: rgba(139,92,246,0.35); }
+                .cq-tok-comment{ color: var(--cq-text-dim2); font-style: italic; }
+                .cq-tok-string{ color: #eab308; }
+                .cq-tok-tag{ color: #3b82f6; }
+                .cq-tok-attr{ color: #10b981; }
+                .cq-tok-punct{ color: var(--cq-text-dim); }
+                .cq-tok-entity{ color: #eab308; }
+                .cq-tok-property{ color: #10b981; }
+                .cq-tok-selector{ color: #ec4899; }
+                .cq-tok-number{ color: #10b981; }
+                .cq-tok-keyword{ color: #a855f7; font-weight:600; }
+                .cq-tok-func{ color: #f59e0b; }
+                .cq-tok-operator{ color: var(--cq-text-dim); }
+                .cq-tok-identifier{ color: var(--cq-text-hi); }
+                .cq-code-textarea::selection{ background: rgba(139,92,246,0.25); }
 
                 .cq-fab:hover{ filter: brightness(1.15); transform: translateY(-2px) scale(1.04); }
                 .cq-fab:active{ transform: translateY(0) scale(0.97); }
@@ -388,7 +386,7 @@ const CodePlayground = ({ onBack }) => {
                 .cq-seg-btn{ transition: background .2s ease, color .2s ease; }
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
-                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: #fff !important; }
+                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: var(--cq-text-hi) !important; }
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
                 .cq-mode-switch{ transition: background .25s ease; }
 
@@ -454,19 +452,16 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* ==================== ГЛАВНАЯ СЦЕНА (один режим на весь экран) ==================== */}
+            {/* ==================== ГЛАВНАЯ СЦЕНА ==================== */}
             <div style={{ position: 'relative', height: '64vh', minHeight: '480px' }}>
                 <AnimatePresence mode="wait">
                     {mode === 'code' ? (
                         <motion.div
                             key="code"
-                            initial={{ opacity: 0, x: -16 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -16 }}
-                            transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
+                            initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.1)' }}
                         >
-                            {/* Полноширинный сегмент-переключатель файлов */}
+                            {/* Сегмент-переключатель файлов */}
                             <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
                                 {LANGS.map((lang) => {
                                     const active = activeTab === lang;
@@ -479,7 +474,7 @@ const CodePlayground = ({ onBack }) => {
                                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                                 padding: '13px 8px', border: 'none', cursor: 'pointer',
                                                 background: active ? 'var(--cq-bg-panel)' : 'transparent',
-                                                color: active ? '#fff' : 'var(--cq-text-dim)',
+                                                color: active ? 'var(--cq-text-hi)' : 'var(--cq-text-dim)',
                                                 borderBottom: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent',
                                                 fontWeight: 800, fontSize: '13.5px'
                                             }}
@@ -496,9 +491,7 @@ const CodePlayground = ({ onBack }) => {
                                 {LANGS.map((lang) => (
                                     <EditorPane
                                         key={lang}
-                                        lang={lang}
-                                        value={code[lang]}
-                                        isActive={activeTab === lang}
+                                        lang={lang} value={code[lang]} isActive={activeTab === lang}
                                         onChange={(v) => updateCode(lang, v)}
                                         onKeyDown={(e) => handleKeyDown(e, lang)}
                                         onScroll={() => handleScrollSync(lang)}
@@ -509,15 +502,15 @@ const CodePlayground = ({ onBack }) => {
                                     />
                                 ))}
 
-                                {/* Плавающая колонка действий — сбоку, а не в шапке */}
+                                {/* Плавающая колонка действий */}
                                 <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
                                     <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}>▶</button>
                                     <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}>↺</button>
                                     <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}>⬇</button>
                                 </div>
 
-                                {/* Индикатор курсора — тихо, снизу слева */}
-                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'rgba(0,0,0,0.35)', padding: '3px 9px', borderRadius: '999px' }}>
+                                {/* Индикатор курсора */}
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px', border: '1px solid var(--cq-border)' }}>
                                     Стр. {cursor.line}:{cursor.col}
                                 </div>
 
@@ -535,16 +528,13 @@ const CodePlayground = ({ onBack }) => {
                     ) : (
                         <motion.div
                             key="preview"
-                            initial={{ opacity: 0, x: 16 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 16 }}
-                            transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.4)' }}
+                            initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.1)' }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
-                                    <span style={{ fontSize: '13px', color: '#fff', fontWeight: 800 }}>Твой сайт готов!</span>
+                                    <span style={{ fontSize: '13px', color: 'var(--cq-text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
                                 </div>
                                 <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px', fontSize: '13px' }}>⟳</button>
                             </div>
@@ -577,11 +567,8 @@ const CodePlayground = ({ onBack }) => {
             <AnimatePresence>
                 {aiResponse && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.2)' }}
+                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}
+                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(0,0,0,0.1)' }}
                     >
                         <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
                             <div style={{
@@ -595,7 +582,7 @@ const CodePlayground = ({ onBack }) => {
                                     <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
                                     <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '16px', padding: '5px', borderRadius: '7px' }}>✖</button>
                                 </div>
-                                <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: '#e9e7f5' }}>
+                                <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: 'var(--cq-text-hi)' }}>
                                     {aiResponse}
                                 </div>
                             </div>
