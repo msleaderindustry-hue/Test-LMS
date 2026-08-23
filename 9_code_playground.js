@@ -81,14 +81,15 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
+// ИЗМЕНЕНО: Заменил жесткие HEX-цвета на твои глобальные CSS-переменные
 const TOKENS = {
-    '--cq-bg-deep': '#120f22',
-    '--cq-bg-panel': '#1b1733',
-    '--cq-bg-soft': '#241f42',
-    '--cq-border': '#332c58',
-    '--cq-text-hi': '#ffffff',
-    '--cq-text-dim': '#a79fd1',
-    '--cq-text-dim2': '#736a9c',
+    '--cq-bg-deep': 'var(--bg-body)',
+    '--cq-bg-panel': 'var(--bg-panel)',
+    '--cq-bg-soft': 'rgba(128,128,128,0.15)',
+    '--cq-border': 'var(--glass-border)',
+    '--cq-text-hi': 'var(--text-main)',
+    '--cq-text-dim': 'var(--text-sec)',
+    '--cq-text-dim2': 'var(--text-sec)',
     '--cq-violet': '#8b5cf6',
     '--cq-pink': '#f472b6',
     '--cq-mint': '#34d399',
@@ -125,7 +126,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         position: 'absolute', inset: 0, margin: 0, padding: '16px',
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
-                        overflow: 'auto', color: '#e7e3f7', pointerEvents: 'none', background: 'transparent'
+                        overflow: 'auto', color: 'var(--cq-text-hi)', pointerEvents: 'none', background: 'transparent'
                     }}
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                 />
@@ -147,7 +148,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
                         fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                         fontSize: '14px', lineHeight: '1.65', whiteSpace: 'pre',
                         border: 'none', resize: 'none', outline: 'none', overflow: 'auto',
-                        background: 'transparent', color: 'transparent', caretColor: '#ffffff'
+                        background: 'transparent', color: 'transparent', caretColor: 'var(--cq-text-hi)'
                     }}
                 />
             </div>
@@ -360,7 +361,7 @@ const CodePlayground = ({ onBack }) => {
             style={{
                 ...TOKENS,
                 width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '16px',
-                padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif", position: 'relative'
+                padding: '20px', margin: '0 auto', fontFamily: "'Nunito', 'Segoe UI', sans-serif', position: 'relative'
             }}
         >
             <style>{`
@@ -381,6 +382,21 @@ const CodePlayground = ({ onBack }) => {
                 .cq-tok-identifier{ color:#e7e3f7; }
                 .cq-code-textarea::selection{ background: rgba(139,92,246,0.35); }
 
+                /* ИЗМЕНЕНО: Добавлена адаптация синтаксиса под светлую тему */
+                body.light .cq-tok-comment{ color:#9ca3af; }
+                body.light .cq-tok-string{ color:#d97706; }
+                body.light .cq-tok-tag{ color:#2563eb; }
+                body.light .cq-tok-attr{ color:#059669; }
+                body.light .cq-tok-punct{ color:#64748b; }
+                body.light .cq-tok-entity{ color:#d97706; }
+                body.light .cq-tok-property{ color:#059669; }
+                body.light .cq-tok-selector{ color:#db2777; }
+                body.light .cq-tok-number{ color:#059669; }
+                body.light .cq-tok-keyword{ color:#9333ea; }
+                body.light .cq-tok-func{ color:#ea580c; }
+                body.light .cq-tok-operator{ color:#64748b; }
+                body.light .cq-tok-identifier{ color:#1e293b; }
+
                 .cq-fab:hover{ filter: brightness(1.15); transform: translateY(-2px) scale(1.04); }
                 .cq-fab:active{ transform: translateY(0) scale(0.97); }
                 .cq-fab{ transition: transform .15s ease, filter .15s ease; }
@@ -388,7 +404,7 @@ const CodePlayground = ({ onBack }) => {
                 .cq-seg-btn{ transition: background .2s ease, color .2s ease; }
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
-                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: #fff !important; }
+                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: var(--cq-text-hi) !important; }
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
                 .cq-mode-switch{ transition: background .25s ease; }
 
@@ -425,7 +441,7 @@ const CodePlayground = ({ onBack }) => {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '9px', padding: '10px 19px', borderRadius: '12px',
                         background: isAsking ? 'var(--cq-bg-soft)' : 'linear-gradient(135deg, var(--cq-pink), var(--cq-violet))',
-                        color: isAsking ? 'var(--cq-text-dim)' : '#fff',
+                        color: isAsking ? 'var(--cq-text-dim)' : 'var(--cq-text-hi)',
                         border: isAsking ? '1px solid var(--cq-border)' : 'none',
                         fontWeight: 700, fontSize: '14px', cursor: isAsking ? 'not-allowed' : 'pointer',
                         boxShadow: isAsking ? 'none' : '0 8px 20px rgba(139,92,246,0.4)'
@@ -445,10 +461,10 @@ const CodePlayground = ({ onBack }) => {
                         borderRadius: '999px', transition: 'left .25s cubic-bezier(.4,0,.2,1)',
                         boxShadow: '0 6px 16px rgba(139,92,246,0.4)'
                     }} />
-                    <button onClick={goCode} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'code' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
+                    <button onClick={goCode} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'code' ? 'var(--cq-text-hi)' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
                         🛠️ Пишу код
                     </button>
-                    <button onClick={goPreview} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'preview' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
+                    <button onClick={goPreview} style={{ position: 'relative', zIndex: 1, border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'preview' ? 'var(--cq-text-hi)' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
                         🚀 Смотрю сайт
                     </button>
                 </div>
@@ -464,7 +480,7 @@ const CodePlayground = ({ onBack }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -16 }}
                             transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.1)' }}
                         >
                             {/* Полноширинный сегмент-переключатель файлов */}
                             <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
@@ -479,7 +495,7 @@ const CodePlayground = ({ onBack }) => {
                                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                                 padding: '13px 8px', border: 'none', cursor: 'pointer',
                                                 background: active ? 'var(--cq-bg-panel)' : 'transparent',
-                                                color: active ? '#fff' : 'var(--cq-text-dim)',
+                                                color: active ? 'var(--cq-text-hi)' : 'var(--cq-text-dim)',
                                                 borderBottom: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent',
                                                 fontWeight: 800, fontSize: '13.5px'
                                             }}
@@ -517,7 +533,7 @@ const CodePlayground = ({ onBack }) => {
                                 </div>
 
                                 {/* Индикатор курсора — тихо, снизу слева */}
-                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'rgba(0,0,0,0.35)', padding: '3px 9px', borderRadius: '999px' }}>
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', border: '1px solid var(--cq-border)', padding: '3px 9px', borderRadius: '999px' }}>
                                     Стр. {cursor.line}:{cursor.col}
                                 </div>
 
@@ -539,17 +555,17 @@ const CodePlayground = ({ onBack }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 16 }}
                             transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.4)' }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.1)' }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
-                                    <span style={{ fontSize: '13px', color: '#fff', fontWeight: 800 }}>Твой сайт готов!</span>
+                                    <span style={{ fontSize: '13px', color: 'var(--cq-text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
                                 </div>
                                 <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px', fontSize: '13px' }}>⟳</button>
                             </div>
-                            <div style={{ padding: '8px 16px', background: '#f5f3fb', borderBottom: '1px solid #e7e2f5', flexShrink: 0 }}>
-                                <div style={{ background: '#ffffff', border: '1px solid #e2ddef', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: '#6b6488', textAlign: 'center', fontWeight: 700 }}>
+                            <div style={{ padding: '8px 16px', background: 'var(--cq-bg-deep)', borderBottom: '1px solid var(--cq-border)', flexShrink: 0 }}>
+                                <div style={{ background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: 'var(--cq-text-dim)', textAlign: 'center', fontWeight: 700 }}>
                                     🔒 мой-сайт.детский-код
                                 </div>
                             </div>
@@ -581,7 +597,7 @@ const CodePlayground = ({ onBack }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.2)' }}
+                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(0,0,0,0.1)' }}
                     >
                         <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
                             <div style={{
@@ -595,7 +611,7 @@ const CodePlayground = ({ onBack }) => {
                                     <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
                                     <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '16px', padding: '5px', borderRadius: '7px' }}>✖</button>
                                 </div>
-                                <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: '#e9e7f5' }}>
+                                <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: 'var(--cq-text-hi)' }}>
                                     {aiResponse}
                                 </div>
                             </div>
