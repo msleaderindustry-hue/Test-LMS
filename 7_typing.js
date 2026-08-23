@@ -81,14 +81,26 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
+/* Две группы переменных:
+   1) "surface-*" — внешний хром (шапка, переключатель, панель ИИ, подсказка).
+      Подхватывает ТЕКУЩУЮ тему хост-приложения через var(--bg-panel) и т.д.
+      Если хост не задаёт эти переменные — используется тёмный фолбэк,
+      и всё выглядит как раньше.
+   2) "editor-*" — сам блок с кодом. Он всегда тёмный, независимо от темы
+      сайта — так остаётся читаемой подсветка синтаксиса (как в любой IDE). */
 const TOKENS = {
-    '--cq-bg-deep': '#120f22',
-    '--cq-bg-panel': '#1b1733',
-    '--cq-bg-soft': '#241f42',
-    '--cq-border': '#332c58',
-    '--cq-text-hi': '#ffffff',
-    '--cq-text-dim': '#a79fd1',
-    '--cq-text-dim2': '#736a9c',
+    '--cq-surface': 'var(--bg-panel, #1b1733)',
+    '--cq-surface-soft': 'var(--bg-body, #241f42)',
+    '--cq-border': 'var(--glass-border, #332c58)',
+    '--cq-text-hi': 'var(--text-main, #ffffff)',
+    '--cq-text-dim': 'var(--text-sec, #a79fd1)',
+
+    '--cq-editor-bg': '#120f22',
+    '--cq-editor-panel': '#1b1733',
+    '--cq-editor-border': '#332c58',
+    '--cq-editor-text-dim': '#a79fd1',
+    '--cq-editor-text-dim2': '#736a9c',
+
     '--cq-violet': '#8b5cf6',
     '--cq-pink': '#f472b6',
     '--cq-mint': '#34d399',
@@ -97,7 +109,7 @@ const TOKENS = {
 };
 
 /* =====================================================================
-   ПАНЕЛЬ ОДНОГО ФАЙЛА
+   ПАНЕЛЬ ОДНОГО ФАЙЛА (всегда тёмная, вне зависимости от темы сайта)
    ===================================================================== */
 
 const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCursor, taRef, preRef, gutterRef }) => {
@@ -109,7 +121,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
             <div
                 ref={gutterRef}
                 style={{
-                    width: '44px', flexShrink: 0, background: 'var(--cq-bg-deep)', color: 'var(--cq-text-dim2)',
+                    width: '44px', flexShrink: 0, background: 'var(--cq-editor-bg)', color: 'var(--cq-editor-text-dim2)',
                     fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
                     fontSize: '13px', lineHeight: '1.65', padding: '16px 10px 16px 0',
                     textAlign: 'right', overflow: 'hidden', userSelect: 'none'
@@ -160,7 +172,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
    ===================================================================== */
 
 const CodePlayground = ({ onBack }) => {
-    const [mode, setMode] = useState('code'); // 'code' | 'preview' — только ОДИН режим виден целиком
+    const [mode, setMode] = useState('code');
     const [activeTab, setActiveTab] = useState('html');
     const [code, setCode] = useState({ ...DEFAULT_CODE });
     const [srcDoc, setSrcDoc] = useState('');
@@ -388,7 +400,7 @@ const CodePlayground = ({ onBack }) => {
                 .cq-seg-btn{ transition: background .2s ease, color .2s ease; }
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
-                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: #fff !important; }
+                .cq-back-btn:hover{ background: var(--cq-surface-soft) !important; color: var(--cq-text-hi) !important; }
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
                 .cq-mode-switch{ transition: background .25s ease; }
 
@@ -398,11 +410,11 @@ const CodePlayground = ({ onBack }) => {
                 .cq-dot:nth-child(3){ animation-delay:.3s; }
             `}</style>
 
-            <div style={{ position: 'absolute', top: '-60px', left: '5%', width: '260px', height: '260px', background: 'var(--cq-violet)', opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '10%', right: '5%', width: '220px', height: '220px', background: 'var(--cq-sky)', opacity: 0.14, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '-60px', left: '5%', width: '260px', height: '260px', background: 'var(--cq-violet)', opacity: 0.14, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '10%', right: '5%', width: '220px', height: '220px', background: 'var(--cq-sky)', opacity: 0.1, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
 
-            {/* ==================== ШАПКА ==================== */}
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--cq-bg-panel)', padding: '14px 22px', borderRadius: '18px', border: '1px solid var(--cq-border)' }}>
+            {/* ==================== ШАПКА (следует теме сайта) ==================== */}
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--cq-surface)', padding: '14px 22px', borderRadius: '18px', border: '1px solid var(--cq-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     {onBack && (
                         <button className="cq-back-btn" onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--cq-border)', borderRadius: '10px', padding: '7px 13px', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
@@ -413,7 +425,7 @@ const CodePlayground = ({ onBack }) => {
                         <span style={{ fontSize: '18px' }}>🚀</span>
                     </div>
                     <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--cq-text-hi)', fontFamily: "'Unbounded', sans-serif", letterSpacing: '-0.01em' }}>VS School</h2>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--cq-bg-soft)', color: 'var(--cq-text-dim)', padding: '5px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, border: '1px solid var(--cq-border)' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--cq-surface-soft)', color: 'var(--cq-text-dim)', padding: '5px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, border: '1px solid var(--cq-border)' }}>
                         📁 Мой первый сайт
                     </span>
                 </div>
@@ -424,7 +436,7 @@ const CodePlayground = ({ onBack }) => {
                     disabled={isAsking}
                     style={{
                         display: 'flex', alignItems: 'center', gap: '9px', padding: '10px 19px', borderRadius: '12px',
-                        background: isAsking ? 'var(--cq-bg-soft)' : 'linear-gradient(135deg, var(--cq-pink), var(--cq-violet))',
+                        background: isAsking ? 'var(--cq-surface-soft)' : 'linear-gradient(135deg, var(--cq-pink), var(--cq-violet))',
                         color: isAsking ? 'var(--cq-text-dim)' : '#fff',
                         border: isAsking ? '1px solid var(--cq-border)' : 'none',
                         fontWeight: 700, fontSize: '14px', cursor: isAsking ? 'not-allowed' : 'pointer',
@@ -435,9 +447,9 @@ const CodePlayground = ({ onBack }) => {
                 </button>
             </div>
 
-            {/* ==================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ==================== */}
+            {/* ==================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА (следует теме сайта) ==================== */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div className="cq-mode-switch" style={{ position: 'relative', display: 'flex', background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px', gap: '4px' }}>
+                <div className="cq-mode-switch" style={{ position: 'relative', display: 'flex', background: 'var(--cq-surface)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px', gap: '4px' }}>
                     <div style={{
                         position: 'absolute', top: '5px', bottom: '5px', width: 'calc(50% - 4px)',
                         left: mode === 'code' ? '5px' : 'calc(50% + 3px)',
@@ -454,7 +466,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* ==================== ГЛАВНАЯ СЦЕНА (один режим на весь экран) ==================== */}
+            {/* ==================== ГЛАВНАЯ СЦЕНА ==================== */}
             <div style={{ position: 'relative', height: '64vh', minHeight: '480px' }}>
                 <AnimatePresence mode="wait">
                     {mode === 'code' ? (
@@ -464,10 +476,10 @@ const CodePlayground = ({ onBack }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -16 }}
                             transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-editor-bg)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-editor-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
                         >
-                            {/* Полноширинный сегмент-переключатель файлов */}
-                            <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
+                            {/* Полноширинный сегмент-переключатель файлов — всегда тёмный (часть редактора) */}
+                            <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-editor-border)' }}>
                                 {LANGS.map((lang) => {
                                     const active = activeTab === lang;
                                     return (
@@ -478,8 +490,8 @@ const CodePlayground = ({ onBack }) => {
                                             style={{
                                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                                 padding: '13px 8px', border: 'none', cursor: 'pointer',
-                                                background: active ? 'var(--cq-bg-panel)' : 'transparent',
-                                                color: active ? '#fff' : 'var(--cq-text-dim)',
+                                                background: active ? 'var(--cq-editor-panel)' : 'transparent',
+                                                color: active ? '#fff' : 'var(--cq-editor-text-dim)',
                                                 borderBottom: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent',
                                                 fontWeight: 800, fontSize: '13.5px'
                                             }}
@@ -509,24 +521,21 @@ const CodePlayground = ({ onBack }) => {
                                     />
                                 ))}
 
-                                {/* Плавающая колонка действий — сбоку, а не в шапке */}
                                 <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
                                     <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}>▶</button>
                                     <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}>↺</button>
                                     <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}>⬇</button>
                                 </div>
 
-                                {/* Индикатор курсора — тихо, снизу слева */}
-                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'rgba(0,0,0,0.35)', padding: '3px 9px', borderRadius: '999px' }}>
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-editor-text-dim)', fontWeight: 700, background: 'rgba(0,0,0,0.35)', padding: '3px 9px', borderRadius: '999px' }}>
                                     Стр. {cursor.line}:{cursor.col}
                                 </div>
 
-                                {/* Кнопка-мостик к результату */}
                                 <button
                                     className="cq-fab"
                                     onClick={goPreview}
                                     title="Посмотреть сайт"
-                                    style={{ ...fabStyle('linear-gradient(135deg, #8b5cf6, #f472b6)'), position: 'absolute', bottom: '14px', right: '14px', width: '54px', height: '54px', fontSize: '20px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #f472b6)' }}
+                                    style={{ position: 'absolute', bottom: '14px', right: '14px', width: '54px', height: '54px', fontSize: '20px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #f472b6)', borderRadius: '50%', border: 'none', cursor: 'pointer', boxShadow: '0 10px 24px rgba(139,92,246,0.5)' }}
                                 >
                                     🚀
                                 </button>
@@ -539,9 +548,10 @@ const CodePlayground = ({ onBack }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 16 }}
                             transition={{ duration: 0.2 }}
-                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.4)' }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-editor-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.4)' }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
+                            {/* Хром превью-«браузера» — тоже всегда тёмный, это рамка устройства, не тема сайта */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-editor-panel)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
                                     <span style={{ fontSize: '13px', color: '#fff', fontWeight: 800 }}>Твой сайт готов!</span>
@@ -564,7 +574,7 @@ const CodePlayground = ({ onBack }) => {
                                 className="cq-fab"
                                 onClick={goCode}
                                 title="Редактировать код"
-                                style={{ position: 'absolute', bottom: '18px', right: '18px', width: '54px', height: '54px', fontSize: '19px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #38bdf8)' }}
+                                style={{ position: 'absolute', bottom: '18px', right: '18px', width: '54px', height: '54px', fontSize: '19px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #38bdf8)', borderRadius: '50%', border: 'none', cursor: 'pointer', boxShadow: '0 10px 24px rgba(56,189,248,0.5)' }}
                             >
                                 ✏️
                             </button>
@@ -573,7 +583,7 @@ const CodePlayground = ({ onBack }) => {
                 </AnimatePresence>
             </div>
 
-            {/* ==================== ИИ-НАСТАВНИК ==================== */}
+            {/* ==================== ИИ-НАСТАВНИК (следует теме сайта) ==================== */}
             <AnimatePresence>
                 {aiResponse && (
                     <motion.div
@@ -581,7 +591,7 @@ const CodePlayground = ({ onBack }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.2)' }}
+                        style={{ background: 'var(--cq-surface)', border: '1px solid var(--cq-border)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.15)' }}
                     >
                         <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
                             <div style={{
@@ -595,7 +605,7 @@ const CodePlayground = ({ onBack }) => {
                                     <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
                                     <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '16px', padding: '5px', borderRadius: '7px' }}>✖</button>
                                 </div>
-                                <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: '#e9e7f5' }}>
+                                <div style={{ background: 'var(--cq-surface-soft)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: 'var(--cq-text-hi)' }}>
                                     {aiResponse}
                                 </div>
                             </div>
@@ -605,7 +615,7 @@ const CodePlayground = ({ onBack }) => {
             </AnimatePresence>
 
             <div style={{ textAlign: 'center' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: 'var(--cq-text-dim)', background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', padding: '6px 16px', borderRadius: '999px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: 'var(--cq-text-dim)', background: 'var(--cq-surface)', border: '1px solid var(--cq-border)', padding: '6px 16px', borderRadius: '999px' }}>
                     💡 Нажимай <b style={{ color: 'var(--cq-text-hi)' }}>Tab</b> для отступа — скобки и кавычки закрываются сами
                 </span>
             </div>
