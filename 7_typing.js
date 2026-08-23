@@ -81,32 +81,93 @@ const LANG_META = {
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
 const CLOSERS = [')', '}', ']', '"', "'"];
 
-/* Две группы переменных:
-   1) "surface-*" — внешний хром (шапка, переключатель, панель ИИ, подсказка).
-      Подхватывает ТЕКУЩУЮ тему хост-приложения через var(--bg-panel) и т.д.
-      Если хост не задаёт эти переменные — используется тёмный фолбэк,
-      и всё выглядит как раньше.
-   2) "editor-*" — сам блок с кодом. Он всегда тёмный, независимо от темы
-      сайта — так остаётся читаемой подсветка синтаксиса (как в любой IDE). */
-const TOKENS = {
-    '--cq-surface': 'var(--bg-panel, #1b1733)',
-    '--cq-surface-soft': 'var(--bg-body, #241f42)',
-    '--cq-border': 'var(--glass-border, #332c58)',
-    '--cq-text-hi': 'var(--text-main, #ffffff)',
-    '--cq-text-dim': 'var(--text-sec, #a79fd1)',
+/* Раньше «внешний хром» пытался подхватить тему через var(--bg-panel) и
+   т.д. — но у хост-приложения оказались другие имена переменных (или их
+   нет вовсе), поэтому переключатель темы ни на что не влиял.
+   Теперь вместо угадывания имён компонент САМ определяет, светлая сейчас
+   тема страницы или тёмная — читает реальный computed-фон родителя (см.
+   хук useHostTheme ниже) — и подставляет подходящую палитру. */
+const ACCENTS = {
+    '--cq-violet': '#8b5cf6',
+    '--cq-pink': '#f472b6',
+    '--cq-mint': '#34d399',
+    '--cq-rose': '#fb7185',
+    '--cq-sky': '#38bdf8',
 
     '--cq-editor-bg': '#120f22',
     '--cq-editor-panel': '#1b1733',
     '--cq-editor-border': '#332c58',
     '--cq-editor-text-dim': '#a79fd1',
-    '--cq-editor-text-dim2': '#736a9c',
-
-    '--cq-violet': '#8b5cf6',
-    '--cq-pink': '#f472b6',
-    '--cq-mint': '#34d399',
-    '--cq-rose': '#fb7185',
-    '--cq-sky': '#38bdf8'
+    '--cq-editor-text-dim2': '#736a9c'
 };
+
+const DARK_SURFACE = {
+    '--cq-surface': '#1b1733',
+    '--cq-surface-soft': '#241f42',
+    '--cq-border': '#332c58',
+    '--cq-text-hi': '#ffffff',
+    '--cq-text-dim': '#a79fd1'
+};
+
+const LIGHT_SURFACE = {
+    '--cq-surface': '#ffffff',
+    '--cq-surface-soft': '#f3f1fb',
+    '--cq-border': '#e3ddf5',
+    '--cq-text-hi': '#241f42',
+    '--cq-text-dim': '#6b6488'
+};
+
+/* Определяет, светлая или тёмная сейчас тема ХОСТ-страницы, не полагаясь
+   на конкретные имена CSS-переменных: поднимается по родителям от
+   переданного узла и берёт первый непрозрачный computed background-color,
+   переводит его в яркость (luminance) и решает light/dark. Дополнительно
+   следит через MutationObserver за сменой class/data-theme на <html> и
+   <body> — это покрывает почти любую реализацию переключателя темы. */
+function useHostTheme(nodeRef) {
+    const [isLight, setIsLight] = useState(false);
+
+    useEffect(() => {
+        const detect = () => {
+            let node = nodeRef.current && nodeRef.current.parentElement;
+            let bg = null;
+            while (node && node !== document.body) {
+                const c = window.getComputedStyle(node).backgroundColor;
+                if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
+                node = node.parentElement;
+            }
+            if (!bg) bg = window.getComputedStyle(document.body).backgroundColor;
+            const nums = bg.match(/[\d.]+/g);
+            if (!nums) return;
+            const [r, g, b] = nums.map(Number);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            setIsLight(luminance > 0.6);
+        };
+
+        detect();
+
+        const mo = new MutationObserver(detect);
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
+        mo.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
+
+        const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+        if (mq) {
+            const onChange = () => detect();
+            if (mq.addEventListener) mq.addEventListener('change', onChange);
+            else if (mq.addListener) mq.addListener(onChange);
+        }
+
+        // Подстраховка: некоторые темы меняются без изменения атрибутов
+        // (например, инлайновым JS), поэтому ещё и мягко опрашиваем.
+        const interval = setInterval(detect, 1200);
+
+        return () => {
+            mo.disconnect();
+            clearInterval(interval);
+        };
+    }, [nodeRef]);
+
+    return isLight;
+}
 
 /* =====================================================================
    ПАНЕЛЬ ОДНОГО ФАЙЛА (всегда тёмная, вне зависимости от темы сайта)
@@ -184,6 +245,10 @@ const CodePlayground = ({ onBack }) => {
     const taRefs = useRef({});
     const preRefs = useRef({});
     const gutterRefs = useRef({});
+
+    const rootRef = useRef(null);
+    const isLightHost = useHostTheme(rootRef);
+    const TOKENS = { ...ACCENTS, ...(isLightHost ? LIGHT_SURFACE : DARK_SURFACE) };
 
     const buildDoc = (c) => `
         <!DOCTYPE html>
@@ -364,6 +429,7 @@ const CodePlayground = ({ onBack }) => {
 
     return (
         <motion.div
+            ref={rootRef}
             className="glass-panel"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
