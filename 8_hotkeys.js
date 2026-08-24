@@ -412,36 +412,40 @@ const HotkeyTrainer = ({ onBack }) => {
     });
 
     // Переключатель языка интерфейса — рендерится на всех экранах.
-    // Всегда идёт отдельной строкой (flex-контейнер вызывающего кода решает выравнивание),
-    // никогда не позиционируется абсолютно — так он не может наехать на заголовок/бейдж
-    // независимо от длины текста (например, длинного названия кастомной темы).
     const LanguageSwitcher = ({ style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
-            {LANGS.map((code) => (
-                <motion.button
-                    key={code}
-                    whileHover={{ y: lang === code ? 0 : -1 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setLang(code)}
-                    title={UI_TRANSLATIONS[code]?.langName || code}
-                    style={{
-                        padding: '7px 12px',
-                        borderRadius: '999px',
-                        border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border)',
-                        background: lang === code
-                            ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
-                            : 'var(--bg-body)',
-                        color: lang === code ? '#fff' : 'var(--text-sec)',
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        letterSpacing: '0.5px',
-                        cursor: 'pointer',
-                        boxShadow: lang === code ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
-                    }}
-                >
-                    {LANG_LABEL[code]}
-                </motion.button>
-            ))}
+            {LANGS.map((rawCode) => {
+                // Очищаем код от любых случайных пробелов или невидимых символов
+                const code = String(rawCode).trim().toLowerCase();
+                // Гарантированно достаём текст для кнопки
+                const btnLabel = LANG_LABEL[code] || UI_TRANSLATIONS[code]?.langName || code.toUpperCase();
+                
+                return (
+                    <motion.button
+                        key={rawCode}
+                        whileHover={{ y: lang === rawCode ? 0 : -1 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => setLang(rawCode)}
+                        title={UI_TRANSLATIONS[code]?.langName || code}
+                        style={{
+                            padding: '7px 12px',
+                            borderRadius: '999px',
+                            border: lang === rawCode ? '1px solid transparent' : '1px solid var(--glass-border)',
+                            background: lang === rawCode
+                                ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
+                                : 'var(--bg-body)',
+                            color: lang === rawCode ? '#fff' : 'var(--text-sec)',
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            letterSpacing: '0.5px',
+                            cursor: 'pointer',
+                            boxShadow: lang === rawCode ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
+                        }}
+                    >
+                        {btnLabel}
+                    </motion.button>
+                );
+            })}
         </div>
     );
 
