@@ -6,9 +6,6 @@ const { shuffleArray } = window;
  * ДАННЫЕ
  * ==========================================================================*/
 
-// Единый источник переводов на язык: интерфейс (ui) + описания хоткеев (hotkeys)
-// собраны в одном объекте на каждый язык — раньше это были два не связанных
-// друг с другом словаря (UI_TRANSLATIONS и HOTKEY_DESC_TRANSLATIONS).
 const TRANSLATIONS = {
     ru: {
         short: "РУС",
@@ -16,7 +13,7 @@ const TRANSLATIONS = {
         aiHint: "русском",
         ui: {
             title: "Хоткеи",
-            eyebrow: "Тренажёр мышечной памяти",
+            eyebrow: "Карточка тренировки №",
             subtitle: "Тренируй стандартную базу из своих конспектов (Word, Система) или собери персональную для любой другой программы",
             customPanelLabel: "Своя база для другой программы",
             inputPlaceholder: "Напр. Word, Excel, Photoshop…",
@@ -24,14 +21,14 @@ const TRANSLATIONS = {
             generating: "Собираем…",
             loadedSuccess: (topic) => `База «${topic}» загружена`,
             startTraining: "Начать тренировку",
-            theoryStep: "Шаг 1 из 2",
+            theoryStep: "Разворот 1 из 2",
             theoryTitle: "Теория",
             theoryDesc: "Изучи комбинации, которые встретятся в тренировке, а затем закрепи их на практике.",
             exit: "Выйти",
             goToPractice: "Перейти к практике",
-            practiceStep: "Шаг 2 из 2",
+            practiceStep: "Разворот 2 из 2",
             doCombination: "Выполните комбинацию",
-            finishedTitle: "Отличная работа",
+            finishedTitle: "Зачёт сдан",
             finishedDesc: (score, total) => `Закреплено ${score} из ${total} горячих клавиш`,
             statAccuracy: "Точность",
             statMistakes: "Ошибок",
@@ -76,7 +73,7 @@ const TRANSLATIONS = {
         aiHint: "английском (English)",
         ui: {
             title: "Hotkeys",
-            eyebrow: "Muscle-memory trainer",
+            eyebrow: "Practice card No.",
             subtitle: "Practice the standard set from your notes (Word, System), or build a custom one for any other program",
             customPanelLabel: "Custom set for another program",
             inputPlaceholder: "e.g. Word, Excel, Photoshop…",
@@ -84,14 +81,14 @@ const TRANSLATIONS = {
             generating: "Building…",
             loadedSuccess: (topic) => `"${topic}" set loaded`,
             startTraining: "Start training",
-            theoryStep: "Step 1 of 2",
+            theoryStep: "Spread 1 of 2",
             theoryTitle: "Theory",
             theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
             exit: "Exit",
             goToPractice: "Go to practice",
-            practiceStep: "Step 2 of 2",
+            practiceStep: "Spread 2 of 2",
             doCombination: "Perform the combination",
-            finishedTitle: "Great job",
+            finishedTitle: "Passed",
             finishedDesc: (score, total) => `You locked in ${score} of ${total} hotkeys`,
             statAccuracy: "Accuracy",
             statMistakes: "Mistakes",
@@ -136,7 +133,7 @@ const TRANSLATIONS = {
         aiHint: "узбекском языке кириллицей (o'zbek tilida, kirill alifbosida)",
         ui: {
             title: "Хоткейлар",
-            eyebrow: "Мушак хотираси тренажёри",
+            eyebrow: "Машқ карточкаси №",
             subtitle: "Конспектларингиздаги стандарт базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини тузинг",
             customPanelLabel: "Бошқа дастур учун ўз базангиз",
             inputPlaceholder: "Масалан: Word, Excel, Photoshop…",
@@ -144,14 +141,14 @@ const TRANSLATIONS = {
             generating: "Тузяпмиз…",
             loadedSuccess: (topic) => `«${topic}» базаси юкланди`,
             startTraining: "Машқни бошлаш",
-            theoryStep: "1-қадам, 2 тадан",
+            theoryStep: "1-варақ, 2 тадан",
             theoryTitle: "Назария",
             theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг уларни амалиётда мустаҳкамланг.",
             exit: "Чиқиш",
             goToPractice: "Амалиётга ўтиш",
-            practiceStep: "2-қадам, 2 тадан",
+            practiceStep: "2-варақ, 2 тадан",
             doCombination: "Комбинацияни бажаринг",
-            finishedTitle: "Ажойиб натижа",
+            finishedTitle: "Зачёт топширилди",
             finishedDesc: (score, total) => `${total} тадан ${score} та хоткей мустаҳкамланди`,
             statAccuracy: "Аниқлик",
             statMistakes: "Хатолар",
@@ -194,8 +191,6 @@ const TRANSLATIONS = {
 
 const LANGS = Object.keys(TRANSLATIONS);
 
-// Штатная база горячих клавиш. desc хранится ключом (descKey), сама строка
-// подставляется из TRANSLATIONS[lang].hotkeys[descKey] — база одна для всех языков.
 const HOTKEYS_DB = [
     { descKey: "alignRight", key: "r", shift: false },
     { descKey: "alignLeft", key: "l", shift: false },
@@ -228,12 +223,11 @@ const HOTKEYS_DB = [
 const AI_ENDPOINT = "https://gemini-proxy-lms.msleaderindustry.workers.dev";
 
 /* ============================================================================
- * НЕБОЛЬШИЕ УТИЛИТЫ
+ * УТИЛИТЫ
  * ==========================================================================*/
 
-// Физический код клавиши по символу — используется вместо разбора e.key,
-// поэтому распознавание работает независимо от раскладки и языка ввода
-// (раньше для этого была отдельная таблица SHIFT_SYMBOL_MAP на все Shift-символы).
+// Физический код клавиши по символу — сверяемся с e.code, а не e.key, поэтому
+// распознавание не зависит от активной раскладки клавиатуры.
 const PUNCT_CODES = {
     "-": "Minus", "=": "Equal", "[": "BracketLeft", "]": "BracketRight",
     "\\": "Backslash", ";": "Semicolon", "'": "Quote", ",": "Comma",
@@ -270,223 +264,214 @@ function buildPrompt(topic, lang) {
 }
 
 /* ============================================================================
- * ИКОНКИ (лёгкие инлайн SVG вместо эмодзи)
+ * ИКОНКИ
  * ==========================================================================*/
 
 const Icon = {
-    key: (p) => (
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <circle cx="8" cy="12" r="4.5" /><path d="M12 12h9M16 12v4M19.5 12v3" />
-        </svg>
-    ),
-    spark: (p) => (
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" {...p}>
-            <path d="M12 2l1.8 5.9L20 10l-6.2 2.1L12 18l-1.8-5.9L4 10l6.2-2.1L12 2z" />
+    pin: (p) => (
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+            <path d="M12 2v6M12 22v-6M5 9l7 3 7-3M5 15l7-3 7 3" />
         </svg>
     ),
     arrowLeft: (p) => (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
             <path d="M19 12H5M11 18l-6-6 6-6" />
         </svg>
     ),
     arrowRight: (p) => (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
             <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
     ),
-    play: (p) => (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" {...p}>
-            <path d="M7 5l12 7-12 7z" />
-        </svg>
-    ),
     check: (p) => (
-        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M5 13l4.5 4.5L19 7" />
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...p}>
+            <path d="M4 12l5 5L20 6" />
         </svg>
     ),
     repeat: (p) => (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" {...p}>
             <path d="M4 10a8 8 0 0113.9-5.3M20 5v5h-5M20 14a8 8 0 01-13.9 5.3M4 19v-5h5" />
         </svg>
     ),
+    pencil: (p) => (
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+    ),
     spinner: (p) => (
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" {...p}>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" {...p}>
             <path d="M12 3a9 9 0 106.36 2.64" />
         </svg>
     ),
 };
 
 /* ============================================================================
- * СТИЛИ (собственная дизайн-система компонента, ни от чего не зависит)
+ * СТИЛИ — карточно-бумажная тема ("зачётка/картотека"), полностью своя
  * ==========================================================================*/
 
-const HK_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+const IDX_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
-.hk-root{
-  --bg:#0d0f14; --panel:#14171d; --raised:#1c202a; --line:#262b35; --line-soft:#1c2028;
-  --text:#eceff4; --text-dim:#8891a3;
-  --cyan:#5eead4; --cyan-dim:rgba(94,234,212,.14);
-  --amber:#f5b942; --amber-dim:rgba(245,185,66,.14);
-  --green:#4ade80; --red:#fb7185;
-  font-family:'Inter',sans-serif; color:var(--text); position:relative; width:100%;
+.idx-root{
+  --paper:#F6F0E3; --paper-alt:#ECE2CB; --card:#FFFCF4;
+  --ink:#211F1A; --ink-soft:#6E6858; --ink-faint:#B9AF97;
+  --accent:#D2491F; --accent-soft:#F3D9C9;
+  --ok:#28684A; --ok-soft:#D9E8DB;
+  font-family:'Inter',sans-serif; color:var(--ink); width:100%; position:relative;
 }
-.hk-shell{
-  position:relative; width:100%; max-width:900px; margin:0 auto; border-radius:26px; overflow:hidden;
-  background:
-    radial-gradient(circle at 4px 4px, rgba(255,255,255,.05) 1px, transparent 1.4px) 0 0/22px 22px,
-    linear-gradient(180deg,#101319 0%,#0d0f14 100%);
-  border:1px solid var(--line); box-shadow:0 30px 70px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.03);
+.idx-stagearea{ position:relative; width:100%; max-width:760px; margin:0 auto; padding:14px 0 26px; }
+
+/* "стопка карточек" под основной карточкой */
+.idx-stagearea::before, .idx-stagearea::after{
+  content:''; position:absolute; left:16px; right:16px; top:24px; bottom:6px;
+  background:var(--paper-alt); border:2px solid var(--ink); border-radius:4px; z-index:0;
 }
-.hk-inner{ position:relative; padding:40px; display:flex; flex-direction:column; gap:26px; }
-@media (max-width:640px){ .hk-inner{ padding:26px 18px; } }
+.idx-stagearea::before{ transform:rotate(-2deg); }
+.idx-stagearea::after{ transform:rotate(1.4deg); background:var(--paper); }
 
-.hk-display{ font-family:'Unbounded',sans-serif; letter-spacing:-.01em; }
-.hk-mono{ font-family:'JetBrains Mono',ui-monospace,monospace; }
-
-.hk-topline{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-
-.hk-lang-row{ display:flex; gap:6px; }
-.hk-lang-chip{
-  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.06em;
-  padding:7px 11px; border-radius:9px; border:1px solid var(--line); background:var(--panel); color:var(--text-dim);
-  cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease;
+.idx-shell{
+  position:relative; z-index:1; background:var(--card); border:2px solid var(--ink); border-radius:4px;
+  box-shadow:6px 6px 0 var(--ink);
 }
-.hk-lang-chip:hover{ color:var(--text); border-color:#3a4150; }
-.hk-lang-chip.is-active{ background:var(--cyan-dim); border-color:var(--cyan); color:var(--cyan); }
+.idx-inner{ padding:38px; display:flex; flex-direction:column; gap:24px; }
+@media (max-width:640px){ .idx-inner{ padding:24px 18px; } .idx-shell{ box-shadow:4px 4px 0 var(--ink); } }
 
-.hk-back-link{
-  display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-dim);
-  font-size:13px; font-weight:600; cursor:pointer; padding:4px 2px;
+.idx-display{ font-family:'Fraunces',serif; letter-spacing:-.01em; }
+.idx-mono{ font-family:'Space Mono',ui-monospace,monospace; }
+
+.idx-topline{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+
+.idx-lang-row{ display:flex; gap:4px; }
+.idx-lang-tab{
+  font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.04em;
+  padding:6px 10px; border:2px solid var(--ink); background:var(--paper); color:var(--ink-soft);
+  cursor:pointer; border-radius:3px 3px 0 0; transform:translateY(2px); transition:transform .12s ease, background .12s ease, color .12s ease;
 }
-.hk-back-link:hover{ color:var(--text); }
+.idx-lang-tab:hover{ transform:translateY(0); color:var(--ink); }
+.idx-lang-tab.is-active{ background:var(--ink); color:var(--paper); transform:translateY(0); }
 
-.hk-hero{ display:flex; align-items:center; gap:14px; }
-.hk-mark{
-  width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-  color:#0d0f14; background:linear-gradient(150deg,var(--cyan),#22b8a3);
-  box-shadow:0 14px 26px -12px rgba(94,234,212,.55);
+.idx-back-link{
+  display:inline-flex; align-items:center; gap:5px; background:none; border:none; color:var(--ink-soft);
+  font-size:12.5px; font-weight:700; cursor:pointer; padding:6px 0;
 }
-.hk-title{ font-size:30px; font-weight:800; margin:0; }
-.hk-eyebrow{
-  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--text-dim); display:flex; align-items:center; gap:8px; margin-bottom:2px;
+.idx-back-link:hover{ color:var(--ink); }
+
+.idx-eyebrow{
+  font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.05em;
+  color:var(--ink-soft); display:flex; align-items:center; gap:7px;
 }
-.hk-badge{
-  display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
-  color:#1a2e2a; background:var(--amber); padding:5px 10px; border-radius:999px;
+.idx-hero{ display:flex; align-items:center; gap:16px; margin-top:2px; }
+.idx-stamp{
+  width:56px; height:56px; border-radius:50%; border:2px dashed var(--accent); color:var(--accent);
+  display:flex; align-items:center; justify-content:center; transform:rotate(-9deg); flex-shrink:0;
+  font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.03em; text-align:center;
+}
+.idx-title{ font-size:36px; font-weight:700; margin:0; line-height:1; }
+
+.idx-subtitle{ font-size:14.5px; line-height:1.65; color:var(--ink-soft); max-width:520px; margin:0; }
+
+.idx-panel{ background:var(--paper); border:2px solid var(--ink); border-radius:4px; padding:22px; position:relative; }
+.idx-panel::before{
+  content:''; position:absolute; top:-2px; left:20px; right:20px; height:2px;
+  background-image:repeating-linear-gradient(90deg, var(--ink) 0 8px, transparent 8px 16px);
+}
+.idx-panel-label{
+  font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-soft); margin-bottom:14px;
 }
 
-.hk-subtitle{ font-size:14.5px; line-height:1.65; color:var(--text-dim); max-width:520px; margin:0; }
-
-.hk-panel{ background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:22px; }
-.hk-panel-label{
-  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--text-dim); display:flex; align-items:center; gap:8px; margin-bottom:14px;
+.idx-field-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.idx-input{
+  flex:1 1 200px; padding:0 14px; height:46px; border-radius:3px; border:2px solid var(--ink);
+  background:var(--card); color:var(--ink); font-size:14.5px; font-weight:500; outline:none;
 }
-.hk-dot{ width:6px; height:6px; border-radius:50%; background:var(--cyan); }
+.idx-input::placeholder{ color:var(--ink-faint); }
+.idx-input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-.hk-field-row{ display:flex; gap:10px; flex-wrap:wrap; }
-.hk-input{
-  flex:1 1 200px; padding:0 16px; height:48px; border-radius:12px; border:1px solid var(--line);
-  background:var(--bg); color:var(--text); font-size:14.5px; font-weight:500; outline:none;
-  transition:border-color .15s ease;
+.idx-btn{
+  height:46px; padding:0 20px; border-radius:3px; border:2px solid var(--ink); cursor:pointer; font-size:13.5px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:transform .1s ease, opacity .1s ease;
+  font-family:'Inter',sans-serif; background:var(--card); color:var(--ink); box-shadow:3px 3px 0 var(--ink);
 }
-.hk-input:focus-visible{ border-color:var(--cyan); }
-.hk-input::placeholder{ color:#5b6273; }
+.idx-btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+.idx-btn:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--ink); }
+.idx-btn:disabled{ cursor:not-allowed; opacity:.55; transform:none; box-shadow:3px 3px 0 var(--ink); }
+.idx-btn--accent{ background:var(--accent); color:#fff; }
+.idx-btn--ink{ background:var(--ink); color:var(--paper); }
+.idx-btn--ghost{ background:var(--paper); }
+.idx-btn--full{ width:100%; height:54px; font-size:15px; }
 
-.hk-btn{
-  height:48px; padding:0 20px; border-radius:12px; border:none; cursor:pointer; font-size:14px; font-weight:700;
-  display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s ease, opacity .12s ease, background .15s ease;
-  font-family:'Inter',sans-serif;
+.idx-banner{ margin-top:14px; font-size:13px; font-weight:600; text-align:center; border-radius:3px; padding:10px 14px; border:2px solid; }
+.idx-banner--ok{ color:var(--ok); background:var(--ok-soft); border-color:var(--ok); }
+.idx-banner--err{ color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }
+
+.idx-header{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px; padding-bottom:16px; border-bottom:2px solid var(--ink); }
+.idx-exit{ display:inline-flex; align-items:center; gap:5px; background:none; border:none; color:var(--ink-soft); font-size:13px; font-weight:700; cursor:pointer; justify-self:start; }
+.idx-exit:hover{ color:var(--ink); }
+.idx-header-title{ font-size:19px; font-weight:700; text-align:center; margin:0; }
+.idx-counter{ justify-self:end; font-family:'Space Mono',monospace; font-size:12.5px; font-weight:700; border:2px solid var(--ink); border-radius:999px; padding:5px 12px; }
+
+.idx-theory-title{ font-size:26px; font-weight:700; margin:2px 0 0; }
+.idx-theory-desc{ font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin:0; }
+
+.idx-combo-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; max-height:400px; overflow-y:auto; padding:4px 4px 4px 0; }
+.idx-combo-card{
+  display:flex; flex-direction:column; gap:12px; padding:15px; background:var(--paper); border:2px solid var(--ink); border-radius:4px;
+  border-top-style:dashed;
 }
-.hk-btn:active{ transform:translateY(1px); }
-.hk-btn:disabled{ cursor:not-allowed; opacity:.6; }
-.hk-btn--accent{ background:linear-gradient(150deg,var(--cyan),#22b8a3); color:#0b1512; }
-.hk-btn--amber{ background:linear-gradient(150deg,var(--amber),#d99a2b); color:#241a04; }
-.hk-btn--ghost{ background:var(--panel); color:var(--text-dim); border:1px solid var(--line); }
-.hk-btn--ghost:hover{ color:var(--text); border-color:#3a4150; }
-.hk-btn--full{ width:100%; height:56px; font-size:15.5px; border-radius:14px; }
+.idx-combo-desc{ font-size:13.5px; font-weight:600; line-height:1.4; }
+.idx-combo-keys{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
 
-.hk-banner{
-  margin-top:14px; font-size:13px; font-weight:600; text-align:center; border-radius:12px; padding:11px 14px;
+.idx-tag{
+  font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:5px 9px; border-radius:3px;
+  border:2px solid var(--ink); background:var(--card); color:var(--ink);
 }
-.hk-banner--ok{ color:var(--green); background:rgba(74,222,128,.08); border:1px solid rgba(74,222,128,.25); }
-.hk-banner--err{ color:var(--red); background:rgba(251,113,133,.08); border:1px solid rgba(251,113,133,.25); }
+.idx-plus{ font-size:13px; font-weight:700; color:var(--ink-faint); }
 
-.hk-header{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; padding-bottom:18px; border-bottom:1px solid var(--line); }
-.hk-exit{
-  display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-dim);
-  font-size:13.5px; font-weight:700; cursor:pointer; padding:6px 2px; justify-self:start;
+.idx-coin{
+  width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:'Space Mono',monospace; font-weight:700; font-size:15px; border:2px solid var(--ink); background:var(--card); color:var(--ink);
+  transition:transform .1s ease, background .12s ease, color .12s ease, border-color .12s ease;
 }
-.hk-exit:hover{ color:var(--text); }
-.hk-header-title{ font-size:20px; font-weight:800; text-align:center; margin:0; }
-.hk-counter{
-  justify-self:end; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--text-dim);
-  background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:7px 14px;
+.idx-coin--sm{ width:32px; height:32px; font-size:12px; }
+.idx-coin--lg{ width:58px; height:58px; font-size:22px; }
+.idx-coin--mystery{ border-style:dashed; border-color:var(--accent); color:var(--accent); background:var(--paper); }
+.idx-coin--success{ background:var(--ok); color:#fff; border-color:var(--ok); transform:scale(0.9); animation:idx-stampdown .28s ease; }
+.idx-coin--error{ background:var(--accent); color:#fff; border-color:var(--accent); animation:idx-shake .32s ease; }
+
+.idx-stage{ display:flex; flex-direction:column; align-items:center; gap:28px; padding:12px 0 4px; }
+.idx-stage-eyebrow{ font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+.idx-stage-quote{ font-family:'Fraunces',serif; font-size:29px; font-weight:600; text-align:center; max-width:88%; line-height:1.28; }
+.idx-stage-quote.is-success{ color:var(--ok); }
+
+.idx-tally{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.idx-tally-mark{ width:9px; height:22px; background:var(--paper-alt); border:2px solid var(--ink); border-radius:1px; transition:background .18s ease, transform .18s ease; }
+.idx-tally-mark.is-done{ background:var(--ok); }
+.idx-tally-mark.is-active{ background:var(--accent); transform:scaleY(1.15); }
+
+.idx-done{ display:flex; flex-direction:column; align-items:center; gap:14px; padding:36px 0 6px; text-align:center; }
+.idx-approve{
+  width:118px; height:78px; border:3px solid var(--ok); border-radius:10px; color:var(--ok); transform:rotate(-6deg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font-family:'Space Mono',monospace; font-weight:700;
 }
-.hk-counter b{ color:var(--text); }
+.idx-approve-title{ font-size:15px; letter-spacing:.04em; }
+.idx-approve-sub{ font-size:9px; letter-spacing:.12em; }
+.idx-done-title{ font-size:27px; font-weight:700; margin:6px 0 0; }
+.idx-done-desc{ font-size:14px; color:var(--ink-soft); margin:0; }
+.idx-stat-row{ display:flex; gap:10px; margin-top:2px; }
+.idx-stat{ background:var(--paper); border:2px solid var(--ink); border-radius:4px; padding:11px 20px; min-width:100px; }
+.idx-stat-value{ font-family:'Space Mono',monospace; font-size:19px; font-weight:700; }
+.idx-stat-label{ font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; margin-top:2px; }
+.idx-done-actions{ display:flex; gap:10px; margin-top:12px; }
 
-.hk-eyebrow-step{
-  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan);
-}
-.hk-theory-title{ font-size:24px; font-weight:800; margin:4px 0 0; }
-.hk-theory-desc{ font-size:13.5px; color:var(--text-dim); line-height:1.6; margin:0; }
+@keyframes idx-shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(2px)} }
+@keyframes idx-stampdown{ 0%{transform:scale(1.25)} 60%{transform:scale(0.85)} 100%{transform:scale(0.9)} }
 
-.hk-combo-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; max-height:400px; overflow-y:auto; padding-right:2px; }
-.hk-combo-card{
-  display:flex; flex-direction:column; gap:12px; padding:15px; background:var(--panel); border:1px solid var(--line); border-radius:14px;
-}
-.hk-combo-desc{ font-size:13.5px; font-weight:600; line-height:1.4; }
-.hk-combo-keys{ display:flex; gap:6px; align-items:center; }
-
-.hk-key{
-  font-family:'JetBrains Mono',monospace; font-weight:700; text-align:center; user-select:none;
-  border-radius:9px; border:1px solid var(--line); background:linear-gradient(180deg,var(--raised),var(--panel));
-  box-shadow:0 3px 0 var(--line-soft), inset 0 1px 0 rgba(255,255,255,.05); color:var(--text);
-  transition:transform .08s ease, box-shadow .08s ease;
-}
-.hk-key--sm{ font-size:11.5px; padding:6px 9px; }
-.hk-key--lg{ font-size:19px; min-width:52px; height:52px; display:flex; align-items:center; justify-content:center; padding:0 14px; }
-.hk-key--mystery{ border:2px dashed var(--cyan); color:var(--cyan); background:var(--bg); animation:hk-blink 1.8s ease-in-out infinite; }
-.hk-key--pressed{ transform:translateY(3px); box-shadow:0 0 0 var(--line-soft), inset 0 1px 0 rgba(255,255,255,.05); border-color:var(--green); color:var(--green); }
-.hk-key--wrong{ animation:hk-shake .32s ease; border-color:var(--red); }
-.hk-plus{ font-size:16px; font-weight:700; color:var(--text-dim); opacity:.6; }
-
-.hk-stage{ display:flex; flex-direction:column; align-items:center; gap:30px; padding:14px 0 4px; }
-.hk-stage-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--text-dim); }
-.hk-stage-quote{ font-size:27px; font-weight:700; text-align:center; max-width:88%; line-height:1.3; letter-spacing:-.01em; }
-.hk-stage-quote.is-success{ color:var(--green); }
-.hk-ring-wrap{ position:relative; display:inline-flex; }
-.hk-ring{ position:absolute; inset:-10px; border-radius:14px; border:2px solid var(--green); opacity:0; }
-.hk-ring.is-active{ animation:hk-pulse-ring .5s ease-out; }
-
-.hk-pips{ display:flex; gap:7px; flex-wrap:wrap; justify-content:center; }
-.hk-pip{ width:9px; height:9px; border-radius:3px; background:var(--line); transition:background .2s ease, transform .2s ease; }
-.hk-pip.is-done{ background:var(--cyan); }
-.hk-pip.is-active{ background:var(--amber); transform:scale(1.3); }
-
-.hk-done{ display:flex; flex-direction:column; align-items:center; gap:16px; padding:44px 0 10px; text-align:center; }
-.hk-done-icon{
-  width:66px; height:66px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#06251c;
-  background:linear-gradient(150deg,var(--green),#22a869); box-shadow:0 16px 30px -12px rgba(74,222,128,.55);
-}
-.hk-done-title{ font-size:28px; font-weight:800; margin:0; }
-.hk-done-desc{ font-size:14.5px; color:var(--text-dim); margin:0; }
-.hk-stat-row{ display:flex; gap:10px; margin-top:4px; }
-.hk-stat{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 20px; min-width:104px; }
-.hk-stat-value{ font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; }
-.hk-stat-label{ font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
-.hk-done-actions{ display:flex; gap:10px; margin-top:14px; }
-
-@keyframes hk-shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)} }
-@keyframes hk-blink{ 0%,100%{opacity:1} 50%{opacity:.45} }
-@keyframes hk-pulse-ring{ 0%{opacity:.9; transform:scale(.9)} 100%{opacity:0; transform:scale(1.12)} }
-
-.hk-root button:focus-visible, .hk-root input:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+.idx-root button:focus-visible, .idx-root input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
 @media (prefers-reduced-motion: reduce){
-  .hk-root *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  .idx-root *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
 }
 `;
 
@@ -577,16 +562,16 @@ function useHotkeySet(lang) {
 }
 
 /* ============================================================================
- * МЕЛКИЕ ВИЗУАЛЬНЫЕ АТОМЫ
+ * ВИЗУАЛЬНЫЕ АТОМЫ
  * ==========================================================================*/
 
 const LangSwitch = ({ lang, onChange }) => (
-    <div className="hk-lang-row">
+    <div className="idx-lang-row">
         {LANGS.map((code) => (
             <button
                 key={code}
                 type="button"
-                className={"hk-lang-chip" + (lang === code ? " is-active" : "")}
+                className={"idx-lang-tab" + (lang === code ? " is-active" : "")}
                 title={TRANSLATIONS[code].langName}
                 onClick={() => onChange(code)}
             >
@@ -596,24 +581,23 @@ const LangSwitch = ({ lang, onChange }) => (
     </div>
 );
 
-// mode: 'mystery' (скрытая клавиша, экран практики по умолчанию) | 'reveal' (просто показать
-// клавишу, экран теории) | 'success' | 'error' (обратная связь во время практики)
+// mode: 'mystery' | 'reveal' | 'success' | 'error'
 const ComboKeys = ({ task, size = "sm", mode = "reveal" }) => (
-    <div className="hk-combo-keys">
-        <span className={`hk-key hk-key--${size}`}>Ctrl</span>
+    <div className="idx-combo-keys">
+        <span className="idx-tag">Ctrl</span>
         {task.shift && (
             <>
-                <span className="hk-plus">+</span>
-                <span className={`hk-key hk-key--${size}`}>Shift</span>
+                <span className="idx-plus">+</span>
+                <span className="idx-tag">Shift</span>
             </>
         )}
-        <span className="hk-plus">+</span>
+        <span className="idx-plus">+</span>
         <span
             className={
-                `hk-key hk-key--${size}` +
-                (mode === "mystery" ? " hk-key--mystery" : "") +
-                (mode === "success" ? " hk-key--pressed" : "") +
-                (mode === "error" ? " hk-key--wrong" : "")
+                `idx-coin idx-coin--${size}` +
+                (mode === "mystery" ? " idx-coin--mystery" : "") +
+                (mode === "success" ? " idx-coin--success" : "") +
+                (mode === "error" ? " idx-coin--error" : "")
             }
         >
             {mode === "mystery" ? "?" : task.key.toUpperCase()}
@@ -733,68 +717,67 @@ const HotkeyTrainer = ({ onBack }) => {
     /* ---------------------------- ЭКРАН: НАСТРОЙКА ---------------------------- */
     if (phase === "setup") {
         return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <motion.div className="hk-shell" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-                    <div className="hk-inner">
-                        <div className="hk-topline">
-                            {typeof onBack === "function" ? (
-                                <button type="button" className="hk-back-link" onClick={onBack}>
-                                    <Icon.arrowLeft /> {t.exit}
-                                </button>
-                            ) : <span />}
-                            <LangSwitch lang={lang} onChange={setLang} />
-                        </div>
-
-                        <div>
-                            <div className="hk-eyebrow">
-                                <Icon.key /> {t.eyebrow}
-                            </div>
-                            <div className="hk-hero">
-                                <div className="hk-mark"><Icon.key width="24" height="24" /></div>
-                                <h2 className="hk-title hk-display">{t.title}</h2>
-                                <span className="hk-badge"><Icon.spark />AI</span>
-                            </div>
-                        </div>
-
-                        <p className="hk-subtitle">{t.subtitle}</p>
-
-                        <div className="hk-panel">
-                            <div className="hk-panel-label"><span className="hk-dot" />{t.customPanelLabel}</div>
-                            <div className="hk-field-row">
-                                <input
-                                    className="hk-input"
-                                    type="text"
-                                    value={topic}
-                                    onChange={(e) => setTopic(e.target.value)}
-                                    placeholder={t.inputPlaceholder}
-                                    disabled={status === "loading"}
-                                />
-                                <button className="hk-btn hk-btn--amber" onClick={generate} disabled={status === "loading"}>
-                                    {status === "loading" ? <Icon.spinner /> : <Icon.spark />}
-                                    {status === "loading" ? t.generating : t.generateButton}
-                                </button>
+            <div className="idx-root">
+                <style>{IDX_CSS}</style>
+                <div className="idx-stagearea">
+                    <motion.div className="idx-shell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+                        <div className="idx-inner">
+                            <div className="idx-topline">
+                                {typeof onBack === "function" ? (
+                                    <button type="button" className="idx-back-link" onClick={onBack}>
+                                        <Icon.arrowLeft /> {t.exit}
+                                    </button>
+                                ) : <span />}
+                                <LangSwitch lang={lang} onChange={setLang} />
                             </div>
 
-                            <AnimatePresence>
-                                {status === "success" && isCustomBase && (
-                                    <motion.div className="hk-banner hk-banner--ok" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                                        {t.loadedSuccess(topic)}
-                                    </motion.div>
-                                )}
-                                {status === "error" && message && (
-                                    <motion.div className="hk-banner hk-banner--err" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                                        {message}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                            <div>
+                                <div className="idx-eyebrow"><Icon.pin /> {t.eyebrow}01</div>
+                                <div className="idx-hero">
+                                    <h2 className="idx-title idx-display">{t.title}</h2>
+                                    <div className="idx-stamp">AI<br/>SET</div>
+                                </div>
+                            </div>
 
-                        <button className="hk-btn hk-btn--accent hk-btn--full" onClick={openTheory}>
-                            <Icon.play /> {t.startTraining}
-                        </button>
-                    </div>
-                </motion.div>
+                            <p className="idx-subtitle">{t.subtitle}</p>
+
+                            <div className="idx-panel">
+                                <div className="idx-panel-label">{t.customPanelLabel}</div>
+                                <div className="idx-field-row">
+                                    <input
+                                        className="idx-input"
+                                        type="text"
+                                        value={topic}
+                                        onChange={(e) => setTopic(e.target.value)}
+                                        placeholder={t.inputPlaceholder}
+                                        disabled={status === "loading"}
+                                    />
+                                    <button className="idx-btn idx-btn--ink" onClick={generate} disabled={status === "loading"}>
+                                        {status === "loading" ? <Icon.spinner /> : <Icon.pencil />}
+                                        {status === "loading" ? t.generating : t.generateButton}
+                                    </button>
+                                </div>
+
+                                <AnimatePresence>
+                                    {status === "success" && isCustomBase && (
+                                        <motion.div className="idx-banner idx-banner--ok" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                                            {t.loadedSuccess(topic)}
+                                        </motion.div>
+                                    )}
+                                    {status === "error" && message && (
+                                        <motion.div className="idx-banner idx-banner--err" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                                            {message}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            <button className="idx-btn idx-btn--accent idx-btn--full" onClick={openTheory}>
+                                {t.startTraining} <Icon.arrowRight />
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
             </div>
         );
     }
@@ -802,37 +785,39 @@ const HotkeyTrainer = ({ onBack }) => {
     /* ----------------------------- ЭКРАН: ТЕОРИЯ ------------------------------ */
     if (phase === "theory") {
         return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <motion.div className="hk-shell" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-                    <div className="hk-inner">
-                        <div className="hk-topline">
-                            <span className="hk-eyebrow-step">{t.theoryStep}</span>
-                            <LangSwitch lang={lang} onChange={setLang} />
-                        </div>
+            <div className="idx-root">
+                <style>{IDX_CSS}</style>
+                <div className="idx-stagearea">
+                    <motion.div className="idx-shell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                        <div className="idx-inner">
+                            <div className="idx-topline">
+                                <span className="idx-eyebrow idx-mono">{t.theoryStep}</span>
+                                <LangSwitch lang={lang} onChange={setLang} />
+                            </div>
 
-                        <div>
-                            <h2 className="hk-theory-title hk-display">{t.theoryTitle}{isCustomBase ? `: ${topic}` : ""}</h2>
-                            <p className="hk-theory-desc" style={{ marginTop: 8 }}>{t.theoryDesc}</p>
-                        </div>
+                            <div>
+                                <h2 className="idx-theory-title idx-display">{t.theoryTitle}{isCustomBase ? `: ${topic}` : ""}</h2>
+                                <p className="idx-theory-desc" style={{ marginTop: 8 }}>{t.theoryDesc}</p>
+                            </div>
 
-                        <div className="hk-combo-grid">
-                            {tasks.map((hk, i) => (
-                                <motion.div key={i} className="hk-combo-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}>
-                                    <div className="hk-combo-desc">{getDesc(hk)}</div>
-                                    <ComboKeys task={hk} size="sm" mode="reveal" />
-                                </motion.div>
-                            ))}
-                        </div>
+                            <div className="idx-combo-grid">
+                                {tasks.map((hk, i) => (
+                                    <motion.div key={i} className="idx-combo-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: Math.min(i * 0.03, 0.3) }}>
+                                        <div className="idx-combo-desc">{getDesc(hk)}</div>
+                                        <ComboKeys task={hk} size="sm" mode="reveal" />
+                                    </motion.div>
+                                ))}
+                            </div>
 
-                        <div style={{ display: "flex", gap: 12 }}>
-                            <button className="hk-btn hk-btn--ghost" style={{ flex: "0 0 140px" }} onClick={exitToSetup}>{t.exit}</button>
-                            <button className="hk-btn hk-btn--accent" style={{ flex: 1 }} onClick={startPractice}>
-                                {t.goToPractice} <Icon.arrowRight />
-                            </button>
+                            <div style={{ display: "flex", gap: 12 }}>
+                                <button className="idx-btn idx-btn--ghost" style={{ flex: "0 0 140px" }} onClick={exitToSetup}>{t.exit}</button>
+                                <button className="idx-btn idx-btn--accent" style={{ flex: 1 }} onClick={startPractice}>
+                                    {t.goToPractice} <Icon.arrowRight />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         );
     }
@@ -840,35 +825,40 @@ const HotkeyTrainer = ({ onBack }) => {
     /* ---------------------------- ЭКРАН: РЕЗУЛЬТАТ ---------------------------- */
     if (phase === "done") {
         return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <motion.div className="hk-shell" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}>
-                    <div className="hk-inner">
-                        <div className="hk-topline"><span /><LangSwitch lang={lang} onChange={setLang} /></div>
+            <div className="idx-root">
+                <style>{IDX_CSS}</style>
+                <div className="idx-stagearea">
+                    <motion.div className="idx-shell" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+                        <div className="idx-inner">
+                            <div className="idx-topline"><span /><LangSwitch lang={lang} onChange={setLang} /></div>
 
-                        <div className="hk-done">
-                            <div className="hk-done-icon"><Icon.check /></div>
-                            <h2 className="hk-done-title hk-display">{t.finishedTitle}</h2>
-                            <p className="hk-done-desc">{t.finishedDesc(score, tasks.length)}</p>
-
-                            <div className="hk-stat-row">
-                                <div className="hk-stat">
-                                    <div className="hk-stat-value hk-mono" style={{ color: "var(--cyan)" }}>{accuracy}%</div>
-                                    <div className="hk-stat-label">{t.statAccuracy}</div>
+                            <div className="idx-done">
+                                <div className="idx-approve">
+                                    <span className="idx-approve-title">ЗАЧЁТ</span>
+                                    <span className="idx-approve-sub">CERTIFIED</span>
                                 </div>
-                                <div className="hk-stat">
-                                    <div className="hk-stat-value hk-mono" style={{ color: mistakes ? "var(--red)" : "var(--text-dim)" }}>{mistakes}</div>
-                                    <div className="hk-stat-label">{t.statMistakes}</div>
-                                </div>
-                            </div>
+                                <h2 className="idx-done-title idx-display">{t.finishedTitle}</h2>
+                                <p className="idx-done-desc">{t.finishedDesc(score, tasks.length)}</p>
 
-                            <div className="hk-done-actions">
-                                <button className="hk-btn hk-btn--ghost" onClick={exitToSetup}>{t.backToSetup}</button>
-                                <button className="hk-btn hk-btn--accent" onClick={restart}><Icon.repeat /> {t.repeat}</button>
+                                <div className="idx-stat-row">
+                                    <div className="idx-stat">
+                                        <div className="idx-stat-value idx-mono" style={{ color: "var(--accent)" }}>{accuracy}%</div>
+                                        <div className="idx-stat-label">{t.statAccuracy}</div>
+                                    </div>
+                                    <div className="idx-stat">
+                                        <div className="idx-stat-value idx-mono">{mistakes}</div>
+                                        <div className="idx-stat-label">{t.statMistakes}</div>
+                                    </div>
+                                </div>
+
+                                <div className="idx-done-actions">
+                                    <button className="idx-btn idx-btn--ghost" onClick={exitToSetup}>{t.backToSetup}</button>
+                                    <button className="idx-btn idx-btn--accent" onClick={restart}><Icon.repeat /> {t.repeat}</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         );
     }
@@ -877,42 +867,41 @@ const HotkeyTrainer = ({ onBack }) => {
     if (!currentTask) return null;
 
     return (
-        <div className="hk-root">
-            <style>{HK_CSS}</style>
-            <motion.div className="hk-shell" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-                <div className="hk-inner">
-                    <div className="hk-header">
-                        <button type="button" className="hk-exit" onClick={exitToSetup}><Icon.arrowLeft /> {t.exit}</button>
-                        <h2 className="hk-header-title hk-display">{isCustomBase ? `${t.title}: ${topic}` : t.title}</h2>
-                        <span className="hk-counter"><b>{index + 1}</b> / {tasks.length}</span>
-                    </div>
+        <div className="idx-root">
+            <style>{IDX_CSS}</style>
+            <div className="idx-stagearea">
+                <motion.div className="idx-shell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="idx-inner">
+                        <div className="idx-header">
+                            <button type="button" className="idx-exit" onClick={exitToSetup}><Icon.arrowLeft /> {t.exit}</button>
+                            <h2 className="idx-header-title idx-display">{isCustomBase ? `${t.title}: ${topic}` : t.title}</h2>
+                            <span className="idx-counter idx-mono">{index + 1} / {tasks.length}</span>
+                        </div>
 
-                    <div className="hk-pips">
-                        {tasks.map((_, i) => (
-                            <span key={i} className={"hk-pip" + (i < index ? " is-done" : "") + (i === index ? " is-active" : "")} />
-                        ))}
-                    </div>
+                        <div className="idx-tally">
+                            {tasks.map((_, i) => (
+                                <span key={i} className={"idx-tally-mark" + (i < index ? " is-done" : "") + (i === index ? " is-active" : "")} />
+                            ))}
+                        </div>
 
-                    <div className="hk-stage">
-                        <div className="hk-stage-eyebrow">{t.doCombination}</div>
+                        <div className="idx-stage">
+                            <div className="idx-stage-eyebrow">{t.doCombination}</div>
 
-                        <motion.div
-                            key={index}
-                            className={"hk-stage-quote" + (feedback === "success" ? " is-success" : "")}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            «{getDesc(currentTask)}»
-                        </motion.div>
+                            <motion.div
+                                key={index}
+                                className={"idx-stage-quote" + (feedback === "success" ? " is-success" : "")}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.18 }}
+                            >
+                                «{getDesc(currentTask)}»
+                            </motion.div>
 
-                        <div className="hk-ring-wrap">
-                            <span className={"hk-ring" + (feedback === "success" ? " is-active" : "")} />
                             <ComboKeys task={currentTask} size="lg" mode={feedback || "mystery"} />
                         </div>
                     </div>
-                </div>
-            </motion.div>
+                </motion.div>
+            </div>
         </div>
     );
 };
