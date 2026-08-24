@@ -162,7 +162,7 @@ const UI_TRANSLATIONS = {
         repeat: "Пройти ещё раз",
         alertNoTopic: "Введите название программы!",
         alertFailed: "Не удалось сгенерировать. Попробуй переформулировать запрос.",
-        defaultBaseName: null // при дефолтной базе название программы в заголовках не показывается
+        defaultBaseName: null 
     },
     en: {
         langName: "English",
@@ -236,7 +236,7 @@ const HotkeyTrainer = ({ onBack }) => {
 
     // Язык интерфейса
     const [lang, setLang] = useState('ru');
-    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ru;
+    const t = UI_TRANSLATIONS[lang];
 
     // AI Состояния
     const [topic, setTopic] = useState("Microsoft Word");
@@ -248,7 +248,7 @@ const HotkeyTrainer = ({ onBack }) => {
     // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
     const getDesc = (hk) => {
         if (hk.descKey) {
-            return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
+            return HOTKEY_DESC_TRANSLATIONS[lang][hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
         }
         return hk.desc;
     };
@@ -414,38 +414,31 @@ const HotkeyTrainer = ({ onBack }) => {
     // Переключатель языка интерфейса — рендерится на всех экранах.
     const LanguageSwitcher = ({ style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
-            {LANGS.map((rawCode) => {
-                // Очищаем код от любых случайных пробелов или невидимых символов
-                const code = String(rawCode).trim().toLowerCase();
-                // Гарантированно достаём текст для кнопки
-                const btnLabel = LANG_LABEL[code] || UI_TRANSLATIONS[code]?.langName || code.toUpperCase();
-                
-                return (
-                    <motion.button
-                        key={rawCode}
-                        whileHover={{ y: lang === rawCode ? 0 : -1 }}
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() => setLang(rawCode)}
-                        title={UI_TRANSLATIONS[code]?.langName || code}
-                        style={{
-                            padding: '7px 12px',
-                            borderRadius: '999px',
-                            border: lang === rawCode ? '1px solid transparent' : '1px solid var(--glass-border)',
-                            background: lang === rawCode
-                                ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
-                                : 'var(--bg-body)',
-                            color: lang === rawCode ? '#fff' : 'var(--text-sec)',
-                            fontSize: '12px',
-                            fontWeight: 800,
-                            letterSpacing: '0.5px',
-                            cursor: 'pointer',
-                            boxShadow: lang === rawCode ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
-                        }}
-                    >
-                        {btnLabel}
-                    </motion.button>
-                );
-            })}
+            {LANGS.map((code) => (
+                <motion.button
+                    key={code}
+                    whileHover={{ y: lang === code ? 0 : -1 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => setLang(code)}
+                    title={UI_TRANSLATIONS[code].langName}
+                    style={{
+                        padding: '7px 12px',
+                        borderRadius: '999px',
+                        border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border)',
+                        background: lang === code
+                            ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
+                            : 'var(--bg-body)',
+                        color: lang === code ? '#fff' : 'var(--text-sec)',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        letterSpacing: '0.5px',
+                        cursor: 'pointer',
+                        boxShadow: lang === code ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
+                    }}
+                >
+                    {LANG_LABEL[code]}
+                </motion.button>
+            ))}
         </div>
     );
 
