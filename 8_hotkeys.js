@@ -1,888 +1,892 @@
-const { useState, useEffect, useCallback, useRef, useMemo } = React;
+const { useState, useEffect, useRef } = React;
 const { motion, AnimatePresence } = window.Motion;
-const { shuffleArray } = window;
+const { Button, shuffleArray } = window;
 
 /* ============================================================================
- * ДАННЫЕ
- * ==========================================================================*/
+   ДАННЫЕ (логика та же, что и раньше: descKey -> перевод, key хранится "как есть")
+   ============================================================================ */
 
-const TRANSLATIONS = {
-    ru: {
-        short: "РУС",
-        langName: "Русский",
-        aiHint: "русском",
-        ui: {
-            title: "Хоткеи",
-            aiPowered: "AI powered",
-            subtitle: "Тренируй стандартную базу из своих конспектов (Word, Система) или собери персональную для любой другой программы",
-            customPanelLabel: "Своя база для другой программы",
-            inputPlaceholder: "Напр. Word, Excel, Photoshop…",
-            generateButton: "Собрать базу",
-            generating: "Собираем…",
-            loadedSuccess: (topic) => `База «${topic}» загружена`,
-            startTraining: "Начать тренировку",
-            theoryStep: "Шаг 1 из 2",
-            theoryTitle: "Теория",
-            theoryDesc: "Изучи комбинации, которые встретятся в тренировке, а затем закрепи их на практике.",
-            exit: "Выйти",
-            goToPractice: "Перейти к практике",
-            doCombination: "Выполните комбинацию",
-            finishedTitle: "Отличная работа",
-            finishedDesc: (score, total) => `Закреплено ${score} из ${total} горячих клавиш`,
-            statAccuracy: "Точность",
-            statMistakes: "Ошибок",
-            repeat: "Пройти ещё раз",
-            backToSetup: "Настроить заново",
-            alertNoTopic: "Сначала введите название программы",
-            alertFailed: "Не удалось собрать базу. Попробуйте переформулировать запрос",
-            alertTimeout: "Сервер долго отвечает. Попробуйте ещё раз",
-        },
-        hotkeys: {
-            alignRight: "Поправить текст по правому краю",
-            alignLeft: "Поправить текст по левому краю",
-            undo: "Отменить последнее действие",
-            cut: "Вырезать текст",
-            alignCenter: "Поправить текст по центру",
-            selectAll: "Выделить весь текст",
-            italic: "Курсив",
-            print: "Открыть печать",
-            underline: "Линия под текстом",
-            save: "Сохранить",
-            copy: "Копировать",
-            paste: "Вставить",
-            openFile: "Открыть файл",
-            closeDoc: "Закрыть документ",
-            find: "Найти",
-            findReplace: "Найти и заменить",
-            redo: "Повторить действие",
-            hyperlink: "Вставить гиперссылку",
-            fontSmaller: "Уменьшить размер шрифта",
-            fontBigger: "Увеличить размер шрифта",
-            doubleUnderline: "Двойное подчёркивание",
-            allCaps: "Все прописные",
-            underlineWords: "Подчёркивание только слов",
-            newTab: "Открыть новую вкладку",
-            newFile: "Создать новый файл или окно",
-            bold: "Жирный текст",
-        },
-    },
-    en: {
-        short: "ENG",
-        langName: "English",
-        aiHint: "английском (English)",
-        ui: {
-            title: "Hotkeys",
-            aiPowered: "AI powered",
-            subtitle: "Practice the standard set from your notes (Word, System), or build a custom one for any other program",
-            customPanelLabel: "Custom set for another program",
-            inputPlaceholder: "e.g. Word, Excel, Photoshop…",
-            generateButton: "Build set",
-            generating: "Building…",
-            loadedSuccess: (topic) => `"${topic}" set loaded`,
-            startTraining: "Start training",
-            theoryStep: "Step 1 of 2",
-            theoryTitle: "Theory",
-            theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
-            exit: "Exit",
-            goToPractice: "Go to practice",
-            doCombination: "Perform the combination",
-            finishedTitle: "Great job",
-            finishedDesc: (score, total) => `You locked in ${score} of ${total} hotkeys`,
-            statAccuracy: "Accuracy",
-            statMistakes: "Mistakes",
-            repeat: "Try again",
-            backToSetup: "Set up again",
-            alertNoTopic: "Enter a program name first",
-            alertFailed: "Couldn't build the set. Try rephrasing the topic",
-            alertTimeout: "The server is taking too long. Please try again",
-        },
-        hotkeys: {
-            alignRight: "Align text to the right",
-            alignLeft: "Align text to the left",
-            undo: "Undo the last action",
-            cut: "Cut text",
-            alignCenter: "Center-align text",
-            selectAll: "Select all text",
-            italic: "Italic",
-            print: "Open print dialog",
-            underline: "Underline text",
-            save: "Save",
-            copy: "Copy",
-            paste: "Paste",
-            openFile: "Open file",
-            closeDoc: "Close the document",
-            find: "Find",
-            findReplace: "Find and replace",
-            redo: "Redo",
-            hyperlink: "Insert a hyperlink",
-            fontSmaller: "Decrease font size",
-            fontBigger: "Increase font size",
-            doubleUnderline: "Double underline",
-            allCaps: "All caps",
-            underlineWords: "Underline words only",
-            newTab: "Open a new tab",
-            newFile: "Create a new file or window",
-            bold: "Bold text",
-        },
-    },
-    uz: {
-        short: "ЎЗБ",
-        langName: "O'zbek (кирилл)",
-        aiHint: "узбекском языке кириллицей (o'zbek tilida, kirill alifbosida)",
-        ui: {
-            title: "Хоткейлар",
-            aiPowered: "AI powered",
-            subtitle: "Конспектларингиздаги стандарт базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини тузинг",
-            customPanelLabel: "Бошқа дастур учун ўз базангиз",
-            inputPlaceholder: "Масалан: Word, Excel, Photoshop…",
-            generateButton: "База тузиш",
-            generating: "Тузяпмиз…",
-            loadedSuccess: (topic) => `«${topic}» базаси юкланди`,
-            startTraining: "Машқни бошлаш",
-            theoryStep: "1-қадам, 2 тадан",
-            theoryTitle: "Назария",
-            theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг уларни амалиётда мустаҳкамланг.",
-            exit: "Чиқиш",
-            goToPractice: "Амалиётга ўтиш",
-            doCombination: "Комбинацияни бажаринг",
-            finishedTitle: "Ажойиб натижа",
-            finishedDesc: (score, total) => `${total} тадан ${score} та хоткей мустаҳкамланди`,
-            statAccuracy: "Аниқлик",
-            statMistakes: "Хатолар",
-            repeat: "Яна бир бор такрорлаш",
-            backToSetup: "Қайтадан созлаш",
-            alertNoTopic: "Аввал дастур номини киритинг",
-            alertFailed: "Базани тузиб бўлмади. Мавзуни бошқача ёзиб кўринг",
-            alertTimeout: "Сервер жуда узоқ жавоб бермоқда. Қайта уриниб кўринг",
-        },
-        hotkeys: {
-            alignRight: "Матнни ўнг томонга текислаш",
-            alignLeft: "Матнни чап томонга текислаш",
-            undo: "Охирги амални бекор қилиш",
-            cut: "Матнни кесиб олиш",
-            alignCenter: "Матнни марказга текислаш",
-            selectAll: "Барча матнни танлаш",
-            italic: "Қия ёзув (курсив)",
-            print: "Босиб чиқаришни очиш",
-            underline: "Матн остига чизиқ тортиш",
-            save: "Сақлаш",
-            copy: "Нусха олиш",
-            paste: "Қўйиш",
-            openFile: "Файлни очиш",
-            closeDoc: "Ҳужжатни ёпиш",
-            find: "Қидириш",
-            findReplace: "Қидириш ва алмаштириш",
-            redo: "Қайта бажариш",
-            hyperlink: "Гиперҳавола қўйиш",
-            fontSmaller: "Шрифт ўлчамини кичрайтириш",
-            fontBigger: "Шрифт ўлчамини катталаштириш",
-            doubleUnderline: "Икки қатор тагига чизиш",
-            allCaps: "Барча ҳарфларни бош ҳарф қилиш",
-            underlineWords: "Фақат сўзларни тагига чизиш",
-            newTab: "Янги ойна очиш",
-            newFile: "Янги файл ёки ойна яратиш",
-            bold: "Қалин (bold) матн",
-        },
-    },
+const SHIFT_SYMBOL_MAP = {
+    '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+    '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+    '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|',
+    ';': ':', "'": '"', ',': '<', '.': '>', '/': '?', '`': '~'
 };
-
-const LANGS = Object.keys(TRANSLATIONS);
 
 const HOTKEYS_DB = [
-    { descKey: "alignRight", key: "r", shift: false },
-    { descKey: "alignLeft", key: "l", shift: false },
-    { descKey: "undo", key: "z", shift: false },
-    { descKey: "cut", key: "x", shift: false },
-    { descKey: "alignCenter", key: "e", shift: false },
-    { descKey: "selectAll", key: "a", shift: false },
-    { descKey: "italic", key: "i", shift: false },
-    { descKey: "print", key: "p", shift: false },
-    { descKey: "underline", key: "u", shift: false },
-    { descKey: "save", key: "s", shift: false },
-    { descKey: "copy", key: "c", shift: false },
-    { descKey: "paste", key: "v", shift: false },
-    { descKey: "openFile", key: "o", shift: false },
-    { descKey: "closeDoc", key: "w", shift: false },
-    { descKey: "find", key: "f", shift: false },
-    { descKey: "findReplace", key: "h", shift: false },
-    { descKey: "redo", key: "y", shift: false },
-    { descKey: "hyperlink", key: "k", shift: false },
-    { descKey: "fontSmaller", key: "1", shift: true },
-    { descKey: "fontBigger", key: "9", shift: true },
-    { descKey: "doubleUnderline", key: "d", shift: true },
-    { descKey: "allCaps", key: "a", shift: true },
-    { descKey: "underlineWords", key: "w", shift: true },
-    { descKey: "newTab", key: "t", shift: false },
-    { descKey: "newFile", key: "n", shift: false },
-    { descKey: "bold", key: "b", shift: false },
+    { descKey: "alignRight", key: "r", shift: false, visual: "Ctrl + R" },
+    { descKey: "alignLeft", key: "l", shift: false, visual: "Ctrl + L" },
+    { descKey: "undo", key: "z", shift: false, visual: "Ctrl + Z" },
+    { descKey: "cut", key: "x", shift: false, visual: "Ctrl + X" },
+    { descKey: "alignCenter", key: "e", shift: false, visual: "Ctrl + E" },
+    { descKey: "selectAll", key: "a", shift: false, visual: "Ctrl + A" },
+    { descKey: "italic", key: "i", shift: false, visual: "Ctrl + I" },
+    { descKey: "print", key: "p", shift: false, visual: "Ctrl + P" },
+    { descKey: "underline", key: "u", shift: false, visual: "Ctrl + U" },
+    { descKey: "save", key: "s", shift: false, visual: "Ctrl + S" },
+    { descKey: "copy", key: "c", shift: false, visual: "Ctrl + C" },
+    { descKey: "paste", key: "v", shift: false, visual: "Ctrl + V" },
+    { descKey: "openFile", key: "o", shift: false, visual: "Ctrl + O" },
+    { descKey: "closeDoc", key: "w", shift: false, visual: "Ctrl + W" },
+    { descKey: "find", key: "f", shift: false, visual: "Ctrl + F" },
+    { descKey: "findReplace", key: "h", shift: false, visual: "Ctrl + H" },
+    { descKey: "redo", key: "y", shift: false, visual: "Ctrl + Y" },
+    { descKey: "hyperlink", key: "k", shift: false, visual: "Ctrl + K" },
+    { descKey: "fontSmaller", key: "1", shift: true, visual: "Ctrl + Shift + 1" },
+    { descKey: "fontBigger", key: "9", shift: true, visual: "Ctrl + Shift + 9" },
+    { descKey: "doubleUnderline", key: "d", shift: true, visual: "Ctrl + Shift + D" },
+    { descKey: "allCaps", key: "a", shift: true, visual: "Ctrl + Shift + A" },
+    { descKey: "underlineWords", key: "w", shift: true, visual: "Ctrl + Shift + W" },
+    { descKey: "newTab", key: "t", shift: false, visual: "Ctrl + T" },
+    { descKey: "newFile", key: "n", shift: false, visual: "Ctrl + N" },
+    { descKey: "bold", key: "b", shift: false, visual: "Ctrl + B" }
 ];
 
-const AI_ENDPOINT = "https://gemini-proxy-lms.msleaderindustry.workers.dev";
-
-/* ============================================================================
- * УТИЛИТЫ
- * ==========================================================================*/
-
-// Физический код клавиши по символу — сверяемся с e.code, а не e.key, поэтому
-// распознавание не зависит от активной раскладки клавиатуры (раньше для этого
-// была отдельная таблица SHIFT_SYMBOL_MAP на все Shift-символы — она не нужна).
-const PUNCT_CODES = {
-    "-": "Minus", "=": "Equal", "[": "BracketLeft", "]": "BracketRight",
-    "\\": "Backslash", ";": "Semicolon", "'": "Quote", ",": "Comma",
-    ".": "Period", "/": "Slash", "`": "Backquote",
-};
-function codeForKey(key) {
-    if (/^[a-z]$/i.test(key)) return "Key" + key.toUpperCase();
-    if (/^[0-9]$/.test(key)) return "Digit" + key;
-    return PUNCT_CODES[key] || null;
-}
-
-function buildVisual(key, shift) {
-    const parts = ["Ctrl"];
-    if (shift) parts.push("Shift");
-    parts.push(key.length === 1 ? key.toUpperCase() : key);
-    return parts.join(" + ");
-}
-
-function buildPrompt(topic, lang) {
-    return `Ты — техническая справочная система, а не творческий помощник. Твоя единственная задача — точно воспроизвести ОФИЦИАЛЬНО ЗАДОКУМЕНТИРОВАННЫЕ горячие клавиши программы "${topic}", без фантазий и "правдоподобных" догадок.
-
-Верни 10 горячих клавиш (с Ctrl, некоторые дополнительно могут включать Shift) для программы "${topic}".
-
-СТРОГИЕ ПРАВИЛА:
-1. Не придумывай комбинации — только реально задокументированные в официальной справке "${topic}".
-2. Если 10 официальных комбинаций с Ctrl не существует — верни столько, сколько есть (не меньше 5), не выдумывая недостающие.
-3. Поле "desc" — точное нейтральное описание действия на ${TRANSLATIONS[lang].aiHint}, без отсебятины.
-4. Поле "key" — ровно один символ: строчная латинская буква или цифра физической клавиши (без "!" или "(", для цифр пиши саму цифру).
-5. Не повторяй одну и ту же комбинацию дважды.
-6. Верни ТОЛЬКО чистый валидный JSON-массив объектов, без markdown и пояснений.
-
-Формат:
-[{"desc": "Описание действия", "key": "c", "shift": false, "visual": "Ctrl + C"}]`;
-}
-
-/* ============================================================================
- * ИКОНКИ (лёгкие инлайн SVG вместо эмодзи — под фирменный градиент сайта)
- * ==========================================================================*/
-
-const Icon = {
-    bolt: (p) => (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...p}>
-            <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" />
-        </svg>
-    ),
-    spark: (p) => (
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" {...p}>
-            <path d="M12 2l1.8 5.9L20 10l-6.2 2.1L12 18l-1.8-5.9L4 10l6.2-2.1L12 2z" />
-        </svg>
-    ),
-    arrowLeft: (p) => (
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M19 12H5M11 18l-6-6 6-6" />
-        </svg>
-    ),
-    arrowRight: (p) => (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
-    ),
-    play: (p) => (
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" {...p}>
-            <path d="M7 5l12 7-12 7z" />
-        </svg>
-    ),
-    check: (p) => (
-        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M5 13l4.5 4.5L19 7" />
-        </svg>
-    ),
-    repeat: (p) => (
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M4 10a8 8 0 0113.9-5.3M20 5v5h-5M20 14a8 8 0 01-13.9 5.3M4 19v-5h5" />
-        </svg>
-    ),
-    spinner: (p) => (
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" {...p}>
-            <path d="M12 3a9 9 0 106.36 2.64" />
-        </svg>
-    ),
+const HOTKEY_DESC_TRANSLATIONS = {
+    ru: {
+        alignRight: "Поправить текст по правому краю", alignLeft: "Поправить текст по левому краю",
+        undo: "Отменить последнее действие", cut: "Вырезать текст", alignCenter: "Поправить текст по центру",
+        selectAll: "Выделить весь текст", italic: "Курсив", print: "Открыть принтер",
+        underline: "Линия под текстом", save: "Сохранить", copy: "Копия", paste: "Вставить",
+        openFile: "Открыть файл", closeDoc: "Выйти из документа", find: "Найти",
+        findReplace: "Найти и заменить", redo: "Перейти к истории (Redo)", hyperlink: "Вставить гиперссылку",
+        fontSmaller: "Уменьшить размер шрифта", fontBigger: "Увеличить размер шрифта",
+        doubleUnderline: "Двойное подчёркивание", allCaps: "Все прописные",
+        underlineWords: "Подчёркивание только слов", newTab: "Открыть новую вкладку",
+        newFile: "Создать новый файл или окно", bold: "Жирный текст"
+    },
+    en: {
+        alignRight: "Align text to the right", alignLeft: "Align text to the left",
+        undo: "Undo the last action", cut: "Cut text", alignCenter: "Center-align text",
+        selectAll: "Select all text", italic: "Italic", print: "Open print dialog",
+        underline: "Underline text", save: "Save", copy: "Copy", paste: "Paste",
+        openFile: "Open file", closeDoc: "Close the document", find: "Find",
+        findReplace: "Find and replace", redo: "Redo", hyperlink: "Insert a hyperlink",
+        fontSmaller: "Decrease font size", fontBigger: "Increase font size",
+        doubleUnderline: "Double underline", allCaps: "All caps",
+        underlineWords: "Underline words only", newTab: "Open a new tab",
+        newFile: "Create a new file or window", bold: "Bold text"
+    },
+    uz: {
+        alignRight: "Матнни ўнг томонга текислаш", alignLeft: "Матнни чап томонга текислаш",
+        undo: "Охирги амални бекор қилиш", cut: "Матнни кесиб олиш", alignCenter: "Матнни марказга текислаш",
+        selectAll: "Барча матнни танлаш", italic: "Қия ёзув (курсив)", print: "Босиб чиқаришни очиш",
+        underline: "Матн остига чизиқ тортиш", save: "Сақлаш", copy: "Нусха олиш", paste: "Қўйиш",
+        openFile: "Файлни очиш", closeDoc: "Ҳужжатни ёпиш", find: "Қидириш",
+        findReplace: "Қидириш ва алмаштириш", redo: "Қайта бажариш (Redo)", hyperlink: "Гиперҳавола қўйиш",
+        fontSmaller: "Шрифт ўлчамини кичрайтириш", fontBigger: "Шрифт ўлчамини катталаштириш",
+        doubleUnderline: "Икки қатор тагига чизиш", allCaps: "Барча ҳарфларни бош ҳарф қилиш",
+        underlineWords: "Фақат сўзларни тагига чизиш", newTab: "Янги ойна (вкладка) очиш",
+        newFile: "Янги файл ёки ойна яратиш", bold: "Қалин (bold) матн"
+    }
 };
 
-/* ============================================================================
- * СТИЛИ
- * Используются те же токены, что и на остальном сайте (--bg-panel, --bg-body,
- * --text-main, --text-sec, --glass-border, --accent-glow, класс .glass-panel).
- * Фолбэки в :root на случай, если компонент открыт отдельно от общей темы.
- * ==========================================================================*/
+const UI_TRANSLATIONS = {
+    ru: {
+        langName: "Русский", title: "Хоткеи", aiPowered: "AI powered",
+        subtitle: "Тренируй базу из конспектов (Word, Система) или собери свою — для любой другой программы.",
+        presetsLabel: "Часто выбирают", customPanelLabel: "Своя база для другой программы",
+        inputPlaceholder: "Напр. Word, Excel, Photoshop…", generateButton: "Собрать базу",
+        generating: "Ищем…", loadedSuccess: (topic) => `База «${topic}» готова`,
+        startTraining: "Начать тренировку", stepTheoryLabel: "Теория", stepPracticeLabel: "Практика",
+        theoryStep: "Шаг 1 из 2", theoryTitle: "Теория",
+        theoryDesc: "Изучи комбинации, которые встретятся в тренировке, а затем закрепи их на практике.",
+        exit: "Выйти", goToPractice: "Перейти к практике", doCombination: "Нажми комбинацию",
+        finishedTitle: "Готово!", finishedDesc: (score) => `Закреплено ${score} из 10 горячих клавиш`,
+        repeat: "Пройти ещё раз", alertNoTopic: "Введите название программы!",
+        alertFailed: "Не удалось сгенерировать. Попробуй переформулировать запрос.", defaultBaseName: null
+    },
+    en: {
+        langName: "English", title: "Hotkeys", aiPowered: "AI powered",
+        subtitle: "Practice the built-in set (Word, System), or build your own for any other program.",
+        presetsLabel: "Popular picks", customPanelLabel: "Custom set for another program",
+        inputPlaceholder: "e.g. Word, Excel, Photoshop…", generateButton: "Generate set",
+        generating: "Generating…", loadedSuccess: (topic) => `"${topic}" set is ready`,
+        startTraining: "Start training", stepTheoryLabel: "Theory", stepPracticeLabel: "Practice",
+        theoryStep: "Step 1 of 2", theoryTitle: "Theory",
+        theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
+        exit: "Exit", goToPractice: "Go to practice", doCombination: "Press the combination",
+        finishedTitle: "All done!", finishedDesc: (score) => `You locked in ${score} of 10 hotkeys`,
+        repeat: "Try again", alertNoTopic: "Enter the name of a program!",
+        alertFailed: "Couldn't generate a set. Try rephrasing the topic.", defaultBaseName: null
+    },
+    uz: {
+        langName: "O'zbek (кирилл)", title: "Хоткейлар", aiPowered: "AI powered",
+        subtitle: "Тайёр базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини яратинг.",
+        presetsLabel: "Кўп танланадиган", customPanelLabel: "Бошқа дастур учун ўз базангиз",
+        inputPlaceholder: "Масалан: Word, Excel, Photoshop…", generateButton: "База яратиш",
+        generating: "Излаяпмиз…", loadedSuccess: (topic) => `«${topic}» базаси тайёр`,
+        startTraining: "Машқни бошлаш", stepTheoryLabel: "Назария", stepPracticeLabel: "Амалиёт",
+        theoryStep: "1-қадам, 2 тадан", theoryTitle: "Назария",
+        theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг амалиётда мустаҳкамланг.",
+        exit: "Чиқиш", goToPractice: "Амалиётга ўтиш", doCombination: "Комбинацияни босинг",
+        finishedTitle: "Тайёр!", finishedDesc: (score) => `10 тадан ${score} таси мустаҳкамланди`,
+        repeat: "Яна такрорлаш", alertNoTopic: "Дастур номини киритинг!",
+        alertFailed: "Яратиб бўлмади. Мавзуни бошқача ёзиб кўринг.", defaultBaseName: null
+    }
+};
 
-const HK_CSS = `
-.hk-root{
-  --hk-title-a:#f6d365; --hk-title-b:#fda085;
-  --hk-ai-a:#a855f7; --hk-ai-b:#6d28d9;
-  --hk-ok:#10b981; --hk-err:#fb7185;
-  --bg-body: var(--bg-body, #12141a);
-  --bg-panel: var(--bg-panel, #1a1d25);
-  --text-main: var(--text-main, #f1f3f8);
-  --text-sec: var(--text-sec, #9399aa);
-  --glass-border: var(--glass-border, rgba(255,255,255,.09));
-  --accent-glow: var(--accent-glow, #0ea5e9);
-  color: var(--text-main); width:100%; position:relative;
-}
-.hk-wrap{ width:100%; max-width:820px; margin:0 auto; }
-.hk-inner{ padding:40px; display:flex; flex-direction:column; gap:24px; position:relative; overflow:hidden; border-radius:24px; }
-@media (max-width:640px){ .hk-inner{ padding:24px 18px; gap:20px; } }
+const AI_LANG_HINT = {
+    ru: "русском", en: "английском (English)",
+    uz: "узбекском языке кириллицей (o'zbek tilida, kirill alifbosida)"
+};
 
-.hk-glow-a{ position:absolute; top:-110px; left:50%; transform:translateX(-50%); width:380px; height:240px;
-  background:radial-gradient(ellipse, rgba(253,160,133,.16), transparent 72%); pointer-events:none; filter:blur(2px); }
-.hk-glow-b{ position:absolute; bottom:-120px; right:-70px; width:280px; height:280px;
-  background:radial-gradient(circle, rgba(139,92,246,.10), transparent 70%); pointer-events:none; }
+const LANGS = ["ru", "en", "uz"];
+const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
 
-.hk-topline{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; position:relative; z-index:1; }
+// Быстрый выбор темы — реальные, узнаваемые программы, без привязки к языку интерфейса
+const PRESET_TOPICS = ["Microsoft Word", "Excel", "PowerPoint", "Photoshop", "Figma", "VS Code"];
 
-.hk-lang-row{ display:flex; gap:6px; }
-.hk-lang-chip{
-  font-size:11px; font-weight:800; letter-spacing:.05em; padding:7px 12px; border-radius:999px;
-  border:1px solid var(--glass-border); background:var(--bg-body); color:var(--text-sec); cursor:pointer;
-  transition:border-color .15s ease, color .15s ease, background .15s ease, transform .1s ease;
-}
-.hk-lang-chip:hover{ color:var(--text-main); }
-.hk-lang-chip.is-active{ background:linear-gradient(120deg, var(--hk-ai-a), var(--hk-ai-b)); border-color:transparent; color:#fff; box-shadow:0 6px 16px -6px rgba(109,40,217,.6); }
-
-.hk-back-link{ display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-sec); font-size:13px; font-weight:700; cursor:pointer; padding:6px 0; }
-.hk-back-link:hover{ color:var(--text-main); }
-
-.hk-hero{ display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
-.hk-mark{
-  width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  color:#241a04; background:linear-gradient(135deg, var(--hk-title-a) 0%, var(--hk-title-b) 100%);
-  box-shadow:0 12px 24px -10px rgba(253,160,133,.55), inset 0 1px 1px rgba(255,255,255,.5);
-}
-.hk-title{
-  margin:0; font-size:30px; font-weight:900; letter-spacing:-.02em;
-  background:linear-gradient(135deg, var(--hk-title-a) 0%, var(--hk-title-b) 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
-.hk-badge{
-  display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
-  color:#fff; background:linear-gradient(120deg, var(--hk-ai-a), var(--hk-ai-b)); padding:6px 11px; border-radius:999px;
-  box-shadow:0 6px 16px -6px rgba(109,40,217,.6);
-}
-
-.hk-subtitle{ font-size:14.5px; line-height:1.7; color:var(--text-sec); max-width:480px; margin:0; position:relative; z-index:1; }
-
-.hk-panel{ background:var(--bg-body); border:1px solid var(--glass-border); border-radius:18px; padding:22px; position:relative; z-index:1; }
-.hk-panel-label{ font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--text-sec); display:flex; align-items:center; gap:8px; margin-bottom:14px; }
-.hk-dot{ width:6px; height:6px; border-radius:50%; background:var(--hk-ai-a); flex-shrink:0; }
-
-.hk-field-row{ display:flex; gap:10px; flex-wrap:wrap; }
-.hk-input{
-  flex:1 1 200px; padding:0 16px; height:48px; border-radius:12px; border:1px solid var(--glass-border);
-  background:var(--bg-panel); color:var(--text-main); font-size:14.5px; font-weight:600; outline:none;
-  transition:border-color .15s ease;
-}
-.hk-input::placeholder{ color:var(--text-sec); opacity:.7; }
-.hk-input:focus-visible{ border-color:var(--hk-ai-a); }
-
-.hk-btn{
-  height:48px; padding:0 20px; border-radius:12px; border:none; cursor:pointer; font-size:14px; font-weight:800;
-  display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s ease, opacity .12s ease, box-shadow .15s ease;
-  font-family:inherit;
-}
-.hk-btn:hover{ transform:translateY(-1px); }
-.hk-btn:active{ transform:translateY(0); }
-.hk-btn:disabled{ cursor:not-allowed; opacity:.65; transform:none; }
-.hk-btn--ai{ background:linear-gradient(120deg, var(--hk-ai-a), var(--hk-ai-b)); color:#fff; box-shadow:0 10px 22px -10px rgba(109,40,217,.65); }
-.hk-btn--warm{ background:linear-gradient(135deg, var(--hk-title-a) 0%, var(--hk-title-b) 100%); color:#241a04; box-shadow:0 12px 24px -10px rgba(253,160,133,.6); }
-.hk-btn--ghost{ background:var(--bg-body); color:var(--text-sec); border:1px solid var(--glass-border); }
-.hk-btn--ghost:hover{ color:var(--text-main); }
-.hk-btn--full{ width:100%; height:56px; font-size:15.5px; border-radius:14px; }
-
-.hk-banner{ margin-top:14px; font-size:13px; font-weight:700; text-align:center; border-radius:11px; padding:10px 14px; }
-.hk-banner--ok{ color:var(--hk-ok); background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.25); }
-.hk-banner--err{ color:var(--hk-err); background:rgba(251,113,133,.08); border:1px solid rgba(251,113,133,.25); }
-
-.hk-header{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; padding-bottom:18px; border-bottom:1px solid var(--glass-border); position:relative; z-index:1; }
-.hk-exit{ display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-sec); font-size:13.5px; font-weight:700; cursor:pointer; padding:6px 2px; justify-self:start; }
-.hk-exit:hover{ color:var(--text-main); }
-.hk-header-title{ font-size:20px; font-weight:900; text-align:center; margin:0;
-  background:linear-gradient(135deg, var(--hk-title-a) 0%, var(--hk-title-b) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.hk-counter{ justify-self:end; font-size:13px; font-weight:800; color:var(--text-sec); background:var(--bg-body); border:1px solid var(--glass-border); border-radius:999px; padding:7px 14px; }
-.hk-counter b{ color:var(--text-main); }
-
-.hk-eyebrow-step{ font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--text-sec); }
-.hk-theory-title{ font-size:24px; font-weight:900; margin:4px 0 0; }
-.hk-theory-desc{ font-size:13.5px; color:var(--text-sec); line-height:1.6; margin:0; }
-
-.hk-combo-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; max-height:400px; overflow-y:auto; padding-right:4px; position:relative; z-index:1; }
-.hk-combo-card{ display:flex; flex-direction:column; gap:12px; padding:16px; background:var(--bg-body); border:1px solid var(--glass-border); border-radius:14px; }
-.hk-combo-desc{ font-size:13.5px; font-weight:700; line-height:1.4; }
-.hk-combo-keys{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-
-.hk-key{
-  font-family:'SF Mono','JetBrains Mono',ui-monospace,monospace; font-weight:800; text-align:center; user-select:none;
-  border-radius:9px; border:1px solid var(--glass-border); background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%);
-  box-shadow:0 3px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.06); color:var(--text-main);
-  transition:transform .1s ease, box-shadow .1s ease, border-color .1s ease, color .1s ease;
-}
-.hk-key--sm{ font-size:11.5px; padding:6px 10px; }
-.hk-key--lg{ font-size:19px; min-width:54px; height:54px; display:flex; align-items:center; justify-content:center; padding:0 14px; }
-.hk-key--mystery{ border:2px dashed var(--accent-glow); color:var(--accent-glow); background:var(--bg-body); animation:hk-blink 1.8s ease-in-out infinite; }
-.hk-key--success{ transform:translateY(2px); border-color:var(--hk-ok); color:var(--hk-ok); box-shadow:0 0 0 rgba(0,0,0,0), inset 0 1px 0 rgba(255,255,255,.06); }
-.hk-key--error{ animation:hk-shake .32s ease; border-color:var(--hk-err); color:var(--hk-err); }
-.hk-plus{ font-size:15px; font-weight:800; color:var(--text-sec); opacity:.55; }
-
-.hk-stage{ display:flex; flex-direction:column; align-items:center; gap:30px; padding:14px 0 4px; position:relative; z-index:1; }
-.hk-stage-eyebrow{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--text-sec); }
-.hk-stage-quote{ font-size:29px; font-weight:800; text-align:center; max-width:88%; line-height:1.3; letter-spacing:-.01em; color:var(--text-main); transition:color .15s ease; }
-.hk-stage-quote.is-success{ color:var(--hk-ok); }
-
-.hk-pips{ display:flex; gap:7px; flex-wrap:wrap; justify-content:center; position:relative; z-index:1; }
-.hk-pip{ width:9px; height:9px; border-radius:50%; background:var(--bg-body); border:1px solid var(--glass-border); transition:background .2s ease, transform .2s ease, border-color .2s ease; }
-.hk-pip.is-done{ background:linear-gradient(120deg, var(--hk-title-a), var(--hk-title-b)); border-color:transparent; }
-.hk-pip.is-active{ background:var(--accent-glow); border-color:transparent; transform:scale(1.35); }
-
-.hk-done{ display:flex; flex-direction:column; align-items:center; gap:16px; padding:44px 0 10px; text-align:center; position:relative; z-index:1; }
-.hk-done-icon{ width:68px; height:68px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#06251c;
-  background:linear-gradient(135deg, var(--hk-ok), #22a869); box-shadow:0 16px 30px -12px rgba(16,185,129,.55); }
-.hk-done-title{ font-size:28px; font-weight:900; margin:0;
-  background:linear-gradient(135deg, var(--hk-title-a) 0%, var(--hk-title-b) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.hk-done-desc{ font-size:14.5px; color:var(--text-sec); margin:0; font-weight:600; }
-.hk-stat-row{ display:flex; gap:10px; margin-top:4px; }
-.hk-stat{ background:var(--bg-body); border:1px solid var(--glass-border); border-radius:12px; padding:12px 22px; min-width:104px; }
-.hk-stat-value{ font-family:'SF Mono','JetBrains Mono',ui-monospace,monospace; font-size:20px; font-weight:800; }
-.hk-stat-label{ font-size:10.5px; color:var(--text-sec); text-transform:uppercase; letter-spacing:.08em; margin-top:2px; font-weight:700; }
-.hk-done-actions{ display:flex; gap:10px; margin-top:16px; }
-
-@keyframes hk-shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)} }
-@keyframes hk-blink{ 0%,100%{opacity:1} 50%{opacity:.45} }
-
-.hk-root button:focus-visible, .hk-root input:focus-visible{ outline:2px solid var(--accent-glow); outline-offset:2px; }
-
-@media (prefers-reduced-motion: reduce){
-  .hk-root *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
-}
-`;
+// Комбинации для «ленивой» демонстрации на стартовом экране
+const AMBIENT_COMBOS = [
+    { key: "c", shift: false, descKey: "copy" },
+    { key: "v", shift: false, descKey: "paste" },
+    { key: "z", shift: false, descKey: "undo" },
+    { key: "s", shift: false, descKey: "save" },
+    { key: "f", shift: false, descKey: "find" }
+];
 
 /* ============================================================================
- * ХУК: языковая база + генерация кастомной темы через ИИ
- * ==========================================================================*/
+   ДИЗАЙН-СИСТЕМА: цифровая клавиатура как материал интерфейса.
+   Всё — от логотипа до фидбека — сделано настоящими "клавишами" (Keycap),
+   собранными в MiniKeyboard. Это единственный акцент; всё остальное — тихое.
+   ============================================================================ */
 
-function useHotkeySet(lang) {
-    const strings = TRANSLATIONS[lang].ui;
-    const [topic, setTopic] = useState("Microsoft Word");
-    const [activeHotkeys, setActiveHotkeys] = useState(HOTKEYS_DB);
-    const [isCustomBase, setIsCustomBase] = useState(false);
-    const [status, setStatus] = useState("idle"); // idle | loading | success | error
-    const [message, setMessage] = useState("");
-    const abortRef = useRef(null);
+const FONTS = {
+    display: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    body: "'Inter', system-ui, -apple-system, sans-serif",
+    mono: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+};
 
-    useEffect(() => () => abortRef.current?.abort(), []);
+const INK = {
+    amberTop: "#f3b65c", amber: "#e8a33d", amberEdge: "#9c661f", amberInk: "#2a1707",
+    tealTop: "#63d8c7", teal: "#49c6b4", tealEdge: "#1f7c6f", tealInk: "#062824",
+    coralTop: "#f5837a", coral: "#f0645a", coralEdge: "#9c2c26",
+    keyTop: "#3d3d47", keyTopHi: "#48485373", keyEdge: "rgba(0,0,0,0.55)", keyInk: "#e9e5da",
+    dimTop: "#222228", dimEdge: "rgba(0,0,0,0.5)", dimInk: "#84818c"
+};
 
-    const generate = useCallback(async () => {
-        const cleanTopic = topic.trim();
-        if (!cleanTopic) {
-            setStatus("error");
-            setMessage(strings.alertNoTopic);
-            return;
-        }
+const KB_ROWS = [
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+    ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+    ["z", "x", "c", "v", "b", "n", "m"]
+];
 
-        abortRef.current?.abort();
-        const controller = new AbortController();
-        abortRef.current = controller;
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
+const KEY_SIZES = {
+    xs: { pad: "6px 8px", fs: 10.5, radius: 6, bb: 2, min: 24 },
+    sm: { pad: "9px 13px", fs: 12.5, radius: 8, bb: 3, min: 32 },
+    md: { pad: "13px 18px", fs: 15, radius: 10, bb: 3, min: 40 },
+    lg: { pad: "16px 22px", fs: 18, radius: 12, bb: 4, min: 48 }
+};
 
-        setStatus("loading");
-        setMessage("");
+const KEY_TONES = {
+    neutral: { top: INK.keyTop, hi: "#48484f", ink: INK.keyInk, edge: INK.keyEdge },
+    amber: { top: INK.amber, hi: INK.amberTop, ink: INK.amberInk, edge: INK.amberEdge },
+    teal: { top: INK.teal, hi: INK.tealTop, ink: INK.tealInk, edge: INK.tealEdge },
+    coral: { top: INK.coral, hi: INK.coralTop, ink: "#2a0a08", edge: INK.coralEdge },
+    dim: { top: INK.dimTop, hi: "#27272d", ink: INK.dimInk, edge: INK.dimEdge }
+};
 
-        try {
-            const response = await fetch(AI_ENDPOINT, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: buildPrompt(cleanTopic, lang) }] }] }),
-                signal: controller.signal,
-            });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error.message || "api error");
+// Keycap — базовый атом дизайна: настоящая "клавиша" с объёмом и подсветкой
+const Keycap = ({ children, size = "md", tone = "neutral", glow = false, wide = false }) => {
+    const d = KEY_SIZES[size];
+    const c = KEY_TONES[tone];
+    return (
+        <div style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            padding: d.pad, minWidth: wide ? undefined : d.min,
+            width: wide ? "100%" : undefined,
+            borderRadius: d.radius, fontFamily: FONTS.mono, fontWeight: 700,
+            fontSize: d.fs, letterSpacing: "0.2px", color: c.ink,
+            background: `linear-gradient(180deg, ${c.hi} 0%, ${c.top} 100%)`,
+            borderBottom: `${d.bb}px solid ${c.edge}`,
+            boxShadow: glow
+                ? `0 0 0 1px ${c.edge}, 0 6px 16px -6px ${c.top}, 0 0 22px -2px ${c.top}99`
+                : `0 0 0 1px ${c.edge}, 0 2px 6px rgba(0,0,0,0.35)`,
+            transition: "box-shadow 0.2s ease, background 0.2s ease",
+            userSelect: "none", whiteSpace: "nowrap", lineHeight: 1
+        }}>
+            {children}
+        </div>
+    );
+};
 
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-            if (!rawText) throw new Error("empty response");
+// MiniKeyboard — функциональная (не декоративная) визуализация: подсвечивает
+// именно те клавиши, которые нужно нажать. Используется и на практике, и в демо.
+const MiniKeyboard = ({ targetKey, needsShift, pulse, scale = 1 }) => {
+    const isMatch = (k) => targetKey && k === targetKey.toLowerCase();
+    return (
+        <div style={{
+            display: "inline-flex", flexDirection: "column", gap: 6, padding: 16,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.025), rgba(0,0,0,0.28))",
+            border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20,
+            boxShadow: "0 30px 60px -24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)",
+            transform: `scale(${scale})`
+        }}>
+            {KB_ROWS.map((row, ri) => (
+                <div key={ri} style={{ display: "flex", gap: 6, justifyContent: "center", paddingLeft: ri * 9 }}>
+                    {row.map((k) => {
+                        const match = isMatch(k);
+                        const cell = (
+                            <Keycap size="xs" tone={match ? "amber" : "dim"} glow={match && pulse !== "error"}>
+                                {k.toUpperCase()}
+                            </Keycap>
+                        );
+                        if (!match) return <div key={k}>{cell}</div>;
+                        return (
+                            <motion.div
+                                key={k}
+                                animate={
+                                    pulse === "success" ? { y: [0, 3, 0] }
+                                        : pulse === "error" ? { x: [-3, 3, -3, 3, 0] }
+                                        : {}
+                                }
+                                transition={{ duration: 0.28 }}
+                            >
+                                {cell}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            ))}
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 2 }}>
+                <div style={{ flex: "0 0 76px" }}>
+                    <Keycap size="xs" tone={needsShift ? "amber" : "dim"} glow={needsShift && pulse !== "error"} wide>Shift</Keycap>
+                </div>
+                <div style={{ flex: "0 0 60px" }}>
+                    <Keycap size="xs" tone="amber" glow={pulse !== "error"} wide>Ctrl</Keycap>
+                </div>
+                <div style={{ flex: "1 1 auto", maxWidth: 140 }}>
+                    <Keycap size="xs" tone="dim" wide>Space</Keycap>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-            const match = rawText.match(/\[[\s\S]*\]/);
-            if (!match) throw new Error("no json array in response");
-
-            const parsed = JSON.parse(match[0]);
-            const cleaned = parsed
-                .filter((hk) => hk && typeof hk.key === "string" && hk.key.trim().length === 1 && typeof hk.desc === "string" && hk.desc.trim())
-                .map((hk) => {
-                    const key = hk.key.trim().toLowerCase();
-                    const shift = !!hk.shift;
-                    return {
-                        desc: hk.desc.trim(),
-                        key,
-                        shift,
-                        visual: typeof hk.visual === "string" && hk.visual.trim() ? hk.visual.trim() : buildVisual(key, shift),
-                    };
-                });
-
-            if (cleaned.length < 3) throw new Error("too few valid hotkeys returned");
-
-            setActiveHotkeys(cleaned);
-            setIsCustomBase(true);
-            setStatus("success");
-        } catch (err) {
-            setStatus("error");
-            setMessage(err && err.name === "AbortError" ? strings.alertTimeout : strings.alertFailed);
-            setActiveHotkeys(HOTKEYS_DB);
-            setIsCustomBase(false);
-        } finally {
-            clearTimeout(timeoutId);
-        }
-    }, [topic, lang, strings]);
-
-    const resetToDefault = useCallback(() => {
-        setActiveHotkeys(HOTKEYS_DB);
-        setIsCustomBase(false);
-        setStatus("idle");
-        setMessage("");
-    }, []);
-
-    return { topic, setTopic, activeHotkeys, isCustomBase, status, message, generate, resetToDefault };
-}
-
-/* ============================================================================
- * ВИЗУАЛЬНЫЕ АТОМЫ
- * ==========================================================================*/
-
-const LangSwitch = ({ lang, onChange }) => (
-    <div className="hk-lang-row">
-        {LANGS.map((code) => (
-            <button
-                key={code}
-                type="button"
-                className={"hk-lang-chip" + (lang === code ? " is-active" : "")}
-                title={TRANSLATIONS[code].langName}
-                onClick={() => onChange(code)}
-            >
-                {TRANSLATIONS[code].short}
-            </button>
+// Хлебные крошки шагов: реальная, а не декоративная последовательность (Теория -> Практика)
+const StepTrail = ({ step, labels }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {[1, 2].map((n) => (
+            <React.Fragment key={n}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <div style={{
+                        width: 20, height: 20, borderRadius: "50%", display: "flex",
+                        alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800,
+                        fontFamily: FONTS.mono,
+                        background: n < step ? INK.teal : n === step ? INK.amber : "rgba(255,255,255,0.09)",
+                        color: n <= step ? "#181818" : "var(--text-sec)"
+                    }}>
+                        {n < step ? "✓" : n}
+                    </div>
+                    <span style={{
+                        fontSize: 12, fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase",
+                        color: n === step ? "var(--text-main)" : "var(--text-sec)", opacity: n === step ? 1 : 0.6
+                    }}>
+                        {labels[n - 1]}
+                    </span>
+                </div>
+                {n === 1 && <div style={{ width: 22, height: 1, background: "rgba(255,255,255,0.14)" }} />}
+            </React.Fragment>
         ))}
     </div>
 );
 
-// mode: 'mystery' | 'reveal' | 'success' | 'error'
-const ComboKeys = ({ task, size = "sm", mode = "reveal" }) => (
-    <div className="hk-combo-keys">
-        <span className={`hk-key hk-key--${size}`}>Ctrl</span>
-        {task.shift && (
-            <>
-                <span className="hk-plus">+</span>
-                <span className={`hk-key hk-key--${size}`}>Shift</span>
-            </>
-        )}
-        <span className="hk-plus">+</span>
-        <span
-            className={
-                `hk-key hk-key--${size}` +
-                (mode === "mystery" ? " hk-key--mystery" : "") +
-                (mode === "success" ? " hk-key--success" : "") +
-                (mode === "error" ? " hk-key--error" : "")
-            }
-        >
-            {mode === "mystery" ? "?" : task.key.toUpperCase()}
-        </span>
+// Прогресс практики — как индикаторные LED на клавиатуре, а не абстрактный бар
+const ProgressDots = ({ total, current }) => (
+    <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center" }}>
+        {Array.from({ length: total }).map((_, i) => (
+            <div key={i} style={{
+                width: i === current ? 20 : 6, height: 6, borderRadius: 4,
+                background: i < current ? INK.teal : i === current ? INK.amber : "rgba(255,255,255,0.14)",
+                boxShadow: i === current ? `0 0 10px -1px ${INK.amber}` : "none",
+                transition: "all 0.25s ease"
+            }} />
+        ))}
+    </div>
+);
+
+const LanguageSwitcher = ({ lang, setLang, style }) => (
+    <div style={{ display: "flex", gap: 6, ...style }}>
+        {LANGS.map((code) => (
+            <motion.button
+                key={code}
+                className="hkx-focusable"
+                whileHover={{ y: lang === code ? 0 : -1 }}
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setLang(code)}
+                title={UI_TRANSLATIONS[code].langName}
+                style={{
+                    padding: "7px 12px", borderRadius: 999,
+                    border: lang === code ? `1px solid ${INK.amberEdge}` : "1px solid var(--glass-border)",
+                    background: lang === code ? `linear-gradient(180deg, ${INK.amberTop}, ${INK.amber})` : "var(--bg-body)",
+                    color: lang === code ? INK.amberInk : "var(--text-sec)",
+                    fontFamily: FONTS.mono, fontSize: 11.5, fontWeight: 800, letterSpacing: "0.5px",
+                    cursor: "pointer", boxShadow: lang === code ? `0 6px 16px -7px ${INK.amber}` : "none"
+                }}
+            >
+                {LANG_LABEL[code]}
+            </motion.button>
+        ))}
     </div>
 );
 
 /* ============================================================================
- * ОСНОВНОЙ КОМПОНЕНТ
- * ==========================================================================*/
+   ОСНОВНОЙ КОМПОНЕНТ
+   ============================================================================ */
 
 const HotkeyTrainer = ({ onBack }) => {
-    const [lang, setLang] = useState("ru");
-    const t = TRANSLATIONS[lang].ui;
-    const hotkeyText = TRANSLATIONS[lang].hotkeys;
-
-    const getDesc = useCallback(
-        (hk) => (hk.descKey ? hotkeyText[hk.descKey] || TRANSLATIONS.ru.hotkeys[hk.descKey] : hk.desc),
-        [hotkeyText]
-    );
-
-    const { topic, setTopic, activeHotkeys, isCustomBase, status, message, generate, resetToDefault } = useHotkeySet(lang);
-
-    // phase: setup -> theory -> practice -> done
-    const [phase, setPhase] = useState("setup");
     const [tasks, setTasks] = useState([]);
-    const [index, setIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
-    const [mistakes, setMistakes] = useState(0);
-    const [feedback, setFeedback] = useState(null); // null | 'success' | 'error'
+    const [shake, setShake] = useState(false);
+    const [successPulse, setSuccessPulse] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+    const [phase, setPhase] = useState('setup'); // 'setup' | 'theory' | 'practice'
 
-    const openTheory = useCallback(() => {
-        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10));
-        setIndex(0);
-        setScore(0);
-        setMistakes(0);
-        setFeedback(null);
-        setPhase("theory");
-    }, [activeHotkeys]);
+    const [lang, setLang] = useState('ru');
+    const t = UI_TRANSLATIONS[lang];
 
-    const startPractice = useCallback(() => setPhase("practice"), []);
+    const [topic, setTopic] = useState("Microsoft Word");
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [activeHotkeys, setActiveHotkeys] = useState(HOTKEYS_DB);
+    const [isCustomBase, setIsCustomBase] = useState(false);
 
-    const restart = useCallback(() => {
-        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10));
-        setIndex(0);
-        setScore(0);
-        setMistakes(0);
-        setFeedback(null);
-        setPhase("practice");
-    }, [activeHotkeys]);
+    const [reducedMotion, setReducedMotion] = useState(false);
+    const [ambientIndex, setAmbientIndex] = useState(0);
 
-    const exitToSetup = useCallback(() => {
-        setPhase("setup");
-        resetToDefault();
-    }, [resetToDefault]);
-
-    // Обработка нажатий: сверяем e.code (физическую клавишу), а не e.key —
-    // так распознавание не зависит от активной раскладки клавиатуры.
+    // Подключаем шрифты один раз (не дублируем, если уже загружены родительским приложением)
     useEffect(() => {
-        if (phase !== "practice" || tasks.length === 0) return;
+        if (document.getElementById('hkx-fonts')) return;
+        const link = document.createElement('link');
+        link.id = 'hkx-fonts';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap';
+        document.head.appendChild(link);
+    }, []);
+
+    // Уважаем prefers-reduced-motion — гасим фоновую демо-анимацию клавиатуры
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        setReducedMotion(mq.matches);
+        const handler = (e) => setReducedMotion(e.matches);
+        if (mq.addEventListener) mq.addEventListener('change', handler); else mq.addListener(handler);
+        return () => { if (mq.removeEventListener) mq.removeEventListener('change', handler); else mq.removeListener(handler); };
+    }, []);
+
+    // Фоновая демонстрация на стартовом экране: клавиатура сама "показывает" пару комбинаций
+    useEffect(() => {
+        if (phase !== 'setup' || reducedMotion) return;
+        const id = setInterval(() => setAmbientIndex((i) => (i + 1) % AMBIENT_COMBOS.length), 1900);
+        return () => clearInterval(id);
+    }, [phase, reducedMotion]);
+
+    const getDesc = (hk) => {
+        if (hk.descKey) return HOTKEY_DESC_TRANSLATIONS[lang][hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
+        return hk.desc;
+    };
+
+    const generateAIHotkeys = async () => {
+        if (!topic.trim()) return alert(t.alertNoTopic);
+        setIsGenerating(true);
+
+        const prompt = `Ты — техническая справочная система, а не творческий помощник. Твоя единственная задача — точно воспроизвести ОФИЦИАЛЬНО ЗАДОКУМЕНТИРОВАННЫЕ горячие клавиши программы "${topic}", без каких-либо фантазий, догадок или "правдоподобных" комбинаций.
+
+        Верни 10 горячих клавиш (с Ctrl или Cmd, некоторые могут дополнительно включать Shift) для программы "${topic}".
+
+        СТРОГИЕ ПРАВИЛА (нарушение недопустимо):
+        1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${topic}". Если не уверен, что комбинация существует именно в этой программе — не включай её.
+        2. Если для "${topic}" в принципе не существует 10 разных официальных комбинаций с Ctrl/Cmd — верни столько, сколько действительно существует (не меньше 5, не выдумывая недостающие).
+        3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей. Напиши поле "desc" на ${AI_LANG_HINT[lang]}.
+        4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или цифра (физическая клавиша, которая нажимается вместе с Ctrl, без символов вроде "!" или "(" — если нужна цифра, пиши саму цифру).
+        5. Не повторяй одну и ту же комбинацию дважды.
+        6. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива.
+
+        Формат строго такой:
+        [
+          {"desc": "Описание действия", "key": "c", "shift": false, "visual": "Ctrl + C"},
+          {"desc": "Сохранить как", "key": "s", "shift": true, "visual": "Ctrl + Shift + S"}
+        ]`;
+
+        try {
+            const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message || "Ошибка API");
+            if (!data.candidates || data.candidates.length === 0) throw new Error("Пустой ответ от ИИ");
+
+            let aiText = data.candidates[0].content.parts[0].text.trim();
+            const jsonMatch = aiText.match(/\[[\s\S]*\]/);
+            if (!jsonMatch) throw new Error("ИИ не вернул JSON массив");
+
+            const parsedHotkeys = JSON.parse(jsonMatch[0]);
+
+            // Валидация + дедупликация: одна буква/цифра в key, без повторов по key+shift
+            const seen = new Set();
+            const validatedHotkeys = parsedHotkeys
+                .filter((hk) => hk && typeof hk.key === "string" && hk.key.trim().length > 0)
+                .map((hk) => ({ ...hk, key: hk.key.trim().toLowerCase().slice(0, 1), shift: !!hk.shift }))
+                .filter((hk) => {
+                    const sig = hk.key + (hk.shift ? "!" : "");
+                    if (seen.has(sig)) return false;
+                    seen.add(sig);
+                    return true;
+                })
+                .slice(0, 10);
+
+            if (validatedHotkeys.length > 0) {
+                setActiveHotkeys(validatedHotkeys);
+                setIsCustomBase(true);
+            } else {
+                throw new Error("Неверный формат данных");
+            }
+        } catch (error) {
+            console.error("❌ Ошибка:", error);
+            alert(t.alertFailed);
+            setActiveHotkeys(HOTKEYS_DB);
+            setIsCustomBase(false);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const openTheory = () => {
+        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10));
+        setCurrentIndex(0);
+        setScore(0);
+        setIsFinished(false);
+        setPhase('theory');
+    };
+
+    const startGame = () => setPhase('practice');
+
+    const resetGame = () => {
+        setTasks(shuffleArray([...activeHotkeys]).slice(0, 10));
+        setCurrentIndex(0);
+        setScore(0);
+        setIsFinished(false);
+        setPhase('practice');
+    };
+
+    const leaveGame = () => {
+        setPhase('setup');
+        setActiveHotkeys(HOTKEYS_DB);
+        setIsCustomBase(false);
+    };
+
+    useEffect(() => {
+        if (phase !== 'practice' || isFinished || tasks.length === 0) return;
 
         const handleKeyDown = (e) => {
-            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-            if (["Control", "Meta", "Shift", "Alt"].includes(e.key)) return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === "Control" || e.key === "Meta" || e.key === "Shift" || e.key === "Alt") return;
 
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-            const current = tasks[index];
-            if (!current) return;
+            const currentTask = tasks[currentIndex];
 
-            if (!isCtrlOrCmd) {
-                triggerFeedback("error");
-                return;
-            }
-            e.preventDefault();
+            if (isCtrlOrCmd) {
+                e.preventDefault();
 
-            const expectedCode = codeForKey(current.key);
-            const keyMatches = expectedCode ? e.code === expectedCode : e.key.toLowerCase() === current.key.toLowerCase();
-            const shiftMatches = e.shiftKey === !!current.shift;
+                const requiresShift = !!currentTask.shift;
+                const isShiftPressed = e.shiftKey;
+                const pressedKey = e.key.toLowerCase();
+                const expectedKey = currentTask.key.toLowerCase();
+                const expectedShiftedKey = SHIFT_SYMBOL_MAP[expectedKey] || expectedKey;
+                const keyMatches = pressedKey === expectedKey || pressedKey === expectedShiftedKey;
 
-            if (keyMatches && shiftMatches) {
-                triggerFeedback("success");
-                setScore((s) => s + 1);
-                setTimeout(() => {
-                    setFeedback(null);
-                    setIndex((i) => {
-                        const next = i + 1;
-                        if (next >= tasks.length) {
-                            setPhase("done");
-                            return i;
-                        }
-                        return next;
-                    });
-                }, 260);
+                if (isShiftPressed === requiresShift && keyMatches) {
+                    setSuccessPulse(true);
+                    setScore((prev) => prev + 1);
+                    setTimeout(() => setSuccessPulse(false), 220);
+
+                    if (currentIndex < tasks.length - 1) {
+                        setTimeout(() => setCurrentIndex((prev) => prev + 1), 160);
+                    } else {
+                        setTimeout(() => setIsFinished(true), 160);
+                    }
+                } else {
+                    setShake(true);
+                    setTimeout(() => setShake(false), 320);
+                }
             } else {
-                triggerFeedback("error");
+                setShake(true);
+                setTimeout(() => setShake(false), 320);
             }
         };
 
-        function triggerFeedback(kind) {
-            setFeedback(kind);
-            if (kind === "error") {
-                setMistakes((m) => m + 1);
-                setTimeout(() => setFeedback(null), 320);
-            }
-        }
-
         window.addEventListener("keydown", handleKeyDown, { passive: false });
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [phase, tasks, index]);
+    }, [currentIndex, tasks, isFinished, phase]);
 
-    const currentTask = tasks[index];
-    const accuracy = useMemo(() => {
-        const attempts = score + mistakes;
-        return attempts === 0 ? 100 : Math.round((score / attempts) * 100);
-    }, [score, mistakes]);
+    const wrap = (children) => (
+        <>
+            <style>{`
+                .hkx-focusable:focus-visible {
+                    outline: 2px solid ${INK.amber};
+                    outline-offset: 2px;
+                }
+                .hkx-input:focus {
+                    border-color: ${INK.amberEdge} !important;
+                    box-shadow: 0 0 0 3px rgba(232,163,61,0.16) !important;
+                }
+                .hkx-grid { grid-template-columns: 1.05fr 0.95fr; }
+                .hkx-theory-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+                @media (max-width: 760px) {
+                    .hkx-grid { grid-template-columns: 1fr !important; }
+                    .hkx-kb-wrap { transform: scale(0.82); }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .hkx-scope * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+                }
+            `}</style>
+            <div className="hkx-scope">{children}</div>
+        </>
+    );
 
-    /* ---------------------------- ЭКРАН: НАСТРОЙКА ---------------------------- */
-    if (phase === "setup") {
-        return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <div className="hk-wrap">
-                    <motion.div className="glass-panel hk-inner" initial={{ opacity: 0, scale: 0.97, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-                        <div className="hk-glow-a" />
-                        <div className="hk-glow-b" />
+    /* ---------------------------- SETUP ---------------------------- */
+    if (phase === 'setup') {
+        const ambient = AMBIENT_COMBOS[ambientIndex];
+        return wrap(
+            <motion.div
+                className="glass-panel"
+                initial={{ opacity: 0, scale: 0.97, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                    width: '100%', maxWidth: '980px', margin: '0 auto', padding: '40px',
+                    position: 'relative', overflow: 'hidden'
+                }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 22 }}>
+                    <LanguageSwitcher lang={lang} setLang={setLang} />
+                </div>
 
-                        <div className="hk-topline">
-                            {typeof onBack === "function" ? (
-                                <button type="button" className="hk-back-link" onClick={onBack}>
-                                    <Icon.arrowLeft /> {t.exit}
-                                </button>
-                            ) : <span />}
-                            <LangSwitch lang={lang} onChange={setLang} />
-                        </div>
-
-                        <div className="hk-hero">
-                            <div className="hk-mark"><Icon.bolt /></div>
-                            <h2 className="hk-title">{t.title}</h2>
-                            <span className="hk-badge"><Icon.spark />{t.aiPowered}</span>
-                        </div>
-
-                        <p className="hk-subtitle">{t.subtitle}</p>
-
-                        <div className="hk-panel">
-                            <div className="hk-panel-label"><span className="hk-dot" />{t.customPanelLabel}</div>
-                            <div className="hk-field-row">
-                                <input
-                                    className="hk-input"
-                                    type="text"
-                                    value={topic}
-                                    onChange={(e) => setTopic(e.target.value)}
-                                    placeholder={t.inputPlaceholder}
-                                    disabled={status === "loading"}
-                                />
-                                <button className="hk-btn hk-btn--ai" onClick={generate} disabled={status === "loading"}>
-                                    {status === "loading" ? <Icon.spinner /> : <Icon.spark />}
-                                    {status === "loading" ? t.generating : t.generateButton}
-                                </button>
+                <div className="hkx-grid" style={{ display: 'grid', gap: 40, alignItems: 'center' }}>
+                    {/* ЛЕВАЯ КОЛОНКА */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <Keycap size="lg" tone="amber" glow>Ctrl</Keycap>
+                            <div>
+                                <h2 style={{
+                                    margin: 0, fontFamily: FONTS.display, fontSize: 32, fontWeight: 800,
+                                    letterSpacing: '-0.5px', color: 'var(--text-main)', lineHeight: 1.05
+                                }}>
+                                    {t.title}
+                                </h2>
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6,
+                                    fontFamily: FONTS.mono, fontSize: 10.5, fontWeight: 800, letterSpacing: '1.4px',
+                                    textTransform: 'uppercase', color: INK.teal
+                                }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: INK.teal, boxShadow: `0 0 8px ${INK.teal}` }} />
+                                    {t.aiPowered}
+                                </span>
                             </div>
+                        </div>
 
+                        <p style={{
+                            fontFamily: FONTS.body, fontSize: 15, color: 'var(--text-sec)', lineHeight: 1.65,
+                            margin: 0, maxWidth: 440, fontWeight: 500
+                        }}>
+                            {t.subtitle}
+                        </p>
+
+                        {/* Быстрый выбор темы */}
+                        <div>
+                            <div style={{
+                                fontFamily: FONTS.mono, fontSize: 10.5, fontWeight: 800, letterSpacing: '1.2px',
+                                textTransform: 'uppercase', color: 'var(--text-sec)', opacity: 0.7, marginBottom: 10
+                            }}>
+                                {t.presetsLabel}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                {PRESET_TOPICS.map((name) => (
+                                    <button
+                                        key={name}
+                                        className="hkx-focusable"
+                                        onClick={() => setTopic(name)}
+                                        disabled={isGenerating}
+                                        style={{
+                                            padding: '8px 14px', borderRadius: 10, cursor: isGenerating ? 'default' : 'pointer',
+                                            fontFamily: FONTS.body, fontSize: 13, fontWeight: 700,
+                                            background: topic === name ? 'rgba(232,163,61,0.14)' : 'var(--bg-body)',
+                                            border: topic === name ? `1px solid ${INK.amberEdge}` : '1px solid var(--glass-border)',
+                                            color: topic === name ? INK.amber : 'var(--text-sec)'
+                                        }}
+                                    >
+                                        {name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Панель генерации */}
+                        <div style={{
+                            background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
+                            borderRadius: 16, padding: 18
+                        }}>
+                            <div style={{
+                                fontFamily: FONTS.mono, fontSize: 10.5, fontWeight: 800, letterSpacing: '1.2px',
+                                textTransform: 'uppercase', color: 'var(--text-sec)', opacity: 0.7, marginBottom: 12
+                            }}>
+                                {t.customPanelLabel}
+                            </div>
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                <div style={{
+                                    flex: '1 1 180px', display: 'flex', alignItems: 'center',
+                                    background: 'var(--bg-panel)', border: '1px solid var(--glass-border)',
+                                    borderRadius: 12, padding: '0 4px 0 14px'
+                                }}>
+                                    <span style={{ fontFamily: FONTS.mono, color: INK.amber, fontWeight: 800, marginRight: 6 }}>›</span>
+                                    <input
+                                        type="text"
+                                        className="hkx-focusable hkx-input"
+                                        value={topic}
+                                        onChange={(e) => setTopic(e.target.value)}
+                                        placeholder={t.inputPlaceholder}
+                                        disabled={isGenerating}
+                                        style={{
+                                            flex: 1, padding: '13px 6px', border: 'none', outline: 'none',
+                                            background: 'transparent', color: 'var(--text-main)',
+                                            fontFamily: FONTS.body, fontSize: 15, fontWeight: 600
+                                        }}
+                                    />
+                                </div>
+                                <motion.button
+                                    className="hkx-focusable"
+                                    whileHover={{ y: isGenerating ? 0 : -1 }}
+                                    whileTap={{ scale: isGenerating ? 1 : 0.97 }}
+                                    onClick={generateAIHotkeys}
+                                    disabled={isGenerating}
+                                    style={{
+                                        padding: '0 22px', height: 48, border: 'none', borderRadius: 12,
+                                        background: `linear-gradient(180deg, ${INK.amberTop}, ${INK.amber})`,
+                                        color: INK.amberInk, fontFamily: FONTS.body, fontWeight: 800, fontSize: 14,
+                                        cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.75 : 1,
+                                        display: 'flex', alignItems: 'center', gap: 9,
+                                        boxShadow: `0 12px 24px -12px ${INK.amber}`
+                                    }}
+                                >
+                                    {isGenerating && (
+                                        <motion.span
+                                            animate={{ rotate: 360 }}
+                                            transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                            style={{
+                                                width: 13, height: 13, borderRadius: '50%',
+                                                border: `2px solid ${INK.amberInk}55`, borderTopColor: INK.amberInk,
+                                                display: 'inline-block'
+                                            }}
+                                        />
+                                    )}
+                                    {isGenerating ? t.generating : t.generateButton}
+                                </motion.button>
+                            </div>
                             <AnimatePresence>
-                                {status === "success" && isCustomBase && (
-                                    <motion.div className="hk-banner hk-banner--ok" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                                {isCustomBase && !isGenerating && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        style={{
+                                            fontFamily: FONTS.body, fontSize: 13, color: INK.teal, fontWeight: 700,
+                                            background: 'rgba(73,198,180,0.09)', border: `1px solid ${INK.tealEdge}55`,
+                                            borderRadius: 10, padding: '9px 12px'
+                                        }}
+                                    >
                                         {t.loadedSuccess(topic)}
-                                    </motion.div>
-                                )}
-                                {status === "error" && message && (
-                                    <motion.div className="hk-banner hk-banner--err" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                                        {message}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        <button className="hk-btn hk-btn--warm hk-btn--full" onClick={openTheory}>
-                            <Icon.play /> {t.startTraining}
-                        </button>
-                    </motion.div>
-                </div>
-            </div>
-        );
-    }
-
-    /* ----------------------------- ЭКРАН: ТЕОРИЯ ------------------------------ */
-    if (phase === "theory") {
-        return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <div className="hk-wrap">
-                    <motion.div className="glass-panel hk-inner" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-                        <div className="hk-topline">
-                            <span className="hk-eyebrow-step">{t.theoryStep}</span>
-                            <LangSwitch lang={lang} onChange={setLang} />
-                        </div>
-
-                        <div>
-                            <h2 className="hk-theory-title">{t.theoryTitle}{isCustomBase ? `: ${topic}` : ""}</h2>
-                            <p className="hk-theory-desc" style={{ marginTop: 8 }}>{t.theoryDesc}</p>
-                        </div>
-
-                        <div className="hk-combo-grid">
-                            {tasks.map((hk, i) => (
-                                <motion.div key={i} className="hk-combo-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}>
-                                    <div className="hk-combo-desc">{getDesc(hk)}</div>
-                                    <ComboKeys task={hk} size="sm" mode="reveal" />
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        <div style={{ display: "flex", gap: 12 }}>
-                            <button className="hk-btn hk-btn--ghost" style={{ flex: "0 0 140px" }} onClick={exitToSetup}>{t.exit}</button>
-                            <button className="hk-btn hk-btn--warm" style={{ flex: 1 }} onClick={startPractice}>
-                                {t.goToPractice} <Icon.arrowRight />
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-        );
-    }
-
-    /* ---------------------------- ЭКРАН: РЕЗУЛЬТАТ ---------------------------- */
-    if (phase === "done") {
-        return (
-            <div className="hk-root">
-                <style>{HK_CSS}</style>
-                <div className="hk-wrap">
-                    <motion.div className="glass-panel hk-inner" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}>
-                        <div className="hk-topline"><span /><LangSwitch lang={lang} onChange={setLang} /></div>
-
-                        <div className="hk-done">
-                            <motion.div className="hk-done-icon" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}>
-                                <Icon.check />
-                            </motion.div>
-                            <h2 className="hk-done-title">{t.finishedTitle}</h2>
-                            <p className="hk-done-desc">{t.finishedDesc(score, tasks.length)}</p>
-
-                            <div className="hk-stat-row">
-                                <div className="hk-stat">
-                                    <div className="hk-stat-value" style={{ color: "var(--accent-glow)" }}>{accuracy}%</div>
-                                    <div className="hk-stat-label">{t.statAccuracy}</div>
-                                </div>
-                                <div className="hk-stat">
-                                    <div className="hk-stat-value" style={{ color: mistakes ? "var(--hk-err)" : "var(--text-sec)" }}>{mistakes}</div>
-                                    <div className="hk-stat-label">{t.statMistakes}</div>
-                                </div>
-                            </div>
-
-                            <div className="hk-done-actions">
-                                <button className="hk-btn hk-btn--ghost" onClick={exitToSetup}>{t.backToSetup}</button>
-                                <button className="hk-btn hk-btn--warm" onClick={restart}><Icon.repeat /> {t.repeat}</button>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-        );
-    }
-
-    /* ---------------------------- ЭКРАН: ПРАКТИКА ----------------------------- */
-    if (!currentTask) return null;
-
-    return (
-        <div className="hk-root">
-            <style>{HK_CSS}</style>
-            <div className="hk-wrap">
-                <motion.div className="glass-panel hk-inner" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-                    <div className="hk-header">
-                        <button type="button" className="hk-exit" onClick={exitToSetup}><Icon.arrowLeft /> {t.exit}</button>
-                        <h2 className="hk-header-title">{isCustomBase ? `${t.title}: ${topic}` : t.title}</h2>
-                        <span className="hk-counter"><b>{index + 1}</b> / {tasks.length}</span>
+                        <Button variant="orange" onClick={openTheory} style={{ height: 52, fontSize: 15.5, borderRadius: 13, fontWeight: 800 }}>
+                            {t.startTraining}
+                        </Button>
                     </div>
 
-                    <div className="hk-pips">
-                        {tasks.map((_, i) => (
-                            <span key={i} className={"hk-pip" + (i < index ? " is-done" : "") + (i === index ? " is-active" : "")} />
-                        ))}
+                    {/* ПРАВАЯ КОЛОНКА — живая клавиатура */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <div className="hkx-kb-wrap">
+                            <MiniKeyboard targetKey={ambient.key} needsShift={ambient.shift} pulse={null} scale={1.15} />
+                        </div>
+                        <div style={{
+                            fontFamily: FONTS.mono, fontSize: 12.5, fontWeight: 700, color: 'var(--text-sec)',
+                            textAlign: 'center', minHeight: 18
+                        }}>
+                            {HOTKEY_DESC_TRANSLATIONS[lang][ambient.descKey]}
+                        </div>
                     </div>
+                </div>
+            </motion.div>
+        );
+    }
 
-                    <div className="hk-stage">
-                        <div className="hk-stage-eyebrow">{t.doCombination}</div>
+    /* ---------------------------- THEORY ---------------------------- */
+    if (phase === 'theory') {
+        return wrap(
+            <motion.div
+                className="glass-panel"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                style={{ width: '100%', maxWidth: '900px', margin: '0 auto', padding: '34px', display: 'flex', flexDirection: 'column', gap: 22 }}
+            >
+                <header style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: 18 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <StepTrail step={1} labels={[t.stepTheoryLabel, t.stepPracticeLabel]} />
+                        <LanguageSwitcher lang={lang} setLang={setLang} />
+                    </div>
+                    <h2 style={{
+                        margin: 0, fontFamily: FONTS.display, fontSize: 26, fontWeight: 800,
+                        letterSpacing: '-0.4px', color: 'var(--text-main)'
+                    }}>
+                        {t.theoryTitle}{isCustomBase ? `: ${topic}` : ''}
+                    </h2>
+                    <p style={{ fontFamily: FONTS.body, fontSize: 14, color: 'var(--text-sec)', fontWeight: 500, margin: '8px 0 0', lineHeight: 1.6 }}>
+                        {t.theoryDesc}
+                    </p>
+                </header>
 
+                <div className="hkx-theory-grid" style={{
+                    display: 'grid', gap: 12, maxHeight: 420, overflowY: 'auto', paddingRight: 4
+                }}>
+                    {tasks.map((hk, i) => (
                         <motion.div
-                            key={index}
-                            className={"hk-stage-quote" + (feedback === "success" ? " is-success" : "")}
+                            key={i}
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.22, delay: Math.min(i * 0.025, 0.28) }}
+                            style={{
+                                display: 'flex', flexDirection: 'column', gap: 12, padding: 16,
+                                background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: 14
+                            }}
                         >
-                            «{getDesc(currentTask)}»
+                            <div style={{ fontFamily: FONTS.body, fontSize: 13.5, fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.4 }}>
+                                {getDesc(hk)}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Keycap size="sm" tone="neutral">Ctrl</Keycap>
+                                {hk.shift && (
+                                    <>
+                                        <span style={{ color: 'var(--text-sec)', opacity: 0.5, fontWeight: 700, fontFamily: FONTS.mono }}>+</span>
+                                        <Keycap size="sm" tone="neutral">Shift</Keycap>
+                                    </>
+                                )}
+                                <span style={{ color: 'var(--text-sec)', opacity: 0.5, fontWeight: 700, fontFamily: FONTS.mono }}>+</span>
+                                <Keycap size="sm" tone="amber">{hk.key.toUpperCase()}</Keycap>
+                            </div>
                         </motion.div>
+                    ))}
+                </div>
 
-                        <ComboKeys task={currentTask} size="lg" mode={feedback || "mystery"} />
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <Button variant="muted" onClick={leaveGame} style={{ flex: '0 0 140px', height: 50, fontSize: 14.5, borderRadius: 13, fontWeight: 800 }}>
+                        {t.exit}
+                    </Button>
+                    <Button variant="orange" onClick={startGame} style={{ flex: 1, height: 50, fontSize: 15, borderRadius: 13, fontWeight: 800 }}>
+                        {t.goToPractice}
+                    </Button>
+                </div>
+            </motion.div>
+        );
+    }
+
+    /* ---------------------------- PRACTICE / FINISHED ---------------------------- */
+    if (tasks.length === 0) return null;
+
+    const currentTask = tasks[currentIndex];
+    const comboText = `Ctrl${currentTask.shift ? ' + Shift' : ''} + ${currentTask.key.toUpperCase()}`;
+    const pulse = shake ? 'error' : successPulse ? 'success' : null;
+
+    return wrap(
+        <motion.div
+            className="glass-panel"
+            initial={{ opacity: 0, y: 26 }}
+            animate={shake ? { x: [-8, 8, -8, 8, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={shake ? { duration: 0.32 } : { duration: 0.45, ease: 'easeOut' }}
+            style={{ width: '100%', maxWidth: '760px', margin: '0 auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: 24 }}
+        >
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: 18 }}>
+                <motion.button
+                    className="hkx-focusable"
+                    whileHover={{ x: -2, opacity: 1 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={leaveGame}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none',
+                        cursor: 'pointer', color: 'var(--text-sec)', fontFamily: FONTS.body, fontSize: 13.5, fontWeight: 700, opacity: 0.85
+                    }}
+                >
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> {t.exit}
+                </motion.button>
+                {!isFinished && <StepTrail step={2} labels={[t.stepTheoryLabel, t.stepPracticeLabel]} />}
+                <LanguageSwitcher lang={lang} setLang={setLang} />
+            </header>
+
+            {!isFinished ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '4px 0' }}>
+                    <div style={{
+                        fontFamily: FONTS.mono, fontSize: 11.5, color: 'var(--text-sec)', textTransform: 'uppercase',
+                        letterSpacing: '2px', fontWeight: 800, opacity: 0.75
+                    }}>
+                        {t.doCombination}
                     </div>
+
+                    <motion.div
+                        key={currentIndex}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                            fontFamily: FONTS.display, fontSize: 26, fontWeight: 700, textAlign: 'center',
+                            color: successPulse ? INK.teal : 'var(--text-main)', maxWidth: '85%', lineHeight: 1.35,
+                            transition: 'color 0.2s ease'
+                        }}
+                    >
+                        {getDesc(currentTask)}
+                    </motion.div>
+
+                    <div className="hkx-kb-wrap">
+                        <MiniKeyboard targetKey={currentTask.key} needsShift={currentTask.shift} pulse={pulse} />
+                    </div>
+
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 12.5, fontWeight: 700, color: 'var(--text-sec)', opacity: 0.7 }}>
+                        {comboText}
+                    </div>
+
+                    <ProgressDots total={tasks.length} current={currentIndex} />
+                </div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.32 }}
+                    style={{ textAlign: 'center', padding: '36px 0', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}
+                >
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.08 }}>
+                        <Keycap size="lg" tone="teal" glow>✓</Keycap>
+                    </motion.div>
+                    <h2 style={{ fontFamily: FONTS.display, fontSize: 30, margin: 0, fontWeight: 800, color: INK.teal, letterSpacing: '-0.4px' }}>
+                        {t.finishedTitle}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: FONTS.mono }}>
+                        <span style={{ fontSize: 34, fontWeight: 800, color: 'var(--text-main)' }}>{score}</span>
+                        <span style={{ fontSize: 16, color: 'var(--text-sec)', opacity: 0.6 }}>/ {tasks.length}</span>
+                    </div>
+                    <p style={{ fontFamily: FONTS.body, fontSize: 14.5, color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
+                        {t.finishedDesc(score)}
+                    </p>
+                    <Button variant="orange" onClick={resetGame} style={{ width: 240, marginTop: 12, height: 50, borderRadius: 13, fontSize: 14.5, fontWeight: 800 }}>
+                        {t.repeat}
+                    </Button>
                 </motion.div>
-            </div>
-        </div>
+            )}
+        </motion.div>
     );
 };
 
