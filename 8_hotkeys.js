@@ -158,8 +158,11 @@ const FONTS = {
     mono: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
 };
 
+// Акцентный цвет заменён с оранжевого на фиолетовый (indigo/violet).
+// Имена ключей (amber*) оставлены прежними, чтобы не трогать остальной код —
+// меняются только значения цветов.
 const INK = {
-    amberTop: "#f3b65c", amber: "#e8a33d", amberEdge: "#9c661f", amberInk: "#2a1707",
+    amberTop: "#c4b5fd", amber: "#8b5cf6", amberEdge: "#5b21b6", amberInk: "#1e1442",
     tealTop: "#63d8c7", teal: "#49c6b4", tealEdge: "#1f7c6f", tealInk: "#062824",
     coralTop: "#f5837a", coral: "#f0645a", coralEdge: "#9c2c26",
     keyTop: "#3d3d47", keyTopHi: "#48485373", keyEdge: "rgba(0,0,0,0.55)", keyInk: "#e9e5da",
@@ -532,7 +535,7 @@ const HotkeyTrainer = ({ onBack }) => {
                 }
                 .hkx-input:focus {
                     border-color: ${INK.amberEdge} !important;
-                    box-shadow: 0 0 0 3px rgba(232,163,61,0.16) !important;
+                    box-shadow: 0 0 0 3px rgba(139,92,246,0.16) !important;
                 }
                 .hkx-grid { grid-template-columns: 1.05fr 0.95fr; }
                 .hkx-theory-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
@@ -614,7 +617,7 @@ const HotkeyTrainer = ({ onBack }) => {
                                         style={{
                                             padding: '8px 14px', borderRadius: 10, cursor: isGenerating ? 'default' : 'pointer',
                                             fontFamily: FONTS.body, fontSize: 13, fontWeight: 700,
-                                            background: topic === name ? 'rgba(232,163,61,0.14)' : 'var(--bg-body)',
+                                            background: topic === name ? 'rgba(139,92,246,0.14)' : 'var(--bg-body)',
                                             border: topic === name ? `1px solid ${INK.amberEdge}` : '1px solid var(--glass-border)',
                                             color: topic === name ? INK.amber : 'var(--text-sec)'
                                         }}
