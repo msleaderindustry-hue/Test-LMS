@@ -2,6 +2,7 @@ const { useState, useEffect, useRef } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
+
 /* =====================================================================
    ПОДСВЕТКА СИНТАКСИСА
    ===================================================================== */
