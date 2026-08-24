@@ -3,7 +3,7 @@ const { motion, AnimatePresence } = window.Motion;
 const { Button, shuffleArray } = window;
 
 /* =====================================================================
-   ПОДСВЕТКА СИНТАКСИСА
+   ПОДСВЕТКА СИНТАКСИСА (CODE PLAYGROUND)
    ===================================================================== */
 
 function escapeHtml(str) {
@@ -61,18 +61,15 @@ function tokenizeCode(code, lang) {
     return out;
 }
 
-/* =====================================================================
-   СТАРТОВЫЙ КОД / КОНСТАНТЫ
-   ===================================================================== */
-
 const DEFAULT_CODE = {
     html: '<h1>Привет, я юный программист! 🚀</h1>\n<p>Это мой первый настоящий сайт.</p>\n<button onclick="sayHello()">Нажми меня!</button>',
     css: 'body {\n  font-family: Arial, sans-serif;\n  background: #f0fdf4;\n  text-align: center;\n  padding: 20px;\n}\n\nh1 {\n  color: #0ea5e9;\n}\n\nbutton {\n  background: #10b981;\n  color: white;\n  border: none;\n  padding: 12px 24px;\n  font-size: 18px;\n  border-radius: 12px;\n  cursor: pointer;\n  transition: 0.3s;\n  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);\n}\n\nbutton:hover {\n  background: #059669;\n  transform: scale(1.05);\n}',
     js: 'function sayHello() {\n  alert("Ура! Ты написал свой первый скрипт! 🎉");\n}'
 };
 
-const LANGS = ['html', 'css', 'js'];
-const LANG_META = {
+// ИСПРАВЛЕНИЕ 1: Переименовали LANGS в CP_LANGS (Code Playground Langs)
+const CP_LANGS = ['html', 'css', 'js'];
+const CP_LANG_META = {
     html: { file: 'index.html', short: 'HTML', accent: '#fb923c', icon: '</>' },
     css: { file: 'style.css', short: 'CSS', accent: '#38bdf8', icon: '#' },
     js: { file: 'script.js', short: 'JS', accent: '#fbbf24', icon: 'JS' }
@@ -95,10 +92,6 @@ const TOKENS = {
     '--cq-rose': 'var(--theme-cq-rose, #fb7185)',
     '--cq-sky': 'var(--theme-cq-sky, #38bdf8)'
 };
-
-/* =====================================================================
-   ПАНЕЛЬ ОДНОГО ФАЙЛА
-   ===================================================================== */
 
 const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCursor, taRef, preRef, gutterRef }) => {
     const lineCount = value.split('\n').length;
@@ -155,12 +148,8 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
     );
 };
 
-/* =====================================================================
-   ОСНОВНОЙ КОМПОНЕНТ
-   ===================================================================== */
-
 const CodePlayground = ({ onBack }) => {
-    const [mode, setMode] = useState('code'); // 'code' | 'preview' — только ОДИН режим виден целиком
+    const [mode, setMode] = useState('code'); 
     const [activeTab, setActiveTab] = useState('html');
     const [code, setCode] = useState({ ...DEFAULT_CODE });
     const [srcDoc, setSrcDoc] = useState('');
@@ -197,7 +186,6 @@ const CodePlayground = ({ onBack }) => {
     }, [activeTab]);
 
     const runNow = () => setSrcDoc(buildDoc(code));
-
     const goPreview = () => { runNow(); setMode('preview'); };
     const goCode = () => setMode('code');
 
@@ -206,7 +194,7 @@ const CodePlayground = ({ onBack }) => {
     };
 
     const resetCurrent = () => {
-        const label = LANG_META[activeTab].file;
+        const label = CP_LANG_META[activeTab].file;
         if (!window.confirm(`Вернуть файл «${label}» к исходному коду? Твои изменения в этом файле пропадут.`)) return;
         updateCode(activeTab, DEFAULT_CODE[activeTab]);
     };
@@ -388,7 +376,8 @@ const CodePlayground = ({ onBack }) => {
                 .cq-seg-btn{ transition: background .2s ease, color .2s ease; }
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
-                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: #fff !important; }
+                
+                .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: var(--cq-text-hi) !important; }
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
                 .cq-mode-switch{ transition: background .25s ease; }
 
@@ -430,7 +419,6 @@ const CodePlayground = ({ onBack }) => {
             <div style={{ position: 'absolute', top: '-60px', left: '5%', width: '260px', height: '260px', background: 'var(--cq-violet)', opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', top: '10%', right: '5%', width: '220px', height: '220px', background: 'var(--cq-sky)', opacity: 0.14, filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none' }} />
 
-            {/* ==================== ШАПКА ==================== */}
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', background: 'var(--cq-bg-panel)', padding: '14px 22px', borderRadius: '18px', border: '1px solid var(--cq-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     {onBack && (
@@ -464,7 +452,6 @@ const CodePlayground = ({ onBack }) => {
                 </button>
             </div>
 
-            {/* ==================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ==================== */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <div className="cq-mode-switch" style={{ position: 'relative', display: 'flex', background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px', gap: '4px' }}>
                     <div style={{
@@ -483,7 +470,6 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* ==================== ГЛАВНАЯ СЦЕНА (один режим на весь экран) ==================== */}
             <div style={{ position: 'relative', height: '64vh', minHeight: '480px' }}>
                 <AnimatePresence mode="wait">
                     {mode === 'code' ? (
@@ -495,9 +481,8 @@ const CodePlayground = ({ onBack }) => {
                             transition={{ duration: 0.2 }}
                             style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
                         >
-                            {/* Полноширинный сегмент-переключатель файлов */}
                             <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
-                                {LANGS.map((lang) => {
+                                {CP_LANGS.map((lang) => {
                                     const active = activeTab === lang;
                                     return (
                                         <button
@@ -509,20 +494,19 @@ const CodePlayground = ({ onBack }) => {
                                                 padding: '13px 8px', border: 'none', cursor: 'pointer',
                                                 background: active ? 'var(--cq-bg-panel)' : 'transparent',
                                                 color: active ? 'var(--cq-text-hi)' : 'var(--cq-text-dim)',
-                                                borderBottom: active ? `3px solid ${LANG_META[lang].accent}` : '3px solid transparent',
+                                                borderBottom: active ? `3px solid ${CP_LANG_META[lang].accent}` : '3px solid transparent',
                                                 fontWeight: 800, fontSize: '13.5px'
                                             }}
                                         >
-                                            <span style={{ fontFamily: "'Cascadia Code', monospace", color: LANG_META[lang].accent }}>{LANG_META[lang].icon}</span>
-                                            {LANG_META[lang].short}
+                                            <span style={{ fontFamily: "'Cascadia Code', monospace", color: CP_LANG_META[lang].accent }}>{CP_LANG_META[lang].icon}</span>
+                                            {CP_LANG_META[lang].short}
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* Тело редактора */}
                             <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-                                {LANGS.map((lang) => (
+                                {CP_LANGS.map((lang) => (
                                     <EditorPane
                                         key={lang}
                                         lang={lang}
@@ -538,19 +522,16 @@ const CodePlayground = ({ onBack }) => {
                                     />
                                 ))}
 
-                                {/* Плавающая колонка действий — сбоку, а не в шапке */}
                                 <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
                                     <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}>▶</button>
                                     <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}>↺</button>
                                     <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}>⬇</button>
                                 </div>
 
-                                {/* Индикатор курсора — тихо, снизу слева */}
-                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}>
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px', border: '1px solid var(--cq-border)' }}>
                                     Стр. {cursor.line}:{cursor.col}
                                 </div>
 
-                                {/* Кнопка-мостик к результату */}
                                 <button
                                     className="cq-fab"
                                     onClick={goPreview}
@@ -573,12 +554,12 @@ const CodePlayground = ({ onBack }) => {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
-                                    <span style={{ fontSize: '13px', color: '#fff', fontWeight: 800 }}>Твой сайт готов!</span>
+                                    <span style={{ fontSize: '13px', color: 'var(--cq-text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
                                 </div>
                                 <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px', fontSize: '13px' }}>⟳</button>
                             </div>
-                            <div style={{ padding: '8px 16px', background: '#f5f3fb', borderBottom: '1px solid #e7e2f5', flexShrink: 0 }}>
-                                <div style={{ background: '#ffffff', border: '1px solid #e2ddef', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: '#6b6488', textAlign: 'center', fontWeight: 700 }}>
+                            <div style={{ padding: '8px 16px', background: 'var(--cq-bg-deep)', borderBottom: '1px solid var(--cq-border)', flexShrink: 0 }}>
+                                <div style={{ background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: 'var(--cq-text-dim)', textAlign: 'center', fontWeight: 700 }}>
                                     🔒 мой-сайт.детский-код
                                 </div>
                             </div>
@@ -602,7 +583,6 @@ const CodePlayground = ({ onBack }) => {
                 </AnimatePresence>
             </div>
 
-            {/* ==================== ИИ-НАСТАВНИК ==================== */}
             <AnimatePresence>
                 {aiResponse && (
                     <motion.div
@@ -610,7 +590,7 @@ const CodePlayground = ({ onBack }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.2)' }}
+                        style={{ background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 14px 34px rgba(139,92,246,0.2)' }}
                     >
                         <div style={{ display: 'flex', gap: '13px', alignItems: 'flex-start', padding: '18px 20px' }}>
                             <div style={{
@@ -723,83 +703,60 @@ const HOTKEY_DESC_TRANSLATIONS = {
     }
 };
 
-const UI_TRANSLATIONS = {
+// ИСПРАВЛЕНИЕ 2: Заменили название переменной UI_TRANSLATIONS на HK_UI_TRANSLATIONS
+const HK_UI_TRANSLATIONS = {
     ru: {
         langName: "Русский", title: "Хоткеи", aiPowered: "AI powered",
-        subtitle: "Тренируй стандартную базу из твоих конспектов (Word, Система) или создай персональную для любой другой программы",
-        customPanelLabel: "Своя база для другой программы",
-        inputPlaceholder: "Напр. Word, Excel, Photoshop...",
-        generateButton: "Создать базу",
-        generating: "Ищем…",
-        loadedSuccess: (topic) => `✅ База «${topic}» успешно загружена`,
-        startTraining: "🚀 Начать тренировку",
-        theoryStep: "Шаг 1 из 2",
-        theoryTitle: "Теория",
-        theoryDesc: "Изучи комбинации, которые встретятся в этой тренировке, а затем закрепи их на практике.",
-        exit: "Выйти",
-        goToPractice: "Перейти к практике →",
-        doCombination: "Выполните комбинацию",
-        finishedTitle: "Отличная работа!",
-        finishedDesc: (score) => `Вы успешно закрепили ${score} горячих клавиш в мышечной памяти`,
-        repeat: "Пройти ещё раз",
-        alertNoTopic: "Введите название программы!",
-        alertFailed: "Не удалось сгенерировать. Попробуй переформулировать запрос.",
-        defaultBaseName: null
+        subtitle: "Тренируй базу из конспектов (Word, Система) или собери свою — для любой другой программы.",
+        presetsLabel: "Часто выбирают", customPanelLabel: "Своя база для другой программы",
+        inputPlaceholder: "Напр. Word, Excel, Photoshop…", generateButton: "Собрать базу",
+        generating: "Ищем…", loadedSuccess: (topic) => `✅ База «${topic}» готова`,
+        startTraining: "🚀 Начать тренировку", stepTheoryLabel: "Теория", stepPracticeLabel: "Практика",
+        theoryStep: "Шаг 1 из 2", theoryTitle: "Теория",
+        theoryDesc: "Изучи комбинации, которые встретятся в тренировке, а затем закрепи их на практике.",
+        exit: "Выйти", goToPractice: "Перейти к практике →", doCombination: "Нажми комбинацию",
+        finishedTitle: "Готово!", finishedDesc: (score) => `Закреплено ${score} из 10 горячих клавиш`,
+        repeat: "Пройти ещё раз", alertNoTopic: "Введите название программы!",
+        alertFailed: "Не удалось сгенерировать. Попробуй переформулировать запрос.", defaultBaseName: null
     },
     en: {
         langName: "English", title: "Hotkeys", aiPowered: "AI powered",
-        subtitle: "Practice the standard set from your notes (Word, System), or create a custom one for any other program",
-        customPanelLabel: "Custom set for another program",
-        inputPlaceholder: "e.g. Word, Excel, Photoshop...",
-        generateButton: "Generate set",
-        generating: "Generating…",
-        loadedSuccess: (topic) => `✅ "${topic}" set loaded successfully`,
-        startTraining: "🚀 Start training",
-        theoryStep: "Step 1 of 2",
-        theoryTitle: "Theory",
+        subtitle: "Practice the built-in set (Word, System), or build your own for any other program.",
+        presetsLabel: "Popular picks", customPanelLabel: "Custom set for another program",
+        inputPlaceholder: "e.g. Word, Excel, Photoshop…", generateButton: "Generate set",
+        generating: "Generating…", loadedSuccess: (topic) => `✅ "${topic}" set is ready`,
+        startTraining: "🚀 Start training", stepTheoryLabel: "Theory", stepPracticeLabel: "Practice",
+        theoryStep: "Step 1 of 2", theoryTitle: "Theory",
         theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
-        exit: "Exit",
-        goToPractice: "Go to practice →",
-        doCombination: "Perform the combination",
-        finishedTitle: "Great job!",
-        finishedDesc: (score) => `You've successfully memorized ${score} hotkeys`,
-        repeat: "Try again",
-        alertNoTopic: "Enter the name of a program!",
-        alertFailed: "Couldn't generate a set. Try rephrasing the topic.",
-        defaultBaseName: null
+        exit: "Exit", goToPractice: "Go to practice →", doCombination: "Press the combination",
+        finishedTitle: "All done!", finishedDesc: (score) => `You locked in ${score} of 10 hotkeys`,
+        repeat: "Try again", alertNoTopic: "Enter the name of a program!",
+        alertFailed: "Couldn't generate a set. Try rephrasing the topic.", defaultBaseName: null
     },
     uz: {
         langName: "O'zbek (кирилл)", title: "Хоткейлар", aiPowered: "AI powered",
-        subtitle: "Конспектларингиздаги стандарт базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини яратинг",
-        customPanelLabel: "Бошқа дастур учун ўз базангиз",
-        inputPlaceholder: "Масалан: Word, Excel, Photoshop...",
-        generateButton: "База яратиш",
-        generating: "Излаяпмиз…",
-        loadedSuccess: (topic) => `✅ «${topic}» базаси муваффақиятли юкланди`,
-        startTraining: "🚀 Машқни бошлаш",
-        theoryStep: "1-қадам, 2 тадан",
-        theoryTitle: "Назария",
-        theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг уларни амалиётда мустаҳкамланг.",
-        exit: "Чиқиш",
-        goToPractice: "Амалиётга ўтиш →",
-        doCombination: "Комбинацияни бажаринг",
-        finishedTitle: "Ажойиб натижа!",
-        finishedDesc: (score) => `Сиз ${score} та хоткейни муваффақиятли мустаҳкамладингиз`,
-        repeat: "Яна бир бор такрорлаш",
-        alertNoTopic: "Дастур номини киритинг!",
-        alertFailed: "Яратиб бўлмади. Мавзуни бошқача ёзиб кўринг.",
-        defaultBaseName: null
+        subtitle: "Тайёр базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини яратинг.",
+        presetsLabel: "Кўп танланадиган", customPanelLabel: "Бошқа дастур учун ўз базангиз",
+        inputPlaceholder: "Масалан: Word, Excel, Photoshop…", generateButton: "База яратиш",
+        generating: "Излаяпмиз…", loadedSuccess: (topic) => `✅ «${topic}» базаси тайёр`,
+        startTraining: "🚀 Машқни бошлаш", stepTheoryLabel: "Назария", stepPracticeLabel: "Амалиёт",
+        theoryStep: "1-қадам, 2 тадан", theoryTitle: "Назария",
+        theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг амалиётда мустаҳкамланг.",
+        exit: "Чиқиш", goToPractice: "Амалиётга ўтиш →", doCombination: "Комбинацияни босинг",
+        finishedTitle: "Тайёр!", finishedDesc: (score) => `10 тадан ${score} таси мустаҳкамланди`,
+        repeat: "Яна такрорлаш", alertNoTopic: "Дастур номини киритинг!",
+        alertFailed: "Яратиб бўлмади. Мавзуни бошқача ёзиб кўринг.", defaultBaseName: null
     }
 };
 
 const AI_LANG_HINT = {
-    ru: "русском",
-    en: "английском (English)",
+    ru: "русском", en: "английском (English)",
     uz: "узбекском языке кириллицей (o'zbek tilida, kirill alifbosida)"
 };
 
-const LANGS = ["ru", "en", "uz"];
-const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
+// ИСПРАВЛЕНИЕ 3: Переименовали LANGS в HK_LANGS
+const HK_LANGS = ["ru", "en", "uz"];
+const HK_LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
 
 const PRESET_TOPICS = ["Microsoft Word", "Excel", "PowerPoint", "Photoshop", "Figma", "VS Code"];
 
@@ -812,7 +769,7 @@ const AMBIENT_COMBOS = [
 ];
 
 /* ============================================================================
-   ДИЗАЙН-СИСТЕМА: ИЗМЕНЕНЫ ЖЕСТКИЕ ЦВЕТА НА CSS-ПЕРЕМЕННЫЕ
+   ДИЗАЙН-СИСТЕМА ХОТКЕЕВ
    ============================================================================ */
 
 const FONTS = {
@@ -967,14 +924,14 @@ const ProgressDots = ({ total, current }) => (
 
 const LanguageSwitcher = ({ lang, setLang, style }) => (
     <div style={{ display: "flex", gap: 6, ...style }}>
-        {LANGS.map((code) => (
+        {HK_LANGS.map((code) => (
             <motion.button
                 key={code}
                 className="hkx-focusable"
                 whileHover={{ y: lang === code ? 0 : -1 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setLang(code)}
-                title={UI_TRANSLATIONS[code].langName}
+                title={HK_UI_TRANSLATIONS[code].langName}
                 style={{
                     padding: "7px 12px", borderRadius: 999,
                     border: lang === code ? `1px solid ${INK.amberEdge}` : "1px solid var(--glass-border)",
@@ -984,7 +941,7 @@ const LanguageSwitcher = ({ lang, setLang, style }) => (
                     cursor: "pointer", boxShadow: lang === code ? `0 6px 16px -7px ${INK.amber}` : "none"
                 }}
             >
-                {LANG_LABEL[code]}
+                {HK_LANG_LABEL[code]}
             </motion.button>
         ))}
     </div>
@@ -1004,7 +961,7 @@ const HotkeyTrainer = ({ onBack }) => {
     const [phase, setPhase] = useState('setup'); // 'setup' | 'theory' | 'practice'
 
     const [lang, setLang] = useState('ru');
-    const t = UI_TRANSLATIONS[lang];
+    const t = HK_UI_TRANSLATIONS[lang];
 
     const [topic, setTopic] = useState("Microsoft Word");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -1177,22 +1134,6 @@ const HotkeyTrainer = ({ onBack }) => {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [currentIndex, tasks, isFinished, phase]);
 
-    const keycapStyle = (accent) => ({
-        padding: '15px 24px',
-        background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)',
-        border: '1px solid var(--glass-border)',
-        borderBottom: accent ? `3px solid ${accent}` : '3px solid var(--glass-border)',
-        borderRadius: '11px',
-        fontSize: '20px',
-        fontWeight: '800',
-        fontFamily: "'SF Mono', 'JetBrains Mono', ui-monospace, monospace",
-        color: accent || 'var(--text-main)',
-        letterSpacing: '0.3px',
-        boxShadow: '0 4px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.4)',
-        minWidth: '26px',
-        textAlign: 'center'
-    });
-
     const wrap = (children) => (
         <>
             <style>{`
@@ -1202,7 +1143,7 @@ const HotkeyTrainer = ({ onBack }) => {
                 }
                 .hkx-input:focus {
                     border-color: ${INK.amberEdge} !important;
-                    box-shadow: 0 0 0 3px var(--hkx-amber-glow, rgba(232,163,61,0.16)) !important;
+                    box-shadow: 0 0 0 3px rgba(232,163,61,0.16) !important;
                 }
                 .hkx-grid { grid-template-columns: 1.05fr 0.95fr; }
                 .hkx-theory-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
@@ -1268,7 +1209,6 @@ const HotkeyTrainer = ({ onBack }) => {
                 </div>
 
                 <div className="hkx-grid" style={{ display: 'grid', gap: 40, alignItems: 'center' }}>
-                    {/* ЛЕВАЯ КОЛОНКА */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                             <Keycap size="lg" tone="amber" glow>Ctrl</Keycap>
@@ -1297,7 +1237,6 @@ const HotkeyTrainer = ({ onBack }) => {
                             {t.subtitle}
                         </p>
 
-                        {/* Быстрый выбор темы */}
                         <div>
                             <div style={{
                                 fontFamily: FONTS.mono, fontSize: 10.5, fontWeight: 800, letterSpacing: '1.2px',
@@ -1326,7 +1265,6 @@ const HotkeyTrainer = ({ onBack }) => {
                             </div>
                         </div>
 
-                        {/* Панель генерации */}
                         <div style={{
                             background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
                             borderRadius: 16, padding: 18
@@ -1410,7 +1348,6 @@ const HotkeyTrainer = ({ onBack }) => {
                         </Button>
                     </div>
 
-                    {/* ПРАВАЯ КОЛОНКА — живая клавиатура */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
                         <div className="hkx-kb-wrap">
                             <MiniKeyboard targetKey={ambient.key} needsShift={ambient.shift} pulse={null} scale={1.15} />
@@ -1461,7 +1398,7 @@ const HotkeyTrainer = ({ onBack }) => {
                             key={i}
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}
+                            transition={{ duration: 0.25, delay: Math.min(i * 0.025, 0.28) }}
                             style={{
                                 display: 'flex', flexDirection: 'column', gap: 12, padding: 16,
                                 background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: 14
@@ -1532,7 +1469,7 @@ const HotkeyTrainer = ({ onBack }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '4px 0' }}>
                     <div style={{
                         fontFamily: FONTS.mono, fontSize: 11.5, color: 'var(--text-sec)', textTransform: 'uppercase',
-                        letterSpacing: '2px', fontWeight: 800, opacity: 0.75
+                        letterSpacing: '2px', fontWeight: '800', opacity: 0.75
                     }}>
                         {t.doCombination}
                     </div>
