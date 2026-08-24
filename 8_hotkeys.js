@@ -408,14 +408,14 @@ const HotkeyTrainer = ({ onBack }) => {
     // Общий стиль "физической" клавиши — переиспользуется на обоих экранах
     const keycapStyle = (accent) => ({
         padding: '15px 24px',
-        background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)',
-        border: '1px solid var(--glass-border)',
-        borderBottom: accent ? `3px solid ${accent}` : '3px solid var(--glass-border)',
+        background: 'linear-gradient(180deg, var(--bg-panel, #1a1d25) 0%, var(--bg-body, #12141a) 100%)',
+        border: '1px solid var(--glass-border, rgba(255,255,255,.09))',
+        borderBottom: accent ? `3px solid ${accent}` : '3px solid var(--glass-border, rgba(255,255,255,.09))',
         borderRadius: '11px',
         fontSize: '20px',
         fontWeight: '800',
         fontFamily: "'SF Mono', 'JetBrains Mono', ui-monospace, monospace",
-        color: accent || 'var(--text-main)',
+        color: accent || 'var(--text-main, #f1f3f8)',
         letterSpacing: '0.3px',
         boxShadow: '0 4px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.4)',
         minWidth: '26px',
@@ -442,11 +442,11 @@ const HotkeyTrainer = ({ onBack }) => {
                         style={{
                             padding: '7px 12px',
                             borderRadius: '999px',
-                            border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border)',
+                            border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border, rgba(255,255,255,.09))',
                             background: lang === code
                                 ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
-                                : 'var(--bg-body)',
-                            color: lang === code ? '#fff' : 'var(--text-sec)',
+                                : 'var(--bg-body, #12141a)',
+                            color: lang === code ? '#fff' : 'var(--text-sec, #9399aa)',
                             fontSize: '12px',
                             fontWeight: 800,
                             letterSpacing: '0.5px',
@@ -518,7 +518,7 @@ const HotkeyTrainer = ({ onBack }) => {
                 </div>
 
                 <p style={{
-                    fontSize: '15px', color: 'var(--text-sec)', maxWidth: '460px', lineHeight: '1.7',
+                    fontSize: '15px', color: 'var(--text-sec, #9399aa)', maxWidth: '460px', lineHeight: '1.7',
                     textAlign: 'center', fontWeight: 500, margin: 0
                 }}>
                     {t.subtitle}
@@ -526,11 +526,11 @@ const HotkeyTrainer = ({ onBack }) => {
 
                 {/* ПАНЕЛЬ ГЕНЕРАЦИИ */}
                 <div style={{
-                    width: '100%', maxWidth: '520px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)',
+                    width: '100%', maxWidth: '520px', background: 'var(--bg-body, #12141a)', border: '1px solid var(--glass-border, rgba(255,255,255,.09))',
                     borderRadius: '20px', padding: '24px', marginTop: '6px', boxShadow: '0 10px 28px rgba(0,0,0,0.05)'
                 }}>
                     <div style={{
-                        fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase',
+                        fontSize: '11px', color: 'var(--text-sec, #9399aa)', fontWeight: 800, textTransform: 'uppercase',
                         letterSpacing: '1.4px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px'
                     }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }} />
@@ -543,8 +543,8 @@ const HotkeyTrainer = ({ onBack }) => {
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder={t.inputPlaceholder}
                             style={{
-                                flex: '1 1 180px', padding: '13px 16px', borderRadius: '12px', border: '1px solid var(--glass-border)',
-                                outline: 'none', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '15px', fontWeight: 600,
+                                flex: '1 1 180px', padding: '13px 16px', borderRadius: '12px', border: '1px solid var(--glass-border, rgba(255,255,255,.09))',
+                                outline: 'none', background: 'var(--bg-panel, #1a1d25)', color: 'var(--text-main, #f1f3f8)', fontSize: '15px', fontWeight: 600,
                                 transition: 'border-color 0.2s ease'
                             }}
                             disabled={isGenerating}
@@ -607,12 +607,12 @@ const HotkeyTrainer = ({ onBack }) => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 style={{ width: '100%', maxWidth: '860px', display: 'flex', flexDirection: 'column', gap: '24px', padding: '34px', margin: '0 auto' }}
             >
-                <header style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px' }}>
+                <header style={{ borderBottom: '1px solid var(--glass-border, rgba(255,255,255,.09))', paddingBottom: '20px' }}>
                     {/* Переключатель — отдельной строкой над "Шаг 1 из 2", не наезжает на заголовок */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
                         <LanguageSwitcher />
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-sec, #9399aa)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
                         {t.theoryStep}
                     </div>
                     <h2 style={{
@@ -624,7 +624,7 @@ const HotkeyTrainer = ({ onBack }) => {
                     </h2>
                 </header>
 
-                <p style={{ fontSize: '14px', color: 'var(--text-sec)', fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
+                <p style={{ fontSize: '14px', color: 'var(--text-sec, #9399aa)', fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
                     {t.theoryDesc}
                 </p>
 
@@ -640,16 +640,16 @@ const HotkeyTrainer = ({ onBack }) => {
                             transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}
                             style={{
                                 display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px',
-                                background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '14px'
+                                background: 'var(--bg-body, #12141a)', border: '1px solid var(--glass-border, rgba(255,255,255,.09))', borderRadius: '14px'
                             }}
                         >
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', lineHeight: '1.4' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main, #f1f3f8)', lineHeight: '1.4' }}>
                                 {getDesc(hk)}
                             </div>
                             <div style={{
                                 alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '8px',
-                                background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)',
-                                border: '1px solid var(--glass-border)', borderBottom: '2px solid var(--glass-border)',
+                                background: 'linear-gradient(180deg, var(--bg-panel, #1a1d25) 0%, var(--bg-body, #12141a) 100%)',
+                                border: '1px solid var(--glass-border, rgba(255,255,255,.09))', borderBottom: '2px solid var(--glass-border, rgba(255,255,255,.09))',
                                 fontSize: '13px', fontWeight: '800', fontFamily: "ui-monospace, monospace",
                                 color: 'var(--accent-glow, #0ea5e9)', letterSpacing: '0.2px'
                             }}>
@@ -690,7 +690,7 @@ const HotkeyTrainer = ({ onBack }) => {
 
             <header style={{
                 display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '18px',
-                borderBottom: '1px solid var(--glass-border)', paddingBottom: '20px'
+                borderBottom: '1px solid var(--glass-border, rgba(255,255,255,.09))', paddingBottom: '20px'
             }}>
                 {/* Выйти — отдельно, слева, тихой ghost-кнопкой, как обычно и располагают выход */}
                 <motion.button
@@ -699,7 +699,7 @@ const HotkeyTrainer = ({ onBack }) => {
                     onClick={leaveGame}
                     style={{
                         display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
-                        cursor: 'pointer', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700,
+                        cursor: 'pointer', color: 'var(--text-sec, #9399aa)', fontSize: '14px', fontWeight: 700,
                         padding: '8px 6px', opacity: 0.85, justifySelf: 'start'
                     }}
                 >
@@ -717,18 +717,18 @@ const HotkeyTrainer = ({ onBack }) => {
                 {/* Счётчик — отдельный элемент справа, currentIndex+1 вместо "сырого" индекса */}
                 <div style={{
                     display: 'flex', alignItems: 'baseline', gap: '6px', justifySelf: 'end',
-                    padding: '9px 18px', borderRadius: '999px', background: 'var(--bg-body)',
-                    border: '1px solid var(--glass-border)', fontFamily: "ui-monospace, monospace"
+                    padding: '9px 18px', borderRadius: '999px', background: 'var(--bg-body, #12141a)',
+                    border: '1px solid var(--glass-border, rgba(255,255,255,.09))', fontFamily: "ui-monospace, monospace"
                 }}>
-                    <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>{currentIndex + 1}</span>
-                    <span style={{ fontSize: '13px', color: 'var(--text-sec)', opacity: 0.5 }}>/</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-sec)' }}>{tasks.length}</span>
+                    <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main, #f1f3f8)' }}>{currentIndex + 1}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-sec, #9399aa)', opacity: 0.5 }}>/</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-sec, #9399aa)' }}>{tasks.length}</span>
                 </div>
             </header>
 
             {!isFinished ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '34px', padding: '12px 0' }}>
-                    <div style={{ fontSize: '12.5px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '800', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12.5px', color: 'var(--text-sec, #9399aa)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '800', textAlign: 'center' }}>
                         {t.doCombination}
                     </div>
 
@@ -738,7 +738,7 @@ const HotkeyTrainer = ({ onBack }) => {
                         animate={{ opacity: 1, scale: successPulse ? 1.04 : 1, y: 0 }}
                         transition={{ duration: 0.22 }}
                         style={{
-                            fontSize: '31px', fontWeight: '800', textAlign: 'center', color: successPulse ? '#10b981' : 'var(--text-main)',
+                            fontSize: '31px', fontWeight: '800', textAlign: 'center', color: successPulse ? '#10b981' : 'var(--text-main, #f1f3f8)',
                             maxWidth: '85%', letterSpacing: '-0.4px', lineHeight: '1.3', transition: 'color 0.2s ease'
                         }}
                     >
@@ -749,7 +749,7 @@ const HotkeyTrainer = ({ onBack }) => {
                         <div style={keycapStyle(null)}>
                             Ctrl
                         </div>
-                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</div>
+                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec, #9399aa)', opacity: 0.5 }}>+</div>
 
                         {/* Динамически показываем карточку Shift, если нужно */}
                         {currentTask.shift && (
@@ -757,7 +757,7 @@ const HotkeyTrainer = ({ onBack }) => {
                                 <div style={keycapStyle(null)}>
                                     Shift
                                 </div>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</div>
+                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec, #9399aa)', opacity: 0.5 }}>+</div>
                             </>
                         )}
 
@@ -775,7 +775,7 @@ const HotkeyTrainer = ({ onBack }) => {
                                 ...keycapStyle('var(--accent-glow, #0ea5e9)'),
                                 border: '2px dashed var(--accent-glow, #0ea5e9)',
                                 borderBottom: '2px dashed var(--accent-glow, #0ea5e9)',
-                                background: 'var(--bg-body)'
+                                background: 'var(--bg-body, #12141a)'
                             }}
                         >
                             ?
@@ -814,7 +814,7 @@ const HotkeyTrainer = ({ onBack }) => {
                         🎉
                     </motion.div>
                     <h2 style={{ fontSize: '38px', margin: 0, fontWeight: 900, color: '#10b981', letterSpacing: '-0.6px' }}>{t.finishedTitle}</h2>
-                    <p style={{ fontSize: '16px', color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
+                    <p style={{ fontSize: '16px', color: 'var(--text-sec, #9399aa)', fontWeight: 600, margin: 0 }}>
                         {t.finishedDesc(score)}
                     </p>
                     <Button variant="orange" onClick={resetGame} style={{ width: '260px', marginTop: '20px', height: '51px', borderRadius: '14px', fontSize: '15px', fontWeight: 800 }}>
