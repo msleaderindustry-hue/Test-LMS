@@ -236,7 +236,7 @@ const HotkeyTrainer = ({ onBack }) => {
 
     // Язык интерфейса
     const [lang, setLang] = useState('ru');
-    const t = UI_TRANSLATIONS[lang];
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ru;
 
     // AI Состояния
     const [topic, setTopic] = useState("Microsoft Word");
@@ -248,7 +248,7 @@ const HotkeyTrainer = ({ onBack }) => {
     // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
     const getDesc = (hk) => {
         if (hk.descKey) {
-            return HOTKEY_DESC_TRANSLATIONS[lang][hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
+            return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
         }
         return hk.desc;
     };
@@ -414,31 +414,36 @@ const HotkeyTrainer = ({ onBack }) => {
     // Переключатель языка интерфейса — рендерится на всех экранах.
     const LanguageSwitcher = ({ style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
-            {LANGS.map((code) => (
-                <motion.button
-                    key={code}
-                    whileHover={{ y: lang === code ? 0 : -1 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setLang(code)}
-                    title={UI_TRANSLATIONS[code].langName}
-                    style={{
-                        padding: '7px 12px',
-                        borderRadius: '999px',
-                        border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border)',
-                        background: lang === code
-                            ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
-                            : 'var(--bg-body)',
-                        color: lang === code ? '#fff' : 'var(--text-sec)',
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        letterSpacing: '0.5px',
-                        cursor: 'pointer',
-                        boxShadow: lang === code ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
-                    }}
-                >
-                    {LANG_LABEL[code]}
-                </motion.button>
-            ))}
+            {LANGS.map((code) => {
+                // Жесткая очистка от невидимых символов
+                const cleanCode = String(code).trim();
+                return (
+                    <motion.button
+                        key={cleanCode}
+                        whileHover={{ y: lang === cleanCode ? 0 : -1 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => setLang(cleanCode)}
+                        // ВОТ ЗДЕСЬ ДОБАВЛЕН ЗНАК ВОПРОСА (?.), чтобы приложение не падало
+                        title={UI_TRANSLATIONS[cleanCode]?.langName}
+                        style={{
+                            padding: '7px 12px',
+                            borderRadius: '999px',
+                            border: lang === cleanCode ? '1px solid transparent' : '1px solid var(--glass-border)',
+                            background: lang === cleanCode
+                                ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
+                                : 'var(--bg-body)',
+                            color: lang === cleanCode ? '#fff' : 'var(--text-sec)',
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            letterSpacing: '0.5px',
+                            cursor: 'pointer',
+                            boxShadow: lang === cleanCode ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
+                        }}
+                    >
+                        {LANG_LABEL[cleanCode]}
+                    </motion.button>
+                );
+            })}
         </div>
     );
 
