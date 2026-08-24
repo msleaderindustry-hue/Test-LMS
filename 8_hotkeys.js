@@ -236,7 +236,7 @@ const HotkeyTrainer = ({ onBack }) => {
 
     // Язык интерфейса
     const [lang, setLang] = useState('ru');
-    const t = UI_TRANSLATIONS[lang];
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ru;
 
     // AI Состояния
     const [topic, setTopic] = useState("Microsoft Word");
@@ -248,7 +248,7 @@ const HotkeyTrainer = ({ onBack }) => {
     // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
     const getDesc = (hk) => {
         if (hk.descKey) {
-            return HOTKEY_DESC_TRANSLATIONS[lang][hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
+            return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
         }
         return hk.desc;
     };
@@ -423,7 +423,7 @@ const HotkeyTrainer = ({ onBack }) => {
                     whileHover={{ y: lang === code ? 0 : -1 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => setLang(code)}
-                    title={UI_TRANSLATIONS[code].langName}
+                    title={UI_TRANSLATIONS[code]?.langName || code}
                     style={{
                         padding: '7px 12px',
                         borderRadius: '999px',
