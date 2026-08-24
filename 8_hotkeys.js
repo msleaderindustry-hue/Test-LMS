@@ -162,7 +162,7 @@ const UI_TRANSLATIONS = {
         repeat: "Пройти ещё раз",
         alertNoTopic: "Введите название программы!",
         alertFailed: "Не удалось сгенерировать. Попробуй переформулировать запрос.",
-        defaultBaseName: null 
+        defaultBaseName: null // при дефолтной базе название программы в заголовках не показывается
     },
     en: {
         langName: "English",
@@ -221,8 +221,15 @@ const AI_LANG_HINT = {
     uz: "узбекском языке кириллицей (o'zbek tilida, kirill alifbosida)"
 };
 
-const LANGS = ["ru", "en", "uz"];
+// ВАЖНО (фикс краша): раньше список языков (LANGS) был отдельным жёстко
+// прописанным массивом, независимым от UI_TRANSLATIONS. Если где-то на сайте
+// (например, при автоопределении языка по IP через ipapi.co) появлялся код
+// языка, которого нет в UI_TRANSLATIONS, — LanguageSwitcher падал на
+// UI_TRANSLATIONS[code].langName, потому что UI_TRANSLATIONS[code] было undefined.
+// Теперь LANGS всегда выводится из самого UI_TRANSLATIONS — рассинхрон невозможен.
+const LANGS = Object.keys(UI_TRANSLATIONS);
 const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
+const DEFAULT_LANG = "ru";
 
 const HotkeyTrainer = ({ onBack }) => {
     const [tasks, setTasks] = useState([]);
@@ -235,8 +242,11 @@ const HotkeyTrainer = ({ onBack }) => {
     const [phase, setPhase] = useState('setup');
 
     // Язык интерфейса
-    const [lang, setLang] = useState('ru');
-    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ru;
+    const [lang, setLang] = useState(DEFAULT_LANG);
+    // Фикс краша: если lang вдруг окажется кодом языка, которого нет в
+    // UI_TRANSLATIONS (напр. прилетел откуда-то извне сайта), интерфейс
+    // просто откатывается на русский, а не падает с TypeError.
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS[DEFAULT_LANG];
 
     // AI Состояния
     const [topic, setTopic] = useState("Microsoft Word");
@@ -248,7 +258,8 @@ const HotkeyTrainer = ({ onBack }) => {
     // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
     const getDesc = (hk) => {
         if (hk.descKey) {
-            return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey] || HOTKEY_DESC_TRANSLATIONS.ru[hk.descKey];
+            const dict = HOTKEY_DESC_TRANSLATIONS[lang] || HOTKEY_DESC_TRANSLATIONS[DEFAULT_LANG];
+            return dict[hk.descKey] || HOTKEY_DESC_TRANSLATIONS[DEFAULT_LANG][hk.descKey];
         }
         return hk.desc;
     };
@@ -266,7 +277,7 @@ const HotkeyTrainer = ({ onBack }) => {
         СТРОГИЕ ПРАВИЛА (нарушение недопустимо):
         1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${topic}". Если не уверен, что комбинация существует именно в этой программе — не включай её.
         2. Если для "${topic}" в принципе не существует 10 разных официальных комбинаций с Ctrl/Cmd — верни столько, сколько действительно существует (не меньше 5, не выдумывая недостающие).
-        3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей. Напиши поле "desc" на ${AI_LANG_HINT[lang]}.
+        3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей. Напиши поле "desc" на ${AI_LANG_HINT[lang] || AI_LANG_HINT[DEFAULT_LANG]}.
         4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или цифра (физическая клавиша, которая нажимается вместе с Ctrl, без символов вроде "!" или "(" — если нужна цифра, пиши саму цифру).
         5. Не повторяй одну и ту же комбинацию дважды.
         6. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива.
@@ -412,35 +423,38 @@ const HotkeyTrainer = ({ onBack }) => {
     });
 
     // Переключатель языка интерфейса — рендерится на всех экранах.
+    // Всегда идёт отдельной строкой (flex-контейнер вызывающего кода решает выравнивание),
+    // никогда не позиционируется абсолютно — так он не может наехать на заголовок/бейдж
+    // независимо от длины текста (например, длинного названия кастомной темы).
     const LanguageSwitcher = ({ style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => {
-                // Жесткая очистка от невидимых символов
-                const cleanCode = String(code).trim();
+                // Фикс краша: подстраховка на случай кода языка без перевода —
+                // используем сам код как подпись вместо падения на .langName
+                const label = UI_TRANSLATIONS[code] ? UI_TRANSLATIONS[code].langName : code;
                 return (
                     <motion.button
-                        key={cleanCode}
-                        whileHover={{ y: lang === cleanCode ? 0 : -1 }}
+                        key={code}
+                        whileHover={{ y: lang === code ? 0 : -1 }}
                         whileTap={{ scale: 0.94 }}
-                        onClick={() => setLang(cleanCode)}
-                        // ВОТ ЗДЕСЬ ДОБАВЛЕН ЗНАК ВОПРОСА (?.), чтобы приложение не падало
-                        title={UI_TRANSLATIONS[cleanCode]?.langName}
+                        onClick={() => setLang(code)}
+                        title={label}
                         style={{
                             padding: '7px 12px',
                             borderRadius: '999px',
-                            border: lang === cleanCode ? '1px solid transparent' : '1px solid var(--glass-border)',
-                            background: lang === cleanCode
+                            border: lang === code ? '1px solid transparent' : '1px solid var(--glass-border)',
+                            background: lang === code
                                 ? 'linear-gradient(120deg, #8b5cf6, #6d28d9)'
                                 : 'var(--bg-body)',
-                            color: lang === cleanCode ? '#fff' : 'var(--text-sec)',
+                            color: lang === code ? '#fff' : 'var(--text-sec)',
                             fontSize: '12px',
                             fontWeight: 800,
                             letterSpacing: '0.5px',
                             cursor: 'pointer',
-                            boxShadow: lang === cleanCode ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
+                            boxShadow: lang === code ? '0 6px 16px -6px rgba(109,40,217,0.6)' : 'none'
                         }}
                     >
-                        {LANG_LABEL[cleanCode]}
+                        {LANG_LABEL[code] || code.toUpperCase()}
                     </motion.button>
                 );
             })}
