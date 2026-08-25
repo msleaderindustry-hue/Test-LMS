@@ -1,17 +1,35 @@
 /**
  * HotkeyTrainer
  * ---------------------------------------------------------------------------
- * ВАЖНО: Бизнес-логика, AI-генерация, локализация и обработка клавиатуры 
- * сохранены в исходном виде. Обновлен только UI/UX слой согласно новому 
- * дизайн-макету (Glassmorphism, Navy background, Neon accents).
+ * ВАЖНО ПРО БАГ "Cannot read properties of undefined (reading 'langName')":
+ * Раньше LANGS / UI_TRANSLATIONS / HOTKEYS_DB и т.д. объявлялись как `const`
+ * прямо в глобальной области видимости файла. Если в приложении несколько
+ * тренажёров грузятся отдельными <script type="text/babel">, они выполняются
+ * в ОБЩЕМ глобальном контексте — и одноимённая переменная из другого файла
+ * (например, без ключа "uz") могла подменить эту. Отсюда и обращение к
+ * несуществующему полю.
+ *
+ * Фикс: весь файл обёрнут в IIFE. Наружу выходит ровно один символ —
+ * window.HotkeyTrainer. Больше никакие имена никуда не "утекают" и ни с чем
+ * не конфликтуют, из какого бы ещё тренажёра он ни грузился на той же странице.
+ * ---------------------------------------------------------------------------
+ * ОБНОВЛЕНИЕ ДИЗАЙНА (2026):
+ * Визуальный слой полностью переработан под тёмную glassmorphism-систему
+ * (см. HK_TOKENS ниже). Бизнес-логика — AI-генерация, обработка клавиатуры,
+ * фазы setup/theory/practice, переводы, HOTKEYS_DB — НЕ ИЗМЕНЕНА.
+ * Новые переиспользуемые UI-компоненты (AppLogo, GlassPanel, GradientButton,
+ * KeyCap, HotkeyIcon, HotkeyCard, ProgramSelector, HotkeyVisual, ProgressKeys)
+ * объявлены локально внутри той же IIFE, ничего наружу больше не экспортируется.
  * ---------------------------------------------------------------------------
  */
 (function () {
     const { useState, useEffect, useRef } = React;
     const { motion, AnimatePresence } = window.Motion;
-    const { shuffleArray } = window; // Button убран, так как используем кастомный GradientButton
+    const { Button, shuffleArray } = window;
 
-    // Соответствие "цифра/символ" -> символ
+    // Соответствие "цифра/символ" -> символ, который реально приходит в e.key,
+    // когда клавиша нажата вместе с Shift (US-раскладка). Нужно, чтобы можно
+    // было хранить key как обычную цифру ("9"), а не гадать, что пришлёт браузер.
     const SHIFT_SYMBOL_MAP = {
         '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
         '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
@@ -19,7 +37,9 @@
         ';': ':', "'": '"', ',': '<', '.': '>', '/': '?', '`': '~'
     };
 
-    // Штатная база горячих клавиш
+    // Штатная база горячих клавиш. desc хранится "ключом перевода" (descKey),
+    // само отображаемое описание берётся из HOTKEY_DESC_TRANSLATIONS[lang][descKey] —
+    // так база остаётся одна для всех языков.
     const HOTKEYS_DB = [
         { descKey: "alignRight", key: "r", shift: false, visual: "Ctrl + R" },
         { descKey: "alignLeft", key: "l", shift: false, visual: "Ctrl + L" },
@@ -140,19 +160,19 @@
         ru: {
             langName: "Русский",
             title: "Хоткеи",
-            aiPowered: "AI POWERED",
+            aiPowered: "AI powered",
             subtitle: "Тренируй стандартную базу из твоих конспектов (Word, Система) или создай персональную для любой другой программы",
             customPanelLabel: "Своя база для другой программы",
             inputPlaceholder: "Напр. Word, Excel, Photoshop...",
             generateButton: "Создать базу",
             generating: "Ищем…",
             loadedSuccess: (topic) => `База «${topic}» загружена`,
-            startTraining: "НАЧАТЬ ТРЕНИРОВКУ",
+            startTraining: "Начать тренировку",
             theoryStep: "Шаг 1 из 2",
             theoryTitle: "Теория",
             theoryDesc: "Изучи комбинации, которые встретятся в этой тренировке, а затем закрепи их на практике.",
             exit: "Выйти",
-            goToPractice: "ПЕРЕЙТИ К ПРАКТИКЕ",
+            goToPractice: "Перейти к практике",
             doCombination: "Выполните комбинацию",
             escToExit: "Esc — выйти",
             finishedTitle: "Отличная работа!",
@@ -165,19 +185,19 @@
         en: {
             langName: "English",
             title: "Hotkeys",
-            aiPowered: "AI POWERED",
+            aiPowered: "AI powered",
             subtitle: "Practice the standard set from your notes (Word, System), or create a custom one for any other program",
             customPanelLabel: "Custom set for another program",
             inputPlaceholder: "e.g. Word, Excel, Photoshop...",
             generateButton: "Generate set",
             generating: "Generating…",
             loadedSuccess: (topic) => `"${topic}" set loaded`,
-            startTraining: "START TRAINING",
+            startTraining: "Start training",
             theoryStep: "Step 1 of 2",
             theoryTitle: "Theory",
             theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
             exit: "Exit",
-            goToPractice: "GO TO PRACTICE",
+            goToPractice: "Go to practice",
             doCombination: "Perform the combination",
             escToExit: "Esc to exit",
             finishedTitle: "Great job!",
@@ -190,19 +210,19 @@
         uz: {
             langName: "O'zbek (кирилл)",
             title: "Хоткейлар",
-            aiPowered: "AI POWERED",
+            aiPowered: "AI powered",
             subtitle: "Конспектларингиздаги стандарт базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини яратинг",
             customPanelLabel: "Бошқа дастур учун ўз базангиз",
             inputPlaceholder: "Масалан: Word, Excel, Photoshop...",
             generateButton: "База яратиш",
             generating: "Излаяпмиз…",
             loadedSuccess: (topic) => `«${topic}» базаси юкланди`,
-            startTraining: "МАШҚНИ БОШЛАШ",
+            startTraining: "Машқни бошлаш",
             theoryStep: "1-қадам, 2 тадан",
             theoryTitle: "Назария",
             theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг уларни амалиётда мустаҳкамланг.",
             exit: "Чиқиш",
-            goToPractice: "АМАЛИЁТГА ЎТИШ",
+            goToPractice: "Амалиётга ўтиш",
             doCombination: "Комбинацияни бажаринг",
             escToExit: "Esc — чиқиш",
             finishedTitle: "Ажойиб натижа!",
@@ -214,6 +234,7 @@
         }
     };
 
+    // Название языка для промпта, отправляемого ИИ (чтобы описания приходили на нужном языке)
     const AI_LANG_HINT = {
         ru: "русском",
         en: "английском (English)",
@@ -223,122 +244,335 @@
     const LANGS = ["ru", "en", "uz"];
     const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
 
-    // ==========================================
-    // UI COMPONENTS & DESIGN SYSTEM
-    // ==========================================
+    // ==========================================================================
+    // ДИЗАЙН-ТОКЕНЫ НОВОЙ ВИЗУАЛЬНОЙ СИСТЕМЫ
+    // Названы с префиксом HK_, чтобы не пересекаться ни с чем глобальным на
+    // странице (см. предупреждение про общий глобальный контекст выше).
+    // ==========================================================================
+    const HK_TOKENS = {
+        bg: '#0B1020',
+        bgAlt: '#111729',
+        panel: '#151B2E',
+        panelSecondary: '#101629',
+        purple: '#8B5CF6',
+        purpleDark: '#6D28D9',
+        yellow: '#F6D365',
+        orange: '#FDA085',
+        blue: '#38BDF8',
+        green: '#34D399',
+        pink: '#F472B6',
+        cyan: '#22D3EE',
+        text: '#F8FAFC',
+        textSec: '#94A3B8',
+        border: 'rgba(148,163,184,0.16)'
+    };
 
-    const AppStyles = () => (
-        <style>{`
-            .ht-app-container {
-                --bg-main: #0B1020;
-                --bg-panel: #151B2E;
-                --bg-panel-sec: #101629;
-                --text-main: #F8FAFC;
-                --text-sec: #94A3B8;
-                --border: rgba(148,163,184,0.16);
-                --purple: #8B5CF6;
-                --purple-dark: #6D28D9;
-                --yellow: #F6D365;
-                --orange: #FDA085;
-                --blue: #38BDF8;
-                
-                background: var(--bg-main);
-                color: var(--text-main);
-                font-family: 'Inter', 'Manrope', 'SF Pro Display', sans-serif;
-                min-height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-                box-sizing: border-box;
-            }
-            .ht-app-container * { box-sizing: border-box; }
-            .ht-glass-panel {
-                background: var(--bg-panel);
-                border: 1px solid var(--border);
-                border-radius: 24px;
-                box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-                width: 100%;
-                position: relative;
-                overflow: hidden;
-            }
-            .ht-custom-scroll::-webkit-scrollbar {
-                width: 5px;
-            }
-            .ht-custom-scroll::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .ht-custom-scroll::-webkit-scrollbar-thumb {
-                background: rgba(139,92,246,0.5);
-                border-radius: 999px;
-            }
-            .ht-input-field {
-                background: var(--bg-panel-sec);
-                border: 1px solid var(--border);
-                color: var(--text-main);
-                transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            }
-            .ht-input-field:focus {
-                border-color: var(--purple);
-                box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
-                outline: none;
-            }
-            .ht-visual-key-anim {
-                animation: floatKey 5s ease-in-out infinite;
-            }
-            @keyframes floatKey {
-                0%, 100% { transform: perspective(800px) rotateX(25deg) rotateY(-15deg) rotateZ(5deg) translateY(0); }
-                50% { transform: perspective(800px) rotateX(25deg) rotateY(-15deg) rotateZ(5deg) translateY(-12px); }
-            }
-            @media (max-width: 650px) {
-                .ht-setup-header { flex-direction: column; align-items: flex-start !important; gap: 16px; }
-                .ht-hero-text { font-size: 24px !important; }
-                .ht-input-group { flex-direction: column; }
-                .ht-theory-grid { grid-template-columns: 1fr !important; }
-                .ht-practice-layout { flex-direction: column !important; align-items: center; }
-                .ht-practice-visual { display: none; }
-                .ht-theory-buttons { flex-direction: column; }
-            }
-        `}</style>
-    );
+    const GRADIENT_WARM = `linear-gradient(135deg, ${HK_TOKENS.yellow} 0%, ${HK_TOKENS.orange} 100%)`;
+    const GRADIENT_PURPLE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.purpleDark} 100%)`;
+    const GRADIENT_BLUE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.blue} 100%)`;
 
-    const AppLogo = () => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-                width: '44px', height: '44px', borderRadius: '12px',
-                background: 'linear-gradient(135deg, var(--yellow), var(--orange))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(253,160,133,0.4)'
+    // Единожды инжектируем небольшой <style> блок — он нужен только там, где
+    // инлайн-стили физически не могут справиться: кастомный скроллбар,
+    // @keyframes плавающей анимации и media query для мобильной раскладки.
+    // Все правила жёстко заскоуплены классом .hk-scope, поэтому конфликтов
+    // с остальной страницей / другими тренажёрами не будет.
+    let hkStylesInjected = false;
+    const injectHkStyles = () => {
+        if (hkStylesInjected || typeof document === 'undefined') return;
+        if (document.getElementById('hk-trainer-styles')) { hkStylesInjected = true; return; }
+        const style = document.createElement('style');
+        style.id = 'hk-trainer-styles';
+        style.textContent = `
+            .hk-scope { color-scheme: dark; }
+            .hk-scroll::-webkit-scrollbar { width: 5px; }
+            .hk-scroll::-webkit-scrollbar-track { background: transparent; }
+            .hk-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.5); border-radius: 999px; }
+            @keyframes hkFloat { 0%, 100% { transform: translateY(0px) rotate(-6deg); } 50% { transform: translateY(-8px) rotate(-3deg); } }
+            .hk-visual-float { animation: hkFloat 4.5s ease-in-out infinite; }
+            @media (max-width: 900px) {
+                .hk-practice-grid { grid-template-columns: 1fr !important; }
+                .hk-visual-side { order: 3; margin: 0 auto; }
+            }
+            @media (max-width: 600px) {
+                .hk-theory-grid { grid-template-columns: 1fr !important; }
+                .hk-setup-toprow { flex-wrap: wrap; justify-content: center !important; }
+                .hk-program-row { flex-direction: column; align-items: stretch !important; }
+                .hk-program-row > * { width: 100% !important; }
+            }
+        `;
+        document.head.appendChild(style);
+        hkStylesInjected = true;
+    };
+
+    // -------------------------------------------------------------------
+    // Иконки — простые инлайн SVG (без внешних зависимостей и без emoji),
+    // чтобы не тянуть в проект новую библиотеку ради редизайна.
+    // -------------------------------------------------------------------
+    const ICON_PATHS = {
+        undo: <path d="M4 10h9a5 5 0 1 1 0 10h-3M4 10l4-4M4 10l4 4" />,
+        redo: <path d="M20 10h-9a5 5 0 1 0 0 10h3M20 10l-4-4M20 10l-4 4" />,
+        scissors: (
+            <g>
+                <circle cx="6" cy="6" r="2.4" />
+                <circle cx="6" cy="18" r="2.4" />
+                <path d="M8.5 7.5 20 18M8.5 16.5 20 6" />
+            </g>
+        ),
+        copy: (
+            <g>
+                <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+                <path d="M5.5 15.5H4.8A1.8 1.8 0 0 1 3 13.7V4.8A1.8 1.8 0 0 1 4.8 3h8.9a1.8 1.8 0 0 1 1.8 1.8v.7" />
+            </g>
+        ),
+        clipboard: (
+            <g>
+                <rect x="5" y="4.5" width="14" height="16" rx="2" />
+                <rect x="8.5" y="3" width="7" height="3" rx="1" />
+                <path d="M8.5 12h7M8.5 16h7" />
+            </g>
+        ),
+        printer: (
+            <g>
+                <rect x="6" y="9" width="12" height="7" rx="1.4" />
+                <path d="M7.5 9V4.5h9V9M7.5 20h9v-4.5h-9V20Z" />
+            </g>
+        ),
+        search: (
+            <g>
+                <circle cx="10.5" cy="10.5" r="6" />
+                <path d="M19 19l-4.3-4.3" />
+            </g>
+        ),
+        replace: (
+            <g>
+                <path d="M6 8h11l-3-3M18 16H7l3 3" />
+            </g>
+        ),
+        select: (
+            <g>
+                <path d="M12 4v16M8 6.5C8 5 9.5 4 12 4s4 1 4 2.5M8 17.5c0 1.5 1.5 2.5 4 2.5s4-1 4-2.5" />
+            </g>
+        ),
+        bold: (
+            <path d="M7 4.5h6a3.3 3.3 0 0 1 0 6.6H7Zm0 6.6h6.8a3.4 3.4 0 0 1 0 6.8H7Z" />
+        ),
+        italic: <path d="M11 4.5h6M7 19.5h6M14.5 4.5 9.5 19.5" />,
+        underline: <path d="M6 4.5v6.5a6 6 0 0 0 12 0V4.5M5 19.5h14" />,
+        save: (
+            <g>
+                <path d="M5 4.5h11l3 3V19a.5.5 0 0 1-.5.5h-13A.5.5 0 0 1 5 19Z" />
+                <path d="M8 4.5v5h7v-5M8 14h8v5.5H8Z" />
+            </g>
+        ),
+        folder: <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h4l2 2.2h7A1.5 1.5 0 0 1 20 8.7V17a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17Z" />,
+        close: (
+            <g>
+                <path d="M6 4.5h9l3 3V19a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 19Z" />
+                <path d="m10.5 11 4 4m0-4-4 4" />
+            </g>
+        ),
+        link: <path d="M9.5 14.5 14.5 9.5M11 6.5l1.6-1.6a3.4 3.4 0 0 1 4.8 4.8L15.8 11.3M13 17.5l-1.6 1.6a3.4 3.4 0 0 1-4.8-4.8l1.6-1.6" />,
+        alignRight: <path d="M20 5H4M20 9.7H10M20 14.3H4M20 19H10" />,
+        alignLeft: <path d="M4 5h16M4 9.7h10M4 14.3h16M4 19h10" />,
+        alignCenter: <path d="M4 5h16M7 9.7h10M4 14.3h16M7 19h10" />,
+        fontSize: (
+            <g>
+                <path d="m4 16 3.4-9L11 16M5 13h4.8" />
+                <path d="M14 12.5a2.5 3 0 1 1 5 0v3.5M19 12.5v3.5" />
+            </g>
+        ),
+        caps: <path d="M4 17 8 6l4 11M5.4 13.5H10.6M15 6h5M17.5 6v11" />,
+        tab: (
+            <g>
+                <rect x="4" y="6" width="16" height="12" rx="2" />
+                <path d="M13 9v6M15.5 12h-5" />
+            </g>
+        ),
+        filePlus: (
+            <g>
+                <path d="M7 3.5h6l4 4V20a.5.5 0 0 1-.5.5h-9.5A.5.5 0 0 1 6.5 20V4A.5.5 0 0 1 7 3.5Z" />
+                <path d="M12 12v5M9.5 14.5h5" />
+            </g>
+        ),
+        zap: <path d="M12.8 3 6 13h5l-1 8 7-11h-5Z" />,
+        check: <path d="M5 13l5 5L19 7" />
+    };
+
+    const HK_ICON_META = {
+        undo: { icon: 'undo', color: 'purple' },
+        redo: { icon: 'redo', color: 'purple' },
+        cut: { icon: 'scissors', color: 'orange' },
+        copy: { icon: 'copy', color: 'cyan' },
+        paste: { icon: 'clipboard', color: 'blue' },
+        print: { icon: 'printer', color: 'purple' },
+        find: { icon: 'search', color: 'blue' },
+        findReplace: { icon: 'replace', color: 'pink' },
+        selectAll: { icon: 'select', color: 'green' },
+        bold: { icon: 'bold', color: 'green' },
+        italic: { icon: 'italic', color: 'purple' },
+        underline: { icon: 'underline', color: 'blue' },
+        doubleUnderline: { icon: 'underline', color: 'blue' },
+        underlineWords: { icon: 'underline', color: 'blue' },
+        save: { icon: 'save', color: 'cyan' },
+        openFile: { icon: 'folder', color: 'orange' },
+        closeDoc: { icon: 'close', color: 'pink' },
+        hyperlink: { icon: 'link', color: 'blue' },
+        alignRight: { icon: 'alignRight', color: 'purple' },
+        alignLeft: { icon: 'alignLeft', color: 'purple' },
+        alignCenter: { icon: 'alignCenter', color: 'purple' },
+        fontSmaller: { icon: 'fontSize', color: 'yellow' },
+        fontBigger: { icon: 'fontSize', color: 'yellow' },
+        allCaps: { icon: 'caps', color: 'green' },
+        newTab: { icon: 'tab', color: 'orange' },
+        newFile: { icon: 'filePlus', color: 'cyan' }
+    };
+
+    const HK_COLOR_CYCLE = ['purple', 'cyan', 'blue', 'orange', 'pink', 'green'];
+
+    const hkColorValue = (name) => HK_TOKENS[name] || HK_TOKENS.purple;
+
+    // Определяет иконку + цвет для карточки. Для штатной базы — по словарю
+    // выше (descKey), для AI-сгенерированной — детерминированно по индексу,
+    // чтобы карточки не мигали разными цветами при каждом ре-рендере.
+    const getHotkeyVisualMeta = (hk, index) => {
+        if (hk.descKey && HK_ICON_META[hk.descKey]) return HK_ICON_META[hk.descKey];
+        const color = HK_COLOR_CYCLE[index % HK_COLOR_CYCLE.length];
+        return { icon: 'zap', color };
+    };
+
+    const Icon = ({ name, size = 18, color = 'currentColor', strokeWidth = 1.8 }) => {
+        const body = ICON_PATHS[name] || ICON_PATHS.zap;
+        return (
+            <svg
+                width={size} height={size} viewBox="0 0 24 24" fill="none"
+                stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+            >
+                {body}
+            </svg>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // AppLogo — [⚡] Хоткеи [AI POWERED]
+    // -------------------------------------------------------------------
+    const AppLogo = ({ title, badge }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <motion.div
+                initial={{ rotate: -8, scale: 0.9 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                    width: '44px', height: '44px', borderRadius: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: GRADIENT_WARM, boxShadow: '0 10px 22px -8px rgba(253,160,133,0.55), inset 0 1px 1px rgba(255,255,255,0.4)',
+                    flexShrink: 0
+                }}
+            >
+                <Icon name="zap" size={22} color="#1a1206" strokeWidth={2.2} />
+            </motion.div>
+            <h2 style={{
+                margin: 0, fontSize: '24px', fontWeight: 900, letterSpacing: '-0.5px', color: HK_TOKENS.text
             }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B1020" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.5px' }}>Хоткеи</span>
-                <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--purple)', letterSpacing: '1px' }}>AI POWERED</span>
-            </div>
+                {title}
+            </h2>
+            {badge && (
+                <span style={{
+                    fontSize: '10px', fontWeight: 900, background: GRADIENT_PURPLE, color: '#fff',
+                    padding: '5px 11px', borderRadius: '999px', letterSpacing: '1.2px', textTransform: 'uppercase',
+                    boxShadow: '0 6px 16px -6px rgba(109,40,217,0.6)'
+                }}>
+                    {badge}
+                </span>
+            )}
         </div>
     );
 
-    const LanguageSwitcher = ({ lang, onChange }) => (
-        <div style={{ display: 'flex', gap: '6px' }}>
+    // -------------------------------------------------------------------
+    // GlassPanel — общий контейнер для крупных экранов
+    // -------------------------------------------------------------------
+    const GlassPanel = React.forwardRef(({ children, style, maxWidth = '820px', className = '', ...rest }, ref) => (
+        <motion.div
+            ref={ref}
+            className={`hk-scope ${className}`}
+            style={{
+                width: '100%', maxWidth, margin: '0 auto', position: 'relative', overflow: 'hidden',
+                background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.panelSecondary} 100%)`,
+                border: `1px solid ${HK_TOKENS.border}`,
+                borderRadius: '24px',
+                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
+                padding: '40px 32px',
+                color: HK_TOKENS.text,
+                ...style
+            }}
+            {...rest}
+        >
+            {children}
+        </motion.div>
+    ));
+
+    // -------------------------------------------------------------------
+    // GradientButton — primary (жёлто-оранжевый) / secondary (фиолетовый)
+    // -------------------------------------------------------------------
+    const GradientButton = ({ variant = 'primary', children, onClick, disabled, type = 'button', style, title, muted }) => {
+        const background =
+            muted ? 'transparent'
+                : variant === 'primary' ? GRADIENT_WARM
+                    : GRADIENT_BLUE;
+        const color = muted ? HK_TOKENS.textSec : (variant === 'primary' ? '#1a1206' : '#fff');
+        const shadow = muted ? 'none'
+            : variant === 'primary'
+                ? '0 14px 30px -12px rgba(253,160,133,0.55)'
+                : '0 14px 30px -12px rgba(109,40,217,0.55)';
+        return (
+            <motion.button
+                type={type}
+                title={title}
+                whileHover={disabled ? {} : { y: -2 }}
+                whileTap={disabled ? {} : { scale: 0.97 }}
+                onClick={onClick}
+                disabled={disabled}
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
+                    padding: '0 26px', height: '54px', borderRadius: '16px', border: muted ? `1px solid ${HK_TOKENS.border}` : 'none',
+                    background, color, fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px',
+                    cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.65 : 1,
+                    boxShadow: shadow, whiteSpace: 'nowrap',
+                    ...style
+                }}
+            >
+                {children}
+            </motion.button>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // LanguageSwitcher — тот же компонент, только переоформлен под тёмную тему
+    // -------------------------------------------------------------------
+    const LanguageSwitcher = ({ lang, onChange, style }) => (
+        <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => {
+                const meta = UI_TRANSLATIONS[code];
+                if (!meta) return null; // защита: не падать, даже если языка нет в словаре
                 const active = lang === code;
                 return (
                     <motion.button
                         key={code}
                         type="button"
-                        whileHover={{ y: active ? 0 : -2 }}
+                        whileHover={{ y: active ? 0 : -1 }}
                         whileTap={{ scale: 0.94 }}
                         onClick={() => onChange(code)}
+                        title={meta.langName}
+                        aria-pressed={active}
                         style={{
-                            padding: '8px 14px', borderRadius: '8px',
-                            border: active ? '1px solid transparent' : '1px solid var(--border)',
-                            background: active ? 'linear-gradient(135deg, var(--purple), var(--purple-dark))' : 'transparent',
-                            color: active ? '#fff' : 'var(--text-sec)',
-                            fontSize: '12px', fontWeight: 800, cursor: 'pointer',
-                            boxShadow: active ? '0 8px 24px rgba(139,92,246,0.35)' : 'none'
+                            padding: '7px 13px',
+                            borderRadius: '999px',
+                            border: active ? '1px solid transparent' : `1px solid ${HK_TOKENS.border}`,
+                            background: active ? GRADIENT_PURPLE : 'transparent',
+                            color: active ? '#fff' : HK_TOKENS.textSec,
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            letterSpacing: '0.5px',
+                            cursor: 'pointer',
+                            boxShadow: active ? '0 8px 20px -8px rgba(139,92,246,0.55)' : 'none'
                         }}
                     >
                         {LANG_LABEL[code]}
@@ -348,52 +582,258 @@
         </div>
     );
 
-    const GradientButton = ({ variant = 'primary', style, children, disabled, ...props }) => {
-        const isPrimary = variant === 'primary';
+    // -------------------------------------------------------------------
+    // KeyCap — переиспользуемая "физическая" клавиша
+    // -------------------------------------------------------------------
+    const KeyCap = ({ children, accent, compact, dashed, pulse }) => {
+        const accentColor = accent ? hkColorValue(accent) : null;
+        const base = {
+            padding: compact ? '6px 11px' : '15px 22px',
+            background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.bg} 100%)`,
+            border: dashed ? `2px dashed ${accentColor || HK_TOKENS.blue}` : `1px solid ${HK_TOKENS.border}`,
+            borderBottom: accentColor ? `3px solid ${accentColor}` : `3px solid ${HK_TOKENS.border}`,
+            borderRadius: compact ? '8px' : '12px',
+            fontSize: compact ? '12.5px' : '20px',
+            fontWeight: 800,
+            fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
+            color: accentColor || HK_TOKENS.text,
+            letterSpacing: '0.3px',
+            minWidth: compact ? '20px' : '28px',
+            textAlign: 'center',
+            display: 'inline-block'
+        };
+        if (!pulse) return <div style={base}>{children}</div>;
         return (
-            <motion.button
-                whileHover={disabled ? {} : { y: -2, filter: 'brightness(1.05)' }}
-                whileTap={disabled ? {} : { scale: 0.97 }}
-                disabled={disabled}
-                style={{
-                    background: isPrimary ? 'linear-gradient(135deg, var(--yellow), var(--orange))' : 'linear-gradient(135deg, var(--purple), var(--purple-dark))',
-                    boxShadow: isPrimary ? '0 10px 30px rgba(253,160,133,0.35)' : '0 10px 30px rgba(109,40,217,0.35)',
-                    color: isPrimary ? '#0B1020' : '#fff',
-                    border: 'none', borderRadius: '16px',
-                    fontWeight: 800, cursor: disabled ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    opacity: disabled ? 0.7 : 1,
-                    ...style
+            <motion.div
+                animate={{
+                    opacity: [0.65, 1, 0.65],
+                    boxShadow: [
+                        `inset 0 0 14px ${accentColor || HK_TOKENS.blue}22`,
+                        `inset 0 0 24px ${accentColor || HK_TOKENS.blue}55`,
+                        `inset 0 0 14px ${accentColor || HK_TOKENS.blue}22`
+                    ]
                 }}
-                {...props}
+                transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+                style={base}
             >
                 {children}
-            </motion.button>
+            </motion.div>
         );
     };
 
-    const KeyCap = ({ children, active, isSmall }) => (
-        <div style={{
-            padding: isSmall ? '6px 12px' : '14px 24px',
-            background: 'linear-gradient(180deg, var(--bg-panel-sec) 0%, var(--bg-main) 100%)',
-            border: `1px solid ${active ? 'var(--blue)' : 'var(--border)'}`,
-            borderBottom: `3px solid ${active ? 'var(--blue)' : 'var(--border)'}`,
-            borderRadius: isSmall ? '8px' : '14px',
-            fontSize: isSmall ? '13px' : '24px',
-            fontWeight: 800,
-            fontFamily: "'SF Mono', 'JetBrains Mono', monospace",
-            color: active ? 'var(--blue)' : 'var(--text-main)',
-            boxShadow: active ? '0 0 16px rgba(56,189,248,0.4), inset 0 0 8px rgba(56,189,248,0.2)' : '0 4px 10px rgba(0,0,0,0.2)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            minWidth: isSmall ? 'auto' : '64px',
-            transition: 'all 0.2s ease'
-        }}>
-            {children}
+    // Компактный ряд клавиш из строки вида "Ctrl + Shift + D"
+    const KeyCombo = ({ visual, compact = true }) => {
+        const parts = String(visual || '').split('+').map((p) => p.trim()).filter(Boolean);
+        return (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: compact ? '5px' : '12px', flexWrap: 'wrap' }}>
+                {parts.map((part, i) => (
+                    <React.Fragment key={i}>
+                        {i > 0 && <span style={{ color: HK_TOKENS.textSec, fontWeight: 700, opacity: 0.6, fontSize: compact ? '12px' : '22px' }}>+</span>}
+                        <KeyCap compact={compact}>{part}</KeyCap>
+                    </React.Fragment>
+                ))}
+            </div>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // HotkeyIcon — цветной квадрат с иконкой
+    // -------------------------------------------------------------------
+    const HotkeyIcon = ({ icon, color }) => {
+        const c = hkColorValue(color);
+        return (
+            <div style={{
+                width: '38px', height: '38px', borderRadius: '11px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: `${c}1F`, border: `1px solid ${c}3D`
+            }}>
+                <Icon name={icon} size={18} color={c} />
+            </div>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // HotkeyCard — карточка теории
+    // -------------------------------------------------------------------
+    const HotkeyCard = ({ hk, index, desc }) => {
+        const meta = getHotkeyVisualMeta(hk, index);
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}
+                whileHover={{ y: -2 }}
+                style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '13px', padding: '16px',
+                    background: HK_TOKENS.panelSecondary, border: `1px solid ${HK_TOKENS.border}`, borderRadius: '16px'
+                }}
+            >
+                <HotkeyIcon icon={meta.icon} color={meta.color} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: HK_TOKENS.text, lineHeight: '1.4' }}>
+                        {desc}
+                    </div>
+                    <KeyCombo visual={hk.visual} compact />
+                </div>
+            </motion.div>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // ProgramSelector — комбобокс "программа" с иконкой + свободным вводом
+    // -------------------------------------------------------------------
+    const PROGRAM_SUGGESTIONS = [
+        { name: 'Microsoft Word', letter: 'W', color: '#2B579A' },
+        { name: 'Excel', letter: 'E', color: '#217346' },
+        { name: 'PowerPoint', letter: 'P', color: '#D24726' },
+        { name: 'Photoshop', letter: 'Ps', color: '#31A8FF' },
+        { name: 'Chrome', letter: 'C', color: '#EA4335' },
+        { name: 'VS Code', letter: '<>', color: '#007ACC' },
+        { name: 'Figma', letter: 'F', color: '#A259FF' },
+        { name: 'Telegram', letter: 'T', color: '#26A5E4' }
+    ];
+
+    const ProgramSelector = ({ value, onChange, onSubmit, disabled, placeholder, label }) => {
+        const [open, setOpen] = useState(false);
+        const rootRef = useRef(null);
+
+        useEffect(() => {
+            const onDocClick = (e) => {
+                if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+            };
+            document.addEventListener('mousedown', onDocClick);
+            return () => document.removeEventListener('mousedown', onDocClick);
+        }, []);
+
+        const match = PROGRAM_SUGGESTIONS.find((p) => p.name.toLowerCase() === value.trim().toLowerCase());
+        const iconLetter = match ? match.letter : (value.trim() ? value.trim()[0].toUpperCase() : '?');
+        const iconColor = match ? match.color : HK_TOKENS.purple;
+
+        const filtered = PROGRAM_SUGGESTIONS.filter((p) =>
+            p.name.toLowerCase().includes(value.trim().toLowerCase())
+        );
+
+        return (
+            <div ref={rootRef} style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', height: '52px',
+                    borderRadius: '14px', border: `1px solid ${open ? HK_TOKENS.purple : HK_TOKENS.border}`,
+                    background: HK_TOKENS.bg, transition: 'border-color 0.2s ease'
+                }}>
+                    <div style={{
+                        width: '26px', height: '26px', borderRadius: '7px', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: `${iconColor}2A`, color: iconColor, fontSize: '11px', fontWeight: 900
+                    }}>
+                        {iconLetter}
+                    </div>
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        onFocus={() => setOpen(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !disabled) { setOpen(false); onSubmit && onSubmit(); }
+                            if (e.key === 'Escape') setOpen(false);
+                        }}
+                        placeholder={placeholder}
+                        aria-label={label}
+                        disabled={disabled}
+                        style={{
+                            flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
+                            color: HK_TOKENS.text, fontSize: '15px', fontWeight: 600
+                        }}
+                    />
+                    <span
+                        onClick={() => !disabled && setOpen((o) => !o)}
+                        style={{ color: HK_TOKENS.textSec, fontSize: '11px', cursor: disabled ? 'default' : 'pointer', userSelect: 'none' }}
+                    >
+                        ▾
+                    </span>
+                </div>
+
+                <AnimatePresence>
+                    {open && filtered.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.15 }}
+                            style={{
+                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20,
+                                background: HK_TOKENS.panel, border: `1px solid ${HK_TOKENS.border}`, borderRadius: '14px',
+                                boxShadow: '0 20px 40px -12px rgba(0,0,0,0.55)', overflow: 'hidden', padding: '6px'
+                            }}
+                        >
+                            {filtered.map((p) => (
+                                <div
+                                    key={p.name}
+                                    onMouseDown={() => { onChange(p.name); setOpen(false); }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+                                        borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: HK_TOKENS.text
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(148,163,184,0.08)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <div style={{
+                                        width: '22px', height: '22px', borderRadius: '6px', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', background: `${p.color}2A`, color: p.color, fontSize: '10px', fontWeight: 900
+                                    }}>
+                                        {p.letter}
+                                    </div>
+                                    {p.name}
+                                </div>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    };
+
+    // -------------------------------------------------------------------
+    // HotkeyVisual — декоративная "3D" клавиша с молнией (не WebGL,
+    // просто transform + gradient + glow, как и просили в ТЗ)
+    // -------------------------------------------------------------------
+    const HotkeyVisual = () => (
+        <div className="hk-visual-side" style={{ position: 'relative', width: '150px', height: '150px', flexShrink: 0 }}>
+            <div style={{
+                position: 'absolute', inset: '-30px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(139,92,246,0.28), transparent 70%)', filter: 'blur(4px)'
+            }} />
+            {[0, 1, 2].map((i) => (
+                <span key={i} style={{
+                    position: 'absolute', width: '5px', height: '5px', borderRadius: '50%',
+                    background: HK_TOKENS.blue, boxShadow: `0 0 8px ${HK_TOKENS.blue}`,
+                    top: `${15 + i * 30}%`, left: i % 2 ? '85%' : '5%', opacity: 0.85
+                }} />
+            ))}
+            <div
+                className="hk-visual-float"
+                style={{
+                    position: 'absolute', inset: 0, borderRadius: '26px',
+                    background: `linear-gradient(155deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.bg} 100%)`,
+                    border: `1px solid ${HK_TOKENS.border}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 25px 50px -15px rgba(139,92,246,0.55), inset 0 1px 1px rgba(255,255,255,0.08), 8px 14px 0 -4px ${HK_TOKENS.panelSecondary}`
+                }}
+            >
+                <div style={{
+                    width: '56px', height: '56px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: GRADIENT_PURPLE, boxShadow: '0 0 30px rgba(139,92,246,0.65)'
+                }}>
+                    <Icon name="zap" size={28} color="#fff" strokeWidth={2} />
+                </div>
+            </div>
         </div>
     );
 
+    // -------------------------------------------------------------------
+    // ProgressKeys (бывший KeyRow) — ряд "клавиш"-индикаторов прогресса
+    // -------------------------------------------------------------------
     const ProgressKeys = ({ total, currentIndex }) => (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
             {Array.from({ length: total }).map((_, i) => {
                 const done = i < currentIndex;
                 const active = i === currentIndex;
@@ -401,12 +841,12 @@
                     <motion.div
                         key={i}
                         animate={active ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                        transition={active ? { repeat: Infinity, duration: 1.5 } : {}}
+                        transition={active ? { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } : { duration: 0.2 }}
                         style={{
-                            width: '28px', height: '10px', borderRadius: '4px',
-                            background: done ? 'linear-gradient(90deg, var(--yellow), var(--orange))' : (active ? 'var(--blue)' : '#1E293B'),
-                            boxShadow: done ? '0 0 10px rgba(253,160,133,0.5)' : (active ? '0 0 14px rgba(56,189,248,0.6)' : 'none'),
-                            border: active ? '1px solid rgba(56,189,248,0.8)' : '1px solid rgba(148,163,184,0.1)'
+                            width: '22px', height: '9px', borderRadius: '3px',
+                            background: done ? GRADIENT_WARM : active ? HK_TOKENS.blue : HK_TOKENS.border,
+                            boxShadow: done ? '0 0 8px rgba(253,160,133,0.55)' : active ? `0 0 10px ${HK_TOKENS.blue}88` : 'none',
+                            transition: 'background 0.25s ease, box-shadow 0.25s ease'
                         }}
                     />
                 );
@@ -414,47 +854,19 @@
         </div>
     );
 
-    const HotkeyVisual = () => (
-        <div style={{ perspective: '1000px', width: '140px', height: '140px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} className="ht-practice-visual">
-            <div className="ht-visual-key-anim" style={{
-                width: '100px', height: '100px', borderRadius: '20px',
-                background: 'linear-gradient(135deg, var(--bg-panel), var(--bg-main))',
-                border: '1px solid rgba(139,92,246,0.4)',
-                boxShadow: '20px 20px 40px rgba(0,0,0,0.5), inset 2px 2px 5px rgba(255,255,255,0.1), 0 0 30px rgba(139,92,246,0.15)',
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                color: 'var(--purple)'
-            }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-            </div>
-        </div>
-    );
-
-    // Helper for icons in Theory cards
-    const getIconInfo = (descKey) => {
-        const iconStyle = { strokeWidth: 2, fill: "none", stroke: "currentColor", width: 20, height: 20 };
-        switch(descKey) {
-            case 'undo': return { svg: <svg {...iconStyle}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>, color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' };
-            case 'copy': return { svg: <svg {...iconStyle}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>, color: '#38BDF8', bg: 'rgba(56,189,248,0.1)' };
-            case 'paste': return { svg: <svg {...iconStyle}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' };
-            case 'cut': return { svg: <svg {...iconStyle}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>, color: '#FDA085', bg: 'rgba(253,160,133,0.1)' };
-            case 'print': return { svg: <svg {...iconStyle}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>, color: '#D946EF', bg: 'rgba(217,70,239,0.1)' };
-            case 'find': return { svg: <svg {...iconStyle}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>, color: '#38BDF8', bg: 'rgba(56,189,248,0.1)' };
-            case 'bold': return { svg: <svg {...iconStyle}><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></svg>, color: '#10B981', bg: 'rgba(16,185,129,0.1)' };
-            default: return { svg: <svg {...iconStyle}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' };
-        }
-    };
-
+    // -------------------------------------------------------------------
+    // ErrorBanner — инлайн-баннер ошибки вместо блокирующего window.alert()
+    // -------------------------------------------------------------------
     const ErrorBanner = ({ children }) => (
         <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
             exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            role="alert"
             style={{
-                fontSize: '13px', color: '#EF4444', fontWeight: 700, textAlign: 'center',
-                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-                borderRadius: '12px', padding: '12px', lineHeight: 1.5
+                fontSize: '13px', color: '#f87171', fontWeight: 700, textAlign: 'center',
+                background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: '11px', padding: '10px 14px', lineHeight: 1.5
             }}
         >
             {children}
@@ -462,12 +874,15 @@
     );
 
     const HotkeyTrainer = ({ onBack }) => {
+        useEffect(() => { injectHkStyles(); }, []);
+
         const [tasks, setTasks] = useState([]);
         const [currentIndex, setCurrentIndex] = useState(0);
         const [score, setScore] = useState(0);
         const [shake, setShake] = useState(false);
         const [successPulse, setSuccessPulse] = useState(false);
         const [isFinished, setIsFinished] = useState(false);
+        // 'setup' — экран настройки, 'theory' — раздел теории, 'practice' — тренировка
         const [phase, setPhase] = useState('setup');
 
         const [lang, setLang] = useState('ru');
@@ -479,9 +894,13 @@
         const [isCustomBase, setIsCustomBase] = useState(false);
         const [genError, setGenError] = useState(null);
 
+        // Отменяем "зависший" запрос к ИИ, если компонент размонтировали
+        // посреди генерации (например, юзер вышел из тренажёра).
         const abortRef = useRef(null);
         useEffect(() => () => abortRef.current?.abort(), []);
 
+        // Достаёт локализованное описание хоткея независимо от того,
+        // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
         const getDesc = (hk) => {
             if (hk.descKey) {
                 return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey]
@@ -491,24 +910,13 @@
             return hk.desc ?? '—';
         };
 
-        const splitHeroText = (subtitle, l) => {
-            let p1 = subtitle, p2 = "";
-            if (l === 'ru' && subtitle.includes(' или ')) {
-                [p1, p2] = subtitle.split(' или '); p2 = 'или ' + p2;
-            } else if (l === 'en' && subtitle.includes(', or ')) {
-                [p1, p2] = subtitle.split(', or '); p2 = 'or ' + p2;
-            } else if (l === 'uz' && subtitle.includes(' ёки ')) {
-                [p1, p2] = subtitle.split(' ёки '); p2 = 'ёки ' + p2;
-            }
-            return { p1, p2 };
-        };
-
         const generateAIHotkeys = async () => {
             const cleanTopic = topic.trim();
             if (!cleanTopic) {
                 setGenError(t.errorNoTopic);
                 return;
             }
+
             setGenError(null);
             setIsGenerating(true);
             abortRef.current?.abort();
@@ -554,6 +962,8 @@
                 const parsed = JSON.parse(jsonMatch[0]);
                 if (!Array.isArray(parsed)) throw new Error("Not an array");
 
+                // Валидируем и отбрасываем битые записи, а не роняем весь тренажёр
+                // из-за одного кривого объекта в ответе ИИ.
                 const validated = parsed
                     .filter(hk => hk && typeof hk.key === 'string' && hk.key.trim().length > 0 && typeof hk.desc === 'string')
                     .map(hk => ({
@@ -578,6 +988,7 @@
             }
         };
 
+        // Формирует набор заданий и переходит в раздел теории (перед практикой)
         const openTheory = () => {
             setTasks(shuffleArray([...activeHotkeys]).slice(0, Math.min(10, activeHotkeys.length)));
             setCurrentIndex(0);
@@ -587,6 +998,8 @@
         };
 
         const startGame = () => setPhase('practice');
+
+        // Повтор: новый набор заданий, сразу в практику, без теории
         const resetGame = () => {
             setTasks(shuffleArray([...activeHotkeys]).slice(0, Math.min(10, activeHotkeys.length)));
             setCurrentIndex(0);
@@ -631,6 +1044,8 @@
                 const isShiftPressed = e.shiftKey;
                 const pressedKey = e.key.toLowerCase();
                 const expectedKey = currentTask.key.toLowerCase();
+                // При зажатом Shift браузер может прислать не саму цифру/символ, а её
+                // "сдвинутую" версию (например "!" вместо "1") — проверяем обе формы.
                 const expectedShiftedKey = SHIFT_SYMBOL_MAP[expectedKey] || expectedKey;
                 const keyMatches = pressedKey === expectedKey || pressedKey === expectedShiftedKey;
 
@@ -652,248 +1067,306 @@
 
             window.addEventListener("keydown", handleKeyDown, { passive: false });
             return () => window.removeEventListener("keydown", handleKeyDown);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [currentIndex, tasks, isFinished, phase]);
 
-        // === RENDER ===
-        const { p1, p2 } = splitHeroText(t.subtitle, lang);
+        // === СТАРТОВЫЙ ЭКРАН ===
+        if (phase === 'setup') {
+            return (
+                <GlassPanel
+                    maxWidth="820px"
+                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}
+                >
+                    <div style={{
+                        position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '420px', height: '260px',
+                        background: 'radial-gradient(ellipse, rgba(139,92,246,0.16), transparent 72%)', pointerEvents: 'none'
+                    }} />
+                    <div style={{
+                        position: 'absolute', bottom: '-100px', right: '-60px', width: '260px', height: '260px',
+                        background: 'radial-gradient(circle, rgba(56,189,248,0.10), transparent 70%)', pointerEvents: 'none'
+                    }} />
 
-        return (
-            <div className="ht-app-container">
-                <AppStyles />
+                    <div className="hk-setup-toprow" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', position: 'relative', zIndex: 2, gap: '14px' }}>
+                        <AppLogo title={t.title} badge={t.aiPowered.toUpperCase()} />
+                        <LanguageSwitcher lang={lang} onChange={setLang} />
+                    </div>
 
-                {/* 1. SETUP PHASE */}
-                {phase === 'setup' && (
-                    <motion.div
-                        className="ht-glass-panel"
-                        initial={{ opacity: 0, scale: 0.98, y: 15 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                        style={{ maxWidth: '820px', padding: '48px 40px' }}
-                    >
-                        <div style={{ position: 'absolute', top: '-100px', left: '20%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%)', pointerEvents: 'none' }} />
-                        <div style={{ position: 'absolute', bottom: '-100px', right: '-50px', width: '250px', height: '250px', background: 'radial-gradient(circle, rgba(253,160,133,0.1), transparent 70%)', pointerEvents: 'none' }} />
-                        
-                        <header className="ht-setup-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', position: 'relative', zIndex: 10 }}>
-                            <AppLogo />
-                            <LanguageSwitcher lang={lang} onChange={setLang} />
-                        </header>
+                    <div style={{ textAlign: 'center', maxWidth: '560px', position: 'relative', zIndex: 2 }}>
+                        <p style={{
+                            fontSize: '15px', color: HK_TOKENS.textSec, lineHeight: '1.7',
+                            fontWeight: 500, margin: 0
+                        }}>
+                            {t.subtitle}
+                        </p>
+                    </div>
 
-                        <div className="ht-hero-text" style={{ fontSize: '36px', fontWeight: 900, lineHeight: 1.25, marginBottom: '40px', maxWidth: '640px' }}>
-                            <span style={{ background: 'linear-gradient(135deg, var(--yellow), var(--orange))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                {p1}
-                            </span>
-                            {p2 && <span style={{ color: 'var(--text-main)', display: 'block' }}>{p2}</span>}
+                    <div style={{
+                        width: '100%', maxWidth: '560px', background: HK_TOKENS.bg, border: `1px solid ${HK_TOKENS.border}`,
+                        borderRadius: '20px', padding: '22px', position: 'relative', zIndex: 2
+                    }}>
+                        <div style={{
+                            fontSize: '11px', color: HK_TOKENS.textSec, fontWeight: 800, textTransform: 'uppercase',
+                            letterSpacing: '1.4px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+                        }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: HK_TOKENS.purple, display: 'inline-block' }} />
+                            {t.customPanelLabel}
                         </div>
-
-                        <div style={{ background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '20px', padding: '24px', marginBottom: '32px' }}>
-                            <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.4px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--purple)', display: 'inline-block' }} />
-                                {t.customPanelLabel}
-                            </div>
-                            <div className="ht-input-group" style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ position: 'relative', flex: 1 }}>
-                                    <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-sec)' }}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                    </div>
-                                    <input
-                                        className="ht-input-field"
-                                        type="text"
-                                        value={topic}
-                                        onChange={(e) => setTopic(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter' && !isGenerating) generateAIHotkeys(); }}
-                                        placeholder={t.inputPlaceholder}
-                                        disabled={isGenerating}
-                                        style={{ width: '100%', padding: '16px 16px 16px 44px', borderRadius: '14px', fontSize: '15px', fontWeight: 600 }}
+                        <div className="hk-program-row" style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
+                            <ProgramSelector
+                                value={topic}
+                                onChange={setTopic}
+                                onSubmit={() => !isGenerating && generateAIHotkeys()}
+                                disabled={isGenerating}
+                                placeholder={t.inputPlaceholder}
+                                label={t.customPanelLabel}
+                            />
+                            <motion.button
+                                type="button"
+                                whileHover={{ scale: isGenerating ? 1 : 1.02, y: isGenerating ? 0 : -1 }}
+                                whileTap={{ scale: isGenerating ? 1 : 0.97 }}
+                                onClick={generateAIHotkeys}
+                                disabled={isGenerating}
+                                style={{
+                                    padding: '0 22px', background: GRADIENT_PURPLE, border: 'none', color: '#fff',
+                                    borderRadius: '14px', fontWeight: 800, fontSize: '14px', cursor: isGenerating ? 'not-allowed' : 'pointer',
+                                    opacity: isGenerating ? 0.7 : 1, height: '52px', boxShadow: '0 10px 24px -10px rgba(109,40,217,0.65)',
+                                    display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0
+                                }}
+                            >
+                                {isGenerating && (
+                                    <motion.span
+                                        animate={{ rotate: 360 }}
+                                        transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                        style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', display: 'inline-block' }}
                                     />
-                                </div>
-                                <GradientButton variant="secondary" onClick={generateAIHotkeys} disabled={isGenerating} style={{ padding: '0 28px', height: '54px' }}>
-                                    {isGenerating ? (
-                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', marginRight: 8 }} />
-                                    ) : null}
-                                    {isGenerating ? t.generating : t.generateButton}
-                                </GradientButton>
-                            </div>
-
-                            <AnimatePresence>
-                                {isCustomBase && !isGenerating && !genError && (
-                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 16 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ fontSize: '14px', color: '#10b981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                                        {t.loadedSuccess(topic)}
-                                    </motion.div>
                                 )}
-                                {genError && <ErrorBanner key="err">{genError}</ErrorBanner>}
-                            </AnimatePresence>
+                                {isGenerating ? t.generating : t.generateButton}
+                            </motion.button>
                         </div>
 
-                        <GradientButton variant="primary" onClick={openTheory} style={{ width: '100%', maxWidth: '500px', height: '60px', fontSize: '16px', margin: '0 auto', gap: '8px' }}>
-                            <span style={{ fontSize: '20px' }}>🚀</span> {t.startTraining}
-                        </GradientButton>
-                    </motion.div>
-                )}
-
-                {/* 2. THEORY PHASE */}
-                {phase === 'theory' && (
-                    <motion.div
-                        className="ht-glass-panel"
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        style={{ maxWidth: '900px', padding: '36px' }}
-                    >
-                        <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                <button onClick={leaveGame} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
-                                    ← {t.exit}
-                                </button>
-                                <LanguageSwitcher lang={lang} onChange={setLang} />
-                            </div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '8px' }}>
-                                {t.theoryStep}
-                            </div>
-                            <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, background: 'linear-gradient(135deg, var(--purple), var(--blue))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                {t.theoryTitle}: <span style={{ color: 'var(--text-main)', WebkitTextFillColor: 'var(--text-main)' }}>{isCustomBase ? topic : 'Microsoft Word'}</span>
-                            </h2>
-                            <p style={{ fontSize: '15px', color: 'var(--text-sec)', fontWeight: 500, marginTop: '12px', marginBottom: 0 }}>
-                                {t.theoryDesc}
-                            </p>
-                        </header>
-
-                        <div className="ht-theory-grid ht-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', maxHeight: '420px', overflowY: 'auto', paddingRight: '8px', marginBottom: '28px' }}>
-                            {tasks.map((hk, i) => {
-                                const info = getIconInfo(hk.descKey);
-                                return (
-                                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.04, 0.4) }} style={{
-                                        display: 'flex', flexDirection: 'column', padding: '20px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '16px'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: info.bg, color: info.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {info.svg}
-                                            </div>
-                                            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', lineHeight: '1.3' }}>
-                                                {getDesc(hk)}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '6px' }}>
-                                            {/* Render visual keys */}
-                                            {hk.visual.split(' + ').map((keyPart, j) => (
-                                                <KeyCap key={j} isSmall>{keyPart}</KeyCap>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="ht-theory-buttons" style={{ display: 'flex', gap: '16px' }}>
-                            <GradientButton variant="secondary" onClick={leaveGame} style={{ flex: '0 0 160px', height: '56px', background: 'var(--bg-panel-sec)', border: '1px solid var(--border)', boxShadow: 'none', color: 'var(--text-main)' }}>
-                                {t.exit}
-                            </GradientButton>
-                            <GradientButton variant="primary" onClick={startGame} style={{ flex: 1, height: '56px', fontSize: '16px' }}>
-                                {t.goToPractice} →
-                            </GradientButton>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* 3. PRACTICE PHASE */}
-                {phase === 'practice' && tasks.length > 0 && !isFinished && (
-                    <motion.div
-                        className="ht-glass-panel"
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
-                        transition={shake ? { duration: 0.3 } : { duration: 0.4 }}
-                        style={{ maxWidth: '1000px', padding: '36px' }}
-                    >
-                        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '40px' }}>
-                            <button onClick={leaveGame} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
-                                ← {t.exit}
-                            </button>
-                            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-sec)' }}>
-                                {t.title}: <span style={{ color: 'var(--text-main)' }}>{isCustomBase ? topic : 'Microsoft Word'}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div style={{ padding: '6px 14px', borderRadius: '999px', background: 'var(--bg-panel-sec)', border: '1px solid var(--border)', fontFamily: "monospace", fontSize: '14px', fontWeight: 800 }}>
-                                    <span style={{ color: 'var(--text-main)' }}>{Math.min(currentIndex + 1, tasks.length)}</span>
-                                    <span style={{ color: 'var(--text-sec)', opacity: 0.5, margin: '0 4px' }}>/</span>
-                                    <span style={{ color: 'var(--text-sec)' }}>{tasks.length}</span>
-                                </div>
-                                <LanguageSwitcher lang={lang} onChange={setLang} />
-                            </div>
-                        </header>
-
-                        <div className="ht-practice-layout" style={{ display: 'flex', gap: '40px', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 60px 0' }}>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                                <div style={{ fontSize: '13px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800 }}>
-                                    {t.doCombination}
-                                </div>
+                        <AnimatePresence>
+                            {isCustomBase && !isGenerating && !genError && (
                                 <motion.div
-                                    key={currentIndex}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, scale: successPulse ? 1.03 : 1, y: 0 }}
-                                    style={{ fontSize: '38px', fontWeight: 900, color: successPulse ? '#10B981' : 'var(--text-main)', lineHeight: 1.2, transition: 'color 0.2s' }}
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
+                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    style={{
+                                        fontSize: '13px', color: HK_TOKENS.green, fontWeight: 700, textAlign: 'center',
+                                        background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '11px', padding: '10px'
+                                    }}
                                 >
-                                    «{getDesc(tasks[currentIndex])}»
+                                    ✓ {t.loadedSuccess(topic)}
                                 </motion.div>
+                            )}
+                            {genError && <ErrorBanner key="err">{genError}</ErrorBanner>}
+                        </AnimatePresence>
+                    </div>
 
-                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '10px' }}>
-                                    <KeyCap>Ctrl</KeyCap>
-                                    <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.4 }}>+</div>
-                                    {tasks[currentIndex].shift && (
-                                        <>
-                                            <KeyCap>Shift</KeyCap>
-                                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.4 }}>+</div>
-                                        </>
-                                    )}
-                                    <motion.div
-                                        animate={{ opacity: [0.7, 1, 0.7], boxShadow: ['0 0 10px rgba(56,189,248,0.2)', '0 0 24px rgba(56,189,248,0.5)', '0 0 10px rgba(56,189,248,0.2)'] }}
-                                        transition={{ repeat: Infinity, duration: 1.5 }}
-                                    >
-                                        <KeyCap active glowColor="var(--blue)">?</KeyCap>
-                                    </motion.div>
-                                </div>
-                            </div>
-                            <HotkeyVisual />
+                    <div style={{ width: '100%', maxWidth: '500px', position: 'relative', zIndex: 2 }}>
+                        <GradientButton variant="primary" onClick={openTheory} style={{ width: '100%' }}>
+                            <Icon name="zap" size={18} color="#1a1206" /> {t.startTraining}
+                        </GradientButton>
+                    </div>
+                </GlassPanel>
+            );
+        }
+
+        // === РАЗДЕЛ ТЕОРИИ ===
+        if (phase === 'theory') {
+            return (
+                <GlassPanel
+                    maxWidth="860px"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}
+                >
+                    <header style={{ borderBottom: `1px solid ${HK_TOKENS.border}`, paddingBottom: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                            <motion.button
+                                type="button"
+                                whileHover={{ x: -2 }}
+                                whileTap={{ scale: 0.96 }}
+                                onClick={leaveGame}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
+                                    cursor: 'pointer', color: HK_TOKENS.textSec, fontSize: '14px', fontWeight: 700, padding: '4px 0'
+                                }}
+                            >
+                                <span style={{ fontSize: '17px', lineHeight: 1 }}>←</span> {t.exit}
+                            </motion.button>
+                            <LanguageSwitcher lang={lang} onChange={setLang} />
                         </div>
 
-                        <ProgressKeys total={tasks.length} currentIndex={currentIndex} />
-                    </motion.div>
-                )}
+                        <div style={{ fontSize: '11px', color: HK_TOKENS.textSec, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '10px' }}>
+                            {t.theoryStep}
+                        </div>
+                        <div style={{ width: '100%', height: '6px', borderRadius: '999px', background: HK_TOKENS.border, marginBottom: '18px', overflow: 'hidden' }}>
+                            <div style={{ width: '50%', height: '100%', background: GRADIENT_WARM, borderRadius: '999px' }} />
+                        </div>
 
-                {/* 4. FINISHED PHASE */}
-                {phase === 'practice' && isFinished && (
+                        <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px' }}>
+                            <span style={{ color: HK_TOKENS.text }}>{t.theoryTitle}</span>
+                            {isCustomBase && (
+                                <span style={{
+                                    background: GRADIENT_BLUE, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+                                }}>{`: ${topic}`}</span>
+                            )}
+                        </h2>
+                    </header>
+
+                    <p style={{ fontSize: '14px', color: HK_TOKENS.textSec, fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
+                        {t.theoryDesc}
+                    </p>
+
+                    <div
+                        className="hk-theory-grid hk-scroll"
+                        style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px',
+                            maxHeight: '420px', overflowY: 'auto', paddingRight: '4px'
+                        }}
+                    >
+                        {tasks.map((hk, i) => (
+                            <HotkeyCard key={i} hk={hk} index={i} desc={getDesc(hk)} />
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '14px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <GradientButton muted onClick={leaveGame} style={{ flex: '0 0 150px' }}>
+                            {t.exit}
+                        </GradientButton>
+                        <GradientButton variant="primary" onClick={startGame} style={{ flex: 1 }}>
+                            {t.goToPractice} →
+                        </GradientButton>
+                    </div>
+                </GlassPanel>
+            );
+        }
+
+        if (tasks.length === 0) return null;
+
+        const currentTask = tasks[currentIndex];
+
+        // === ЭКРАН ПРАКТИКИ ===
+        return (
+            <GlassPanel
+                maxWidth="1040px"
+                initial={{ opacity: 0, y: 30 }}
+                animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                transition={shake ? { duration: 0.3 } : { duration: 0.5, ease: "easeOut" }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}
+            >
+                <header style={{
+                    display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '18px',
+                    borderBottom: `1px solid ${HK_TOKENS.border}`, paddingBottom: '18px'
+                }}>
+                    <motion.button
+                        type="button"
+                        whileHover={{ x: -2, opacity: 1 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={leaveGame}
+                        title={t.escToExit}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
+                            cursor: 'pointer', color: HK_TOKENS.textSec, fontSize: '14px', fontWeight: 700,
+                            padding: '8px 6px', opacity: 0.85, justifySelf: 'start'
+                        }}
+                    >
+                        <span style={{ fontSize: '17px', lineHeight: 1 }}>←</span> {t.exit}
+                    </motion.button>
+
+                    <h2 style={{
+                        margin: 0, fontSize: '22px', fontWeight: 900, letterSpacing: '-0.4px', textAlign: 'center', color: HK_TOKENS.text
+                    }}>
+                        {isCustomBase ? `${t.title}: ${topic}` : `${t.title} ⚡`}
+                    </h2>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifySelf: 'end' }}>
+                        <LanguageSwitcher lang={lang} onChange={setLang} />
+                        <div style={{
+                            display: 'flex', alignItems: 'baseline', gap: '6px',
+                            padding: '9px 16px', borderRadius: '999px', background: HK_TOKENS.bg,
+                            border: `1px solid ${HK_TOKENS.border}`, fontFamily: "ui-monospace, monospace"
+                        }}>
+                            <span style={{ fontSize: '15px', fontWeight: 800, color: HK_TOKENS.text }}>{Math.min(currentIndex + 1, tasks.length)}</span>
+                            <span style={{ fontSize: '13px', color: HK_TOKENS.textSec, opacity: 0.5 }}>/</span>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: HK_TOKENS.textSec }}>{tasks.length}</span>
+                        </div>
+                    </div>
+                </header>
+
+                {!isFinished ? (
+                    <div className="hk-practice-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '32px', padding: '8px 0' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+                            <div style={{ fontSize: '12.5px', color: HK_TOKENS.textSec, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800, textAlign: 'center' }}>
+                                {t.doCombination}
+                            </div>
+
+                            <motion.div
+                                key={currentIndex}
+                                initial={{ opacity: 0, scale: 0.85, y: 6 }}
+                                animate={{ opacity: 1, scale: successPulse ? 1.04 : 1, y: 0 }}
+                                transition={{ duration: 0.22 }}
+                                style={{
+                                    fontSize: '32px', fontWeight: 800, textAlign: 'center',
+                                    color: successPulse ? HK_TOKENS.green : HK_TOKENS.text,
+                                    maxWidth: '90%', letterSpacing: '-0.4px', lineHeight: '1.3', transition: 'color 0.2s ease'
+                                }}
+                            >
+                                «{getDesc(currentTask)}»
+                            </motion.div>
+
+                            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                                <KeyCap>Ctrl</KeyCap>
+                                <span style={{ fontSize: '24px', fontWeight: 'bold', color: HK_TOKENS.textSec, opacity: 0.5 }}>+</span>
+
+                                {currentTask.shift && (
+                                    <>
+                                        <KeyCap>Shift</KeyCap>
+                                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: HK_TOKENS.textSec, opacity: 0.5 }}>+</span>
+                                    </>
+                                )}
+
+                                <KeyCap accent="blue" dashed pulse>?</KeyCap>
+                            </div>
+
+                            <ProgressKeys total={tasks.length} currentIndex={currentIndex} />
+                        </div>
+
+                        <HotkeyVisual />
+                    </div>
+                ) : (
                     <motion.div
-                        className="ht-glass-panel"
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        style={{ maxWidth: '600px', padding: '64px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}
+                        transition={{ duration: 0.35 }}
+                        style={{ textAlign: 'center', padding: '44px 0', display: 'flex', flexDirection: 'column', gap: '18px', alignItems: 'center' }}
                     >
                         <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
                             style={{
-                                width: '96px', height: '96px', borderRadius: '50%', background: 'linear-gradient(135deg, #34D399, #10B981)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
-                                boxShadow: '0 20px 40px rgba(16,185,129,0.4), inset 0 2px 4px rgba(255,255,255,0.4)'
+                                width: '76px', height: '76px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: `linear-gradient(135deg, ${HK_TOKENS.green}, #10b981)`,
+                                boxShadow: `0 18px 40px -12px ${HK_TOKENS.green}99, inset 0 1px 1px rgba(255,255,255,0.35)`
                             }}
                         >
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <Icon name="check" size={34} color="#052e1f" strokeWidth={2.6} />
                         </motion.div>
-                        
-                        <div>
-                            <h2 style={{ fontSize: '42px', margin: '0 0 12px 0', fontWeight: 900, color: '#10B981', letterSpacing: '-0.5px' }}>
-                                {t.finishedTitle}
-                            </h2>
-                            <p style={{ fontSize: '18px', color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
-                                {t.finishedDesc(score, tasks.length)}
-                            </p>
-                        </div>
-
-                        <GradientButton variant="primary" onClick={resetGame} style={{ width: '100%', maxWidth: '320px', height: '56px', fontSize: '16px', marginTop: '16px' }}>
+                        <h2 style={{ fontSize: '36px', margin: 0, fontWeight: 900, color: HK_TOKENS.green, letterSpacing: '-0.6px' }}>{t.finishedTitle}</h2>
+                        <p style={{ fontSize: '16px', color: HK_TOKENS.textSec, fontWeight: 600, margin: 0 }}>
+                            {t.finishedDesc(score, tasks.length)}
+                        </p>
+                        <GradientButton variant="primary" onClick={resetGame} style={{ width: '260px', marginTop: '10px' }}>
                             {t.repeat}
                         </GradientButton>
                     </motion.div>
                 )}
-            </div>
+            </GlassPanel>
         );
     };
 
