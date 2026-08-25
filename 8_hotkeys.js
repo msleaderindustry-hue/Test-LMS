@@ -1234,11 +1234,8 @@
                         ))}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '14px', marginTop: '4px', flexWrap: 'wrap' }}>
-                        <GradientButton muted onClick={leaveGame} style={{ flex: '0 0 150px' }}>
-                            {t.exit}
-                        </GradientButton>
-                        <GradientButton variant="primary" onClick={startGame} style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px', width: '100%' }}>
+                        <GradientButton variant="primary" onClick={startGame} style={{ width: '100%', maxWidth: '500px' }}>
                             {t.goToPractice} →
                         </GradientButton>
                     </div>
