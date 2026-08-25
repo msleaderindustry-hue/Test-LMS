@@ -236,6 +236,60 @@
     const LANGS = ["ru", "en", "uz"];
     const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
 
+    // === Иконки карточек теории ===
+    // Каждому descKey сопоставлена короткая пиктограмма (эмодзи или буква).
+    // Для кастомных ИИ-баз (без descKey) используется первая буква "key".
+    const HOTKEY_ICONS = {
+        alignRight: "➡️",
+        alignLeft: "⬅️",
+        undo: "↩️",
+        cut: "✂️",
+        alignCenter: "↔️",
+        selectAll: "A",
+        italic: "I",
+        print: "🖨️",
+        underline: "U",
+        save: "💾",
+        copy: "📄",
+        paste: "📋",
+        openFile: "📂",
+        closeDoc: "✖️",
+        find: "🔍",
+        findReplace: "🔁",
+        redo: "↪️",
+        hyperlink: "🔗",
+        fontSmaller: "A−",
+        fontBigger: "A+",
+        doubleUnderline: "U",
+        allCaps: "AA",
+        underlineWords: "W",
+        newTab: "🗂️",
+        newFile: "📄",
+        bold: "B"
+    };
+
+    // Палитра цветов для иконок — циклически применяется по индексу карточки,
+    // чтобы список выглядел живо и разнообразно, как на макете.
+    const ICON_PALETTE = [
+        { bg: 'rgba(139,92,246,0.15)', fg: '#a78bfa' },  // фиолетовый
+        { bg: 'rgba(20,184,166,0.16)', fg: '#2dd4bf' },  // бирюзовый
+        { bg: 'rgba(16,185,129,0.16)', fg: '#34d399' },  // изумрудный
+        { bg: 'rgba(244,63,94,0.15)',  fg: '#fb7185' },  // розовый
+        { bg: 'rgba(249,115,22,0.16)', fg: '#fb923c' },  // оранжевый
+        { bg: 'rgba(34,197,94,0.16)',  fg: '#4ade80' },  // зелёный
+        { bg: 'rgba(14,165,233,0.16)', fg: '#38bdf8' },  // голубой
+        { bg: 'rgba(168,85,247,0.16)', fg: '#c084fc' }   // сиреневый
+    ];
+
+    // Возвращает {icon, bg, fg, isLetter} для карточки теории по её позиции в списке.
+    // Чистая функция без замыканий — вынесена за пределы компонента.
+    const getHotkeyIconMeta = (hk, index) => {
+        const palette = ICON_PALETTE[index % ICON_PALETTE.length];
+        const rawIcon = hk.descKey ? (HOTKEY_ICONS[hk.descKey] ?? hk.key.toUpperCase()) : hk.key.toUpperCase();
+        const isLetter = /^[A-Za-zА-Яа-я+\-]{1,3}$/.test(rawIcon);
+        return { icon: rawIcon, bg: palette.bg, fg: palette.fg, isLetter };
+    };
+
     // Общий стиль "физической" клавиши — вынесен за пределы компонента:
     // это чистая функция без замыканий, пересоздавать её на каждый рендер незачем.
     const keycapStyle = (accent, muted) => ({
@@ -701,8 +755,18 @@
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
                             <LanguageSwitcher lang={lang} onChange={setLang} />
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '6px' }}>
-                            {t.theoryStep}
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            gap: '16px', marginBottom: '6px', flexWrap: 'wrap'
+                        }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px' }}>
+                                {t.theoryStep}
+                            </div>
+                            {/* Шаговый индикатор: теория -> практика, вместо простого текста */}
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <div style={{ width: '34px', height: '6px', borderRadius: '3px', background: 'linear-gradient(120deg, #8b5cf6, #6d28d9)', boxShadow: '0 0 8px rgba(139,92,246,0.5)' }} />
+                                <div style={{ width: '34px', height: '6px', borderRadius: '3px', background: 'var(--glass-border)' }} />
+                            </div>
                         </div>
                         <h2 style={{
                             margin: 0, fontSize: '27px', fontWeight: 900, letterSpacing: '-0.5px',
@@ -721,31 +785,45 @@
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px',
                         maxHeight: '420px', overflowY: 'auto', paddingRight: '4px'
                     }}>
-                        {tasks.map((hk, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}
-                                style={{
-                                    display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px',
-                                    background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '14px'
-                                }}
-                            >
-                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', lineHeight: '1.4' }}>
-                                    {getDesc(hk)}
-                                </div>
-                                <div style={{
-                                    alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '8px',
-                                    background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)',
-                                    border: '1px solid var(--glass-border)', borderBottom: '2px solid var(--glass-border)',
-                                    fontSize: '13px', fontWeight: '800', fontFamily: "ui-monospace, monospace",
-                                    color: 'var(--accent-glow, #0ea5e9)', letterSpacing: '0.2px'
-                                }}>
-                                    {hk.visual}
-                                </div>
-                            </motion.div>
-                        ))}
+                        {tasks.map((hk, i) => {
+                            const iconMeta = getHotkeyIconMeta(hk, i);
+                            return (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}
+                                    style={{
+                                        display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '14px', padding: '16px',
+                                        background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '14px'
+                                    }}
+                                >
+                                    <div style={{
+                                        width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        background: iconMeta.bg, color: iconMeta.fg,
+                                        fontSize: iconMeta.isLetter ? '17px' : '19px', fontWeight: 800,
+                                        letterSpacing: '-0.2px'
+                                    }}>
+                                        {iconMeta.icon}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+                                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', lineHeight: '1.4' }}>
+                                            {getDesc(hk)}
+                                        </div>
+                                        <div style={{
+                                            alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '8px',
+                                            background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)',
+                                            border: '1px solid var(--glass-border)', borderBottom: '2px solid var(--glass-border)',
+                                            fontSize: '13px', fontWeight: '800', fontFamily: "ui-monospace, monospace",
+                                            color: 'var(--accent-glow, #0ea5e9)', letterSpacing: '0.2px'
+                                        }}>
+                                            {hk.visual}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
 
                     <div style={{ display: 'flex', gap: '14px', marginTop: '4px' }}>
