@@ -234,7 +234,6 @@
         }
     };
 
-    // Название языка для промпта, отправляемого ИИ (чтобы описания приходили на нужном языке)
     const AI_LANG_HINT = {
         ru: "русском",
         en: "английском (English)",
@@ -245,15 +244,15 @@
     const LANG_LABEL = { ru: "РУС", en: "ENG", uz: "ЎЗБ" };
 
     // ==========================================================================
-    // ДИЗАЙН-ТОКЕНЫ НОВОЙ ВИЗУАЛЬНОЙ СИСТЕМЫ
-    // Названы с префиксом HK_, чтобы не пересекаться ни с чем глобальным на
-    // странице (см. предупреждение про общий глобальный контекст выше).
+    // ДИЗАЙН-ТОКЕНЫ С ПОДДЕРЖКОЙ ТЕМ (LIGHT/DARK)
+    // Теперь токены обращаются к переменным вашей LMS, поэтому при смене темы 
+    // цвета плавно переключаются. Неоновые акцентные цвета остаются постоянными.
     // ==========================================================================
     const HK_TOKENS = {
-        bg: '#0B1020',
-        bgAlt: '#111729',
-        panel: '#151B2E',
-        panelSecondary: '#101629',
+        bg: 'var(--bg-body, #0B1020)',
+        bgAlt: 'var(--bg-body, #111729)',
+        panel: 'var(--bg-panel, #151B2E)',
+        panelSecondary: 'var(--bg-body, #101629)',
         purple: '#8B5CF6',
         purpleDark: '#6D28D9',
         yellow: '#F6D365',
@@ -262,20 +261,15 @@
         green: '#34D399',
         pink: '#F472B6',
         cyan: '#22D3EE',
-        text: '#F8FAFC',
-        textSec: '#94A3B8',
-        border: 'rgba(148,163,184,0.16)'
+        text: 'var(--text-main, #F8FAFC)',
+        textSec: 'var(--text-sec, #94A3B8)',
+        border: 'var(--glass-border, rgba(148,163,184,0.16))'
     };
 
     const GRADIENT_WARM = `linear-gradient(135deg, ${HK_TOKENS.yellow} 0%, ${HK_TOKENS.orange} 100%)`;
     const GRADIENT_PURPLE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.purpleDark} 100%)`;
     const GRADIENT_BLUE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.blue} 100%)`;
 
-    // Единожды инжектируем небольшой <style> блок — он нужен только там, где
-    // инлайн-стили физически не могут справиться: кастомный скроллбар,
-    // @keyframes плавающей анимации и media query для мобильной раскладки.
-    // Все правила жёстко заскоуплены классом .hk-scope, поэтому конфликтов
-    // с остальной страницей / другими тренажёрами не будет.
     let hkStylesInjected = false;
     const injectHkStyles = () => {
         if (hkStylesInjected || typeof document === 'undefined') return;
@@ -283,7 +277,6 @@
         const style = document.createElement('style');
         style.id = 'hk-trainer-styles';
         style.textContent = `
-            .hk-scope { color-scheme: dark; }
             .hk-scroll::-webkit-scrollbar { width: 5px; }
             .hk-scroll::-webkit-scrollbar-track { background: transparent; }
             .hk-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.5); border-radius: 999px; }
@@ -304,10 +297,6 @@
         hkStylesInjected = true;
     };
 
-    // -------------------------------------------------------------------
-    // Иконки — простые инлайн SVG (без внешних зависимостей и без emoji),
-    // чтобы не тянуть в проект новую библиотеку ради редизайна.
-    // -------------------------------------------------------------------
     const ICON_PATHS = {
         undo: <path d="M4 10h9a5 5 0 1 1 0 10h-3M4 10l4-4M4 10l4 4" />,
         redo: <path d="M20 10h-9a5 5 0 1 0 0 10h3M20 10l-4-4M20 10l-4 4" />,
@@ -431,9 +420,6 @@
 
     const hkColorValue = (name) => HK_TOKENS[name] || HK_TOKENS.purple;
 
-    // Определяет иконку + цвет для карточки. Для штатной базы — по словарю
-    // выше (descKey), для AI-сгенерированной — детерминированно по индексу,
-    // чтобы карточки не мигали разными цветами при каждом ре-рендере.
     const getHotkeyVisualMeta = (hk, index) => {
         if (hk.descKey && HK_ICON_META[hk.descKey]) return HK_ICON_META[hk.descKey];
         const color = HK_COLOR_CYCLE[index % HK_COLOR_CYCLE.length];
@@ -452,9 +438,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // AppLogo — [⚡] Хоткеи [AI POWERED]
-    // -------------------------------------------------------------------
     const AppLogo = ({ title, badge }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <motion.div
@@ -486,9 +469,6 @@
         </div>
     );
 
-    // -------------------------------------------------------------------
-    // GlassPanel — общий контейнер для крупных экранов
-    // -------------------------------------------------------------------
     const GlassPanel = React.forwardRef(({ children, style, maxWidth = '820px', className = '', ...rest }, ref) => (
         <motion.div
             ref={ref}
@@ -498,7 +478,7 @@
                 background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.panelSecondary} 100%)`,
                 border: `1px solid ${HK_TOKENS.border}`,
                 borderRadius: '24px',
-                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
+                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)',
                 padding: '40px 32px',
                 color: HK_TOKENS.text,
                 ...style
@@ -509,9 +489,6 @@
         </motion.div>
     ));
 
-    // -------------------------------------------------------------------
-    // GradientButton — primary (жёлто-оранжевый) / secondary (фиолетовый)
-    // -------------------------------------------------------------------
     const GradientButton = ({ variant = 'primary', children, onClick, disabled, type = 'button', style, title, muted }) => {
         const background =
             muted ? 'transparent'
@@ -544,14 +521,11 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // LanguageSwitcher — тот же компонент, только переоформлен под тёмную тему
-    // -------------------------------------------------------------------
     const LanguageSwitcher = ({ lang, onChange, style }) => (
         <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => {
                 const meta = UI_TRANSLATIONS[code];
-                if (!meta) return null; // защита: не падать, даже если языка нет в словаре
+                if (!meta) return null;
                 const active = lang === code;
                 return (
                     <motion.button
@@ -582,9 +556,6 @@
         </div>
     );
 
-    // -------------------------------------------------------------------
-    // KeyCap — переиспользуемая "физическая" клавиша
-    // -------------------------------------------------------------------
     const KeyCap = ({ children, accent, compact, dashed, pulse }) => {
         const accentColor = accent ? hkColorValue(accent) : null;
         const base = {
@@ -621,7 +592,6 @@
         );
     };
 
-    // Компактный ряд клавиш из строки вида "Ctrl + Shift + D"
     const KeyCombo = ({ visual, compact = true }) => {
         const parts = String(visual || '').split('+').map((p) => p.trim()).filter(Boolean);
         return (
@@ -636,9 +606,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // HotkeyIcon — цветной квадрат с иконкой
-    // -------------------------------------------------------------------
     const HotkeyIcon = ({ icon, color }) => {
         const c = hkColorValue(color);
         return (
@@ -652,9 +619,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // HotkeyCard — карточка теории
-    // -------------------------------------------------------------------
     const HotkeyCard = ({ hk, index, desc }) => {
         const meta = getHotkeyVisualMeta(hk, index);
         return (
@@ -679,9 +643,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // ProgramSelector — комбобокс, который плавно раздвигает контент вниз
-    // -------------------------------------------------------------------
     const PROGRAM_SUGGESTIONS = [
         { name: 'Microsoft Word', letter: 'W', color: '#2B579A' },
         { name: 'Excel', letter: 'E', color: '#217346' },
@@ -764,8 +725,8 @@
                             <div
                                 className="hk-scroll"
                                 style={{
-                                    background: '#0B1020',
-                                    border: `1px solid rgba(139, 92, 246, 0.4)`,
+                                    background: HK_TOKENS.panel,
+                                    border: `1px solid ${HK_TOKENS.border}`,
                                     borderRadius: '14px',
                                     padding: '6px',
                                     maxHeight: '185px',
@@ -780,7 +741,7 @@
                                             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
                                             borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: HK_TOKENS.text
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.18)'}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border, rgba(148,163,184,0.1))'}
                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                     >
                                         <div style={{
@@ -800,10 +761,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // HotkeyVisual — декоративная "3D" клавиша с молнией (не WebGL,
-    // просто transform + gradient + glow, как и просили в ТЗ)
-    // -------------------------------------------------------------------
     const HotkeyVisual = () => (
         <div className="hk-visual-side" style={{ position: 'relative', width: '150px', height: '150px', flexShrink: 0 }}>
             <div style={{
@@ -837,9 +794,6 @@
         </div>
     );
 
-    // -------------------------------------------------------------------
-    // ProgressKeys (бывший KeyRow) — ряд "клавиш"-индикаторов прогресса
-    // -------------------------------------------------------------------
     const ProgressKeys = ({ total, currentIndex }) => (
         <div style={{ display: 'flex', gap: '6px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
             {Array.from({ length: total }).map((_, i) => {
@@ -862,9 +816,6 @@
         </div>
     );
 
-    // -------------------------------------------------------------------
-    // ErrorBanner — инлайн-баннер ошибки вместо блокирующего window.alert()
-    // -------------------------------------------------------------------
     const ErrorBanner = ({ children }) => (
         <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -890,7 +841,6 @@
         const [shake, setShake] = useState(false);
         const [successPulse, setSuccessPulse] = useState(false);
         const [isFinished, setIsFinished] = useState(false);
-        // 'setup' — экран настройки, 'theory' — раздел теории, 'practice' — тренировка
         const [phase, setPhase] = useState('setup');
 
         const [lang, setLang] = useState('ru');
@@ -902,13 +852,9 @@
         const [isCustomBase, setIsCustomBase] = useState(false);
         const [genError, setGenError] = useState(null);
 
-        // Отменяем "зависший" запрос к ИИ, если компонент размонтировали
-        // посреди генерации (например, юзер вышел из тренажёра).
         const abortRef = useRef(null);
         useEffect(() => () => abortRef.current?.abort(), []);
 
-        // Достаёт локализованное описание хоткея независимо от того,
-        // штатная это база (descKey) или сгенерированная ИИ (desc уже готовой строкой)
         const getDesc = (hk) => {
             if (hk.descKey) {
                 return HOTKEY_DESC_TRANSLATIONS[lang]?.[hk.descKey]
@@ -970,8 +916,6 @@
                 const parsed = JSON.parse(jsonMatch[0]);
                 if (!Array.isArray(parsed)) throw new Error("Not an array");
 
-                // Валидируем и отбрасываем битые записи, а не роняем весь тренажёр
-                // из-за одного кривого объекта в ответе ИИ.
                 const validated = parsed
                     .filter(hk => hk && typeof hk.key === 'string' && hk.key.trim().length > 0 && typeof hk.desc === 'string')
                     .map(hk => ({
@@ -996,7 +940,6 @@
             }
         };
 
-        // Формирует набор заданий и переходит в раздел теории (перед практикой)
         const openTheory = () => {
             setTasks(shuffleArray([...activeHotkeys]).slice(0, Math.min(10, activeHotkeys.length)));
             setCurrentIndex(0);
@@ -1007,7 +950,6 @@
 
         const startGame = () => setPhase('practice');
 
-        // Повтор: новый набор заданий, сразу в практику, без теории
         const resetGame = () => {
             setTasks(shuffleArray([...activeHotkeys]).slice(0, Math.min(10, activeHotkeys.length)));
             setCurrentIndex(0);
@@ -1052,8 +994,6 @@
                 const isShiftPressed = e.shiftKey;
                 const pressedKey = e.key.toLowerCase();
                 const expectedKey = currentTask.key.toLowerCase();
-                // При зажатом Shift браузер может прислать не саму цифру/символ, а её
-                // "сдвинутую" версию (например "!" вместо "1") — проверяем обе формы.
                 const expectedShiftedKey = SHIFT_SYMBOL_MAP[expectedKey] || expectedKey;
                 const keyMatches = pressedKey === expectedKey || pressedKey === expectedShiftedKey;
 
@@ -1075,7 +1015,6 @@
 
             window.addEventListener("keydown", handleKeyDown, { passive: false });
             return () => window.removeEventListener("keydown", handleKeyDown);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [currentIndex, tasks, isFinished, phase]);
 
         // === СТАРТОВЫЙ ЭКРАН ===
