@@ -1,12 +1,13 @@
 /**
  * ExcelTrainerLMS
  * ---------------------------------------------------------------------------
- * Логика строго сохранена. Визуальная структура и стили переписаны
- * для точного соответствия предоставленному эталонному макету (Dark Navy).
+ * ВАЖНО: Бизнес-логика, структура состояний, Firebase, ИИ-генерация и проверка 
+ * ответов СТРОГО СОХРАНЕНЫ. Произведен глубокий редизайн интерфейса 
+ * в стиле современной LMS-платформы (Glassmorphism, Navy/Purple/Cyan).
  * ---------------------------------------------------------------------------
  */
 (function () {
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
     const { motion, AnimatePresence } = window.Motion;
     const { Button } = window;
 
@@ -24,50 +25,49 @@
     const UI_DICT = {
         ru: {
             title: "Энциклопедия Excel", subtitle: "Умный тренажер функций с ИИ",
-            magic: "МАГИЯ ИИ", search: "Поиск функции (напр. ВПР)...",
+            magic: "Магия ИИ", search: "Поиск функции (напр. ВПР)...",
             genLoading: "Создаем магию...", genBtn: "Сгенерировать урок",
             aiTitle: "Готовим материалы для", aiSub: "ИИ пишет уникальную задачу и таблицу",
-            theory: "ТЕОРИЯ", defTitle: "ОПРЕДЕЛЕНИЕ", enVersion: "Английская версия:",
-            syntaxTitle: "ПРИМЕРЫ СИНТАКСИСА", practice: "ПРАКТИКА",
+            theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
+            syntaxTitle: "Примеры синтаксиса", practice: "Практика",
             successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
-            btnAnother: "🔄 ДРУГАЯ ЗАДАЧА", btnHint: "💡 ПОДСКАЗКА", btnExam: "🔒 ЭКЗАМЕН", btnCheck: "✓ ПРОВЕРИТЬ"
+            btnAnother: "🔄 Другая задача", btnHint: "💡 Подсказка", btnExam: "🔒 Экзамен", btnCheck: "✓ Проверить"
         },
         en: {
             title: "Excel Encyclopedia", subtitle: "Smart AI function trainer",
-            magic: "AI MAGIC", search: "Search function (e.g. VLOOKUP)...",
+            magic: "AI Magic", search: "Search function (e.g. VLOOKUP)...",
             genLoading: "Creating magic...", genBtn: "Generate lesson",
             aiTitle: "Preparing materials for", aiSub: "AI is writing a unique task and table",
-            theory: "THEORY", defTitle: "DEFINITION", enVersion: "English version:",
-            syntaxTitle: "SYNTAX EXAMPLES", practice: "PRACTICE",
+            theory: "Theory", defTitle: "Definition", enVersion: "English version:",
+            syntaxTitle: "Syntax examples", practice: "Practice",
             successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
-            btnAnother: "🔄 ANOTHER TASK", btnHint: "💡 HINT", btnExam: "🔒 EXAM", btnCheck: "✓ CHECK"
+            btnAnother: "🔄 Another task", btnHint: "💡 Hint", btnExam: "🔒 Exam", btnCheck: "✓ Check"
         },
         uz: {
             title: "Excel Энциклопедияси", subtitle: "ИИ ёрдамида ақлли функция тренажёри",
-            magic: "ИИ СЕҲРИ", search: "Функцияни қидириш (мас. ВПР)...",
+            magic: "ИИ Сеҳри", search: "Функцияни қидириш (мас. ВПР)...",
             genLoading: "Сеҳр яратилмоқда...", genBtn: "Дарсни яратиш",
             aiTitle: "Материаллар тайёрланмоқда:", aiSub: "ИИ ноёб вазифа ва жадвал ёзмоқда",
-            theory: "НАЗАРИЯ", defTitle: "ТАЪРИФ", enVersion: "Инглизча версияси:",
-            syntaxTitle: "СИНТАКСИС МИСОЛЛАРИ", practice: "АМАЛИЁТ",
+            theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
+            syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
             successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
-            btnAnother: "🔄 БОШҚА ВАЗИФА", btnHint: "💡 ЁРДАМ", btnExam: "🔒 ИМТИҲОН", btnCheck: "✓ ТЕКШИРИШ"
+            btnAnother: "🔄 Бошқа вазифа", btnHint: "💡 Ёрдам", btnExam: "🔒 Имтиҳон", btnCheck: "✓ Текшириш"
         }
     };
 
-    // Цветовая палитра под новый дизайн
-    const COLORS = {
-        bgApp: '#141827',
-        bgPanel: '#0F1524',
-        bgCard: '#151C30',
-        bgElement: '#1B233A',
-        bgInput: '#0E1322',
-        border: 'rgba(255,255,255,0.08)',
-        text: '#F8FAFC',
-        textMuted: '#94A3B8',
-        cyan: '#38BDF8',
-        blue: '#3B82F6',
-        green: '#10B981',
-        purple: '#8B5CF6'
+    // ТОКЕНЫ ДИЗАЙН-СИСТЕМЫ (Поддержка системной темы + глубокие цвета)
+    const EX_TOKENS = {
+        bg: 'var(--bg-body, #050816)',
+        panel: 'var(--bg-panel, #0D1328)',
+        card: 'var(--bg-card, #111936)',
+        purple: '#8b5cf6',
+        blue: '#3b82f6',
+        cyan: '#22d3ee',
+        green: '#10b981',
+        red: '#ef4444',
+        text: 'var(--text-main, #f8fafc)',
+        textSec: 'var(--text-sec, #94a3b8)',
+        border: 'var(--glass-border, rgba(255,255,255,0.08))'
     };
 
     const injectStyles = () => {
@@ -75,17 +75,14 @@
         const style = document.createElement('style');
         style.id = 'excel-lms-styles';
         style.textContent = `
-            .ex-app-wrapper * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-            .ex-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+            .ex-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
             .ex-scroll::-webkit-scrollbar-track { background: transparent; }
-            .ex-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-            .ex-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02)); background-size: 200% 100%; animation: exShimmer 1.5s infinite; }
+            .ex-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 10px; }
+            .ex-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); background-size: 200% 100%; animation: exShimmer 1.5s infinite; }
             @keyframes exShimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-            .ex-sidebar-item { transition: all 0.2s; }
-            .ex-sidebar-item:hover { background: rgba(255,255,255,0.05) !important; }
             @media (max-width: 900px) {
-                .ex-main-layout { flex-direction: column !important; }
-                .ex-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid ${COLORS.border}; }
+                .ex-layout { flex-direction: column !important; }
+                .ex-sidebar { width: 100% !important; max-height: none !important; }
             }
         `;
         document.head.appendChild(style);
@@ -97,6 +94,8 @@
         const categories = Object.keys(EXCEL_DATABASE);
         const [activeCategory, setActiveCategory] = useState(categories[0]);
         const [activeFormulaName, setActiveFormulaName] = useState(EXCEL_DATABASE[categories[0]][0]);
+        
+        // UI Состояние для аккордеона категорий (По умолчанию открыта первая)
         const [openCategories, setOpenCategories] = useState({ [categories[0]]: true });
 
         const [currentLesson, setCurrentLesson] = useState(null);
@@ -105,11 +104,15 @@
         const [showSuccess, setShowSuccess] = useState(false);
         const [customSearch, setCustomSearch] = useState("");
         const [isGenerating, setIsGenerating] = useState(false);
-        const [genError, setGenError] = useState(null);
+        const [genError, setGenError] = useState(null); // Новое состояние для ошибок AI
 
+        // СОСТОЯНИЕ ЯЗЫКА ПЕРЕВОДА
         const [lang, setLang] = useState('ru');
+
+        // СТЕЙТ ДЛЯ РЕЖИМА ЭКЗАМЕНА
         const [hintsEnabled, setHintsEnabled] = useState(true);
 
+        // СЛУШАЕМ БАЗУ ДАННЫХ
         useEffect(() => {
             const uid = window.auth?.currentUser?.uid;
             if (!uid || !window.db) return;
@@ -150,6 +153,7 @@
             ];
             const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
+            // ПРОМПТ С УЛУЧШЕНИЯМИ ОТ CHATGPT (добавлены xp, difficulty и строгие правила)
             const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
             Пользователь выбрал функцию: "${formulaName}".
             Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -263,19 +267,18 @@
         };
 
         return (
-            <div className="ex-app-wrapper" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', background: COLORS.bgPanel, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${COLORS.border}`, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '1400px', display: 'flex', flexDirection: 'column', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', border: `1px solid ${EX_TOKENS.border}` }}>
                 {/* HEADER */}
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 30px', borderBottom: `1px solid ${COLORS.border}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '42px', height: '42px', background: `linear-gradient(135deg, #38BDF8 0%, #0284C7 100%)`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', boxShadow: `0 4px 15px rgba(56, 189, 248, 0.4)` }}>📊</div>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: EX_TOKENS.panel, padding: '24px 32px', borderBottom: `1px solid ${EX_TOKENS.border}`, flexWrap: 'wrap', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '52px', height: '52px', background: `linear-gradient(135deg, ${EX_TOKENS.cyan} 0%, ${EX_TOKENS.blue} 100%)`, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: `0 8px 24px ${EX_TOKENS.blue}55` }}>📊</div>
                         <div>
-                            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: COLORS.text, letterSpacing: '-0.5px' }}>{UI_DICT[lang].title}</h2>
-                            <div style={{ fontSize: '12px', color: COLORS.textMuted, fontWeight: 500, marginTop: '2px' }}>{UI_DICT[lang].subtitle}</div>
+                            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: EX_TOKENS.text, letterSpacing: '-0.5px' }}>{UI_DICT[lang].title}</h2>
+                            <div style={{ fontSize: '13px', color: EX_TOKENS.textSec, fontWeight: 600, marginTop: '2px' }}>{UI_DICT[lang].subtitle}</div>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px', border: `1px solid ${COLORS.border}` }}>
+                    <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.15)', padding: '6px', borderRadius: '16px', border: `1px solid ${EX_TOKENS.border}` }}>
                         {[ { id: 'ru', label: 'RU' }, { id: 'en', label: 'EN' }, { id: 'uz', label: 'UZ' } ].map(item => {
                             const isActive = lang === item.id;
                             return (
@@ -283,11 +286,14 @@
                                     key={item.id}
                                     onClick={() => setLang(item.id)}
                                     style={{
-                                        padding: '6px 14px', borderRadius: '8px',
-                                        background: isActive ? `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.blue})` : 'transparent',
-                                        border: 'none', color: isActive ? '#fff' : COLORS.textMuted,
-                                        fontWeight: 800, fontSize: '11px', cursor: 'pointer', outline: 'none',
-                                        transition: 'all 0.2s', boxShadow: isActive ? `0 4px 10px rgba(139, 92, 246, 0.4)` : 'none'
+                                        padding: '8px 16px', 
+                                        borderRadius: '12px',
+                                        background: isActive ? `linear-gradient(135deg, ${EX_TOKENS.purple}, ${EX_TOKENS.blue})` : 'transparent',
+                                        border: 'none',
+                                        color: isActive ? '#ffffff' : EX_TOKENS.textSec,
+                                        fontWeight: 800, fontSize: '13px', cursor: 'pointer', outline: 'none',
+                                        boxShadow: isActive ? `0 4px 14px ${EX_TOKENS.purple}66` : 'none',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
                                     {item.label}
@@ -298,51 +304,50 @@
                 </header>
 
                 {/* MAIN LAYOUT */}
-                <div className="ex-main-layout" style={{ display: 'flex', alignItems: 'stretch' }}>
+                <div className="ex-layout" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                     
-                    {/* СИДБАР (ЛЕВАЯ КОЛОНКА) */}
-                    <div className="ex-sidebar ex-scroll" style={{ width: '340px', padding: '24px', borderRight: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '800px', overflowY: 'auto' }}>
+                    {/* SIDEBAR */}
+                    <div className="ex-sidebar ex-scroll" style={{ width: '320px', display: 'flex', flexDirection: 'column', padding: '24px', borderRight: `1px solid ${EX_TOKENS.border}`, background: EX_TOKENS.panelSecondary, maxHeight: '800px', overflowY: 'auto' }}>
                         
-                        {/* Магия ИИ */}
-                        <div style={{ background: COLORS.bgElement, border: `1px solid ${COLORS.border}`, padding: '16px', borderRadius: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '14px' }}>✨</span>
-                                <span style={{ fontSize: '11px', fontWeight: 800, color: COLORS.text, letterSpacing: '0.5px' }}>{UI_DICT[lang].magic}</span>
+                        {/* МАГИЯ ИИ */}
+                        <div style={{ background: EX_TOKENS.card, border: `1px solid ${EX_TOKENS.border}`, padding: '20px', borderRadius: '20px', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', position: 'relative', zIndex: 2 }}>
+                                <span style={{ fontSize: '18px' }}>✨</span>
+                                <span style={{ fontSize: '12px', fontWeight: 800, color: EX_TOKENS.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{UI_DICT[lang].magic}</span>
                             </div>
                             <input
                                 type="text"
                                 value={customSearch}
                                 onChange={(e) => setCustomSearch(e.target.value)}
                                 placeholder={UI_DICT[lang].search}
-                                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${COLORS.border}`, background: COLORS.bgInput, color: COLORS.text, marginBottom: '12px', fontSize: '13px', outline: 'none' }}
+                                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: `1px solid ${EX_TOKENS.border}`, background: 'rgba(0,0,0,0.1)', color: EX_TOKENS.text, marginBottom: '12px', fontSize: '14px', outline: 'none', position: 'relative', zIndex: 2 }}
                             />
                             <button 
                                 onClick={handleCustomSearch} 
                                 disabled={isGenerating} 
-                                style={{ width: '100%', height: '38px', borderRadius: '8px', background: COLORS.cyan, border: 'none', color: '#000', fontWeight: 800, fontSize: '12px', cursor: isGenerating ? 'wait' : 'pointer' }}
+                                style={{ width: '100%', height: '44px', fontSize: '13px', borderRadius: '12px', fontWeight: 800, border: 'none', background: `linear-gradient(135deg, ${EX_TOKENS.cyan}, ${EX_TOKENS.blue})`, color: '#000', cursor: isGenerating ? 'wait' : 'pointer', position: 'relative', zIndex: 2, boxShadow: `0 6px 16px ${EX_TOKENS.blue}44` }}
                             >
                                 {isGenerating ? UI_DICT[lang].genLoading : UI_DICT[lang].genBtn}
                             </button>
                         </div>
 
-                        {/* Аккордеон категорий */}
+                        {/* АККОРДЕОН КАТЕГОРИЙ */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {categories.map(category => {
                                 const isOpen = openCategories[category];
                                 return (
                                     <div key={category}>
                                         <div 
-                                            className="ex-sidebar-item"
                                             onClick={() => toggleCategory(category)}
-                                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: COLORS.bgElement, borderRadius: '8px', cursor: 'pointer', border: `1px solid ${COLORS.border}` }}
+                                            style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', cursor: 'pointer', fontWeight: 800, color: EX_TOKENS.textSec, textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px', border: `1px solid ${EX_TOKENS.border}` }}
                                         >
-                                            <span style={{ fontSize: '11px', fontWeight: 800, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{category}</span>
-                                            <span style={{ fontSize: '10px', color: COLORS.textMuted }}>{isOpen ? '▼' : '▶'}</span>
+                                            <span>{category}</span>
+                                            <span>{isOpen ? '▼' : '▶'}</span>
                                         </div>
                                         <AnimatePresence>
                                             {isOpen && (
-                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px 0' }}>
+                                                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px 4px' }}>
                                                         {EXCEL_DATABASE[category].map(fName => {
                                                             const isActive = activeFormulaName === fName;
                                                             return (
@@ -351,15 +356,15 @@
                                                                     onClick={() => { setActiveCategory(category); setActiveFormulaName(fName); }}
                                                                     disabled={isGenerating}
                                                                     style={{
-                                                                        textAlign: 'left', padding: '10px 16px', borderRadius: '6px',
-                                                                        background: isActive ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-                                                                        border: 'none', color: isActive ? COLORS.cyan : COLORS.text,
-                                                                        fontWeight: isActive ? 700 : 500, fontSize: '13px', cursor: isGenerating ? 'wait' : 'pointer',
-                                                                        borderLeft: isActive ? `3px solid ${COLORS.cyan}` : '3px solid transparent',
-                                                                        transition: 'all 0.2s', outline: 'none'
+                                                                        padding: '8px 16px', borderRadius: '20px', border: isActive ? 'none' : `1px solid ${EX_TOKENS.border}`,
+                                                                        background: isActive ? `linear-gradient(135deg, ${EX_TOKENS.purple}, ${EX_TOKENS.blue})` : 'rgba(255,255,255,0.02)',
+                                                                        color: isActive ? '#ffffff' : EX_TOKENS.text, fontWeight: isActive ? 700 : 600,
+                                                                        cursor: isGenerating ? 'wait' : 'pointer', outline: 'none', fontSize: '12px',
+                                                                        boxShadow: isActive ? `0 4px 12px ${EX_TOKENS.purple}66` : 'none',
+                                                                        opacity: (isGenerating && !isActive) ? 0.5 : 1
                                                                     }}
                                                                 >
-                                                                    {fName}
+                                                                    <span style={{opacity: 0.6, marginRight: '4px'}}>ƒx</span> {fName}
                                                                 </button>
                                                             );
                                                         })}
@@ -373,71 +378,72 @@
                         </div>
                     </div>
 
-                    {/* КОНТЕНТ (ПРАВАЯ КОЛОНКА) */}
-                    <div className="ex-scroll" style={{ flex: 1, padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px', maxHeight: '800px', overflowY: 'auto' }}>
-                        
+                    {/* CONTENT AREA */}
+                    <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '24px', padding: '32px' }}>
                         {isGenerating || !currentLesson ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-                                <div className="ex-shimmer" style={{ height: '220px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }} />
-                                <div className="ex-shimmer" style={{ height: '400px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', height: '100%', justifyContent: 'center' }}>
+                                <div style={{ fontSize: '20px', color: EX_TOKENS.cyan, display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800 }}>
+                                    <span style={{animation: 'pulse-glow 1.5s infinite'}}>✨</span> {UI_DICT[lang].genLoading}
+                                </div>
+                                <div className="ex-shimmer" style={{ height: '180px', borderRadius: '20px', border: `1px solid ${EX_TOKENS.border}` }} />
+                                <div className="ex-shimmer" style={{ height: '350px', borderRadius: '20px', border: `1px solid ${EX_TOKENS.border}` }} />
                             </div>
                         ) : genError ? (
-                            <div style={{ background: 'rgba(239,68,68,0.05)', border: `1px solid ${COLORS.red}`, padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
-                                <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</div>
-                                <h3 style={{ color: COLORS.red, margin: '0 0 10px 0', fontSize: '20px' }}>{genError}</h3>
-                                <Button onClick={() => generateAIFormula(activeFormulaName)} style={{ marginTop: '15px', background: COLORS.red, color: '#fff', border: 'none' }}>Повторить попытку</Button>
+                            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '40px', borderRadius: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                                <div style={{ fontSize: '48px', marginBottom: '15px' }}>⚠️</div>
+                                <h3 style={{ color: EX_TOKENS.red, margin: '0 0 10px 0', fontSize: '22px' }}>{genError}</h3>
+                                <p style={{ color: EX_TOKENS.textSec, marginBottom: '24px' }}>Произошла ошибка при обращении к ИИ. Пожалуйста, попробуйте снова.</p>
+                                <Button variant="orange" onClick={() => generateAIFormula(activeFormulaName)} style={{ height: '50px', padding: '0 30px', borderRadius: '14px', fontWeight: 800 }}>Повторить попытку</Button>
                             </div>
                         ) : (
-                            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
                                 
-                                {/* КАРТОЧКА ТЕОРИИ */}
-                                <div style={{ background: COLORS.bgCard, padding: '24px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }}>
-                                    <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: COLORS.text, fontWeight: 900 }}>{currentLesson.name}</h1>
-                                    <div style={{ color: COLORS.textMuted, fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
-                                        {UI_DICT[lang].enVersion} <span style={{ color: COLORS.cyan }}>{currentLesson.enName}</span>
-                                    </div>
-
-                                    {/* Бэйджи */}
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                                        {currentLesson.difficulty && <div style={{ border: `1px solid ${COLORS.border}`, padding: '6px 12px', borderRadius: '20px', color: COLORS.text, fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>{currentLesson.difficulty}</div>}
-                                        {currentLesson.xp && <div style={{ border: `1px solid rgba(246, 211, 101, 0.4)`, padding: '6px 12px', borderRadius: '20px', color: '#F6D365', fontWeight: 800, fontSize: '10px' }}>⭐ {currentLesson.xp} XP</div>}
-                                        <div style={{ background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.blue})`, padding: '6px 12px', borderRadius: '20px', color: '#fff', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase' }}>📘 {UI_DICT[lang].theory}</div>
+                                {/* THEORY CARD */}
+                                <div style={{ background: EX_TOKENS.card, padding: '32px', borderRadius: '24px', border: `1px solid ${EX_TOKENS.border}`, boxShadow: '0 12px 40px rgba(0,0,0,0.2)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }}>
+                                        <div>
+                                            <h1 style={{ margin: '0 0 8px 0', fontSize: '38px', color: EX_TOKENS.text, fontWeight: 900 }}>{currentLesson.name}</h1>
+                                            <div style={{ color: EX_TOKENS.textSec, fontSize: '14px', fontWeight: 600 }}>{UI_DICT[lang].enVersion} <span style={{ color: EX_TOKENS.cyan }}>{currentLesson.enName}</span></div>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            {currentLesson.difficulty && <div style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${EX_TOKENS.border}`, padding: '8px 16px', borderRadius: '12px', color: EX_TOKENS.text, fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}>{currentLesson.difficulty}</div>}
+                                            {currentLesson.xp && <div style={{ background: 'rgba(246, 211, 101, 0.15)', border: `1px solid rgba(246, 211, 101, 0.3)`, padding: '8px 16px', borderRadius: '12px', color: EX_TOKENS.yellow, fontWeight: 900, fontSize: '12px' }}>⭐ {currentLesson.xp} XP</div>}
+                                            <div style={{ background: `linear-gradient(135deg, ${EX_TOKENS.purple}, ${EX_TOKENS.blue})`, padding: '8px 16px', borderRadius: '12px', color: '#fff', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', boxShadow: `0 4px 15px ${EX_TOKENS.purple}55` }}>📘 {UI_DICT[lang].theory}</div>
+                                        </div>
                                     </div>
                                     
-                                    {/* Определение */}
-                                    <div style={{ position: 'relative', paddingLeft: '16px', borderLeft: `2px solid ${COLORS.cyan}`, marginBottom: '24px' }}>
-                                        <div style={{ fontSize: '10px', color: COLORS.textMuted, textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px', letterSpacing: '0.5px' }}>{UI_DICT[lang].defTitle}</div>
-                                        <div style={{ fontSize: '14px', color: COLORS.text, lineHeight: 1.6 }}>{getTranslatedText(currentLesson.def, lang)}</div>
+                                    <div style={{ background: EX_TOKENS.panelSecondary, padding: '24px', borderRadius: '16px', borderLeft: `4px solid ${EX_TOKENS.cyan}`, marginBottom: '20px' }}>
+                                        <div style={{ fontSize: '12px', color: EX_TOKENS.textSec, textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px', letterSpacing: '0.5px' }}>{UI_DICT[lang].defTitle}</div>
+                                        <div style={{ fontSize: '16px', color: EX_TOKENS.text, lineHeight: 1.6 }}>{getTranslatedText(currentLesson.def, lang)}</div>
                                     </div>
 
-                                    {/* Синтаксис */}
-                                    <div style={{ background: '#0A0E17', padding: '16px', borderRadius: '12px' }}>
-                                        <div style={{ fontSize: '10px', color: COLORS.textMuted, textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px', letterSpacing: '0.5px' }}>{UI_DICT[lang].syntaxTitle}</div>
-                                        <code style={{ fontSize: '13px', color: COLORS.cyan, fontFamily: "'Fira Code', 'JetBrains Mono', monospace", whiteSpace: 'pre-wrap', display: 'block', lineHeight: 1.6 }}>
+                                    <div style={{ background: '#050816', padding: '24px', borderRadius: '16px', border: `1px solid ${EX_TOKENS.border}` }}>
+                                        <div style={{ fontSize: '12px', color: EX_TOKENS.textSec, textTransform: 'uppercase', fontWeight: 800, marginBottom: '12px', letterSpacing: '0.5px' }}>{UI_DICT[lang].syntaxTitle}</div>
+                                        <code style={{ fontSize: '15px', color: EX_TOKENS.cyan, fontFamily: "'Fira Code', 'JetBrains Mono', monospace", whiteSpace: 'pre-wrap', display: 'block', lineHeight: 1.6 }}>
                                             {currentLesson.syntax}
                                         </code>
                                     </div>
                                 </div>
 
-                                {/* КАРТОЧКА ПРАКТИКИ */}
-                                <div style={{ background: COLORS.bgCard, padding: '24px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                        <span style={{ fontSize: '18px' }}>🎯</span>
-                                        <span style={{ fontSize: '14px', color: COLORS.green, textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{UI_DICT[lang].practice}</span>
+                                {/* PRACTICE CARD */}
+                                <div style={{ background: EX_TOKENS.card, padding: '32px', borderRadius: '24px', border: `2px solid ${EX_TOKENS.border}`, position: 'relative' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+                                        <span style={{ fontSize: '24px' }}>🎯</span>
+                                        <span style={{ fontSize: '16px', color: EX_TOKENS.green, textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{UI_DICT[lang].practice}</span>
                                     </div>
                                     
-                                    <p style={{ margin: '0 0 20px 0', color: COLORS.text, fontSize: '15px', fontWeight: 600, lineHeight: 1.5 }}>
+                                    <p style={{ margin: '0 0 25px 0', color: EX_TOKENS.text, fontSize: '17px', fontWeight: 600, lineHeight: 1.5 }}>
                                         {getTranslatedText(currentLesson.taskDesc, lang)}
                                     </p>
                                     
-                                    {/* EXCEL ТАБЛИЦА (Dark Mode) */}
-                                    <div className="ex-scroll" style={{ overflowX: 'auto', borderRadius: '8px', border: `1px solid ${COLORS.border}`, marginBottom: '24px' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '12px' }}>
+                                    {/* EXCEL TABLE */}
+                                    <div className="ex-scroll" style={{ overflowX: 'auto', background: EX_TOKENS.bgAlt, borderRadius: '12px', border: `1px solid ${EX_TOKENS.border}`, boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.2)', marginBottom: '30px' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}>
                                             <thead>
-                                                <tr>
-                                                    <th style={{ width: '40px', borderRight: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}`, padding: '10px', background: COLORS.bgElement }}></th>
+                                                <tr style={{ background: EX_TOKENS.panel }}>
+                                                    <th style={{ width: '45px', borderRight: `1px solid ${EX_TOKENS.border}`, borderBottom: `1px solid ${EX_TOKENS.border}`, padding: '12px 8px', background: 'rgba(255,255,255,0.02)' }}></th>
                                                     {currentLesson.table[0].map((_, colIdx) => (
-                                                        <th key={colIdx} style={{ borderRight: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}`, padding: '10px', fontWeight: 800, color: COLORS.text, background: COLORS.bgElement }}>
+                                                        <th key={colIdx} style={{ borderRight: `1px solid ${EX_TOKENS.border}`, borderBottom: `1px solid ${EX_TOKENS.border}`, padding: '12px 8px', fontWeight: 800, color: EX_TOKENS.textSec, background: 'rgba(255,255,255,0.02)' }}>
                                                             {getColumnLetter(colIdx)}
                                                         </th>
                                                     ))}
@@ -445,12 +451,12 @@
                                             </thead>
                                             <tbody>
                                                 {currentLesson.table.map((row, rowIdx) => (
-                                                    <tr key={rowIdx} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                                                        <td style={{ background: COLORS.bgElement, borderRight: `1px solid ${COLORS.border}`, padding: '10px', fontWeight: 800, color: COLORS.text }}>
+                                                    <tr key={rowIdx} style={{ borderBottom: `1px solid ${EX_TOKENS.border}`, transition: 'background 0.2s' }} onMouseEnter={(e)=>e.currentTarget.style.background='rgba(255,255,255,0.03)'} onMouseLeave={(e)=>e.currentTarget.style.background='transparent'}>
+                                                        <td style={{ background: 'rgba(255,255,255,0.02)', borderRight: `1px solid ${EX_TOKENS.border}`, padding: '12px 8px', fontWeight: 800, color: EX_TOKENS.textSec }}>
                                                             {rowIdx + 1}
                                                         </td>
                                                         {row.map((cell, colIdx) => (
-                                                            <td key={colIdx} style={{ borderRight: `1px solid ${COLORS.border}`, padding: '10px', color: COLORS.text, fontWeight: 500, background: COLORS.bgPanel }}>
+                                                            <td key={colIdx} style={{ borderRight: `1px solid ${EX_TOKENS.border}`, padding: '12px 8px', color: EX_TOKENS.text, fontWeight: 500 }}>
                                                                 {cell}
                                                             </td>
                                                         ))}
@@ -460,9 +466,9 @@
                                         </table>
                                     </div>
 
-                                    {/* ПОЛЕ ВВОДА (White/Light as in screenshot) */}
-                                    <div style={{ position: 'relative', marginBottom: '20px' }}>
-                                        <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#94A3B8', fontSize: '14px', fontStyle: 'italic', borderRight: '1px solid #E2E8F0' }}>fx</div>
+                                    {/* FORMULA INPUT */}
+                                    <div style={{ position: 'relative', marginBottom: '24px' }}>
+                                        <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: EX_TOKENS.textSec, fontSize: '18px', fontStyle: 'italic', borderRight: `1px solid ${EX_TOKENS.border}`, background: 'rgba(255,255,255,0.02)', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>fx</div>
                                         <input
                                             type="text"
                                             value={inputValue}
@@ -470,42 +476,49 @@
                                             disabled={showSuccess}
                                             onKeyDown={(e) => e.key === 'Enter' && !showSuccess && checkAnswer()}
                                             style={{ 
-                                                width: '100%', padding: '14px 14px 14px 58px', borderRadius: '8px', 
-                                                border: `2px solid ${showSuccess ? COLORS.green : shake ? COLORS.red : 'transparent'}`, 
-                                                background: '#FFFFFF', color: '#0F172A', 
-                                                fontSize: '15px', fontWeight: 700, outline: 'none', 
+                                                width: '100%', padding: '20px 20px 20px 70px', borderRadius: '16px', 
+                                                border: `2px solid ${showSuccess ? EX_TOKENS.green : shake ? EX_TOKENS.red : EX_TOKENS.border}`, 
+                                                background: EX_TOKENS.bgAlt, color: showSuccess ? EX_TOKENS.green : EX_TOKENS.text, 
+                                                fontSize: '18px', fontWeight: 700, outline: 'none', 
                                                 fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
-                                                transition: 'all 0.2s ease'
+                                                boxShadow: showSuccess ? `0 0 20px ${EX_TOKENS.green}33` : 'inset 0 4px 10px rgba(0,0,0,0.2)',
+                                                transition: 'all 0.3s ease'
                                             }}
+                                            onFocus={(e) => { if(!showSuccess) { e.target.style.borderColor = EX_TOKENS.purple; e.target.style.boxShadow = `0 0 0 4px ${EX_TOKENS.purple}33`; } }}
+                                            onBlur={(e) => { if(!showSuccess && !shake) { e.target.style.borderColor = EX_TOKENS.border; e.target.style.boxShadow = 'inset 0 4px 10px rgba(0,0,0,0.2)'; } }}
                                         />
                                     </div>
 
-                                    {/* УСПЕХ */}
+                                    {/* SUCCESS STATE */}
                                     <AnimatePresence>
                                         {showSuccess && (
-                                            <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} style={{ background: 'rgba(16, 185, 129, 0.1)', border: `1px solid ${COLORS.green}`, padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', overflow: 'hidden', marginBottom: '20px' }}>
+                                            <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} style={{ background: 'rgba(16, 185, 129, 0.1)', border: `2px solid ${EX_TOKENS.green}`, padding: '24px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', overflow: 'hidden', marginBottom: '24px' }}>
                                                 <div>
-                                                    <h4 style={{ margin: '0 0 4px 0', color: COLORS.green, fontSize: '15px', fontWeight: 800 }}>{UI_DICT[lang].successMsg}</h4>
-                                                    <span style={{ color: COLORS.textSec, fontSize: '13px' }}>{UI_DICT[lang].resultMsg} <b style={{color: COLORS.text}}>{currentLesson.result}</b></span>
+                                                    <h4 style={{ margin: '0 0 8px 0', color: EX_TOKENS.green, fontSize: '20px', fontWeight: 900 }}>{UI_DICT[lang].successMsg}</h4>
+                                                    <span style={{ color: EX_TOKENS.textSec, fontSize: '15px', fontWeight: 600 }}>{UI_DICT[lang].resultMsg} <b style={{color: EX_TOKENS.text}}>{currentLesson.result}</b></span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                    <div style={{ fontSize: '42px', lineHeight: 1 }}>✅</div>
+                                                    {currentLesson.xp && <motion.div initial={{y: 10, opacity: 0}} animate={{y: 0, opacity: 1}} transition={{delay: 0.2}} style={{ color: EX_TOKENS.yellow, fontWeight: 900, marginTop: '8px' }}>+{currentLesson.xp} XP</motion.div>}
                                                 </div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
 
-                                    {/* КНОПКИ ПРАКТИКИ */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {/* ACTION BUTTONS */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', paddingTop: '24px', borderTop: `1px solid ${EX_TOKENS.border}` }}>
                                         <button 
                                             onClick={() => generateAIFormula(activeFormulaName)} 
                                             disabled={isGenerating} 
-                                            style={{ width: '100%', height: '46px', borderRadius: '8px', background: COLORS.bgElement, border: `1px solid ${COLORS.border}`, color: COLORS.text, fontWeight: 700, fontSize: '12px', cursor: 'pointer', transition: 'background 0.2s' }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = COLORS.bgElement}
+                                            style={{ flex: '1 1 180px', height: '54px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${EX_TOKENS.border}`, color: EX_TOKENS.textSec, fontWeight: 800, fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = EX_TOKENS.text; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = EX_TOKENS.textSec; }}
                                         >
                                             {UI_DICT[lang].btnAnother}
                                         </button>
                                         
                                         {!showSuccess && (
-                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                            <div style={{ display: 'flex', gap: '16px', flex: '2 1 340px' }}>
                                                 <button 
                                                     onClick={() => {
                                                         if (hintsEnabled && currentLesson) {
@@ -513,14 +526,14 @@
                                                         }
                                                     }} 
                                                     disabled={!hintsEnabled}
-                                                    style={{ flex: 1, height: '46px', borderRadius: '8px', background: COLORS.bgElement, border: `1px solid ${COLORS.border}`, color: hintsEnabled ? COLORS.textMuted : 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: 700, cursor: hintsEnabled ? 'pointer' : 'not-allowed' }}
+                                                    style={{ flex: '1 1 50%', height: '54px', borderRadius: '14px', background: hintsEnabled ? `linear-gradient(135deg, ${EX_TOKENS.orange}, #f59e0b)` : 'rgba(255,255,255,0.05)', border: hintsEnabled ? 'none' : `1px solid ${EX_TOKENS.border}`, color: hintsEnabled ? '#000' : EX_TOKENS.textSec, fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', cursor: hintsEnabled ? 'pointer' : 'not-allowed', opacity: hintsEnabled ? 1 : 0.6, boxShadow: hintsEnabled ? `0 6px 16px ${EX_TOKENS.orange}44` : 'none' }}
                                                 >
                                                     {hintsEnabled ? UI_DICT[lang].btnHint : UI_DICT[lang].btnExam}
                                                 </button>
                                                 
                                                 <button 
                                                     onClick={checkAnswer} 
-                                                    style={{ flex: 1, height: '46px', borderRadius: '8px', background: COLORS.green, border: 'none', color: '#000', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+                                                    style={{ flex: '1 1 50%', height: '54px', borderRadius: '14px', background: `linear-gradient(135deg, ${EX_TOKENS.green}, #059669)`, border: 'none', color: '#000', fontSize: '15px', fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer', boxShadow: `0 6px 16px ${EX_TOKENS.green}55` }}
                                                 >
                                                     {UI_DICT[lang].btnCheck}
                                                 </button>
@@ -528,7 +541,6 @@
                                         )}
                                     </div>
                                 </div>
-
                             </motion.div>
                         )}
                     </div>
