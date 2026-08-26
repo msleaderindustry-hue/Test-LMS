@@ -1105,7 +1105,7 @@
 
                     <div style={{
                         width: '100%', maxWidth: '560px', background: HK_TOKENS.bg, border: `1px solid ${HK_TOKENS.border}`,
-                        borderRadius: '20px', padding: '22px', position: 'relative', zIndex: 2
+                        borderRadius: '20px', padding: '22px', position: 'relative', zIndex: 10
                     }}>
                         <div style={{
                             fontSize: '11px', color: HK_TOKENS.textSec, fontWeight: 800, textTransform: 'uppercase',
