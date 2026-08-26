@@ -151,7 +151,7 @@
             allCaps: "Барча ҳарфларни бош ҳарф қилиш",
             underlineWords: "Фақат сўзларни тагига чизиш",
             newTab: "Янги ойна (вкладка) очиш",
-            newFile: "Янги файл ёки ойна ярати яратиш",
+            newFile: "Янги файл ёки ойна яратиш",
             bold: "Қалин (bold) матн"
         }
     };
@@ -680,7 +680,7 @@
     };
 
     // -------------------------------------------------------------------
-    // ProgramSelector — комбобокс "программа" с иконкой + свободным вводом
+    // ProgramSelector — комбобокс, который плавно раздвигает контент вниз
     // -------------------------------------------------------------------
     const PROGRAM_SUGGESTIONS = [
         { name: 'Microsoft Word', letter: 'W', color: '#2B579A' },
@@ -755,39 +755,44 @@
                 <AnimatePresence>
                     {open && filtered.length > 0 && (
                         <motion.div
-                            initial={{ opacity: 0, y: -6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.15 }}
-                            className="hk-scroll"
-                            style={{
-                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 30,
-                                background: HK_TOKENS.panel, border: `1px solid ${HK_TOKENS.border}`, borderRadius: '14px',
-                                boxShadow: '0 20px 40px -12px rgba(0,0,0,0.55)', padding: '6px',
-                                maxHeight: '190px',
-                                overflowY: 'auto'
-                            }}
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            style={{ overflow: 'hidden' }}
                         >
-                            {filtered.map((p) => (
-                                <div
-                                    key={p.name}
-                                    onMouseDown={() => { onChange(p.name); setOpen(false); }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-                                        borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: HK_TOKENS.text
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(148,163,184,0.08)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <div style={{
-                                        width: '22px', height: '22px', borderRadius: '6px', display: 'flex', alignItems: 'center',
-                                        justifyContent: 'center', background: `${p.color}2A`, color: p.color, fontSize: '10px', fontWeight: 900
-                                    }}>
-                                        {p.letter}
+                            <div
+                                className="hk-scroll"
+                                style={{
+                                    background: '#0B1020',
+                                    border: `1px solid rgba(139, 92, 246, 0.4)`,
+                                    borderRadius: '14px',
+                                    padding: '6px',
+                                    maxHeight: '185px',
+                                    overflowY: 'auto'
+                                }}
+                            >
+                                {filtered.map((p) => (
+                                    <div
+                                        key={p.name}
+                                        onMouseDown={() => { onChange(p.name); setOpen(false); }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+                                            borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: HK_TOKENS.text
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.18)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <div style={{
+                                            width: '22px', height: '22px', borderRadius: '6px', display: 'flex', alignItems: 'center',
+                                            justifyContent: 'center', background: `${p.color}2A`, color: p.color, fontSize: '10px', fontWeight: 900
+                                        }}>
+                                            {p.letter}
+                                        </div>
+                                        {p.name}
                                     </div>
-                                    {p.name}
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -1117,7 +1122,7 @@
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: HK_TOKENS.purple, display: 'inline-block' }} />
                             {t.customPanelLabel}
                         </div>
-                        <div className="hk-program-row" style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
+                        <div className="hk-program-row" style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                             <ProgramSelector
                                 value={topic}
                                 onChange={setTopic}
