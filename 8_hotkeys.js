@@ -234,6 +234,7 @@
         }
     };
 
+    // Название языка для промпта, отправляемого ИИ (чтобы описания приходили на нужном языке)
     const AI_LANG_HINT = {
         ru: "русском",
         en: "английском (English)",
@@ -245,8 +246,8 @@
 
     // ==========================================================================
     // ДИЗАЙН-ТОКЕНЫ С ПОДДЕРЖКОЙ ТЕМ (LIGHT/DARK)
-    // Теперь токены обращаются к переменным вашей LMS, поэтому при смене темы 
-    // цвета плавно переключаются. Неоновые акцентные цвета остаются постоянными.
+    // Теперь токены используют системные CSS-переменные var(), поэтому они
+    // идеально переключаются вместе с остальным сайтом.
     // ==========================================================================
     const HK_TOKENS = {
         bg: 'var(--bg-body, #0B1020)',
@@ -270,6 +271,7 @@
     const GRADIENT_PURPLE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.purpleDark} 100%)`;
     const GRADIENT_BLUE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.blue} 100%)`;
 
+    // Единожды инжектируем небольшой <style> блок
     let hkStylesInjected = false;
     const injectHkStyles = () => {
         if (hkStylesInjected || typeof document === 'undefined') return;
@@ -297,6 +299,9 @@
         hkStylesInjected = true;
     };
 
+    // -------------------------------------------------------------------
+    // Иконки — простые инлайн SVG
+    // -------------------------------------------------------------------
     const ICON_PATHS = {
         undo: <path d="M4 10h9a5 5 0 1 1 0 10h-3M4 10l4-4M4 10l4 4" />,
         redo: <path d="M20 10h-9a5 5 0 1 0 0 10h3M20 10l-4-4M20 10l-4 4" />,
@@ -438,6 +443,9 @@
         );
     };
 
+    // -------------------------------------------------------------------
+    // AppLogo — [⚡] Хоткеи [AI POWERED]
+    // -------------------------------------------------------------------
     const AppLogo = ({ title, badge }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <motion.div
@@ -469,6 +477,9 @@
         </div>
     );
 
+    // -------------------------------------------------------------------
+    // GlassPanel — общий контейнер для крупных экранов
+    // -------------------------------------------------------------------
     const GlassPanel = React.forwardRef(({ children, style, maxWidth = '820px', className = '', ...rest }, ref) => (
         <motion.div
             ref={ref}
@@ -478,7 +489,7 @@
                 background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.panelSecondary} 100%)`,
                 border: `1px solid ${HK_TOKENS.border}`,
                 borderRadius: '24px',
-                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)',
+                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
                 padding: '40px 32px',
                 color: HK_TOKENS.text,
                 ...style
@@ -525,7 +536,7 @@
         <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => {
                 const meta = UI_TRANSLATIONS[code];
-                if (!meta) return null;
+                if (!meta) return null; // защита: не падать, даже если языка нет в словаре
                 const active = lang === code;
                 return (
                     <motion.button
@@ -643,6 +654,9 @@
         );
     };
 
+    // -------------------------------------------------------------------
+    // ProgramSelector — комбобокс
+    // -------------------------------------------------------------------
     const PROGRAM_SUGGESTIONS = [
         { name: 'Microsoft Word', letter: 'W', color: '#2B579A' },
         { name: 'Excel', letter: 'E', color: '#217346' },
@@ -1017,7 +1031,6 @@
             return () => window.removeEventListener("keydown", handleKeyDown);
         }, [currentIndex, tasks, isFinished, phase]);
 
-        // === СТАРТОВЫЙ ЭКРАН ===
         if (phase === 'setup') {
             return (
                 <GlassPanel
@@ -1121,7 +1134,6 @@
             );
         }
 
-        // === РАЗДЕЛ ТЕОРИИ ===
         if (phase === 'theory') {
             return (
                 <GlassPanel
@@ -1194,7 +1206,6 @@
 
         const currentTask = tasks[currentIndex];
 
-        // === ЭКРАН ПРАКТИКИ ===
         return (
             <GlassPanel
                 maxWidth="1040px"
