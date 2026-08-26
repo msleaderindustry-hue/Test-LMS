@@ -14,12 +14,10 @@
  * не конфликтуют, из какого бы ещё тренажёра он ни грузился на той же странице.
  * ---------------------------------------------------------------------------
  * ОБНОВЛЕНИЕ ДИЗАЙНА (2026):
- * Визуальный слой полностью переработан под тёмную glassmorphism-систему
- * (см. HK_TOKENS ниже). Бизнес-логика — AI-генерация, обработка клавиатуры,
- * фазы setup/theory/practice, переводы, HOTKEYS_DB — НЕ ИЗМЕНЕНА.
- * Новые переиспользуемые UI-компоненты (AppLogo, GlassPanel, GradientButton,
- * KeyCap, HotkeyIcon, HotkeyCard, ProgramSelector, HotkeyVisual, ProgressKeys)
- * объявлены локально внутри той же IIFE, ничего наружу больше не экспортируется.
+ * Визуальный слой полностью переработан под glassmorphism-систему с полной 
+ * поддержкой смены тем (Light/Dark) через CSS-переменные платформы. 
+ * Бизнес-логика — AI-генерация, обработка клавиатуры, фазы setup/theory/practice, 
+ * переводы, HOTKEYS_DB — НЕ ИЗМЕНЕНА.
  * ---------------------------------------------------------------------------
  */
 (function () {
@@ -246,14 +244,8 @@
 
     // ==========================================================================
     // ДИЗАЙН-ТОКЕНЫ С ПОДДЕРЖКОЙ ТЕМ (LIGHT/DARK)
-    // Теперь токены используют системные CSS-переменные var(), поэтому они
-    // идеально переключаются вместе с остальным сайтом.
     // ==========================================================================
     const HK_TOKENS = {
-        bg: 'var(--bg-body, #0B1020)',
-        bgAlt: 'var(--bg-body, #111729)',
-        panel: 'var(--bg-panel, #151B2E)',
-        panelSecondary: 'var(--bg-body, #101629)',
         purple: '#8B5CF6',
         purpleDark: '#6D28D9',
         yellow: '#F6D365',
@@ -261,17 +253,13 @@
         blue: '#38BDF8',
         green: '#34D399',
         pink: '#F472B6',
-        cyan: '#22D3EE',
-        text: 'var(--text-main, #F8FAFC)',
-        textSec: 'var(--text-sec, #94A3B8)',
-        border: 'var(--glass-border, rgba(148,163,184,0.16))'
+        cyan: '#22D3EE'
     };
 
     const GRADIENT_WARM = `linear-gradient(135deg, ${HK_TOKENS.yellow} 0%, ${HK_TOKENS.orange} 100%)`;
     const GRADIENT_PURPLE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.purpleDark} 100%)`;
     const GRADIENT_BLUE = `linear-gradient(135deg, ${HK_TOKENS.purple} 0%, ${HK_TOKENS.blue} 100%)`;
 
-    // Единожды инжектируем небольшой <style> блок
     let hkStylesInjected = false;
     const injectHkStyles = () => {
         if (hkStylesInjected || typeof document === 'undefined') return;
@@ -461,7 +449,7 @@
                 <Icon name="zap" size={22} color="#1a1206" strokeWidth={2.2} />
             </motion.div>
             <h2 style={{
-                margin: 0, fontSize: '24px', fontWeight: 900, letterSpacing: '-0.5px', color: HK_TOKENS.text
+                margin: 0, fontSize: '24px', fontWeight: 900, letterSpacing: '-0.5px', color: 'var(--text-main)'
             }}>
                 {title}
             </h2>
@@ -478,20 +466,15 @@
     );
 
     // -------------------------------------------------------------------
-    // GlassPanel — общий контейнер для крупных экранов
+    // GlassPanel — Обёртка с родным классом "glass-panel"
     // -------------------------------------------------------------------
     const GlassPanel = React.forwardRef(({ children, style, maxWidth = '820px', className = '', ...rest }, ref) => (
         <motion.div
             ref={ref}
-            className={`hk-scope ${className}`}
+            className={`glass-panel hk-scope ${className}`}
             style={{
                 width: '100%', maxWidth, margin: '0 auto', position: 'relative', overflow: 'hidden',
-                background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.panelSecondary} 100%)`,
-                border: `1px solid ${HK_TOKENS.border}`,
-                borderRadius: '24px',
-                boxShadow: '0 30px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
-                padding: '40px 32px',
-                color: HK_TOKENS.text,
+                padding: '48px 36px',
                 ...style
             }}
             {...rest}
@@ -505,7 +488,7 @@
             muted ? 'transparent'
                 : variant === 'primary' ? GRADIENT_WARM
                     : GRADIENT_BLUE;
-        const color = muted ? HK_TOKENS.textSec : (variant === 'primary' ? '#1a1206' : '#fff');
+        const color = muted ? 'var(--text-sec)' : (variant === 'primary' ? '#1a1206' : '#fff');
         const shadow = muted ? 'none'
             : variant === 'primary'
                 ? '0 14px 30px -12px rgba(253,160,133,0.55)'
@@ -520,7 +503,7 @@
                 disabled={disabled}
                 style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
-                    padding: '0 26px', height: '54px', borderRadius: '16px', border: muted ? `1px solid ${HK_TOKENS.border}` : 'none',
+                    padding: '0 26px', height: '54px', borderRadius: '16px', border: muted ? `1px solid var(--glass-border)` : 'none',
                     background, color, fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px',
                     cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.65 : 1,
                     boxShadow: shadow, whiteSpace: 'nowrap',
@@ -536,7 +519,7 @@
         <div style={{ display: 'flex', gap: '6px', ...style }}>
             {LANGS.map((code) => {
                 const meta = UI_TRANSLATIONS[code];
-                if (!meta) return null; // защита: не падать, даже если языка нет в словаре
+                if (!meta) return null;
                 const active = lang === code;
                 return (
                     <motion.button
@@ -550,9 +533,9 @@
                         style={{
                             padding: '7px 13px',
                             borderRadius: '999px',
-                            border: active ? '1px solid transparent' : `1px solid ${HK_TOKENS.border}`,
+                            border: active ? '1px solid transparent' : `1px solid var(--glass-border)`,
                             background: active ? GRADIENT_PURPLE : 'transparent',
-                            color: active ? '#fff' : HK_TOKENS.textSec,
+                            color: active ? '#fff' : 'var(--text-sec)',
                             fontSize: '12px',
                             fontWeight: 800,
                             letterSpacing: '0.5px',
@@ -571,14 +554,14 @@
         const accentColor = accent ? hkColorValue(accent) : null;
         const base = {
             padding: compact ? '6px 11px' : '15px 22px',
-            background: `linear-gradient(180deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.bg} 100%)`,
-            border: dashed ? `2px dashed ${accentColor || HK_TOKENS.blue}` : `1px solid ${HK_TOKENS.border}`,
-            borderBottom: accentColor ? `3px solid ${accentColor}` : `3px solid ${HK_TOKENS.border}`,
+            background: `linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-body) 100%)`,
+            border: dashed ? `2px dashed ${accentColor || HK_TOKENS.blue}` : `1px solid var(--glass-border)`,
+            borderBottom: accentColor ? `3px solid ${accentColor}` : `3px solid var(--glass-border)`,
             borderRadius: compact ? '8px' : '12px',
             fontSize: compact ? '12.5px' : '20px',
             fontWeight: 800,
             fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
-            color: accentColor || HK_TOKENS.text,
+            color: accentColor || 'var(--text-main)',
             letterSpacing: '0.3px',
             minWidth: compact ? '20px' : '28px',
             textAlign: 'center',
@@ -609,7 +592,7 @@
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: compact ? '5px' : '12px', flexWrap: 'wrap' }}>
                 {parts.map((part, i) => (
                     <React.Fragment key={i}>
-                        {i > 0 && <span style={{ color: HK_TOKENS.textSec, fontWeight: 700, opacity: 0.6, fontSize: compact ? '12px' : '22px' }}>+</span>}
+                        {i > 0 && <span style={{ color: 'var(--text-sec)', fontWeight: 700, opacity: 0.6, fontSize: compact ? '12px' : '22px' }}>+</span>}
                         <KeyCap compact={compact}>{part}</KeyCap>
                     </React.Fragment>
                 ))}
@@ -640,12 +623,12 @@
                 whileHover={{ y: -2 }}
                 style={{
                     display: 'flex', alignItems: 'flex-start', gap: '13px', padding: '16px',
-                    background: HK_TOKENS.panelSecondary, border: `1px solid ${HK_TOKENS.border}`, borderRadius: '16px'
+                    background: 'var(--bg-body)', border: `1px solid var(--glass-border)`, borderRadius: '16px'
                 }}
             >
                 <HotkeyIcon icon={meta.icon} color={meta.color} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: HK_TOKENS.text, lineHeight: '1.4' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', lineHeight: '1.4' }}>
                         {desc}
                     </div>
                     <KeyCombo visual={hk.visual} compact />
@@ -654,9 +637,6 @@
         );
     };
 
-    // -------------------------------------------------------------------
-    // ProgramSelector — комбобокс
-    // -------------------------------------------------------------------
     const PROGRAM_SUGGESTIONS = [
         { name: 'Microsoft Word', letter: 'W', color: '#2B579A' },
         { name: 'Excel', letter: 'E', color: '#217346' },
@@ -692,8 +672,8 @@
             <div ref={rootRef} style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', height: '52px',
-                    borderRadius: '14px', border: `1px solid ${open ? HK_TOKENS.purple : HK_TOKENS.border}`,
-                    background: HK_TOKENS.bg, transition: 'border-color 0.2s ease'
+                    borderRadius: '14px', border: `1px solid ${open ? HK_TOKENS.purple : 'var(--glass-border)'}`,
+                    background: 'var(--bg-body)', transition: 'border-color 0.2s ease'
                 }}>
                     <div style={{
                         width: '26px', height: '26px', borderRadius: '7px', flexShrink: 0,
@@ -716,12 +696,12 @@
                         disabled={disabled}
                         style={{
                             flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
-                            color: HK_TOKENS.text, fontSize: '15px', fontWeight: 600
+                            color: 'var(--text-main)', fontSize: '15px', fontWeight: 600
                         }}
                     />
                     <span
                         onClick={() => !disabled && setOpen((o) => !o)}
-                        style={{ color: HK_TOKENS.textSec, fontSize: '11px', cursor: disabled ? 'default' : 'pointer', userSelect: 'none' }}
+                        style={{ color: 'var(--text-sec)', fontSize: '11px', cursor: disabled ? 'default' : 'pointer', userSelect: 'none' }}
                     >
                         ▾
                     </span>
@@ -739,8 +719,8 @@
                             <div
                                 className="hk-scroll"
                                 style={{
-                                    background: HK_TOKENS.panel,
-                                    border: `1px solid ${HK_TOKENS.border}`,
+                                    background: 'var(--bg-panel)',
+                                    border: `1px solid var(--glass-border)`,
                                     borderRadius: '14px',
                                     padding: '6px',
                                     maxHeight: '185px',
@@ -753,9 +733,9 @@
                                         onMouseDown={() => { onChange(p.name); setOpen(false); }}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-                                            borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: HK_TOKENS.text
+                                            borderRadius: '9px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-main)'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border, rgba(148,163,184,0.1))'}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border)'}
                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                     >
                                         <div style={{
@@ -792,10 +772,10 @@
                 className="hk-visual-float"
                 style={{
                     position: 'absolute', inset: 0, borderRadius: '26px',
-                    background: `linear-gradient(155deg, ${HK_TOKENS.panel} 0%, ${HK_TOKENS.bg} 100%)`,
-                    border: `1px solid ${HK_TOKENS.border}`,
+                    background: `linear-gradient(155deg, var(--bg-panel) 0%, var(--bg-body) 100%)`,
+                    border: `1px solid var(--glass-border)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: `0 25px 50px -15px rgba(139,92,246,0.55), inset 0 1px 1px rgba(255,255,255,0.08), 8px 14px 0 -4px ${HK_TOKENS.panelSecondary}`
+                    boxShadow: `0 25px 50px -15px rgba(139,92,246,0.55), inset 0 1px 1px rgba(255,255,255,0.08), 8px 14px 0 -4px var(--bg-body)`
                 }}
             >
                 <div style={{
@@ -820,7 +800,7 @@
                         transition={active ? { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } : { duration: 0.2 }}
                         style={{
                             width: '22px', height: '9px', borderRadius: '3px',
-                            background: done ? GRADIENT_WARM : active ? HK_TOKENS.blue : HK_TOKENS.border,
+                            background: done ? GRADIENT_WARM : active ? HK_TOKENS.blue : 'var(--glass-border)',
                             boxShadow: done ? '0 0 8px rgba(253,160,133,0.55)' : active ? `0 0 10px ${HK_TOKENS.blue}88` : 'none',
                             transition: 'background 0.25s ease, box-shadow 0.25s ease'
                         }}
@@ -1056,7 +1036,7 @@
 
                     <div style={{ textAlign: 'center', maxWidth: '560px', position: 'relative', zIndex: 2 }}>
                         <p style={{
-                            fontSize: '15px', color: HK_TOKENS.textSec, lineHeight: '1.7',
+                            fontSize: '15px', color: 'var(--text-sec)', lineHeight: '1.7',
                             fontWeight: 500, margin: 0
                         }}>
                             {t.subtitle}
@@ -1064,11 +1044,11 @@
                     </div>
 
                     <div style={{
-                        width: '100%', maxWidth: '560px', background: HK_TOKENS.bg, border: `1px solid ${HK_TOKENS.border}`,
+                        width: '100%', maxWidth: '560px', background: 'var(--bg-body)', border: `1px solid var(--glass-border)`,
                         borderRadius: '20px', padding: '22px', position: 'relative', zIndex: 10
                     }}>
                         <div style={{
-                            fontSize: '11px', color: HK_TOKENS.textSec, fontWeight: 800, textTransform: 'uppercase',
+                            fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase',
                             letterSpacing: '1.4px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px'
                         }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: HK_TOKENS.purple, display: 'inline-block' }} />
@@ -1143,7 +1123,7 @@
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                     style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}
                 >
-                    <header style={{ borderBottom: `1px solid ${HK_TOKENS.border}`, paddingBottom: '20px' }}>
+                    <header style={{ borderBottom: `1px solid var(--glass-border)`, paddingBottom: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
                             <motion.button
                                 type="button"
@@ -1152,7 +1132,7 @@
                                 onClick={leaveGame}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
-                                    cursor: 'pointer', color: HK_TOKENS.textSec, fontSize: '14px', fontWeight: 700, padding: '4px 0'
+                                    cursor: 'pointer', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700, padding: '4px 0'
                                 }}
                             >
                                 <span style={{ fontSize: '17px', lineHeight: 1 }}>←</span> {t.exit}
@@ -1160,15 +1140,15 @@
                             <LanguageSwitcher lang={lang} onChange={setLang} />
                         </div>
 
-                        <div style={{ fontSize: '11px', color: HK_TOKENS.textSec, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '10px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.6px', marginBottom: '10px' }}>
                             {t.theoryStep}
                         </div>
-                        <div style={{ width: '100%', height: '6px', borderRadius: '999px', background: HK_TOKENS.border, marginBottom: '18px', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: '6px', borderRadius: '999px', background: 'var(--glass-border)', marginBottom: '18px', overflow: 'hidden' }}>
                             <div style={{ width: '50%', height: '100%', background: GRADIENT_WARM, borderRadius: '999px' }} />
                         </div>
 
                         <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px' }}>
-                            <span style={{ color: HK_TOKENS.text }}>{t.theoryTitle}</span>
+                            <span style={{ color: 'var(--text-main)' }}>{t.theoryTitle}</span>
                             {isCustomBase && (
                                 <span style={{
                                     background: GRADIENT_BLUE, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
@@ -1177,7 +1157,7 @@
                         </h2>
                     </header>
 
-                    <p style={{ fontSize: '14px', color: HK_TOKENS.textSec, fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '14px', color: 'var(--text-sec)', fontWeight: 500, margin: 0, lineHeight: '1.6' }}>
                         {t.theoryDesc}
                     </p>
 
@@ -1216,7 +1196,7 @@
             >
                 <header style={{
                     display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '18px',
-                    borderBottom: `1px solid ${HK_TOKENS.border}`, paddingBottom: '18px'
+                    borderBottom: `1px solid var(--glass-border)`, paddingBottom: '18px'
                 }}>
                     <motion.button
                         type="button"
@@ -1226,7 +1206,7 @@
                         title={t.escToExit}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '7px', background: 'transparent', border: 'none',
-                            cursor: 'pointer', color: HK_TOKENS.textSec, fontSize: '14px', fontWeight: 700,
+                            cursor: 'pointer', color: 'var(--text-sec)', fontSize: '14px', fontWeight: 700,
                             padding: '8px 6px', opacity: 0.85, justifySelf: 'start'
                         }}
                     >
@@ -1234,7 +1214,7 @@
                     </motion.button>
 
                     <h2 style={{
-                        margin: 0, fontSize: '22px', fontWeight: 900, letterSpacing: '-0.4px', textAlign: 'center', color: HK_TOKENS.text
+                        margin: 0, fontSize: '22px', fontWeight: 900, letterSpacing: '-0.4px', textAlign: 'center', color: 'var(--text-main)'
                     }}>
                         {isCustomBase ? `${t.title}: ${topic}` : `${t.title} ⚡`}
                     </h2>
@@ -1243,12 +1223,12 @@
                         <LanguageSwitcher lang={lang} onChange={setLang} />
                         <div style={{
                             display: 'flex', alignItems: 'baseline', gap: '6px',
-                            padding: '9px 16px', borderRadius: '999px', background: HK_TOKENS.bg,
-                            border: `1px solid ${HK_TOKENS.border}`, fontFamily: "ui-monospace, monospace"
+                            padding: '9px 16px', borderRadius: '999px', background: 'var(--bg-body)',
+                            border: `1px solid var(--glass-border)`, fontFamily: "ui-monospace, monospace"
                         }}>
-                            <span style={{ fontSize: '15px', fontWeight: 800, color: HK_TOKENS.text }}>{Math.min(currentIndex + 1, tasks.length)}</span>
-                            <span style={{ fontSize: '13px', color: HK_TOKENS.textSec, opacity: 0.5 }}>/</span>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: HK_TOKENS.textSec }}>{tasks.length}</span>
+                            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>{Math.min(currentIndex + 1, tasks.length)}</span>
+                            <span style={{ fontSize: '13px', color: 'var(--text-sec)', opacity: 0.5 }}>/</span>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-sec)' }}>{tasks.length}</span>
                         </div>
                     </div>
                 </header>
@@ -1256,7 +1236,7 @@
                 {!isFinished ? (
                     <div className="hk-practice-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '32px', padding: '8px 0' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
-                            <div style={{ fontSize: '12.5px', color: HK_TOKENS.textSec, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800, textAlign: 'center' }}>
+                            <div style={{ fontSize: '12.5px', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800, textAlign: 'center' }}>
                                 {t.doCombination}
                             </div>
 
@@ -1267,7 +1247,7 @@
                                 transition={{ duration: 0.22 }}
                                 style={{
                                     fontSize: '32px', fontWeight: 800, textAlign: 'center',
-                                    color: successPulse ? HK_TOKENS.green : HK_TOKENS.text,
+                                    color: successPulse ? HK_TOKENS.green : 'var(--text-main)',
                                     maxWidth: '90%', letterSpacing: '-0.4px', lineHeight: '1.3', transition: 'color 0.2s ease'
                                 }}
                             >
@@ -1276,12 +1256,12 @@
 
                             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                                 <KeyCap>Ctrl</KeyCap>
-                                <span style={{ fontSize: '24px', fontWeight: 'bold', color: HK_TOKENS.textSec, opacity: 0.5 }}>+</span>
+                                <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</span>
 
                                 {currentTask.shift && (
                                     <>
                                         <KeyCap>Shift</KeyCap>
-                                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: HK_TOKENS.textSec, opacity: 0.5 }}>+</span>
+                                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</span>
                                     </>
                                 )}
 
@@ -1313,7 +1293,7 @@
                             <Icon name="check" size={34} color="#052e1f" strokeWidth={2.6} />
                         </motion.div>
                         <h2 style={{ fontSize: '36px', margin: 0, fontWeight: 900, color: HK_TOKENS.green, letterSpacing: '-0.6px' }}>{t.finishedTitle}</h2>
-                        <p style={{ fontSize: '16px', color: HK_TOKENS.textSec, fontWeight: 600, margin: 0 }}>
+                        <p style={{ fontSize: '16px', color: 'var(--text-sec)', fontWeight: 600, margin: 0 }}>
                             {t.finishedDesc(score, tasks.length)}
                         </p>
                         <GradientButton variant="primary" onClick={resetGame} style={{ width: '260px', marginTop: '10px' }}>
