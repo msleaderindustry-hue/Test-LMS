@@ -151,7 +151,7 @@
             allCaps: "Барча ҳарфларни бош ҳарф қилиш",
             underlineWords: "Фақат сўзларни тагига чизиш",
             newTab: "Янги ойна (вкладка) очиш",
-            newFile: "Янги файл ёки ойна яратиш",
+            newFile: "Янги файл ёки ойна ярати яратиш",
             bold: "Қалин (bold) матн"
         }
     };
@@ -759,10 +759,13 @@
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -6 }}
                             transition={{ duration: 0.15 }}
+                            className="hk-scroll"
                             style={{
-                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20,
+                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 30,
                                 background: HK_TOKENS.panel, border: `1px solid ${HK_TOKENS.border}`, borderRadius: '14px',
-                                boxShadow: '0 20px 40px -12px rgba(0,0,0,0.55)', overflow: 'hidden', padding: '6px'
+                                boxShadow: '0 20px 40px -12px rgba(0,0,0,0.55)', padding: '6px',
+                                maxHeight: '190px',
+                                overflowY: 'auto'
                             }}
                         >
                             {filtered.map((p) => (
