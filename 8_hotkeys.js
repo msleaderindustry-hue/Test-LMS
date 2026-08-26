@@ -276,11 +276,34 @@
                 .hk-practice-grid { grid-template-columns: 1fr !important; }
                 .hk-visual-side { order: 3; margin: 0 auto; }
             }
-            @media (max-width: 600px) {
+            @media (max-width: 650px) {
                 .hk-theory-grid { grid-template-columns: 1fr !important; }
                 .hk-setup-toprow { flex-wrap: wrap; justify-content: center !important; }
                 .hk-program-row { flex-direction: column; align-items: stretch !important; }
                 .hk-program-row > * { width: 100% !important; }
+                
+                /* Исправление наложения шапки Practice на мобилках */
+                .hk-practice-header {
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    justify-content: space-between !important;
+                    gap: 12px !important;
+                }
+                .hk-practice-header h2 {
+                    order: 3;
+                    width: 100%;
+                    margin-top: 4px !important;
+                }
+                .hk-practice-controls {
+                    order: 2;
+                }
+                .hk-lang-btn {
+                    padding: 6px 10px !important;
+                    font-size: 11px !important;
+                }
+                .hk-progress-pill {
+                    padding: 7px 12px !important;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -525,6 +548,7 @@
                     <motion.button
                         key={code}
                         type="button"
+                        className="hk-lang-btn"
                         whileHover={{ y: active ? 0 : -1 }}
                         whileTap={{ scale: 0.94 }}
                         onClick={() => onChange(code)}
@@ -1194,7 +1218,7 @@
                 transition={shake ? { duration: 0.3 } : { duration: 0.5, ease: "easeOut" }}
                 style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}
             >
-                <header style={{
+                <header className="hk-practice-header" style={{
                     display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '18px',
                     borderBottom: `1px solid var(--glass-border)`, paddingBottom: '18px'
                 }}>
@@ -1219,9 +1243,9 @@
                         {isCustomBase ? `${t.title}: ${topic}` : `${t.title} ⚡`}
                     </h2>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifySelf: 'end' }}>
+                    <div className="hk-practice-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', justifySelf: 'end' }}>
                         <LanguageSwitcher lang={lang} onChange={setLang} />
-                        <div style={{
+                        <div className="hk-progress-pill" style={{
                             display: 'flex', alignItems: 'baseline', gap: '6px',
                             padding: '9px 16px', borderRadius: '999px', background: 'var(--bg-body)',
                             border: `1px solid var(--glass-border)`, fontFamily: "ui-monospace, monospace"
