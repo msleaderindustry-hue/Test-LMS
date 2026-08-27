@@ -121,7 +121,7 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — стили с поддержкой темной и светлой темы родительского приложения
+   3. CSS — стили с поддержкой темной и светлой темы
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
@@ -151,7 +151,7 @@ const ET_STYLES = `
   position: relative;
 }
 
-/* Автоматическая адаптация под светлую тему родительского интерфейса */
+/* Светлая тема */
 .et-shell.theme-light,
 html.light .et-shell,
 body.light .et-shell,
@@ -305,9 +305,66 @@ body.light .et-shell .et-syntax-box,
 .et-formula-status.ok{color:var(--accent-green);}
 .et-formula-status.bad{color:#f87171;}
 
-.et-hint-box{background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.3);border-radius:13px;padding:14px 16px;margin:6px 0 18px;font-size:13.5px;color:#fde68a;line-height:1.5;}
-.et-hint-actions{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;}
-.et-hint-link{background:none;border:none;color:#fbbf24;font-weight:700;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
+/* СТИЛИ ПОДСКАЗОК (ТЕМНАЯ И СВЕТЛАЯ ТЕМЫ) */
+.et-hint-box{
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 10px 0 20px;
+  font-size: 14px;
+  color: #fde68a;
+  line-height: 1.6;
+}
+.et-hint-box code{
+  background: rgba(0, 0, 0, 0.35);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'Fira Code', monospace;
+  font-weight: 700;
+}
+.et-hint-actions{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.et-hint-link{
+  background:none;border:none;color:#fbbf24;font-weight:800;font-size:13px;
+  cursor:pointer;text-decoration:underline;padding:0;transition:opacity .15s;
+}
+.et-hint-link:hover{opacity:0.8;}
+
+/* Подсказки в светлой теме — четкие, контрастные и легко читаемые */
+.et-shell.theme-light .et-hint-box,
+html.light .et-shell .et-hint-box,
+body.light .et-shell .et-hint-box,
+[data-theme='light'] .et-shell .et-hint-box,
+.light .et-shell .et-hint-box {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
+}
+.et-shell.theme-light .et-hint-box code,
+html.light .et-shell .et-hint-box code,
+body.light .et-shell .et-hint-box code,
+[data-theme='light'] .et-shell .et-hint-box code,
+.light .et-shell .et-hint-box code {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.et-shell.theme-light .et-hint-link,
+html.light .et-shell .et-hint-link,
+body.light .et-shell .et-hint-link,
+[data-theme='light'] .et-shell .et-hint-link,
+.light .et-shell .et-hint-link {
+  color: #d97706;
+}
+.et-shell.theme-light .et-hint-link:hover,
+html.light .et-shell .et-hint-link:hover,
+body.light .et-shell .et-hint-link:hover,
+[data-theme='light'] .et-shell .et-hint-link:hover,
+.light .et-shell .et-hint-link:hover {
+  color: #b45309;
+}
 
 .et-success-card{background:rgba(34,230,138,.08);border:2px solid var(--accent-green);padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;overflow:hidden;flex-wrap:wrap;margin-bottom:8px;}
 .et-success-title{margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
@@ -586,7 +643,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const [lang, setLang] = useState("ru");
 
-    // Определение и авто-синхронизация темы с родительским интерфейсом
+    // Определение и авто-синхронизация темы
     const detectTheme = () => {
         if (typeof propTheme !== 'undefined') return propTheme;
         if (typeof document === 'undefined') return 'dark';
@@ -860,9 +917,10 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
 
+    // КОРРЕКТНОЕ ИЗВЛЕЧЕНИЕ НАЧАЛА ФОРМУЛЫ ДЛЯ 3-Й ПОДСКАЗКИ
     const rawExpected = String(currentLesson?.expected?.[0] || "").trim().toUpperCase();
-    const firstFnLetter = rawExpected.match(/^=\s*([A-ZА-ЯЁ]+)\s*\(/i);
-    const hintStep3 = firstFnLetter ? `=${firstFnLetter}(` : "=";
+    const fnMatch = rawExpected.match(/^=\s*([A-ZА-ЯЁ0-9_.]+)\s*\(/i);
+    const hintStep3 = fnMatch ? `=${fnMatch}(` : (activeFormulaName ? `=${activeFormulaName}(` : "=");
 
     return (
         <motion.div
@@ -873,7 +931,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         >
             <ToastStack toasts={toasts} />
 
-            {/* ШАПКА БЕЗ ЛОКАЛЬНОЙ КНОПКИ ТЕМЫ */}
+            {/* ШАПКА */}
             <header className="et-header">
                 <div className="et-header-left">
                     <div className="et-logo">📊</div>
