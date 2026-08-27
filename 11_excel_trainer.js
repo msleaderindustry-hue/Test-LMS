@@ -331,7 +331,7 @@ body.light .et-shell .et-syntax-box,
 }
 .et-hint-link:hover{opacity:0.8;}
 
-/* Подсказки в светлой теме — четкие, контрастные и легко читаемые */
+/* Подсказки в светлой теме */
 .et-shell.theme-light .et-hint-box,
 html.light .et-shell .et-hint-box,
 body.light .et-shell .et-hint-box,
@@ -441,6 +441,20 @@ function getDifficulty(fnName, lesson) {
 }
 function getXp(lesson, difficulty) {
     return (lesson && lesson.xp) || XP_BY_DIFFICULTY[difficulty] || 100;
+}
+
+// Надежное получение начала формулы для 3-й подсказки
+function getFormulaStart(lesson, defaultName) {
+    const fnName = lesson?.name || defaultName || "";
+    if (fnName) {
+        return `=${fnName.trim().toUpperCase()}(`;
+    }
+    const rawExpected = String(lesson?.expected?.[0] || "").trim();
+    const match = rawExpected.match(/^=\s*([A-ZА-ЯЁ0-9_.]+)\s*\(/i);
+    if (match && match) {
+        return `=${match.toUpperCase()}(`;
+    }
+    return "=";
 }
 
 /* =========================================================================
@@ -917,10 +931,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
 
-    // КОРРЕКТНОЕ ИЗВЛЕЧЕНИЕ НАЧАЛА ФОРМУЛЫ ДЛЯ 3-Й ПОДСКАЗКИ
-    const rawExpected = String(currentLesson?.expected?.[0] || "").trim().toUpperCase();
-    const fnMatch = rawExpected.match(/^=\s*([A-ZА-ЯЁ0-9_.]+)\s*\(/i);
-    const hintStep3 = fnMatch ? `=${fnMatch}(` : (activeFormulaName ? `=${activeFormulaName}(` : "=");
+    // НАДЕЖНОЕ НАЧАЛО ФОРМУЛЫ ДЛЯ 3-Й ПОДСКАЗКИ
+    const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
 
     return (
         <motion.div
