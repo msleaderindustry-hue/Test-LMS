@@ -121,7 +121,7 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — стили с поддержкой темной и светлой темы
+   3. CSS — стили интерфейса
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
@@ -193,7 +193,9 @@ body.light .et-shell .et-langswitch,
 .et-lang-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.4);}
 
 .et-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
-.et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:16px;max-height:720px;overflow-y:auto;padding-right:6px;}
+
+/* САЙДБАР: колонка слева */
+.et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:14px;}
 
 .et-ai-card{background:var(--bg-panel);border:1px solid var(--border);padding:18px;border-radius:var(--radius-lg);position:relative;overflow:hidden;}
 .et-ai-card::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;
@@ -201,6 +203,12 @@ body.light .et-shell .et-langswitch,
 .et-ai-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:13px;color:var(--text-main);}
 .et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
 .et-ai-input:focus{border-color:var(--accent-cyan);}
+
+/* СПИСОК КАТЕГОРИЙ (СКРОЛЛИРУЕМЫЙ) */
+.et-cat-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:6px;}
+.et-cat-list::-webkit-scrollbar{width:5px;}
+.et-cat-list::-webkit-scrollbar-track{background:transparent;}
+.et-cat-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
 .et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
 .et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
@@ -220,6 +228,7 @@ body.light .et-shell .et-langswitch,
 .et-fn-dot.hard{background:var(--accent-red);}
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
+/* КАРТОЧКА ПРОГРЕССА ВНИЗУ */
 .et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
 .et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
 .et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
@@ -305,7 +314,7 @@ body.light .et-shell .et-syntax-box,
 .et-formula-status.ok{color:var(--accent-green);}
 .et-formula-status.bad{color:#f87171;}
 
-/* СТИЛИ ПОДСКАЗОК (ТЕМНАЯ И СВЕТЛАЯ ТЕМЫ) */
+/* СТИЛИ ПОДСКАЗОК */
 .et-hint-box{
   background: rgba(245, 158, 11, 0.12);
   border: 1px solid rgba(245, 158, 11, 0.35);
@@ -389,7 +398,8 @@ body.light .et-shell .et-hint-link:hover,
 
 @media (max-width:760px){
   .et-gsearch{display:none;}
-  .et-sidebar{max-width:100%;max-height:none;}
+  .et-sidebar{max-width:100%;}
+  .et-cat-list{max-height:none;}
 }
 `;
 
@@ -960,7 +970,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
             <div className="et-body">
                 {/* САЙДБАР */}
-                <div className="et-sidebar modern-scroll">
+                <div className="et-sidebar">
+                    {/* КАРТОЧКА ПОИСКА С ИИ */}
                     <div className="et-ai-card">
                         <div className="et-ai-title">✨ {t.magic}</div>
                         <input
@@ -976,15 +987,19 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                         </Button>
                     </div>
 
-                    <CategoryAccordion
-                        categories={categories}
-                        openCats={openCats}
-                        toggleCat={toggleCat}
-                        activeFormulaName={activeFormulaName}
-                        isGenerating={isGenerating}
-                        onPick={pickFromSidebarOrSearch}
-                    />
+                    {/* СКРОЛЛИРУЕМЫЙ СПИСОК КАТЕГОРИЙ */}
+                    <div className="et-cat-list modern-scroll">
+                        <CategoryAccordion
+                            categories={categories}
+                            openCats={openCats}
+                            toggleCat={toggleCat}
+                            activeFormulaName={activeFormulaName}
+                            isGenerating={isGenerating}
+                            onPick={pickFromSidebarOrSearch}
+                        />
+                    </div>
 
+                    {/* КАРТОЧКА ПРОГРЕССА ВНИЗУ (НЕ СКРОЛЛИТСЯ СО СПИСКОМ) */}
                     <ProgressCard t={t} progress={progress} />
                 </div>
 
