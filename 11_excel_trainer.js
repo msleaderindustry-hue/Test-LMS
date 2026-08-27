@@ -121,7 +121,7 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — стили интерфейса и адаптивная таблица
+   3. CSS — стили интерфейса
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
@@ -272,31 +272,81 @@ body.light .et-shell .et-progress-bar-track,
 .et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
 
 .et-def-box{background:var(--bg-card);padding:18px;border-radius:14px;border-left:4px solid var(--accent-green);margin-bottom:16px;}
-.et-box-label{font-size:11px;color:var(--text-sec);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:.5px;}
-.et-def-text{font-size:15px;color:var(--text-main);line-height:1.6;}
+.et-box-label{font-size:11.5px;color:var(--text-sec);text-transform:uppercase;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:6px;}
+.et-def-text{font-size:15px;color:var(--text-main);line-height:1.6;margin-top:8px;}
 
-.et-syntax-box{background:#0a0f24;padding:18px;border-radius:14px;border:1px solid var(--border);position:relative;}
+/* =========================================================================
+   БЛОК СИНТАКСИСА И СТИЛЬНАЯ КНОПКА КОПИРОВАНИЯ
+   ========================================================================= */
+.et-syntax-box{
+  background: #090e24;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  position: relative;
+}
 .et-shell.theme-light .et-syntax-box,
 html.light .et-shell .et-syntax-box,
 body.light .et-shell .et-syntax-box,
 [data-theme='light'] .et-shell .et-syntax-box {
-  background:#0f172a;
+  background: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.14);
 }
-.et-syntax-code{font-size:14px;color:#38bdf8;font-family:'Fira Code',monospace;white-space:pre-wrap;display:block;line-height:1.6;padding-right:90px;}
-.et-copy-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#e2e8f0;
-  padding:6px 11px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;}
-.et-copy-btn:hover{border-color:var(--accent-cyan);}
+
+.et-syntax-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.et-copy-btn{
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  padding: 6px 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+.et-copy-btn:hover{
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  transform: translateY(-1px);
+}
+.et-copy-btn.copied{
+  background: rgba(34, 230, 138, 0.16);
+  border-color: rgba(34, 230, 138, 0.45);
+  color: #22e68a;
+  box-shadow: 0 2px 10px rgba(34, 230, 138, 0.2);
+}
+
+.et-syntax-code{
+  font-size: 14.5px;
+  color: #38bdf8;
+  font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  white-space: pre-wrap;
+  display: block;
+  line-height: 1.65;
+  margin: 0;
+}
 
 .et-practice-card{background:var(--bg-card);padding:28px;border-radius:var(--radius-lg);border:2px dashed var(--border);}
 .et-practice-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
 .et-practice-title{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent-green);text-transform:uppercase;font-weight:900;letter-spacing:1px;}
 .et-task-text{margin:0 0 22px;color:var(--text-main);font-size:16.5px;font-weight:600;line-height:1.55;}
 
-/* =========================================================================
-   ТАБЛИЦА EXCEL (ПОЛНАЯ ПОДДЕРЖКА ТЕМНОЙ И СВЕТЛОЙ ТЕМЫ)
-   ========================================================================= */
-
-/* ТЕМНАЯ ТЕМА ТАБЛИЦЫ (по умолчанию) */
+/* ТАБЛИЦА EXCEL */
 .et-table-wrap{
   overflow-x: auto;
   background: #090e1f;
@@ -365,7 +415,6 @@ body.light .et-shell .et-table-wrap,
   border: 1px solid #cbd5e1;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
 }
-
 .et-shell.theme-light .et-table,
 html.light .et-shell .et-table,
 body.light .et-shell .et-table,
@@ -373,7 +422,6 @@ body.light .et-shell .et-table,
 .light .et-shell .et-table {
   color: #1e293b;
 }
-
 .et-shell.theme-light .et-table thead tr,
 html.light .et-shell .et-table thead tr,
 body.light .et-shell .et-table thead tr,
@@ -382,7 +430,6 @@ body.light .et-shell .et-table thead tr,
   background: #f8fafc;
   border-bottom: 3px solid #10b981;
 }
-
 .et-shell.theme-light .et-table th,
 html.light .et-shell .et-table th,
 body.light .et-shell .et-table th,
@@ -391,7 +438,6 @@ body.light .et-shell .et-table th,
   border-right: 1px solid #e2e8f0;
   color: #334155;
 }
-
 .et-shell.theme-light .et-table th.et-corner,
 html.light .et-shell .et-table th.et-corner,
 body.light .et-shell .et-table th.et-corner,
@@ -400,7 +446,6 @@ body.light .et-shell .et-table th.et-corner,
   background: #f1f5f9;
   color: #94a3b8;
 }
-
 .et-shell.theme-light .et-table td,
 html.light .et-shell .et-table td,
 body.light .et-shell .et-table td,
@@ -410,7 +455,6 @@ body.light .et-shell .et-table td,
   color: #1e293b;
   background: #ffffff;
 }
-
 .et-shell.theme-light .et-table td.et-rownum,
 html.light .et-shell .et-table td.et-rownum,
 body.light .et-shell .et-table td.et-rownum,
@@ -420,7 +464,6 @@ body.light .et-shell .et-table td.et-rownum,
   color: #64748b;
   border-right: 1px solid #e2e8f0;
 }
-
 .et-shell.theme-light .et-table tr,
 html.light .et-shell .et-table tr,
 body.light .et-shell .et-table tr,
@@ -428,7 +471,6 @@ body.light .et-shell .et-table tr,
 .light .et-shell .et-table tr {
   border-bottom: 1px solid #e2e8f0;
 }
-
 .et-shell.theme-light .et-table td:not(.et-rownum):hover,
 html.light .et-shell .et-table td:not(.et-rownum):hover,
 body.light .et-shell .et-table td:not(.et-rownum):hover,
@@ -436,7 +478,6 @@ body.light .et-shell .et-table td:not(.et-rownum):hover,
 .light .et-shell .et-table td:not(.et-rownum):hover {
   background: #eef2ff;
 }
-
 .et-shell.theme-light .et-table td.et-selected,
 html.light .et-shell .et-table td.et-selected,
 body.light .et-shell .et-table td.et-selected,
@@ -447,9 +488,7 @@ body.light .et-shell .et-table td.et-selected,
   outline-offset: -2px;
 }
 
-/* =========================================================================
-   СТРОКА ФОРМУЛЫ И СТАТУСЫ
-   ========================================================================= */
+/* СТРОКА ФОРМУЛЫ */
 .et-formula-bar{position:relative;margin-bottom:8px;}
 .et-formula-bar .fx{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:900;color:var(--accent-green);font-size:18px;font-style:italic;pointer-events:none;}
 .et-formula-bar input{width:100%;padding:18px 18px 18px 52px;border-radius:15px;border:2px solid var(--border);background:var(--bg-panel);
@@ -1170,16 +1209,24 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                 </div>
 
                                 <div className="et-def-box">
-                                    <div className="et-box-label">{t.defTitle}</div>
+                                    <div className="et-box-label">📖 {t.defTitle}</div>
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
+                                {/* БЛОК СИНТАКСИСА С КРАСИВОЙ ШАПКОЙ */}
                                 <div className="et-syntax-box">
-                                    <div className="et-box-label">{t.syntaxTitle}</div>
+                                    <div className="et-syntax-header">
+                                        <div className="et-box-label">⚡ {t.syntaxTitle}</div>
+                                        <button 
+                                            className={`et-copy-btn ${copyState ? "copied" : ""}`} 
+                                            onClick={handleCopySyntax}
+                                            title={t.copy}
+                                        >
+                                            <span>{copyState ? "✓" : "📋"}</span>
+                                            <span>{copyState ? t.copied : t.copy}</span>
+                                        </button>
+                                    </div>
                                     <code className="et-syntax-code">{currentLesson.syntax}</code>
-                                    <button className="et-copy-btn" onClick={handleCopySyntax}>
-                                        {copyState ? `✓ ${t.copied}` : `📋 ${t.copy}`}
-                                    </button>
                                 </div>
                             </div>
 
