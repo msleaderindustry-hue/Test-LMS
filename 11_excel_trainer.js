@@ -121,7 +121,7 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — стили интерфейса
+   3. CSS — стили интерфейса и адаптивная таблица
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
@@ -194,7 +194,7 @@ body.light .et-shell .et-langswitch,
 
 .et-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
 
-/* САЙДБАР: колонка слева */
+/* САЙДБАР */
 .et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:14px;}
 
 .et-ai-card{background:var(--bg-panel);border:1px solid var(--border);padding:18px;border-radius:var(--radius-lg);position:relative;overflow:hidden;}
@@ -204,7 +204,7 @@ body.light .et-shell .et-langswitch,
 .et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
 .et-ai-input:focus{border-color:var(--accent-cyan);}
 
-/* СПИСОК КАТЕГОРИЙ (СКРОЛЛИРУЕМЫЙ) */
+/* СПИСОК КАТЕГОРИЙ */
 .et-cat-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:6px;}
 .et-cat-list::-webkit-scrollbar{width:5px;}
 .et-cat-list::-webkit-scrollbar-track{background:transparent;}
@@ -228,7 +228,7 @@ body.light .et-shell .et-langswitch,
 .et-fn-dot.hard{background:var(--accent-red);}
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
-/* КАРТОЧКА ПРОГРЕССА ВНИЗУ */
+/* КАРТОЧКА ПРОГРЕССА */
 .et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
 .et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
 .et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
@@ -292,17 +292,164 @@ body.light .et-shell .et-syntax-box,
 .et-practice-title{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent-green);text-transform:uppercase;font-weight:900;letter-spacing:1px;}
 .et-task-text{margin:0 0 22px;color:var(--text-main);font-size:16.5px;font-weight:600;line-height:1.55;}
 
-.et-table-wrap{overflow-x:auto;background:#fff;border-radius:12px;border:1px solid #cbd5e1;box-shadow:0 4px 6px rgba(0,0,0,.04);margin-bottom:26px;}
-.et-table{width:100%;border-collapse:collapse;text-align:center;font-size:14.5px;font-family:sans-serif;}
-.et-table thead tr{background:#f8fafc;border-bottom:3px solid var(--accent-green,#10b981);}
-.et-table th{border-right:1px solid #e2e8f0;padding:11px 8px;font-weight:700;color:#334155;}
-.et-table th.et-corner{width:42px;background:#f1f5f9;color:#94a3b8;}
-.et-table td{border-right:1px solid #e2e8f0;padding:9px 8px;color:#1e293b;cursor:default;transition:background .12s;}
-.et-table td.et-rownum{background:#f1f5f9;font-weight:700;color:#64748b;cursor:default;}
-.et-table tr{border-bottom:1px solid #e2e8f0;}
-.et-table td:not(.et-rownum):hover{background:#eef2ff;}
-.et-table td.et-selected{background:#dbeafe !important;outline:2px solid #3b82f6;outline-offset:-2px;}
+/* =========================================================================
+   ТАБЛИЦА EXCEL (ПОЛНАЯ ПОДДЕРЖКА ТЕМНОЙ И СВЕТЛОЙ ТЕМЫ)
+   ========================================================================= */
 
+/* ТЕМНАЯ ТЕМА ТАБЛИЦЫ (по умолчанию) */
+.et-table-wrap{
+  overflow-x: auto;
+  background: #090e1f;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  margin-bottom: 26px;
+}
+.et-table{
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 14.5px;
+  font-family: sans-serif;
+  color: #f1f5f9;
+}
+.et-table thead tr{
+  background: #111936;
+  border-bottom: 3px solid var(--accent-green, #22e68a);
+}
+.et-table th{
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 11px 8px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+.et-table th.et-corner{
+  width: 42px;
+  background: #0b1124;
+  color: #64748b;
+}
+.et-table td{
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 10px 8px;
+  color: #e2e8f0;
+  background: #090e1f;
+  cursor: default;
+  transition: background .12s;
+}
+.et-table td.et-rownum{
+  background: #0b1124;
+  font-weight: 700;
+  color: #64748b;
+  cursor: default;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+.et-table tr{
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.et-table td:not(.et-rownum):hover{
+  background: rgba(59, 130, 246, 0.16);
+}
+.et-table td.et-selected{
+  background: rgba(59, 130, 246, 0.28) !important;
+  outline: 2px solid #38bdf8;
+  outline-offset: -2px;
+}
+
+/* СВЕТЛАЯ ТЕМА ТАБЛИЦЫ */
+.et-shell.theme-light .et-table-wrap,
+html.light .et-shell .et-table-wrap,
+body.light .et-shell .et-table-wrap,
+[data-theme='light'] .et-shell .et-table-wrap,
+.light .et-shell .et-table-wrap {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+}
+
+.et-shell.theme-light .et-table,
+html.light .et-shell .et-table,
+body.light .et-shell .et-table,
+[data-theme='light'] .et-shell .et-table,
+.light .et-shell .et-table {
+  color: #1e293b;
+}
+
+.et-shell.theme-light .et-table thead tr,
+html.light .et-shell .et-table thead tr,
+body.light .et-shell .et-table thead tr,
+[data-theme='light'] .et-shell .et-table thead tr,
+.light .et-shell .et-table thead tr {
+  background: #f8fafc;
+  border-bottom: 3px solid #10b981;
+}
+
+.et-shell.theme-light .et-table th,
+html.light .et-shell .et-table th,
+body.light .et-shell .et-table th,
+[data-theme='light'] .et-shell .et-table th,
+.light .et-shell .et-table th {
+  border-right: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.et-shell.theme-light .et-table th.et-corner,
+html.light .et-shell .et-table th.et-corner,
+body.light .et-shell .et-table th.et-corner,
+[data-theme='light'] .et-shell .et-table th.et-corner,
+.light .et-shell .et-table th.et-corner {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.et-shell.theme-light .et-table td,
+html.light .et-shell .et-table td,
+body.light .et-shell .et-table td,
+[data-theme='light'] .et-shell .et-table td,
+.light .et-shell .et-table td {
+  border-right: 1px solid #e2e8f0;
+  color: #1e293b;
+  background: #ffffff;
+}
+
+.et-shell.theme-light .et-table td.et-rownum,
+html.light .et-shell .et-table td.et-rownum,
+body.light .et-shell .et-table td.et-rownum,
+[data-theme='light'] .et-shell .et-table td.et-rownum,
+.light .et-shell .et-table td.et-rownum {
+  background: #f1f5f9;
+  color: #64748b;
+  border-right: 1px solid #e2e8f0;
+}
+
+.et-shell.theme-light .et-table tr,
+html.light .et-shell .et-table tr,
+body.light .et-shell .et-table tr,
+[data-theme='light'] .et-shell .et-table tr,
+.light .et-shell .et-table tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.et-shell.theme-light .et-table td:not(.et-rownum):hover,
+html.light .et-shell .et-table td:not(.et-rownum):hover,
+body.light .et-shell .et-table td:not(.et-rownum):hover,
+[data-theme='light'] .et-shell .et-table td:not(.et-rownum):hover,
+.light .et-shell .et-table td:not(.et-rownum):hover {
+  background: #eef2ff;
+}
+
+.et-shell.theme-light .et-table td.et-selected,
+html.light .et-shell .et-table td.et-selected,
+body.light .et-shell .et-table td.et-selected,
+[data-theme='light'] .et-shell .et-table td.et-selected,
+.light .et-shell .et-table td.et-selected {
+  background: #dbeafe !important;
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* =========================================================================
+   СТРОКА ФОРМУЛЫ И СТАТУСЫ
+   ========================================================================= */
 .et-formula-bar{position:relative;margin-bottom:8px;}
 .et-formula-bar .fx{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:900;color:var(--accent-green);font-size:18px;font-style:italic;pointer-events:none;}
 .et-formula-bar input{width:100%;padding:18px 18px 18px 52px;border-radius:15px;border:2px solid var(--border);background:var(--bg-panel);
@@ -314,7 +461,7 @@ body.light .et-shell .et-syntax-box,
 .et-formula-status.ok{color:var(--accent-green);}
 .et-formula-status.bad{color:#f87171;}
 
-/* СТИЛИ ПОДСКАЗОК */
+/* ПОДСКАЗКИ */
 .et-hint-box{
   background: rgba(245, 158, 11, 0.12);
   border: 1px solid rgba(245, 158, 11, 0.35);
@@ -340,7 +487,6 @@ body.light .et-shell .et-syntax-box,
 }
 .et-hint-link:hover{opacity:0.8;}
 
-/* Подсказки в светлой теме */
 .et-shell.theme-light .et-hint-box,
 html.light .et-shell .et-hint-box,
 body.light .et-shell .et-hint-box,
@@ -453,7 +599,6 @@ function getXp(lesson, difficulty) {
     return (lesson && lesson.xp) || XP_BY_DIFFICULTY[difficulty] || 100;
 }
 
-// Надежное получение начала формулы для 3-й подсказки
 function getFormulaStart(lesson, defaultName) {
     const fnName = lesson?.name || defaultName || "";
     if (fnName) {
@@ -941,7 +1086,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
 
-    // НАДЕЖНОЕ НАЧАЛО ФОРМУЛЫ ДЛЯ 3-Й ПОДСКАЗКИ
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
 
     return (
@@ -971,7 +1115,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             <div className="et-body">
                 {/* САЙДБАР */}
                 <div className="et-sidebar">
-                    {/* КАРТОЧКА ПОИСКА С ИИ */}
                     <div className="et-ai-card">
                         <div className="et-ai-title">✨ {t.magic}</div>
                         <input
@@ -999,7 +1142,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                         />
                     </div>
 
-                    {/* КАРТОЧКА ПРОГРЕССА ВНИЗУ (НЕ СКРОЛЛИТСЯ СО СПИСКОМ) */}
+                    {/* КАРТОЧКА ПРОГРЕССА ВНИЗУ */}
                     <ProgressCard t={t} progress={progress} />
                 </div>
 
