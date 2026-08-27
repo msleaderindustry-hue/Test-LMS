@@ -1,50 +1,10 @@
-/* =====================================================================
-   ExcelTrainerLMS — redesigned
-   -----------------------------------------------------------------------
-   Что сохранено без изменений в поведении (по требованию ТЗ):
-     - EXCEL_DATABASE (список функций по категориям)
-     - fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", ...)
-       и разбор data.candidates[0].content.parts[0].text -> JSON.parse
-     - формат промпта для ИИ (структура JSON урока, правило "единая тема")
-     - getTranslatedText(obj, lang) с fallback на ru
-     - checkAnswer(): нормализация формулы (uppercase, пробелы, ; вместо ,
-       кавычки, кириллица -> латиница) + сравнение с expected
-     - Firebase-подписка на excelHintsEnabled через window.db/window.auth
-     - activeFormulaName, currentLesson, inputValue, showSuccess,
-       customSearch, isGenerating — те же по смыслу состояния
-
-   Что изменено/добавлено (по пунктам ТЗ):
-     - Компонент разбит на AppHeader / Sidebar / LessonContent и их
-       под-компоненты вместо одного JSX-блока на 500 строк (п.5, п.71)
-     - CSS design system через переменные, инжектится один раз (п.9,42,43)
-     - Header: логотип, глобальный поиск функций, RU/EN/UZ, ThemeToggle (п.6-9)
-     - Sidebar: AI Magic Card, категории-аккордеон, ProgressCard с XP/уровнем
-       (п.10-17)
-     - Theory/Syntax карточки, кнопка "Копировать" (п.19-21)
-     - Excel-таблица с буквами колонок/номерами строк, hover, выбор ячейки
-       (п.24-25, уже частично было — расширено)
-     - Formula bar в стиле Excel с fx, подсветкой состояния (п.26-27)
-     - ЧЕСТНАЯ система подсказок: 3 уровня подсказок + отдельная кнопка
-       "Показать решение", вместо мгновенной вставки готового ответа (п.30-31)
-     - НАСТОЯЩИЙ режим экзамена: отключает все подсказки, считает
-       попытки/правильные ответы, таймер сессии (п.32-33)
-     - XP/level/progress state, сохраняется в Firebase если доступно (п.16-17,58-59)
-     - Toast-система вместо alert(), карточка ошибки с "Повторить" (п.40-41,69)
-     - Валидация JSON от ИИ перед применением + повторный запрос при невалидном
-       ответе (п.67-68)
-     - Расширенный UI_DICT на 3 языках без дефолта на русский "заглушку" (п.64-65)
-     - Keyboard shortcuts: Ctrl/Cmd+K — поиск, Esc — закрыть поиск/подсказку,
-       Enter — проверить (п.48-49)
-     - Адаптивность: sidebar превращается в drawer на мобильном (п.61-62)
-   ===================================================================== */
-
 const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
-// ---------------------------------------------------------------------
-// 1. ДАННЫЕ (не менять состав функций — только используется как есть)
-// ---------------------------------------------------------------------
+/* =========================================================================
+   1. ДАННЫЕ — база функций (НЕ ТРОГАЛ, как было)
+   ========================================================================= */
 const EXCEL_DATABASE = {
     "Математические": ["СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "ЦЕЛОЕ", "СУММПРОИЗВ", "АБС"],
     "Статистические": ["СРЗНАЧ", "СРЗНАЧЕСЛИ", "МАКС", "МИН", "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "МЕДИАНА", "МОДА", "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "СЧИТАТЬПУСТОТЫ"],
@@ -54,277 +14,324 @@ const EXCEL_DATABASE = {
     "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТОЛБЕЦ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП"]
 };
 
-const CATEGORY_ICON = {
+// Иконки категорий (для сайдбара)
+const CATEGORY_ICONS = {
     "Математические": "Σ",
     "Статистические": "📈",
     "Логические": "◆",
     "Текстовые": "Aa",
-    "Дата и время": "🕒",
+    "Дата и время": "🕐",
     "Поиск и ссылки": "🔎"
 };
 
-// ---------------------------------------------------------------------
-// 2. UI_DICT — расширен, у всех трёх языков реальные переводы (п.64-65)
-// ---------------------------------------------------------------------
+// Статическая сложность (для бейджей в сайдбаре, независимо от ИИ)
+const DIFFICULTY_MAP = {
+    СУММ:"easy", СУММЕСЛИ:"medium", СУММЕСЛИМН:"hard", ОКРУГЛ:"easy", ОКРУГЛВВЕРХ:"easy", ОКРУГЛВНИЗ:"easy",
+    ПРОИЗВЕД:"easy", ОСТАТ:"easy", КОРЕНЬ:"easy", СТЕПЕНЬ:"easy", СЛЧИС:"easy", ЦЕЛОЕ:"easy", СУММПРОИЗВ:"hard", АБС:"easy",
+    СРЗНАЧ:"easy", СРЗНАЧЕСЛИ:"medium", МАКС:"easy", МИН:"easy", СЧЁТ:"easy", СЧЁТЕСЛИ:"medium", СЧЁТЕСЛИМН:"hard",
+    СЧЁТЗ:"easy", МЕДИАНА:"medium", МОДА:"medium", НАИБОЛЬШИЙ:"medium", НАИМЕНЬШИЙ:"medium", СЧИТАТЬПУСТОТЫ:"easy",
+    ЕСЛИ:"easy", И:"easy", ИЛИ:"easy", ЕСЛИОШИБКА:"medium", НЕ:"easy", ИСТИНА:"easy", ЛОЖЬ:"easy", ЕСЛИМН:"medium",
+    ЕПУСТО:"easy", ЕЧИСЛО:"easy", ЕТЕКСТ:"easy",
+    СЦЕПИТЬ:"easy", ЛЕВСИМВ:"easy", ПРАВСИМВ:"easy", ПСТР:"medium", ДЛСТР:"easy", НАЙТИ:"medium", ПОИСК:"medium",
+    ЗАМЕНИТЬ:"medium", ПОДСТАВИТЬ:"medium", ПРОПИСН:"easy", СТРОЧН:"easy", СЖПРОБЕЛЫ:"easy", ТЕКСТ:"medium",
+    СЕГОДНЯ:"easy", ТДАТА:"easy", ДЕНЬ:"easy", МЕСЯЦ:"easy", ГОД:"easy", ДАТА:"easy", ДЕНЬНЕД:"medium", ЧАС:"easy",
+    МИНУТЫ:"easy", РАБДЕНЬ:"medium", ДОЛЯГОДА:"hard", НОМНЕДЕЛИ:"medium",
+    ВПР:"medium", ГПР:"medium", ИНДЕКС:"hard", ПОИСКПОЗ:"hard", СМЕЩ:"hard", ДВССЫЛ:"hard", СТРОКА:"easy",
+    СТОЛБЕЦ:"easy", ПРОСМОТР:"hard", ВЫБОР:"medium", ТРАНСП:"medium"
+};
+
+// XP по сложности (используется как fallback, если ИИ не прислал xp)
+const XP_BY_DIFFICULTY = { easy: 60, medium: 100, hard: 160 };
+
+/* =========================================================================
+   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА (расширен, старые ключи не тронуты)
+   ========================================================================= */
 const UI_DICT = {
     ru: {
-        title: "Энциклопедия Excel", subtitle: "Умный тренажёр функций с ИИ",
-        magic: "Магия ИИ", magicHint: "Найди любую функцию или задай вопрос ИИ",
-        search: "Поиск функции (напр. ВПР)...", globalSearch: "Поиск по функциям...",
-        genLoading: "Создаём урок...", genBtn: "Сгенерировать урок",
-        aiTitle: "ИИ создаёт урок для", aiSub: "Готовим уникальную задачу и таблицу",
+        title: "Энциклопедия Excel", subtitle: "Умный тренажер функций с ИИ",
+        magic: "Магия ИИ", search: "Поиск функции (напр. ВПР)...",
+        genLoading: "Создаем магию...", genBtn: "Сгенерировать урок",
+        aiTitle: "Готовим материалы для", aiSub: "ИИ пишет уникальную задачу и таблицу",
         theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
         syntaxTitle: "Примеры синтаксиса", practice: "Практика",
-        successMsg: "Формула написана верно!", resultMsg: "Результат вычисления:",
-        btnAnother: "Другая задача", btnHint: "Подсказка", btnExam: "Экзамен",
-        btnCheck: "Проверить", btnExamOff: "Завершить экзамен",
+        successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
+        btnAnother: "🔄 Другая задача", btnHint: "👀 Подсказка", btnExam: "🔒 Экзамен", btnCheck: "Проверить",
+        // новое
+        globalSearchPlaceholder: "Поиск по функциям...",
         copy: "Копировать", copied: "Скопировано",
         easy: "Легко", medium: "Средне", hard: "Сложно",
-        xp: "XP", level: "Уровень", progress: "Прогресс",
-        hint: "Подсказка", hintLevel: "Подсказка", showSolution: "Показать решение",
-        nextTask: "Следующая задача", nextFunction: "Следующая функция",
-        correct: "Верно", incorrect: "Проверьте формулу ещё раз",
-        tryAgain: "Повторить", loading: "Загрузка...",
-        error: "Не удалось создать урок", retry: "Повторить",
-        exam: "Экзамен", examActive: "Режим экзамена",
-        examScore: "Правильно", examAttempts: "Попыток", examLocked: "В режиме экзамена подсказки отключены",
-        time: "Время", question: "Вопрос", of: "из",
-        cellSelected: "Выбрана ячейка", searchNoResults: "Ничего не найдено",
-        searchAiCreate: "Функция не найдена в базе — создать урок с помощью ИИ",
-        completed: "Задание выполнено", repeatTheory: "Повторить теорию",
-        yourStats: "Мой прогресс", learned: "Изучено функций", accuracy: "Правильных ответов",
-        streak: "Серия дней"
+        xp: "XP", level: "Уровень",
+        progressTitle: "Прокачай свои навыки", progressSub: "Открывай новые функции и становись мастером Excel",
+        hintLevel1: "Что нужно найти?", hintLevel2: "Какую функцию использовать?", hintLevel3: "Начните формулу так:",
+        showSolution: "Показать решение", hintOf: "Подсказка",
+        nextTask: "Следующая задача", nextFunction: "Следующая функция", repeatTheory: "Повторить теорию",
+        taskDone: "Задание выполнено", incorrectMsg: "Пока не верно, попробуйте ещё раз",
+        loadingTitle: "ИИ создаёт урок", errorTitle: "Не удалось создать урок", errorSub: "Проверьте связь и попробуйте снова",
+        retry: "Повторить", examOnLabel: "🔒 Экзамен", examOffLabel: "🔓 Обычный режим",
+        attempts: "Попыток", formulaOk: "Формула правильная", formulaBad: "Проверьте формулу",
+        notFoundInDb: "Функции нет в локальной базе.", createWithAI: "✨ Создать урок с помощью ИИ",
+        toastLessonReady: "Урок создан", toastCopied: "Формула скопирована"
     },
     en: {
         title: "Excel Encyclopedia", subtitle: "Smart AI function trainer",
-        magic: "AI Magic", magicHint: "Find any function or ask the AI",
-        search: "Search function (e.g. VLOOKUP)...", globalSearch: "Search functions...",
-        genLoading: "Creating lesson...", genBtn: "Generate lesson",
-        aiTitle: "AI is creating a lesson for", aiSub: "Preparing a unique task and table",
+        magic: "AI Magic", search: "Search function (e.g. VLOOKUP)...",
+        genLoading: "Creating magic...", genBtn: "Generate lesson",
+        aiTitle: "Preparing materials for", aiSub: "AI is writing a unique task and table",
         theory: "Theory", defTitle: "Definition", enVersion: "English version:",
         syntaxTitle: "Syntax examples", practice: "Practice",
-        successMsg: "Formula is correct!", resultMsg: "Calculation result:",
-        btnAnother: "Another task", btnHint: "Hint", btnExam: "Exam",
-        btnCheck: "Check", btnExamOff: "End exam",
+        successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
+        btnAnother: "🔄 Another task", btnHint: "👀 Hint", btnExam: "🔒 Exam", btnCheck: "Check",
+        globalSearchPlaceholder: "Search functions...",
         copy: "Copy", copied: "Copied",
         easy: "Easy", medium: "Medium", hard: "Hard",
-        xp: "XP", level: "Level", progress: "Progress",
-        hint: "Hint", hintLevel: "Hint", showSolution: "Show solution",
-        nextTask: "Next task", nextFunction: "Next function",
-        correct: "Correct", incorrect: "Check your formula again",
-        tryAgain: "Try again", loading: "Loading...",
-        error: "Couldn't create the lesson", retry: "Retry",
-        exam: "Exam", examActive: "Exam mode",
-        examScore: "Correct", examAttempts: "Attempts", examLocked: "Hints are disabled in exam mode",
-        time: "Time", question: "Question", of: "of",
-        cellSelected: "Selected cell", searchNoResults: "No results",
-        searchAiCreate: "Function not in the database — create a lesson with AI",
-        completed: "Task completed", repeatTheory: "Review theory",
-        yourStats: "My progress", learned: "Functions learned", accuracy: "Accuracy",
-        streak: "Day streak"
+        xp: "XP", level: "Level",
+        progressTitle: "Level up your skills", progressSub: "Unlock new functions and become an Excel master",
+        hintLevel1: "What do you need to find?", hintLevel2: "Which function should you use?", hintLevel3: "Start the formula like this:",
+        showSolution: "Show solution", hintOf: "Hint",
+        nextTask: "Next task", nextFunction: "Next function", repeatTheory: "Review theory",
+        taskDone: "Task completed", incorrectMsg: "Not quite, try again",
+        loadingTitle: "AI is building the lesson", errorTitle: "Couldn't generate the lesson", errorSub: "Check your connection and try again",
+        retry: "Retry", examOnLabel: "🔒 Exam", examOffLabel: "🔓 Normal mode",
+        attempts: "Attempts", formulaOk: "Formula looks correct", formulaBad: "Check your formula",
+        notFoundInDb: "This function isn't in the local database.", createWithAI: "✨ Generate lesson with AI",
+        toastLessonReady: "Lesson ready", toastCopied: "Formula copied"
     },
     uz: {
         title: "Excel Энциклопедияси", subtitle: "ИИ ёрдамида ақлли функция тренажёри",
-        magic: "ИИ Сеҳри", magicHint: "Исталган функцияни топинг ёки ИИдан сўранг",
-        search: "Функцияни қидириш (мас. ВПР)...", globalSearch: "Функциялар бўйича қидириш...",
-        genLoading: "Дарс яратилмоқда...", genBtn: "Дарсни яратиш",
-        aiTitle: "ИИ дарс яратмоқда:", aiSub: "Ноёб вазифа ва жадвал тайёрланмоқда",
+        magic: "ИИ Сеҳри", search: "Функцияни қидириш (мас. ВПР)...",
+        genLoading: "Сеҳр яратилмоқда...", genBtn: "Дарсни ярати яратиш",
+        aiTitle: "Материаллар тайёрланмоқда:", aiSub: "ИИ ноёб вазифа ва жадвал ёзмоқда",
         theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
         syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
-        successMsg: "Формула тўғри ёзилган!", resultMsg: "Ҳисоблаш натижаси:",
-        btnAnother: "Бошқа вазифа", btnHint: "Ёрдам", btnExam: "Имтиҳон",
-        btnCheck: "Текшириш", btnExamOff: "Имтиҳонни тугатиш",
+        successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
+        btnAnother: "🔄 Бошқа вазифа", btnHint: "👀 Ёрдам", btnExam: "🔒 Имтиҳон", btnCheck: "Текшириш",
+        globalSearchPlaceholder: "Функцияларни қидириш...",
         copy: "Нусха олиш", copied: "Нусха олинди",
-        easy: "Осон", medium: "Ўртача", hard: "Қийин",
-        xp: "XP", level: "Даража", progress: "Жараён",
-        hint: "Ёрдам", hintLevel: "Ёрдам", showSolution: "Ечимни кўрсатиш",
-        nextTask: "Кейинги вазифа", nextFunction: "Кейинги функция",
-        correct: "Тўғри", incorrect: "Формулани қайта текширинг",
-        tryAgain: "Қайта уриниш", loading: "Юкланмоқда...",
-        error: "Дарсни яратиб бўлмади", retry: "Қайта уриниш",
-        exam: "Имтиҳон", examActive: "Имтиҳон режими",
-        examScore: "Тўғри", examAttempts: "Уринишлар", examLocked: "Имтиҳон режимида ёрдам ўчирилган",
-        time: "Вақт", question: "Савол", of: "дан",
-        cellSelected: "Танланган катак", searchNoResults: "Ҳеч нарса топилмади",
-        searchAiCreate: "Функция базада йўқ — ИИ ёрдамида дарс яратинг",
-        completed: "Вазифа бажарилди", repeatTheory: "Назарияни такрорлаш",
-        yourStats: "Менинг жараёним", learned: "Ўрганилган функциялар", accuracy: "Тўғри жавоблар",
-        streak: "Кетма-кет кунлар"
+        easy: "Осон", medium: "Ўртача", hard: "Мураккаб",
+        xp: "XP", level: "Даража",
+        progressTitle: "Кўникмаларингизни оширинг", progressSub: "Янги функцияларни очинг ва Excel устаси бўлинг",
+        hintLevel1: "Нимани топиш керак?", hintLevel2: "Қайси функцияни ишлатиш керак?", hintLevel3: "Формулани шундай бошланг:",
+        showSolution: "Ечимни кўрсатиш", hintOf: "Ёрдам",
+        nextTask: "Кейинги вазифа", nextFunction: "Кейинги функция", repeatTheory: "Назарияни такрорлаш",
+        taskDone: "Вазифа бажарилди", incorrectMsg: "Ҳали тўғри эмас, яна уриниб кўринг",
+        loadingTitle: "ИИ дарсни яратмоқда", errorTitle: "Дарсни яратиб бўлмади", errorSub: "Алоқани текшириб, яна уриниб кўринг",
+        retry: "Такрорлаш", examOnLabel: "🔒 Имтиҳон", examOffLabel: "🔓 Оддий режим",
+        attempts: "Уринишлар", formulaOk: "Формула тўғри", formulaBad: "Формулани текширинг",
+        notFoundInDb: "Функция локал базада йўқ.", createWithAI: "✨ ИИ билан дарс яратиш",
+        toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди"
     }
 };
 
-const DIFFICULTY_XP = { easy: 100, medium: 150, hard: 220 };
+/* =========================================================================
+   3. CSS — единая дизайн-система, инжектится один раз в <head>
+   ========================================================================= */
+const ET_STYLES = `
+.et-shell{
+  --bg-main:#050816; --bg-panel:#0D1328; --bg-card:#111936; --bg-elevated:#151d3d;
+  --accent-purple:#8b5cf6; --accent-blue:#3b82f6; --accent-cyan:#22d3ee; --accent-green:#22e68a; --accent-red:#ef4444;
+  --text-main:#f8fafc; --text-sec:#94a3b8; --border:rgba(255,255,255,.08);
+  --radius-lg:22px; --radius-md:14px; --radius-sm:10px;
+  background:var(--bg-main); color:var(--text-main);
+  border-radius:24px; padding:28px; width:100%; max-width:1280px; margin:0 auto;
+  font-family:inherit; position:relative;
+}
+.et-shell.theme-light{
+  --bg-main:#f4f6fb; --bg-panel:#ffffff; --bg-card:#f8fafc; --bg-elevated:#eef1fb;
+  --text-main:#0f172a; --text-sec:#64748b; --border:rgba(15,23,42,.08);
+}
+.et-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:22px;}
+.et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
+.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
+  background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-green) 100%);box-shadow:0 6px 18px rgba(34,211,238,.25);}
+.et-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.3px;color:var(--text-main);}
+.et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
+.et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
-// ---------------------------------------------------------------------
-// 3. Дизайн-система (п.9, 42-45) — инжектится один раз в <head>
-// ---------------------------------------------------------------------
-const DESIGN_SYSTEM_CSS = `
-:root[data-elms-theme="dark"]{
-  --elms-bg-main:#050816;
-  --elms-bg-panel:#0d1328;
-  --elms-bg-card:#111936;
-  --elms-bg-input:#0a0f22;
-  --elms-accent-purple:#8b5cf6;
-  --elms-accent-blue:#3b82f6;
-  --elms-accent-cyan:#22d3ee;
-  --elms-accent-green:#22e68a;
-  --elms-accent-red:#ef4444;
-  --elms-text-main:#f8fafc;
-  --elms-text-sec:#94a3b8;
-  --elms-border:rgba(255,255,255,.08);
-  --elms-shadow:0 8px 30px rgba(0,0,0,.35);
-}
-:root[data-elms-theme="light"]{
-  --elms-bg-main:#f4f6fb;
-  --elms-bg-panel:#ffffff;
-  --elms-bg-card:#f8fafc;
-  --elms-bg-input:#ffffff;
-  --elms-accent-purple:#7c3aed;
-  --elms-accent-blue:#2563eb;
-  --elms-accent-cyan:#0891b2;
-  --elms-accent-green:#059669;
-  --elms-accent-red:#dc2626;
-  --elms-text-main:#0f172a;
-  --elms-text-sec:#64748b;
-  --elms-border:rgba(15,23,42,.08);
-  --elms-shadow:0 8px 30px rgba(15,23,42,.08);
-}
-.elms-shell{background:var(--elms-bg-main);border-radius:24px;padding:24px;width:100%;max-width:1280px;margin:0 auto;font-family:'Inter',system-ui,sans-serif;color:var(--elms-text-main);}
-.elms-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--elms-border);padding-bottom:18px;margin-bottom:20px;}
-.elms-logo-wrap{display:flex;align-items:center;gap:14px;}
-.elms-logo{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,var(--elms-accent-purple),var(--elms-accent-cyan));box-shadow:0 4px 18px rgba(139,92,246,.35);}
-.elms-title{margin:0;font-size:24px;font-weight:900;letter-spacing:-.4px;}
-.elms-subtitle{font-size:12.5px;color:var(--elms-text-sec);font-weight:600;margin-top:2px;}
-.elms-global-search{flex:1 1 260px;max-width:420px;position:relative;}
-.elms-global-search input{width:100%;padding:11px 44px 11px 40px;border-radius:12px;border:1px solid var(--elms-border);background:var(--elms-bg-input);color:var(--elms-text-main);font-size:13.5px;outline:none;transition:border-color .2s,box-shadow .2s;}
-.elms-global-search input:focus{border-color:var(--elms-accent-cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15);}
-.elms-global-search .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.6;font-size:14px;}
-.elms-global-search .kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--elms-text-sec);border:1px solid var(--elms-border);padding:2px 6px;border-radius:6px;}
-.elms-global-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--elms-bg-panel);border:1px solid var(--elms-border);border-radius:14px;box-shadow:var(--elms-shadow);z-index:40;max-height:280px;overflow-y:auto;padding:6px;}
-.elms-global-search-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;}
-.elms-global-search-item:hover{background:var(--elms-bg-card);}
-.elms-lang-switch{display:flex;gap:4px;background:rgba(0,0,0,.15);padding:5px;border-radius:14px;border:1px solid var(--elms-border);}
-.elms-lang-btn{padding:7px 14px;border-radius:10px;border:none;background:transparent;color:var(--elms-text-sec);font-weight:800;font-size:12.5px;cursor:pointer;transition:all .2s;}
-.elms-lang-btn.active{background:linear-gradient(135deg,var(--elms-accent-purple),var(--elms-accent-blue));color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.4);}
-.elms-theme-toggle{width:38px;height:38px;border-radius:12px;border:1px solid var(--elms-border);background:var(--elms-bg-card);color:var(--elms-text-main);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
-.elms-layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
-.elms-sidebar{flex:1 1 300px;max-width:340px;display:flex;flex-direction:column;gap:16px;max-height:760px;overflow-y:auto;padding-right:6px;}
-.elms-main{flex:3 1 520px;display:flex;flex-direction:column;gap:18px;min-width:0;}
-.elms-card{background:var(--elms-bg-panel);border:1px solid var(--elms-border);border-radius:20px;padding:20px;box-shadow:var(--elms-shadow);}
-.elms-ai-card{background:linear-gradient(160deg,rgba(139,92,246,.14),rgba(34,211,238,.08));border:1px solid rgba(139,92,246,.3);border-radius:20px;padding:20px;position:relative;overflow:hidden;}
-.elms-ai-card .glow{position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(139,92,246,.35),transparent 70%);}
-.elms-eyebrow{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--elms-text-main);margin-bottom:6px;}
-.elms-eyebrow-sub{font-size:12px;color:var(--elms-text-sec);margin-bottom:14px;}
-.elms-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--elms-border);background:var(--elms-bg-input);color:var(--elms-text-main);font-size:13.5px;outline:none;margin-bottom:12px;transition:border-color .2s;}
-.elms-input:focus{border-color:var(--elms-accent-cyan);}
-.elms-gen-btn{width:100%;height:44px;border-radius:12px;border:none;font-weight:800;font-size:13px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--elms-accent-purple),var(--elms-accent-blue));box-shadow:0 6px 18px rgba(139,92,246,.35);display:flex;align-items:center;justify-content:center;gap:8px;}
-.elms-gen-btn:disabled{opacity:.6;cursor:wait;}
-.elms-accordion-head{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;cursor:pointer;user-select:none;}
-.elms-accordion-title{font-size:11.5px;font-weight:800;color:var(--elms-text-sec);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:8px;}
-.elms-accordion-chevron{transition:transform .2s;color:var(--elms-text-sec);}
-.elms-accordion-chevron.open{transform:rotate(180deg);}
-.elms-fn-grid{display:flex;flex-wrap:wrap;gap:8px;padding:4px 4px 10px;}
-.elms-fn-btn{padding:8px 14px;border-radius:20px;border:1px solid var(--elms-border);background:var(--elms-bg-card);color:var(--elms-text-main);font-weight:600;font-size:12.5px;cursor:pointer;transition:transform .15s,border-color .15s;}
-.elms-fn-btn:hover{transform:translateY(-2px);border-color:var(--elms-accent-cyan);}
-.elms-fn-btn.active{background:linear-gradient(135deg,var(--elms-accent-purple),var(--elms-accent-blue));border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.4);}
-.elms-fn-btn:disabled{opacity:.5;cursor:wait;}
-.elms-progress-card{background:linear-gradient(160deg,rgba(34,230,138,.14),rgba(59,130,246,.08));border:1px solid rgba(34,230,138,.3);border-radius:20px;padding:20px;}
-.elms-progress-bar-track{width:100%;height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px;}
-.elms-progress-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--elms-accent-green),var(--elms-accent-cyan));}
-.elms-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
-.elms-badge-easy{background:rgba(34,230,138,.14);color:var(--elms-accent-green);}
-.elms-badge-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
-.elms-badge-hard{background:rgba(239,68,68,.14);color:var(--elms-accent-red);}
-.elms-badge-theory{background:rgba(139,92,246,.14);color:var(--elms-accent-purple);}
-.elms-badge-xp{background:rgba(34,211,238,.14);color:var(--elms-accent-cyan);}
-.elms-def-box{background:var(--elms-bg-card);padding:16px;border-radius:14px;border-left:3px solid var(--elms-accent-purple);margin-bottom:14px;line-height:1.6;font-size:14.5px;}
-.elms-code-box{background:#0a0f22;padding:16px;border-radius:14px;border:1px solid var(--elms-border);position:relative;}
-.elms-code-box code{color:var(--elms-accent-cyan);font-family:'Fira Code',monospace;font-size:14px;white-space:pre-wrap;display:block;line-height:1.7;}
-.elms-copy-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.06);border:1px solid var(--elms-border);color:var(--elms-text-sec);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;}
-.elms-table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--elms-border);background:#fff;}
-.elms-table{width:100%;border-collapse:collapse;text-align:center;font-size:14px;}
-.elms-table th,.elms-table td{border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:9px 10px;color:#1e293b;}
-.elms-table thead th{background:#f1f5f9;color:#334155;font-weight:800;border-bottom:2px solid var(--elms-accent-green);}
-.elms-table .row-head{background:#f1f5f9;font-weight:800;color:#64748b;}
-.elms-table td.selected{background:rgba(34,211,238,.18)!important;outline:2px solid var(--elms-accent-cyan);outline-offset:-2px;}
-.elms-table tbody tr:hover td{background:#f8fafc;}
-.elms-formula-bar{position:relative;margin-bottom:16px;}
-.elms-formula-bar .fx{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-weight:900;font-style:italic;font-size:17px;color:var(--elms-accent-green);}
-.elms-formula-bar input{width:100%;padding:16px 16px 16px 48px;border-radius:14px;border:2px solid var(--elms-border);background:var(--elms-bg-input);color:var(--elms-text-main);font-size:17px;font-weight:700;font-family:'Fira Code',monospace;outline:none;transition:border-color .2s,box-shadow .2s;}
-.elms-formula-bar input.state-focus{border-color:var(--elms-accent-cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15);}
-.elms-formula-bar input.state-correct{border-color:var(--elms-accent-green);}
-.elms-formula-bar input.state-error{border-color:var(--elms-accent-red);}
-.elms-hint-status{font-size:12.5px;font-weight:700;margin-top:8px;display:flex;align-items:center;gap:6px;}
-.elms-hint-status.err{color:var(--elms-accent-red);}
-.elms-hint-status.ok{color:var(--elms-accent-green);}
-.elms-hint-panel{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13.5px;line-height:1.5;}
-.elms-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid var(--elms-border);}
-.elms-btn{flex:1 1 140px;height:46px;border-radius:12px;font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:6px;}
-.elms-btn:disabled{opacity:.5;cursor:not-allowed;}
-.elms-btn-outline{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.35);color:var(--elms-accent-cyan);}
-.elms-btn-muted{background:var(--elms-bg-card);border:1px solid var(--elms-border);color:var(--elms-text-main);}
-.elms-btn-primary{background:linear-gradient(135deg,var(--elms-accent-green),#16a34a);color:#fff;box-shadow:0 6px 16px rgba(34,230,138,.3);}
-.elms-btn-exam{background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.4);color:var(--elms-accent-purple);}
-.elms-btn-exam.active{background:linear-gradient(135deg,var(--elms-accent-purple),#6d28d9);color:#fff;}
-.elms-success-card{background:rgba(34,230,138,.1);border:2px solid var(--elms-accent-green);padding:18px 20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;}
-.elms-error-card{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);border-radius:18px;padding:22px;text-align:center;}
-.elms-skeleton{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--elms-bg-card) 25%,var(--elms-border) 50%,var(--elms-bg-card) 75%);background-size:200% 100%;animation:elms-shimmer 1.4s infinite;}
-@keyframes elms-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.elms-toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:200;}
-.elms-toast{background:var(--elms-bg-panel);border:1px solid var(--elms-border);color:var(--elms-text-main);padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:var(--elms-shadow);}
-.elms-toast.ok{border-color:rgba(34,230,138,.4);}
-.elms-toast.err{border-color:rgba(239,68,68,.4);}
-.elms-exam-strip{display:flex;gap:14px;align-items:center;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:10px 16px;margin-bottom:16px;font-size:12.5px;font-weight:700;flex-wrap:wrap;}
-.elms-drawer-toggle{display:none;}
-@media (max-width: 900px){
-  .elms-layout{flex-direction:column;}
-  .elms-sidebar{max-width:100%;max-height:none;}
-  .elms-drawer-toggle{display:flex;align-items:center;gap:8px;background:var(--elms-bg-card);border:1px solid var(--elms-border);color:var(--elms-text-main);padding:10px 14px;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px;}
-  .elms-sidebar.collapsed{display:none;}
+.et-gsearch{position:relative;width:240px;max-width:40vw;}
+.et-gsearch input{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-size:13px;outline:none;}
+.et-gsearch input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15);}
+.et-gsearch-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;z-index:20;box-shadow:0 12px 30px rgba(0,0,0,.35);max-height:220px;overflow-y:auto;}
+.et-gsearch-item{padding:9px 14px;font-size:13px;font-weight:600;color:var(--text-main);cursor:pointer;}
+.et-gsearch-item:hover{background:rgba(139,92,246,.15);}
+
+.et-langswitch{display:flex;gap:4px;background:rgba(0,0,0,.15);padding:5px;border-radius:14px;border:1px solid var(--border);}
+.et-shell.theme-light .et-langswitch{background:rgba(15,23,42,.05);}
+.et-lang-btn{padding:7px 13px;border-radius:10px;border:none;background:transparent;color:var(--text-sec);font-weight:800;font-size:12px;cursor:pointer;transition:.2s;}
+.et-lang-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.4);}
+
+.et-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
+.et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:16px;max-height:720px;overflow-y:auto;padding-right:6px;}
+
+.et-ai-card{background:var(--bg-panel);border:1px solid var(--border);padding:18px;border-radius:var(--radius-lg);position:relative;overflow:hidden;}
+.et-ai-card::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,.35),transparent 70%);pointer-events:none;}
+.et-ai-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:13px;color:var(--text-main);}
+.et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
+.et-ai-input:focus{border-color:var(--accent-cyan);}
+
+.et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
+.et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
+.et-cat-head-left{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-sec);}
+.et-cat-icon{font-size:13px;color:var(--accent-cyan);}
+.et-cat-chevron{transition:transform .2s;color:var(--text-sec);font-size:11px;}
+.et-cat-chevron.open{transform:rotate(180deg);}
+.et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
+
+.et-fn-btn{padding:7px 13px;border-radius:18px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);
+  font-weight:700;font-size:12.5px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
+.et-fn-btn:hover{border-color:var(--accent-cyan);transform:translateY(-1px);}
+.et-fn-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;border:none;box-shadow:0 4px 14px rgba(59,130,246,.4);}
+.et-fn-dot{width:6px;height:6px;border-radius:50%;flex:none;}
+.et-fn-dot.easy{background:var(--accent-green);}
+.et-fn-dot.medium{background:#fbbf24;}
+.et-fn-dot.hard{background:var(--accent-red);}
+.et-fn-btn:disabled{opacity:.45;cursor:wait;}
+
+.et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
+.et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
+.et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
+.et-progress-row{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:6px;}
+.et-progress-bar-track{height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;}
+.et-shell.theme-light .et-progress-bar-track{background:rgba(15,23,42,.08);}
+.et-progress-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));transition:width .4s ease;}
+
+.et-main{flex:3 1 520px;display:flex;flex-direction:column;gap:18px;min-width:0;}
+
+.et-skeleton-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;min-height:480px;}
+.et-skel-line{height:16px;border-radius:8px;margin-bottom:12px;background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-elevated) 37%,var(--bg-card) 63%);
+  background-size:400% 100%;animation:et-shimmer 1.4s ease infinite;}
+@keyframes et-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.et-skel-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;color:var(--accent-cyan);text-transform:uppercase;letter-spacing:.5px;margin-bottom:20px;}
+
+.et-error-card{background:var(--bg-panel);border:1px solid rgba(239,68,68,.35);border-radius:var(--radius-lg);padding:28px;text-align:center;min-height:300px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.et-error-icon{font-size:34px;}
+.et-error-title{font-size:17px;font-weight:800;color:var(--text-main);}
+.et-error-sub{font-size:13px;color:var(--text-sec);}
+.et-retry-btn{margin-top:8px;padding:10px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));
+  color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
+
+.et-theory-card{background:var(--bg-panel);padding:28px;border-radius:var(--radius-lg);border:1px solid var(--border);}
+.et-theory-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.et-fn-name{margin:0 0 4px;font-size:32px;font-weight:900;color:var(--text-main);letter-spacing:-.5px;}
+.et-fn-en{color:var(--text-sec);font-size:14px;font-weight:600;}
+.et-fn-en b{color:var(--accent-green);font-weight:800;}
+.et-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.et-badge-theory{background:rgba(34,230,138,.12);color:var(--accent-green);}
+.et-badge-diff-easy{background:rgba(34,230,138,.12);color:var(--accent-green);}
+.et-badge-diff-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
+.et-badge-diff-hard{background:rgba(239,68,68,.14);color:#f87171;}
+.et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
+
+.et-def-box{background:var(--bg-card);padding:18px;border-radius:14px;border-left:4px solid var(--accent-green);margin-bottom:16px;}
+.et-box-label{font-size:11px;color:var(--text-sec);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:.5px;}
+.et-def-text{font-size:15px;color:var(--text-main);line-height:1.6;}
+
+.et-syntax-box{background:#0a0f24;padding:18px;border-radius:14px;border:1px solid var(--border);position:relative;}
+.et-shell.theme-light .et-syntax-box{background:#0f172a;}
+.et-syntax-code{font-size:14px;color:#38bdf8;font-family:'Fira Code',monospace;white-space:pre-wrap;display:block;line-height:1.6;padding-right:90px;}
+.et-copy-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#e2e8f0;
+  padding:6px 11px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.et-copy-btn:hover{border-color:var(--accent-cyan);}
+
+.et-practice-card{background:var(--bg-card);padding:28px;border-radius:var(--radius-lg);border:2px dashed var(--border);}
+.et-practice-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.et-practice-title{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent-green);text-transform:uppercase;font-weight:900;letter-spacing:1px;}
+.et-task-text{margin:0 0 22px;color:var(--text-main);font-size:16.5px;font-weight:600;line-height:1.55;}
+
+.et-table-wrap{overflow-x:auto;background:#fff;border-radius:12px;border:1px solid #cbd5e1;box-shadow:0 4px 6px rgba(0,0,0,.04);margin-bottom:26px;}
+.et-table{width:100%;border-collapse:collapse;text-align:center;font-size:14.5px;font-family:sans-serif;}
+.et-table thead tr{background:#f8fafc;border-bottom:3px solid var(--accent-green,#10b981);}
+.et-table th{border-right:1px solid #e2e8f0;padding:11px 8px;font-weight:700;color:#334155;}
+.et-table th.et-corner{width:42px;background:#f1f5f9;color:#94a3b8;}
+.et-table td{border-right:1px solid #e2e8f0;padding:9px 8px;color:#1e293b;cursor:default;transition:background .12s;}
+.et-table td.et-rownum{background:#f1f5f9;font-weight:700;color:#64748b;cursor:default;}
+.et-table tr{border-bottom:1px solid #e2e8f0;}
+.et-table td:not(.et-rownum):hover{background:#eef2ff;}
+.et-table td.et-selected{background:#dbeafe !important;outline:2px solid #3b82f6;outline-offset:-2px;}
+
+.et-formula-bar{position:relative;margin-bottom:8px;}
+.et-formula-bar .fx{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:900;color:var(--accent-green);font-size:18px;font-style:italic;pointer-events:none;}
+.et-formula-bar input{width:100%;padding:18px 18px 18px 52px;border-radius:15px;border:2px solid var(--border);background:var(--bg-panel);
+  color:var(--text-main);font-size:18px;font-weight:700;outline:none;font-family:'Fira Code',monospace;transition:.2s;}
+.et-formula-bar input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 4px rgba(34,211,238,.12);}
+.et-formula-bar.correct input{border-color:var(--accent-green);}
+.et-formula-bar.wrong input{border-color:var(--accent-red);}
+.et-formula-status{font-size:12.5px;font-weight:700;margin:8px 2px 4px;display:flex;align-items:center;gap:6px;}
+.et-formula-status.ok{color:var(--accent-green);}
+.et-formula-status.bad{color:#f87171;}
+
+.et-hint-box{background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.3);border-radius:13px;padding:14px 16px;margin:6px 0 18px;font-size:13.5px;color:#fde68a;line-height:1.5;}
+.et-hint-actions{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;}
+.et-hint-link{background:none;border:none;color:#fbbf24;font-weight:700;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
+
+.et-success-card{background:rgba(34,230,138,.08);border:2px solid var(--accent-green);padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;overflow:hidden;flex-wrap:wrap;margin-bottom:8px;}
+.et-success-title{margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
+.et-success-sub{color:#6ee7b7;font-size:14.5px;font-weight:600;}
+.et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;}
+
+.et-actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+.et-action-btn{flex:1 1 150px;height:48px;border-radius:12px;border:1px solid transparent;font-weight:800;font-size:12.5px;
+  text-transform:uppercase;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.et-action-btn:disabled{opacity:.45;cursor:not-allowed;}
+.et-action-secondary{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.35);color:#38bdf8;}
+.et-action-warning{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#fbbf24;}
+.et-action-exam{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171;}
+.et-action-exam.on{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border-color:transparent;}
+.et-action-primary{background:linear-gradient(135deg,var(--accent-green),#059669);color:#fff;box-shadow:0 4px 15px rgba(16,185,129,.3);}
+
+.et-attempts{font-size:12px;color:var(--text-sec);font-weight:700;align-self:center;padding:0 6px;}
+
+.et-toast-wrap{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:50;pointer-events:none;}
+.et-toast{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-main);padding:10px 16px;border-radius:11px;
+  font-size:13px;font-weight:700;box-shadow:0 10px 25px rgba(0,0,0,.3);}
+
+@media (max-width:760px){
+  .et-gsearch{display:none;}
+  .et-sidebar{max-width:100%;max-height:none;}
 }
 `;
 
-let elmsStyleInjected = false;
-function DesignSystemStyles() {
+function useInjectStyles() {
     useEffect(() => {
-        if (elmsStyleInjected) return;
-        const tag = document.createElement("style");
-        tag.setAttribute("data-elms-design-system", "true");
-        tag.innerHTML = DESIGN_SYSTEM_CSS;
-        document.head.appendChild(tag);
-        elmsStyleInjected = true;
+        if (!document.getElementById("et-styles")) {
+            const tag = document.createElement("style");
+            tag.id = "et-styles";
+            tag.textContent = ET_STYLES;
+            document.head.appendChild(tag);
+        }
     }, []);
-    return null;
 }
 
-// ---------------------------------------------------------------------
-// 4. Утилиты (сохранена логика checkAnswer, вынесена в чистые функции)
-// ---------------------------------------------------------------------
-function normalizeFormula(f) {
-    let str = String(f).trim().toUpperCase()
-        .replace(/\s/g, "")
-        .replace(/,/g, ";")
-        .replace(/["'«»""]/g, "");
-    const ruToEn = { 'А':'A','В':'B','С':'C','Е':'E','Н':'H','К':'K','М':'M','О':'O','Р':'P','Т':'T','Х':'X','У':'Y' };
-    return str.replace(/[АВСЕНКМОРТХУ]/g, m => ruToEn[m]);
-}
+/* =========================================================================
+   4. МЕЛКИЕ ХЕЛПЕРЫ
+   ========================================================================= */
+const getColumnLetter = (colIndex) => String.fromCharCode(65 + colIndex);
 
-function isFormulaCorrect(userInput, expectedList) {
-    if (!expectedList || !expectedList.length) return false;
-    const userForm = normalizeFormula(userInput);
-    return expectedList.some(exp => normalizeFormula(exp) === userForm);
-}
-
-function getTranslatedText(obj, currentLang) {
+// Безопасно достаём перевод из объекта, который прислал ИИ (НЕ ТРОГАЛ логику)
+const getTranslatedText = (obj, currentLang) => {
     if (!obj) return "";
     if (typeof obj === "string") return obj;
     return obj[currentLang] || obj.ru || "";
+};
+
+// Нормализация формулы для сравнения (вынесено в отдельную функцию, логика та же + чуть умнее)
+function normalizeFormula(f) {
+    let str = String(f).trim().toUpperCase()
+        .replace(/\s+/g, "")
+        .replace(/,/g, ";")
+        .replace(/["'«»""]/g, "")
+        .replace(/;+$/g, ""); // убираем висячую точку с запятой в конце
+
+    const ruToEn = { 'А':'A','В':'B','С':'C','Е':'E','Н':'H','К':'K','М':'M','О':'O','Р':'P','Т':'T','Х':'X','У':'Y' };
+    return str.replace(/[АВСЕНКМОРТХУ]/g, (m) => ruToEn[m]);
 }
 
-function getColumnLetter(colIndex) { return String.fromCharCode(65 + colIndex); }
-
+// Проверяем, что урок, который прислал ИИ, содержит всё нужное
 function validateLesson(lesson) {
-    if (!lesson || typeof lesson !== "object") return false;
+    if (!lesson) return false;
     if (!lesson.name || !lesson.enName || !lesson.syntax) return false;
     if (!lesson.def || !lesson.taskDesc) return false;
     if (!Array.isArray(lesson.table) || lesson.table.length < 2) return false;
@@ -333,84 +340,51 @@ function validateLesson(lesson) {
     return true;
 }
 
-function difficultyLabel(diff, t) {
-    if (diff === "hard") return t.hard;
-    if (diff === "medium") return t.medium;
-    return t.easy;
+function getDifficulty(fnName, lesson) {
+    return (lesson && lesson.difficulty) || DIFFICULTY_MAP[fnName] || "medium";
+}
+function getXp(lesson, difficulty) {
+    return (lesson && lesson.xp) || XP_BY_DIFFICULTY[difficulty] || 100;
 }
 
-// ---------------------------------------------------------------------
-// 5. Toast система (п.41) — заменяет alert()
-// ---------------------------------------------------------------------
-function useToasts() {
-    const [toasts, setToasts] = useState([]);
-    const push = useCallback((message, kind = "ok") => {
-        const id = Math.random().toString(36).slice(2);
-        setToasts(t => [...t, { id, message, kind }]);
-        setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3200);
-    }, []);
-    return { toasts, push };
-}
+/* =========================================================================
+   5. ПОДКОМПОНЕНТЫ
+   ========================================================================= */
 
-function ToastStack({ toasts }) {
+function LangSwitch({ lang, setLang }) {
     return (
-        <div className="elms-toast-wrap">
-            <AnimatePresence>
-                {toasts.map(t => (
-                    <motion.div
-                        key={t.id}
-                        className={`elms-toast ${t.kind === "err" ? "err" : "ok"}`}
-                        initial={{ opacity: 0, x: 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 40 }}
-                    >
-                        {t.kind === "err" ? "⚠ " : "✓ "}{t.message}
-                    </motion.div>
-                ))}
-            </AnimatePresence>
+        <div className="et-langswitch">
+            {[{ id: "ru", label: "RU" }, { id: "en", label: "EN" }, { id: "uz", label: "UZ" }].map((item) => (
+                <button key={item.id} className={`et-lang-btn ${lang === item.id ? "active" : ""}`} onClick={() => setLang(item.id)}>
+                    {item.label}
+                </button>
+            ))}
         </div>
     );
 }
 
-// ---------------------------------------------------------------------
-// 6. Header
-// ---------------------------------------------------------------------
-function GlobalSearch({ t, onPick, searchRef }) {
-    const [query, setQuery] = useState("");
+function GlobalSearch({ t, onPick }) {
+    const [q, setQ] = useState("");
     const [open, setOpen] = useState(false);
-
-    const allFunctions = Object.entries(EXCEL_DATABASE).flatMap(([cat, fns]) =>
-        fns.map(f => ({ name: f, category: cat }))
-    );
-    const matches = query.trim()
-        ? allFunctions.filter(f => f.name.toUpperCase().includes(query.trim().toUpperCase())).slice(0, 8)
+    const allFns = Object.entries(EXCEL_DATABASE).flatMap(([cat, fns]) => fns.map((f) => ({ f, cat })));
+    const matches = q.trim()
+        ? allFns.filter((x) => x.f.toUpperCase().includes(q.trim().toUpperCase())).slice(0, 8)
         : [];
 
     return (
-        <div className="elms-global-search" onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); e.target.blur(); } }}>
-            <span className="icon">🔍</span>
+        <div className="et-gsearch">
             <input
-                ref={searchRef}
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+                value={q}
+                placeholder={t.globalSearchPlaceholder}
+                onChange={(e) => { setQ(e.target.value); setOpen(true); }}
                 onFocus={() => setOpen(true)}
                 onBlur={() => setTimeout(() => setOpen(false), 150)}
-                placeholder={t.globalSearch}
             />
-            <span className="kbd">Ctrl K</span>
-            {open && query.trim() && (
-                <div className="elms-global-search-results">
-                    {matches.length === 0 && (
-                        <div style={{ padding: "10px", fontSize: "13px", color: "var(--elms-text-sec)" }}>
-                            {t.searchNoResults}
-                        </div>
-                    )}
-                    {matches.map(m => (
-                        <div key={m.name} className="elms-global-search-item"
-                             onMouseDown={() => { onPick(m.name); setQuery(""); setOpen(false); }}>
-                            <span>{CATEGORY_ICON[m.category] || "•"}</span>
-                            <span>{m.name}</span>
-                            <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--elms-text-sec)", fontWeight: 500 }}>{m.category}</span>
+            {open && matches.length > 0 && (
+                <div className="et-gsearch-drop">
+                    {matches.map((m) => (
+                        <div key={m.f} className="et-gsearch-item" onMouseDown={() => { onPick(m.cat, m.f); setQ(""); setOpen(false); }}>
+                            {m.f} <span style={{ opacity: .5, fontWeight: 500 }}>· {m.cat}</span>
                         </div>
                     ))}
                 </div>
@@ -419,565 +393,225 @@ function GlobalSearch({ t, onPick, searchRef }) {
     );
 }
 
-function LanguageSwitcher({ lang, setLang }) {
-    return (
-        <div className="elms-lang-switch">
-            {["ru", "en", "uz"].map(code => (
-                <button key={code}
-                        className={`elms-lang-btn ${lang === code ? "active" : ""}`}
-                        onClick={() => setLang(code)}>
-                    {code.toUpperCase()}
-                </button>
-            ))}
-        </div>
-    );
+function DifficultyBadge({ difficulty, t }) {
+    const label = t[difficulty] || difficulty;
+    return <span className={`et-badge et-badge-diff-${difficulty}`}>★ {label}</span>;
 }
 
-function ThemeToggle({ theme, setTheme }) {
+function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName, isGenerating, onPick }) {
     return (
-        <button className="elms-theme-toggle" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title="Theme">
-            {theme === "dark" ? "☾" : "☀"}
-        </button>
-    );
-}
-
-function AppHeader({ t, lang, setLang, theme, setTheme, onSearchPick, searchRef }) {
-    return (
-        <header className="elms-header">
-            <div className="elms-logo-wrap">
-                <div className="elms-logo">📊</div>
-                <div>
-                    <h2 className="elms-title">{t.title}</h2>
-                    <div className="elms-subtitle">{t.subtitle}</div>
-                </div>
-            </div>
-            <GlobalSearch t={t} onPick={onSearchPick} searchRef={searchRef} />
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <LanguageSwitcher lang={lang} setLang={setLang} />
-                <ThemeToggle theme={theme} setTheme={setTheme} />
-            </div>
-        </header>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 7. Sidebar
-// ---------------------------------------------------------------------
-function AIMagicCard({ t, customSearch, setCustomSearch, onGenerate, isGenerating }) {
-    return (
-        <div className="elms-ai-card">
-            <div className="glow" />
-            <div className="elms-eyebrow">✨ {t.magic}</div>
-            <div className="elms-eyebrow-sub">{t.magicHint}</div>
-            <input
-                className="elms-input"
-                value={customSearch}
-                onChange={(e) => setCustomSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onGenerate()}
-                placeholder={t.search}
-            />
-            <button className="elms-gen-btn" onClick={onGenerate} disabled={isGenerating}>
-                {isGenerating ? "◌" : "✨"} {isGenerating ? t.genLoading : t.genBtn}
-            </button>
-        </div>
-    );
-}
-
-function CategoryAccordion({ category, isOpen, onToggle, activeFormulaName, isGenerating, onPick }) {
-    return (
-        <div>
-            <div className="elms-accordion-head" onClick={onToggle}>
-                <span className="elms-accordion-title">
-                    <span>{CATEGORY_ICON[category] || "•"}</span>{category}
-                </span>
-                <span className={`elms-accordion-chevron ${isOpen ? "open" : ""}`}>˅</span>
-            </div>
-            <AnimatePresence initial={false}>
-                {isOpen && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        style={{ overflow: "hidden" }}
-                    >
-                        <div className="elms-fn-grid">
-                            {EXCEL_DATABASE[category].map(fName => (
-                                <button
-                                    key={fName}
-                                    className={`elms-fn-btn ${activeFormulaName === fName ? "active" : ""}`}
-                                    disabled={isGenerating}
-                                    onClick={() => onPick(category, fName)}
-                                >
-                                    {fName}
-                                </button>
-                            ))}
+        <>
+            {categories.map((category) => {
+                const isOpen = openCats.has(category);
+                return (
+                    <div className="et-cat" key={category}>
+                        <div className="et-cat-head" onClick={() => toggleCat(category)}>
+                            <div className="et-cat-head-left">
+                                <span className="et-cat-icon">{CATEGORY_ICONS[category] || "•"}</span>
+                                {category}
+                            </div>
+                            <span className={`et-cat-chevron ${isOpen ? "open" : ""}`}>▾</span>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                        {isOpen && (
+                            <div className="et-cat-body">
+                                {EXCEL_DATABASE[category].map((fName) => {
+                                    const isActive = activeFormulaName === fName;
+                                    const diff = DIFFICULTY_MAP[fName] || "medium";
+                                    return (
+                                        <button
+                                            key={fName}
+                                            disabled={isGenerating}
+                                            className={`et-fn-btn ${isActive ? "active" : ""}`}
+                                            onClick={() => onPick(category, fName)}
+                                        >
+                                            {!isActive && <span className={`et-fn-dot ${diff}`} />}
+                                            {fName}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </>
     );
 }
 
 function ProgressCard({ t, progress }) {
-    const xpForNextLevel = progress.level * 200;
-    const pct = Math.min(100, Math.round((progress.xp % 200) / 2));
+    const xpIntoLevel = progress.xp % 500;
+    const pct = Math.min(100, Math.round((xpIntoLevel / 500) * 100));
     return (
-        <div className="elms-progress-card">
-            <div className="elms-eyebrow">💎 {t.yourStats}</div>
-            <div style={{ fontSize: "13px", color: "var(--elms-text-sec)", marginBottom: "14px" }}>
-                {t.learned}: {progress.completedFunctions.length} · {t.streak}: {progress.streak}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 800 }}>
-                <span>{t.level} {progress.level}</span>
-                <span>{progress.xp % 200} / 200 {t.xp}</span>
-            </div>
-            <div className="elms-progress-bar-track">
-                <div className="elms-progress-bar-fill" style={{ width: `${pct}%` }} />
-            </div>
+        <div className="et-progress-card">
+            <div className="et-progress-title">💎 {t.progressTitle}</div>
+            <div className="et-progress-sub">{t.progressSub}</div>
+            <div className="et-progress-row"><span>{t.level} {progress.level}</span><span>{xpIntoLevel} / 500 {t.xp}</span></div>
+            <div className="et-progress-bar-track"><div className="et-progress-bar-fill" style={{ width: `${pct}%` }} /></div>
         </div>
     );
 }
 
-function Sidebar({
-    t, categories, openCategories, toggleCategory,
-    activeCategory, activeFormulaName, isGenerating,
-    onPick, customSearch, setCustomSearch, onGenerate, progress
-}) {
+function LoadingSkeleton({ t, name }) {
     return (
-        <div className="elms-sidebar">
-            <AIMagicCard t={t} customSearch={customSearch} setCustomSearch={setCustomSearch}
-                         onGenerate={onGenerate} isGenerating={isGenerating} />
-            {categories.map(category => (
-                <CategoryAccordion
-                    key={category}
-                    category={category}
-                    isOpen={openCategories.includes(category)}
-                    onToggle={() => toggleCategory(category)}
-                    activeFormulaName={activeFormulaName}
-                    isGenerating={isGenerating}
-                    onPick={onPick}
-                />
-            ))}
-            <ProgressCard t={t} progress={progress} />
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 8. Loading / Error states
-// ---------------------------------------------------------------------
-function LoadingSkeleton({ t, activeFormulaName }) {
-    return (
-        <div className="elms-card" style={{ minHeight: "480px" }}>
-            <div className="elms-eyebrow">✨ {t.aiTitle} {activeFormulaName}…</div>
-            <div style={{ fontSize: "12.5px", color: "var(--elms-text-sec)", marginBottom: "20px" }}>{t.aiSub}</div>
-            <div className="elms-skeleton" style={{ width: "40%", marginBottom: "14px" }} />
-            <div className="elms-skeleton" style={{ width: "70%", marginBottom: "24px" }} />
-            <div className="elms-skeleton" style={{ width: "100%", height: "70px", marginBottom: "18px" }} />
-            <div className="elms-skeleton" style={{ width: "100%", height: "160px" }} />
+        <div className="et-skeleton-card">
+            <div className="et-skel-title">
+                <motion.span animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}>✨</motion.span>
+                {t.loadingTitle}{name ? ` — ${name}` : ""}
+            </div>
+            <div className="et-skel-line" style={{ width: "45%", height: 26 }} />
+            <div className="et-skel-line" style={{ width: "25%" }} />
+            <div className="et-skel-line" style={{ width: "90%", marginTop: 20 }} />
+            <div className="et-skel-line" style={{ width: "75%" }} />
+            <div className="et-skel-line" style={{ width: "95%", marginTop: 20, height: 120 }} />
         </div>
     );
 }
 
 function ErrorCard({ t, onRetry }) {
     return (
-        <div className="elms-error-card">
-            <div style={{ fontSize: "26px", marginBottom: "8px" }}>⚠</div>
-            <div style={{ fontWeight: 800, marginBottom: "6px" }}>{t.error}</div>
-            <div style={{ fontSize: "13px", color: "var(--elms-text-sec)", marginBottom: "16px" }}>{t.tryAgain}</div>
-            <button className="elms-btn elms-btn-primary" style={{ flex: "0 0 auto", padding: "0 24px" }} onClick={onRetry}>
-                {t.retry}
-            </button>
+        <div className="et-error-card">
+            <div className="et-error-icon">⚠️</div>
+            <div className="et-error-title">{t.errorTitle}</div>
+            <div className="et-error-sub">{t.errorSub}</div>
+            <button className="et-retry-btn" onClick={onRetry}>{t.retry}</button>
         </div>
     );
 }
 
-// ---------------------------------------------------------------------
-// 9. Theory / Syntax
-// ---------------------------------------------------------------------
-function TheoryCard({ t, lesson, lang }) {
-    const diff = lesson.difficulty || "easy";
-    const xp = lesson.xp || DIFFICULTY_XP[diff] || 100;
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = () => {
-        navigator.clipboard?.writeText(lesson.syntax || "");
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1600);
-    };
-
+function ToastStack({ toasts }) {
     return (
-        <div className="elms-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px", marginBottom: "16px" }}>
-                <div>
-                    <h1 style={{ margin: "0 0 4px 0", fontSize: "32px", fontWeight: 900 }}>{lesson.name}</h1>
-                    <div style={{ color: "var(--elms-text-sec)", fontSize: "14px", fontWeight: 600 }}>
-                        {t.enVersion} <span style={{ color: "var(--elms-accent-cyan)" }}>{lesson.enName}</span>
-                    </div>
-                </div>
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <span className={`elms-badge elms-badge-${diff}`}>{difficultyLabel(diff, t)}</span>
-                    <span className="elms-badge elms-badge-xp">★ {xp} {t.xp}</span>
-                    <span className="elms-badge elms-badge-theory">📘 {t.theory}</span>
-                </div>
-            </div>
-
-            <div className="elms-def-box">
-                <div style={{ fontSize: "11px", color: "var(--elms-text-sec)", textTransform: "uppercase", fontWeight: 800, marginBottom: "6px" }}>
-                    {t.defTitle}
-                </div>
-                {getTranslatedText(lesson.def, lang)}
-            </div>
-
-            <div className="elms-code-box">
-                <div style={{ fontSize: "11px", color: "var(--elms-text-sec)", textTransform: "uppercase", fontWeight: 800, marginBottom: "10px" }}>
-                    {t.syntaxTitle}
-                </div>
-                <button className="elms-copy-btn" onClick={handleCopy}>
-                    {copied ? `✓ ${t.copied}` : `📋 ${t.copy}`}
-                </button>
-                <code>{lesson.syntax}</code>
-            </div>
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 10. Excel-таблица (интерактивные ячейки, п.24-25)
-// ---------------------------------------------------------------------
-function ExcelTable({ table, t }) {
-    const [selected, setSelected] = useState(null);
-    return (
-        <div>
-            <div className="elms-table-wrap">
-                <table className="elms-table">
-                    <thead>
-                        <tr>
-                            <th style={{ width: "40px" }}></th>
-                            {table[0].map((_, colIdx) => (
-                                <th key={colIdx}>{getColumnLetter(colIdx)}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {table.map((row, rowIdx) => (
-                            <tr key={rowIdx}>
-                                <td className="row-head">{rowIdx + 1}</td>
-                                {row.map((cell, colIdx) => {
-                                    const id = `${getColumnLetter(colIdx)}${rowIdx + 1}`;
-                                    return (
-                                        <td key={colIdx}
-                                            className={selected === id ? "selected" : ""}
-                                            onClick={() => setSelected(id)}
-                                            style={{ cursor: "pointer" }}>
-                                            {cell}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            {selected && (
-                <div style={{ fontSize: "11.5px", color: "var(--elms-text-sec)", marginTop: "6px" }}>
-                    {t.cellSelected}: <b>{selected}</b>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 11. Formula bar
-// ---------------------------------------------------------------------
-function FormulaBar({ t, inputValue, setInputValue, disabled, status, onEnter }) {
-    const [focused, setFocused] = useState(false);
-    const stateClass = status === "correct" ? "state-correct" : status === "error" ? "state-error" : (focused ? "state-focus" : "");
-    return (
-        <div className="elms-formula-bar">
-            <span className="fx">fx</span>
-            <input
-                type="text"
-                value={inputValue}
-                disabled={disabled}
-                className={stateClass}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                onChange={(e) => setInputValue(e.target.value === "" ? "=" : e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === "Enter" && !disabled && onEnter()}
-            />
-            {status === "error" && <div className="elms-hint-status err">⚠ {t.incorrect}</div>}
-            {status === "correct" && <div className="elms-hint-status ok">✓ {t.correct}</div>}
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 12. Честная система подсказок (п.30-31)
-//     hintLevel: 0 = скрыто, 1..3 = уровни, 4 = показать решение
-// ---------------------------------------------------------------------
-function HintPanel({ t, lesson, hintLevel, lang }) {
-    if (hintLevel === 0) return null;
-    const hints = lesson.hint;
-    let text = "";
-    if (hintLevel === 1) {
-        text = (hints && getTranslatedText(hints.level1 || hints, lang)) ||
-            (lang === "en" ? "Think about which function fits this task." :
-             lang === "uz" ? "Бу вазифага қайси функция мос келишини ўйланг." :
-             "Подумайте, какая функция подходит для этой задачи.");
-    } else if (hintLevel === 2) {
-        text = (hints && getTranslatedText(hints.level2, lang)) ||
-            `${lang === "en" ? "Function to use:" : lang === "uz" ? "Қайси функциядан фойдаланинг:" : "Используйте функцию:"} ${lesson.name} (${lesson.enName})`;
-    } else if (hintLevel === 3) {
-        const firstExpected = lesson.expected && lesson.expected[0];
-        const startsWith = firstExpected ? String(firstExpected).slice(0, Math.max(3, Math.ceil(String(firstExpected).length * 0.35))) : "=" + lesson.name + "(";
-        text = (hints && getTranslatedText(hints.level3, lang)) ||
-            `${lang === "en" ? "Start of the formula:" : lang === "uz" ? "Формула бошланиши:" : "Начало формулы:"} ${startsWith}…`;
-    } else if (hintLevel >= 4) {
-        const solution = lesson.expected && lesson.expected[0];
-        text = `${t.showSolution}: ${solution}`;
-    }
-    return (
-        <div className="elms-hint-panel">
-            💡 {t.hintLevel} {Math.min(hintLevel, 4)}/3{hintLevel >= 4 ? "+" : ""} — {text}
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 13. Success card
-// ---------------------------------------------------------------------
-function SuccessCard({ t, lesson, xpAwarded }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="elms-success-card"
-            style={{ overflow: "hidden", marginBottom: "16px" }}
-        >
-            <div>
-                <h4 style={{ margin: "0 0 4px 0", color: "var(--elms-accent-green)", fontSize: "17px", fontWeight: 800 }}>
-                    ✓ {t.successMsg}
-                </h4>
-                <span style={{ fontSize: "14px" }}>{t.resultMsg} <b>{lesson.result}</b></span>
-            </div>
-            <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="elms-badge elms-badge-xp"
-                style={{ fontSize: "13px" }}
-            >
-                +{xpAwarded} XP ✨
-            </motion.div>
-        </motion.div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 14. Exam status strip (п.32-33 — настоящий режим экзамена)
-// ---------------------------------------------------------------------
-function ExamStrip({ t, exam }) {
-    if (!exam.active) return null;
-    const mm = String(Math.floor(exam.elapsed / 60)).padStart(2, "0");
-    const ss = String(exam.elapsed % 60).padStart(2, "0");
-    return (
-        <div className="elms-exam-strip">
-            <span>🔒 {t.examActive}</span>
-            <span>{t.examScore}: {exam.correctCount}</span>
-            <span>{t.examAttempts}: {exam.attempts}</span>
-            <span>⏱ {mm}:{ss}</span>
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------
-// 15. Practice card (собирает таблицу, formula bar, hints, actions)
-// ---------------------------------------------------------------------
-function PracticeCard({
-    t, lang, lesson, inputValue, setInputValue,
-    showSuccess, formulaStatus, onCheck,
-    hintLevel, onHintClick, onShowSolution,
-    examMode, onToggleExam, exam,
-    onAnother, onNextFunction, xpAwarded
-}) {
-    return (
-        <div className="elms-card" style={{ border: "2px dashed var(--elms-border)" }}>
-            <div className="elms-eyebrow" style={{ color: "var(--elms-accent-green)" }}>
-                🎯 {t.practice}
-            </div>
-
-            <ExamStrip t={t} exam={exam} />
-
-            <p style={{ margin: "0 0 20px 0", fontSize: "16px", fontWeight: 600, lineHeight: 1.5 }}>
-                {getTranslatedText(lesson.taskDesc, lang)}
-            </p>
-
-            <div style={{ marginBottom: "22px" }}>
-                <ExcelTable table={lesson.table} t={t} />
-            </div>
-
-            <FormulaBar
-                t={t}
-                inputValue={inputValue}
-                setInputValue={setInputValue}
-                disabled={showSuccess}
-                status={formulaStatus}
-                onEnter={onCheck}
-            />
-
-            {!examMode && <HintPanel t={t} lesson={lesson} hintLevel={hintLevel} lang={lang} />}
-
+        <div className="et-toast-wrap">
             <AnimatePresence>
-                {showSuccess && <SuccessCard t={t} lesson={lesson} xpAwarded={xpAwarded} />}
+                {toasts.map((tItem) => (
+                    <motion.div key={tItem.id} className="et-toast" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}>
+                        {tItem.text}
+                    </motion.div>
+                ))}
             </AnimatePresence>
-
-            <div className="elms-actions">
-                {!showSuccess ? (
-                    <>
-                        <button className="elms-btn elms-btn-outline" onClick={onAnother}>
-                            🔄 {t.btnAnother}
-                        </button>
-                        {!examMode && (
-                            <button className="elms-btn elms-btn-muted" onClick={onHintClick}>
-                                💡 {t.btnHint}{hintLevel > 0 ? ` ${Math.min(hintLevel, 3)}/3` : ""}
-                            </button>
-                        )}
-                        {!examMode && hintLevel >= 3 && (
-                            <button className="elms-btn elms-btn-muted" onClick={onShowSolution}>
-                                🗝 {t.showSolution}
-                            </button>
-                        )}
-                        <button className={`elms-btn elms-btn-exam ${examMode ? "active" : ""}`} onClick={onToggleExam}>
-                            🔒 {examMode ? t.btnExamOff : t.btnExam}
-                        </button>
-                        <button className="elms-btn elms-btn-primary" onClick={onCheck}>
-                            ✓ {t.btnCheck}
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <div className="elms-btn elms-btn-muted" style={{ cursor: "default", flex: "1 1 100%", opacity: 1 }}>
-                            ✓ {t.completed}
-                        </div>
-                        <button className="elms-btn elms-btn-outline" onClick={onAnother}>
-                            {t.nextTask}
-                        </button>
-                        <button className="elms-btn elms-btn-primary" onClick={onNextFunction}>
-                            {t.nextFunction}
-                        </button>
-                    </>
-                )}
-            </div>
         </div>
     );
 }
 
-// ---------------------------------------------------------------------
-// 16. Главный компонент
-// ---------------------------------------------------------------------
-const ExcelTrainerLMS = ({ onBack }) => {
-    const categories = Object.keys(EXCEL_DATABASE);
+function ExcelTable({ table, selected, onSelectCell }) {
+    return (
+        <div className="et-table-wrap">
+            <table className="et-table">
+                <thead>
+                    <tr>
+                        <th className="et-corner"></th>
+                        {table[0].map((_, colIdx) => <th key={colIdx}>{getColumnLetter(colIdx)}</th>)}
+                    </tr>
+                </thead>
+                <tbody>
+                    {table.map((row, rowIdx) => (
+                        <tr key={rowIdx}>
+                            <td className="et-rownum">{rowIdx + 1}</td>
+                            {row.map((cell, colIdx) => {
+                                const cellId = `${getColumnLetter(colIdx)}${rowIdx + 1}`;
+                                return (
+                                    <td
+                                        key={colIdx}
+                                        className={selected === cellId ? "et-selected" : ""}
+                                        onClick={() => onSelectCell(cellId)}
+                                        title={cellId}
+                                    >
+                                        {cell}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
+/* =========================================================================
+   6. ГЛАВНЫЙ КОМПОНЕНТ
+   ========================================================================= */
+const ExcelTrainerLMS = ({ onBack, theme = "dark" }) => {
+    useInjectStyles();
+
+    const categories = Object.keys(EXCEL_DATABASE);
     const [activeCategory, setActiveCategory] = useState(categories[0]);
     const [activeFormulaName, setActiveFormulaName] = useState(EXCEL_DATABASE[categories[0]][0]);
-    const [openCategories, setOpenCategories] = useState([categories[0]]);
+    const [openCats, setOpenCats] = useState(new Set([categories[0]]));
 
     const [currentLesson, setCurrentLesson] = useState(null);
     const [inputValue, setInputValue] = useState("=");
     const [shake, setShake] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [formulaStatus, setFormulaStatus] = useState("idle"); // idle | error | correct
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
-    const [genError, setGenError] = useState(false);
 
     const [lang, setLang] = useState("ru");
-    const [theme, setTheme] = useState("dark");
-    const [hintsEnabled, setHintsEnabled] = useState(true); // из Firebase — как и раньше
+
+    // подсказки, разрешённые настройками (Firebase, как и раньше)
+    const [hintsEnabled, setHintsEnabled] = useState(true);
+
+    // новое состояние
+    const [error, setError] = useState(false);
     const [hintLevel, setHintLevel] = useState(0);
     const [examMode, setExamMode] = useState(false);
-    const [exam, setExam] = useState({ active: false, attempts: 0, correctCount: 0, elapsed: 0 });
-
-    const [userProgress, setUserProgress] = useState({
-        xp: 0, level: 1, completedFunctions: [], streak: 0
-    });
+    const [attempts, setAttempts] = useState(0);
+    const [answerStatus, setAnswerStatus] = useState("idle"); // idle | wrong
+    const [selectedCell, setSelectedCell] = useState(null);
+    const [copyState, setCopyState] = useState(false);
+    const [toasts, setToasts] = useState([]);
+    const [progress, setProgress] = useState({ level: 1, xp: 0, completedLessons: 0, streak: 0 });
 
     const t = UI_DICT[lang];
-    const searchRef = useRef(null);
-    const { toasts, push: pushToast } = useToasts();
 
-    useEffect(() => {
-        document.documentElement.setAttribute("data-elms-theme", theme);
-    }, [theme]);
+    const pushToast = useCallback((text) => {
+        const id = Date.now() + Math.random();
+        setToasts((prev) => [...prev, { id, text }]);
+        setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
+    }, []);
 
-    // --- Firebase: excelHintsEnabled + прогресс (логика подписки сохранена) ---
+    // СЛУШАЕМ БАЗУ ДАННЫХ (без изменений в логике)
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
 
-        const unsub = window.db.collection("users").doc(uid).onSnapshot(doc => {
+        const unsub = window.db.collection('users').doc(uid).onSnapshot(doc => {
             if (doc.exists) {
                 const data = doc.data();
                 setHintsEnabled(data.excelHintsEnabled !== false);
-                if (typeof data.excelXp === "number") {
-                    setUserProgress(p => ({
-                        ...p,
-                        xp: data.excelXp,
-                        level: Math.floor(data.excelXp / 200) + 1,
-                        completedFunctions: data.excelCompletedFunctions || p.completedFunctions,
-                        streak: data.excelStreak || p.streak
-                    }));
+                if (data.excelProgress) {
+                    setProgress((prev) => ({ ...prev, ...data.excelProgress }));
                 }
             }
         });
         return () => unsub();
     }, []);
 
-    // --- exam timer ---
-    useEffect(() => {
-        if (!exam.active) return;
-        const id = setInterval(() => setExam(e => ({ ...e, elapsed: e.elapsed + 1 })), 1000);
-        return () => clearInterval(id);
-    }, [exam.active]);
-
-    // --- keyboard shortcuts (п.48-49) ---
-    useEffect(() => {
-        const handler = (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-                e.preventDefault();
-                searchRef.current?.focus();
-            }
-        };
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-    }, []);
-
     useEffect(() => {
         generateAIFormula(activeFormulaName);
+        setOpenCats((prev) => new Set(prev).add(activeCategory));
+        // сброс состояния попытки под новый урок
+        setHintLevel(0);
+        setAttempts(0);
+        setAnswerStatus("idle");
+        setSelectedCell(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFormulaName]);
 
-    const toggleCategory = (category) => {
-        setOpenCategories(prev =>
-            prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
-        );
+    const toggleCat = (cat) => {
+        setOpenCats((prev) => {
+            const next = new Set(prev);
+            next.has(cat) ? next.delete(cat) : next.add(cat);
+            return next;
+        });
     };
 
-    // -------------------------------------------------------------
-    // Генерация урока ИИ — тот же backend-flow, что и раньше,
-    // + расширенный JSON-контракт и повторный запрос при невалидном
-    // ответе (п.3-4, 66-69)
-    // -------------------------------------------------------------
-    const generateAIFormula = async (formulaName, attempt = 0) => {
+    const generateAIFormula = async (formulaName, isRetry) => {
         setInputValue("=");
         setShowSuccess(false);
-        setFormulaStatus("idle");
-        setHintLevel(0);
         setIsGenerating(true);
-        setGenError(false);
         setCurrentLesson(null);
+        setError(false);
+        setAnswerStatus("idle");
 
         const themes = [
             "успеваемость и оценки студентов на экзаменах",
@@ -999,7 +633,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
         ];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-        const prompt = `Ты профессиональный преподаватель Microsoft Excel.
+        const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
         Верни ТОЛЬКО чистый валидный JSON (без markdown) строго в таком формате:
@@ -1007,7 +641,7 @@ const ExcelTrainerLMS = ({ onBack }) => {
           "name": "${formulaName}",
           "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
           "difficulty": "easy | medium | hard",
-          "xp": число (100 для easy, 150 для medium, 220 для hard),
+          "xp": число от 50 до 200 в зависимости от сложности,
           "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; \\"Текст\\"; X1:X10)",
           "def": {
              "ru": "Подробное, простое объяснение функции на русском. Обязательно короткий пример из жизни, связанный с темой.",
@@ -1020,9 +654,9 @@ const ExcelTrainerLMS = ({ onBack }) => {
              "uz": "Формула ёзинг, у [НИМАНИДИР] ҳисоблайди (Кирилл алифбосида)."
           },
           "hint": {
-             "level1": { "ru": "Мягкая подсказка без названия функции.", "en": "...", "uz": "..." },
-             "level2": { "ru": "Подсказка с названием функции, но без диапазона.", "en": "...", "uz": "..." },
-             "level3": { "ru": "Начало формулы, без полного решения.", "en": "...", "uz": "..." }
+             "ru": "Короткая подсказка на русском без готового ответа.",
+             "en": "A short hint in English without the full answer.",
+             "uz": "Тайёр жавобсиз қисқа маслаҳат (Кирилл алифбосида)."
           },
           "table": [
             ["Заголовок1", "Заголовок2", "Заголовок3"],
@@ -1037,15 +671,13 @@ const ExcelTrainerLMS = ({ onBack }) => {
         2. ФОРМУЛИРОВКА ЗАДАЧИ: В поле "taskDesc" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО упоминать ячейку для вывода результата.
         3. ЛОГИКА ОЖИДАЕМОГО ОТВЕТА ("expected"): Добавь ВСЕ правильные варианты.
         4. ЭКРАНИРОВАНИЕ: В массиве "expected" экранируй внутренние кавычки.
-        5. ЕДИНАЯ ТЕМА (САМОЕ ВАЖНОЕ): Я задаю тебе тему задачи: "${randomTheme}".
-           - Поля "def", "table", "taskDesc" и "hint" должны быть ИМЕННО на эту тему!
+        5. ЕДИНАЯ ТЕМА (САМОЕ ВАЖНОЕ): Я задаю тебе тему задачи: "${randomTheme}". 
+           - Поля "def", "table" и "taskDesc" должны быть ИМЕННО на эту тему!
            Категорически запрещено смешивать темы.
         6. ЗАПРЕТ ШАБЛОНОВ: Не используй слова "Иванов", "Петров", "Товар", "Цена", "Категория", если они не подходят к выбранной теме.
-        7. Задача должна иметь однозначный ответ.
-        8. Все значения таблицы должны математически соответствовать expected и result — перед возвратом JSON самостоятельно проверь вычисление.
-        9. Не создавай невозможные или противоречивые данные.
-        10. Поле "hint" НЕ должно содержать полную готовую формулу — только направляющие подсказки.
-        11. "difficulty" должен соответствовать реальной сложности функции, "xp" должен соответствовать "difficulty".`;
+        7. "hint" НЕ должен содержать готовую формулу или прямой ответ — только направление мысли.
+        8. Все значения в "table" должны математически соответствовать "expected" и "result". Перед тем как вернуть JSON, самостоятельно пересчитай результат.
+        9. "difficulty" и "xp" должны реально соответствовать сложности выбранной функции.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -1064,18 +696,18 @@ const ExcelTrainerLMS = ({ onBack }) => {
             const parsedFormula = JSON.parse(jsonMatch[0]);
 
             if (!validateLesson(parsedFormula)) {
-                throw new Error("invalid-lesson-schema");
+                if (!isRetry) {
+                    // одна автоматическая попытка перегенерировать
+                    return generateAIFormula(formulaName, true);
+                }
+                throw new Error("Некорректный урок от ИИ");
             }
 
             setCurrentLesson(parsedFormula);
-        } catch (error) {
-            console.error("Ошибка генерации урока:", error);
-            if (attempt < 1) {
-                // одна автоматическая попытка повторить при невалидном/сбойном ответе
-                return generateAIFormula(formulaName, attempt + 1);
-            }
-            setGenError(true);
-            pushToast(`${t.error}: ${formulaName}`, "err");
+            pushToast(t.toastLessonReady);
+        } catch (err) {
+            console.error("Ошибка:", err);
+            setError(true);
         } finally {
             setIsGenerating(false);
         }
@@ -1086,6 +718,8 @@ const ExcelTrainerLMS = ({ onBack }) => {
         const fName = customSearch.trim().toUpperCase();
 
         if (fName === activeFormulaName) {
+            setInputValue("=");
+            setShowSuccess(false);
             generateAIFormula(fName);
         } else {
             setActiveCategory("Поиск ИИ");
@@ -1094,152 +728,260 @@ const ExcelTrainerLMS = ({ onBack }) => {
         setCustomSearch("");
     };
 
-    const handleSidebarPick = (category, fName) => {
+    const pickFromSidebarOrSearch = (category, fName) => {
         setActiveCategory(category);
         setActiveFormulaName(fName);
     };
 
-    const handleGlobalSearchPick = (fName) => {
-        const category = categories.find(c => EXCEL_DATABASE[c].includes(fName));
-        if (category && !openCategories.includes(category)) {
-            setOpenCategories(prev => [...prev, category]);
-        }
-        setActiveCategory(category || "Поиск ИИ");
-        setActiveFormulaName(fName);
-    };
-
-    // --- XP / прогресс, синхронизация с Firebase (best-effort) ---
-    const awardXp = (amount, fnName) => {
-        setUserProgress(prev => {
-            const nextXp = prev.xp + amount;
-            const nextLevel = Math.floor(nextXp / 200) + 1;
-            const nextCompleted = prev.completedFunctions.includes(fnName)
-                ? prev.completedFunctions
-                : [...prev.completedFunctions, fnName];
-            const next = { ...prev, xp: nextXp, level: nextLevel, completedFunctions: nextCompleted };
-
-            const uid = window.auth?.currentUser?.uid;
-            if (uid && window.db) {
-                window.db.collection("users").doc(uid).set({
-                    excelXp: nextXp,
-                    excelCompletedFunctions: nextCompleted
-                }, { merge: true }).catch(() => {});
-            }
-            return next;
-        });
-    };
-
     const checkAnswer = () => {
         if (!currentLesson) return;
-        const isCorrect = isFormulaCorrect(inputValue, currentLesson.expected);
 
-        setExam(e => e.active ? { ...e, attempts: e.attempts + 1, correctCount: e.correctCount + (isCorrect ? 1 : 0) } : e);
+        const userForm = normalizeFormula(inputValue);
+        const isCorrect = currentLesson.expected.some((exp) => normalizeFormula(exp) === userForm);
 
         if (isCorrect) {
             setShowSuccess(true);
-            setFormulaStatus("correct");
-            const xp = currentLesson.xp || DIFFICULTY_XP[currentLesson.difficulty] || 100;
-            awardXp(xp, activeFormulaName);
-            pushToast(t.correct, "ok");
+            setAnswerStatus("idle");
+            const diff = getDifficulty(activeFormulaName, currentLesson);
+            const xpGain = getXp(currentLesson, diff);
+
+            setProgress((prev) => {
+                const nextXp = prev.xp + xpGain;
+                const nextLevel = 1 + Math.floor(nextXp / 500);
+                const next = { level: nextLevel, xp: nextXp, completedLessons: prev.completedLessons + 1, streak: prev.streak };
+                // best-effort сохранение в Firebase, не ломает интерфейс при отсутствии полей
+                try {
+                    const uid = window.auth?.currentUser?.uid;
+                    if (uid && window.db) {
+                        window.db.collection('users').doc(uid).set({ excelProgress: next }, { merge: true });
+                    }
+                } catch (e) { /* тихо игнорируем — прогресс всё равно виден локально */ }
+                return next;
+            });
         } else {
-            setFormulaStatus("error");
             setShake(true);
+            setAnswerStatus("wrong");
+            setAttempts((prev) => prev + 1);
             setTimeout(() => setShake(false), 400);
         }
     };
 
-    // --- честные подсказки: каждый клик открывает следующий уровень ---
+    const handleCopySyntax = () => {
+        if (!currentLesson) return;
+        navigator.clipboard?.writeText(currentLesson.syntax || "");
+        setCopyState(true);
+        pushToast(t.toastCopied);
+        setTimeout(() => setCopyState(false), 1500);
+    };
+
     const handleHintClick = () => {
-        if (!hintsEnabled) {
-            pushToast(t.examLocked, "err");
-            return;
-        }
-        setHintLevel(l => Math.min(l + 1, 3));
-    };
-    const handleShowSolution = () => setHintLevel(4);
-
-    // --- настоящий экзамен: блокирует подсказки, считает попытки ---
-    const toggleExamMode = () => {
-        if (!examMode) {
-            setExamMode(true);
-            setExam({ active: true, attempts: 0, correctCount: 0, elapsed: 0 });
-            setHintLevel(0);
-        } else {
-            setExamMode(false);
-            setExam(e => ({ ...e, active: false }));
-        }
+        if (!hintsEnabled || examMode) return;
+        setHintLevel((prev) => Math.min(3, prev + 1));
     };
 
-    const handleAnotherTask = () => generateAIFormula(activeFormulaName);
+    const handleNextTask = () => generateAIFormula(activeFormulaName);
 
     const handleNextFunction = () => {
-        const idx = EXCEL_DATABASE[activeCategory]?.indexOf(activeFormulaName);
-        const list = EXCEL_DATABASE[activeCategory] || [];
-        if (idx > -1 && idx < list.length - 1) {
-            setActiveFormulaName(list[idx + 1]);
-        } else {
-            handleAnotherTask();
-        }
+        const list = EXCEL_DATABASE[activeCategory];
+        const idx = list.indexOf(activeFormulaName);
+        const nextName = list[(idx + 1) % list.length];
+        setActiveFormulaName(nextName);
     };
 
-    const xpAwarded = currentLesson ? (currentLesson.xp || DIFFICULTY_XP[currentLesson.difficulty] || 100) : 0;
+    const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
+    const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
+
+    // Для подсказки берём имя функции из СЫРОЙ строки expected (без транслитерации,
+    // которая используется только для сравнения формул в checkAnswer/normalizeFormula)
+    const rawExpected = String(currentLesson?.expected?.[0] || "").trim().toUpperCase();
+    const firstFnLetter = rawExpected.match(/^=\s*([A-ZА-ЯЁ]+)\s*\(/i);
+    const hintStep3 = firstFnLetter ? `=${firstFnLetter[1]}(` : "=";
 
     return (
         <motion.div
-            className="elms-shell glass-panel"
+            className={`et-shell theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
-            <DesignSystemStyles />
             <ToastStack toasts={toasts} />
 
-            <AppHeader
-                t={t} lang={lang} setLang={setLang}
-                theme={theme} setTheme={setTheme}
-                onSearchPick={handleGlobalSearchPick}
-                searchRef={searchRef}
-            />
+            {/* HEADER */}
+            <header className="et-header">
+                <div className="et-header-left">
+                    <div className="et-logo">📊</div>
+                    <div style={{ minWidth: 0 }}>
+                        <h2 className="et-title">{t.title}</h2>
+                        <div className="et-subtitle">{t.subtitle}</div>
+                    </div>
+                </div>
+                <div className="et-header-right">
+                    <GlobalSearch t={t} onPick={pickFromSidebarOrSearch} />
+                    <LangSwitch lang={lang} setLang={setLang} />
+                </div>
+            </header>
 
-            <div className="elms-layout">
-                <Sidebar
-                    t={t}
-                    categories={categories}
-                    openCategories={openCategories}
-                    toggleCategory={toggleCategory}
-                    activeCategory={activeCategory}
-                    activeFormulaName={activeFormulaName}
-                    isGenerating={isGenerating}
-                    onPick={handleSidebarPick}
-                    customSearch={customSearch}
-                    setCustomSearch={setCustomSearch}
-                    onGenerate={handleCustomSearch}
-                    progress={userProgress}
-                />
+            <div className="et-body">
+                {/* SIDEBAR */}
+                <div className="et-sidebar modern-scroll">
+                    <div className="et-ai-card">
+                        <div className="et-ai-title">✨ {t.magic}</div>
+                        <input
+                            className="et-ai-input"
+                            type="text"
+                            value={customSearch}
+                            onChange={(e) => setCustomSearch(e.target.value)}
+                            placeholder={t.search}
+                            onKeyDown={(e) => e.key === "Enter" && handleCustomSearch()}
+                        />
+                        <Button variant="green" onClick={handleCustomSearch} disabled={isGenerating} style={{ width: '100%', height: '44px', fontSize: '14px', borderRadius: '12px', fontWeight: 'bold' }}>
+                            {isGenerating ? t.genLoading : t.genBtn}
+                        </Button>
+                    </div>
 
-                <div className="elms-main">
-                    {isGenerating || !currentLesson ? (
-                        genError
-                            ? <ErrorCard t={t} onRetry={() => generateAIFormula(activeFormulaName)} />
-                            : <LoadingSkeleton t={t} activeFormulaName={activeFormulaName} />
+                    <CategoryAccordion
+                        categories={categories}
+                        openCats={openCats}
+                        toggleCat={toggleCat}
+                        activeFormulaName={activeFormulaName}
+                        isGenerating={isGenerating}
+                        onPick={pickFromSidebarOrSearch}
+                    />
+
+                    <ProgressCard t={t} progress={progress} />
+                </div>
+
+                {/* MAIN CONTENT */}
+                <div className="et-main">
+                    {error ? (
+                        <ErrorCard t={t} onRetry={() => generateAIFormula(activeFormulaName)} />
+                    ) : isGenerating || !currentLesson ? (
+                        <LoadingSkeleton t={t} name={activeFormulaName} />
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.35 }}
-                            style={{ display: "flex", flexDirection: "column", gap: "18px" }}
-                        >
-                            <TheoryCard t={t} lesson={currentLesson} lang={lang} />
-                            <PracticeCard
-                                t={t} lang={lang} lesson={currentLesson}
-                                inputValue={inputValue} setInputValue={setInputValue}
-                                showSuccess={showSuccess} formulaStatus={formulaStatus}
-                                onCheck={checkAnswer}
-                                hintLevel={hintLevel} onHintClick={handleHintClick} onShowSolution={handleShowSolution}
-                                examMode={examMode} onToggleExam={toggleExamMode} exam={exam}
-                                onAnother={handleAnotherTask} onNextFunction={handleNextFunction}
-                                xpAwarded={xpAwarded}
-                            />
+                        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                            {/* ТЕОРИЯ */}
+                            <div className="et-theory-card">
+                                <div className="et-theory-top">
+                                    <div>
+                                        <h1 className="et-fn-name">{currentLesson.name}</h1>
+                                        <div className="et-fn-en">{t.enVersion} <b>{currentLesson.enName}</b></div>
+                                    </div>
+                                    <div className="et-badges">
+                                        <DifficultyBadge difficulty={difficulty} t={t} />
+                                        <span className="et-badge et-badge-xp">⚡ {xpForLesson} {t.xp}</span>
+                                        <span className="et-badge et-badge-theory">📘 {t.theory}</span>
+                                    </div>
+                                </div>
+
+                                <div className="et-def-box">
+                                    <div className="et-box-label">{t.defTitle}</div>
+                                    <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
+                                </div>
+
+                                <div className="et-syntax-box">
+                                    <div className="et-box-label">{t.syntaxTitle}</div>
+                                    <code className="et-syntax-code">{currentLesson.syntax}</code>
+                                    <button className="et-copy-btn" onClick={handleCopySyntax}>
+                                        {copyState ? `✓ ${t.copied}` : `📋 ${t.copy}`}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ПРАКТИКА */}
+                            <div className="et-practice-card">
+                                <div className="et-practice-top">
+                                    <div className="et-practice-title">🎯 {t.practice}</div>
+                                    {examMode && <span className="et-attempts">🔒 {t.attempts}: {attempts}</span>}
+                                </div>
+
+                                <p className="et-task-text">{getTranslatedText(currentLesson.taskDesc, lang)}</p>
+
+                                <ExcelTable table={currentLesson.table} selected={selectedCell} onSelectCell={setSelectedCell} />
+
+                                <div className={`et-formula-bar ${answerStatus === "wrong" ? "wrong" : ""} ${showSuccess ? "correct" : ""}`}>
+                                    <div className="fx">fx</div>
+                                    <input
+                                        type="text"
+                                        value={inputValue}
+                                        onChange={(e) => { if (e.target.value === "") setInputValue("="); else setInputValue(e.target.value.toUpperCase()); }}
+                                        disabled={showSuccess}
+                                        onKeyDown={(e) => e.key === 'Enter' && !showSuccess && checkAnswer()}
+                                    />
+                                </div>
+                                {answerStatus === "wrong" && !showSuccess && (
+                                    <div className="et-formula-status bad">⚠ {t.formulaBad}</div>
+                                )}
+                                {showSuccess && (
+                                    <div className="et-formula-status ok">✓ {t.formulaOk}</div>
+                                )}
+
+                                {/* ПОДСКАЗКИ */}
+                                {!showSuccess && !examMode && hintsEnabled && hintLevel > 0 && (
+                                    <div className="et-hint-box">
+                                        {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
+                                        {hintLevel >= 2 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
+                                        {hintLevel >= 3 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel3} <code>{hintStep3}</code></div>}
+                                        <div className="et-hint-actions">
+                                            {hintLevel < 3 && <button className="et-hint-link" onClick={handleHintClick}>{t.hintOf} {hintLevel + 1}/3</button>}
+                                            {hintLevel === 3 && (
+                                                <button className="et-hint-link" onClick={() => setInputValue(currentLesson.expected[0])}>
+                                                    {t.showSolution}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* УСПЕХ */}
+                                <AnimatePresence>
+                                    {showSuccess && (
+                                        <motion.div className="et-success-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                                            <div>
+                                                <h4 className="et-success-title">{t.successMsg}</h4>
+                                                <span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span>
+                                            </div>
+                                            <div className="et-success-xp">+{xpForLesson} XP ✨</div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* КНОПКИ */}
+                                <div className="et-actions">
+                                    {!showSuccess ? (
+                                        <>
+                                            <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
+                                                {t.btnAnother}
+                                            </button>
+                                            {hintsEnabled && (
+                                                <button
+                                                    className={`et-action-btn et-action-exam ${examMode ? "on" : ""}`}
+                                                    onClick={() => setExamMode((v) => !v)}
+                                                >
+                                                    {examMode ? t.examOnLabel : t.examOffLabel}
+                                                </button>
+                                            )}
+                                            {hintsEnabled && !examMode && (
+                                                <button className="et-action-btn et-action-warning" onClick={handleHintClick} disabled={hintLevel >= 3}>
+                                                    {t.btnHint}
+                                                </button>
+                                            )}
+                                            <button className="et-action-btn et-action-primary" onClick={checkAnswer}>
+                                                {t.btnCheck}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
+                                                🔄 {t.nextTask}
+                                            </button>
+                                            <button className="et-action-btn et-action-primary" onClick={handleNextFunction}>
+                                                {t.nextFunction} →
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </motion.div>
                     )}
                 </div>
