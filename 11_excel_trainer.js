@@ -1177,7 +1177,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на Firebase
+    // Подписка на Firebase (настройки админки)
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
