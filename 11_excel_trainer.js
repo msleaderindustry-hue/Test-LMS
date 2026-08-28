@@ -173,7 +173,7 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — стили интерфейса
+   3. CSS — СТИЛИ ИНТЕРФЕЙСА
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
@@ -453,40 +453,80 @@ body.light .et-shell .et-progress-bar-track,
   white-space: pre-line;
 }
 
-/* БЛОК СИНТАКСИСА */
-.et-syntax-box{
-  background: #090e24;
-  padding: 16px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+/* =========================================================================
+   НОВЫЙ ДИЗАЙН БЛОКА СИНТАКСИСА (CODE TERMINAL STYLE)
+   ========================================================================= */
+.et-syntax-box {
+  background: radial-gradient(120% 120% at 50% 0%, #0d1530 0%, #070b1a 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
   position: relative;
-}
-.et-shell.theme-light .et-syntax-box,
-html.light .et-shell .et-syntax-box,
-body.light .et-shell .et-syntax-box,
-[data-theme='light'] .et-shell .et-syntax-box {
-  background: #0f172a;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 
-.et-syntax-header{
+.et-syntax-box:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 238, 0.08);
+}
+
+.et-syntax-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.et-copy-btn{
+.et-syntax-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.et-terminal-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.et-terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.et-dot-red { background: #ef4444; opacity: 0.85; }
+.et-dot-yellow { background: #f59e0b; opacity: 0.85; }
+.et-dot-green { background: #10b981; opacity: 0.85; }
+
+.et-syntax-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.et-syntax-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.et-copy-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #94a3b8;
-  padding: 6px 13px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 9px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -494,27 +534,99 @@ body.light .et-shell .et-syntax-box,
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
-.et-copy-btn:hover{
-  background: rgba(56, 189, 248, 0.14);
+
+.et-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
   border-color: rgba(56, 189, 248, 0.4);
   color: #38bdf8;
   transform: translateY(-1px);
 }
-.et-copy-btn.copied{
+
+.et-copy-btn.copied {
   background: rgba(34, 230, 138, 0.16);
   border-color: rgba(34, 230, 138, 0.45);
   color: #22e68a;
-  box-shadow: 0 2px 10px rgba(34, 230, 138, 0.2);
+  box-shadow: 0 2px 12px rgba(34, 230, 138, 0.25);
 }
 
-.et-syntax-code{
-  font-size: 14.5px;
-  color: #38bdf8;
-  font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+.et-syntax-content {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.et-syntax-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.et-line-num {
+  user-select: none;
+  color: #475569;
+  font-size: 12px;
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.et-line-code {
+  color: #e2e8f0;
   white-space: pre-wrap;
-  display: block;
-  line-height: 1.65;
-  margin: 0;
+  word-break: break-all;
+}
+
+/* Элементы подсветки */
+.tok-fn { color: #38bdf8; font-weight: 700; }
+.tok-range { color: #fbbf24; font-weight: 600; }
+.tok-str { color: #34d399; }
+.tok-op { color: #94a3b8; }
+.tok-paren { color: #c084fc; font-weight: 600; }
+.tok-num { color: #f472b6; }
+
+/* Светлая тема для синтаксиса */
+.et-shell.theme-light .et-syntax-box,
+html.light .et-shell .et-syntax-box,
+body.light .et-shell .et-syntax-box,
+[data-theme='light'] .et-shell .et-syntax-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+.et-shell.theme-light .et-syntax-header,
+html.light .et-shell .et-syntax-header,
+body.light .et-shell .et-syntax-header,
+[data-theme='light'] .et-shell .et-syntax-header {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+.et-shell.theme-light .et-line-code,
+html.light .et-shell .et-line-code,
+body.light .et-shell .et-line-code,
+[data-theme='light'] .et-shell .et-line-code {
+  color: #0f172a;
+}
+.et-shell.theme-light .tok-fn { color: #0284c7; }
+.et-shell.theme-light .tok-range { color: #d97706; }
+.et-shell.theme-light .tok-str { color: #059669; }
+.et-shell.theme-light .tok-op { color: #64748b; }
+.et-shell.theme-light .tok-paren { color: #7c3aed; }
+.et-shell.theme-light .tok-num { color: #db2777; }
+.et-shell.theme-light .et-copy-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+.et-shell.theme-light .et-copy-btn:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  color: #0284c7;
 }
 
 .et-practice-card{background:var(--bg-card);padding:28px;border-radius:var(--radius-lg);border:2px dashed var(--border);}
@@ -912,6 +1024,36 @@ function getFormulaStart(lesson, defaultName) {
     return "=";
 }
 
+// Парсер токенов для подсветки синтаксиса
+function renderHighlightedFormula(lineText) {
+    if (!lineText) return null;
+    
+    const tokenRegex = /(".*?"|'[^']*'|[A-ZА-ЯЁ0-9_.]+(?=\()|[A-ZА-ЯЁ]+\d+(?::[A-ZА-ЯЁ]+\d+)?|\b\d+(?:\.\d+)?\b|[=;+\-*/^&><%*]|\(|\)|[^\s\(\)=;+\-*/^&><%*]+|\s+)/g;
+    const tokens = lineText.match(tokenRegex) || [lineText];
+
+    return tokens.map((tok, idx) => {
+        if (/^(".*"|'.*')$/.test(tok)) {
+            return <span key={idx} className="tok-str">{tok}</span>;
+        }
+        if (/^[A-ZА-ЯЁ0-9_.]+$/.test(tok) && idx + 1 < tokens.length && tokens[idx + 1] === '(') {
+            return <span key={idx} className="tok-fn">{tok}</span>;
+        }
+        if (/^[A-ZА-ЯЁ]+\d+(?::[A-ZА-ЯЁ]+\d+)?$/i.test(tok)) {
+            return <span key={idx} className="tok-range">{tok}</span>;
+        }
+        if (/^\d+(\.\d+)?$/.test(tok)) {
+            return <span key={idx} className="tok-num">{tok}</span>;
+        }
+        if (tok === '(' || tok === ')') {
+            return <span key={idx} className="tok-paren">{tok}</span>;
+        }
+        if (/^[=;+\-*/^&><%*]$/.test(tok)) {
+            return <span key={idx} className="tok-op">{tok}</span>;
+        }
+        return <span key={idx}>{tok}</span>;
+    });
+}
+
 /* =========================================================================
    5. КОМПОНЕНТЫ ИНТЕРФЕЙСА
    ========================================================================= */
@@ -1104,6 +1246,46 @@ function ExcelTable({ table, selected, onSelectCell }) {
     );
 }
 
+function SyntaxBlock({ syntax, t, onCopy, copied }) {
+    const lines = (syntax || "").split("\n").filter(l => l.trim() !== "");
+
+    return (
+        <div className="et-syntax-box">
+            <div className="et-syntax-header">
+                <div className="et-syntax-header-left">
+                    <div className="et-terminal-dots">
+                        <span className="et-terminal-dot et-dot-red" />
+                        <span className="et-terminal-dot et-dot-yellow" />
+                        <span className="et-terminal-dot et-dot-green" />
+                    </div>
+                    <div className="et-syntax-title-wrap">
+                        <span className="et-box-label">⚡ {t.syntaxTitle}</span>
+                        <span className="et-syntax-badge">Formula</span>
+                    </div>
+                </div>
+                <button
+                    className={`et-copy-btn ${copied ? "copied" : ""}`}
+                    onClick={onCopy}
+                    title={t.copy}
+                >
+                    <span>{copied ? "✓" : "📋"}</span>
+                    <span>{copied ? t.copied : t.copy}</span>
+                </button>
+            </div>
+            <div className="et-syntax-content">
+                {lines.map((line, idx) => (
+                    <div className="et-syntax-line" key={idx}>
+                        <span className="et-line-num">{String(idx + 1).padStart(2, "0")}</span>
+                        <div className="et-line-code">
+                            {renderHighlightedFormula(line)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 /* =========================================================================
    6. ГЛАВНЫЙ КОМПОНЕНТ
    ========================================================================= */
@@ -1124,7 +1306,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const [lang, setLang] = useState("ru");
 
-    // Определение и авто-синхронизация темы
+    // Определение и синхронизация темы
     const detectTheme = () => {
         if (typeof propTheme !== 'undefined') return propTheme;
         if (typeof document === 'undefined') return 'dark';
@@ -1399,10 +1581,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
-
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
 
-return (
+    return (
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
@@ -1444,7 +1625,7 @@ return (
                         </Button>
                     </div>
 
-                    {/* СКРОЛЛИРУЕМЫЙ СПИСОК ВСЕХ КАТЕГОРИЙ */}
+                    {/* СПИСОК КАТЕГОРИЙ */}
                     <div className="et-cat-list modern-scroll">
                         <CategoryAccordion
                             categories={categories}
@@ -1456,7 +1637,7 @@ return (
                         />
                     </div>
 
-                    {/* КАРТОЧКА ПРОГРЕССА ВНИЗУ */}
+                    {/* КАРТОЧКА ПРОГРЕССА */}
                     <ProgressCard t={t} progress={progress} />
                 </div>
 
@@ -1488,20 +1669,13 @@ return (
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
-                                <div className="et-syntax-box">
-                                    <div className="et-syntax-header">
-                                        <div className="et-box-label">⚡ {t.syntaxTitle}</div>
-                                        <button 
-                                            className={`et-copy-btn ${copyState ? "copied" : ""}`} 
-                                            onClick={handleCopySyntax}
-                                            title={t.copy}
-                                        >
-                                            <span>{copyState ? "✓" : "📋"}</span>
-                                            <span>{copyState ? t.copied : t.copy}</span>
-                                        </button>
-                                    </div>
-                                    <code className="et-syntax-code">{currentLesson.syntax}</code>
-                                </div>
+                                {/* ОБНОВЛЕННЫЙ БЛОК СИНТАКСИСА */}
+                                <SyntaxBlock
+                                    syntax={currentLesson.syntax}
+                                    t={t}
+                                    onCopy={handleCopySyntax}
+                                    copied={copyState}
+                                />
                             </div>
 
                             {/* ПРАКТИКА */}
