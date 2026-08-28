@@ -454,7 +454,7 @@ body.light .et-shell .et-progress-bar-track,
 }
 
 /* =========================================================================
-   НОВЫЙ ДИЗАЙН БЛОКА СИНТАКСИСА (CODE TERMINAL STYLE)
+   БЛОК СИНТАКСИСА (CODE TERMINAL STYLE)
    ========================================================================= */
 .et-syntax-box {
   background: radial-gradient(120% 120% at 50% 0%, #0d1530 0%, #070b1a 100%);
@@ -582,7 +582,7 @@ body.light .et-shell .et-progress-bar-track,
   word-break: break-all;
 }
 
-/* Элементы подсветки */
+/* Элементы подсветки синтаксиса */
 .tok-fn { color: #38bdf8; font-weight: 700; }
 .tok-range { color: #fbbf24; font-weight: 600; }
 .tok-str { color: #34d399; }
@@ -905,14 +905,6 @@ body.light .et-shell .et-hint-link:hover,
   transform: translateY(-1px);
 }
 
-/* Кнопка заблокированного экзамена */
-.et-action-exam{
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px dashed rgba(239, 68, 68, 0.35);
-  color: #f87171;
-  opacity: 0.7;
-}
-
 .et-action-primary{
   background: linear-gradient(135deg, var(--accent-green), #059669);
   color: #fff;
@@ -942,16 +934,6 @@ body.light .et-shell .et-action-warning,
   background: rgba(217, 119, 6, 0.1);
   border-color: rgba(217, 119, 6, 0.3);
   color: #b45309;
-}
-
-.et-shell.theme-light .et-action-exam,
-html.light .et-shell .et-action-exam,
-body.light .et-shell .et-action-exam,
-[data-theme='light'] .et-shell .et-action-exam,
-.light .et-shell .et-action-exam {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.3);
-  color: #dc2626;
 }
 
 @media (max-width:760px){
@@ -1024,7 +1006,7 @@ function getFormulaStart(lesson, defaultName) {
     return "=";
 }
 
-// Парсер токенов для подсветки синтаксиса
+// Парсер токенов формул Excel для подсветки синтаксиса
 function renderHighlightedFormula(lineText) {
     if (!lineText) return null;
     
@@ -1360,7 +1342,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на Firebase
+    // Подписка на изменения прав в реальном времени из Firebase
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1669,7 +1651,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
-                                {/* ОБНОВЛЕННЫЙ БЛОК СИНТАКСИСА */}
+                                {/* ТЕРМИНАЛЬНЫЙ БЛОК СИНТАКСИСА */}
                                 <SyntaxBlock
                                     syntax={currentLesson.syntax}
                                     t={t}
@@ -1682,6 +1664,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                             <div className="et-practice-card">
                                 <div className="et-practice-top">
                                     <div className="et-practice-title">🎯 {t.practice}</div>
+                                    {/* ЕДИНСТВЕННЫЙ ИНДИКАТОР ЭКЗАМЕНА В ШАПКЕ */}
                                     {!hintsEnabled && (
                                         <span className="et-badge et-badge-diff-hard">🔒 {t.btnExam}</span>
                                     )}
@@ -1746,32 +1729,20 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                                 {t.btnAnother}
                                             </button>
 
-                                            <AnimatePresence mode="wait">
-                                                {hintsEnabled ? (
+                                            {/* ПЛАВНОЕ СКРЫТИЕ / ПОЯВЛЕНИЕ КНОПКИ ПОДСКАЗКИ */}
+                                            <AnimatePresence>
+                                                {hintsEnabled && (
                                                     <motion.button
                                                         key="hint-btn"
-                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        initial={{ opacity: 0, scale: 0.9 }}
                                                         animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
                                                         transition={{ duration: 0.2 }}
                                                         className="et-action-btn et-action-warning"
                                                         onClick={handleHintClick}
                                                         disabled={hintLevel >= 3}
                                                     >
                                                         {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
-                                                    </motion.button>
-                                                ) : (
-                                                    <motion.button
-                                                        key="exam-btn"
-                                                        initial={{ opacity: 0, scale: 0.95 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.95 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="et-action-btn et-action-exam"
-                                                        disabled={true}
-                                                        title="Подсказки отключены преподавателем"
-                                                    >
-                                                        {t.btnExam}
                                                     </motion.button>
                                                 )}
                                             </AnimatePresence>
