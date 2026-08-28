@@ -1158,7 +1158,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => observer.disconnect();
     }, [propTheme]);
 
-    // Статус подсказок из Firebase (только из админки)
+    // Статус подсказок из Firebase
     const [hintsEnabled, setHintsEnabled] = useState(true);
 
     const [error, setError] = useState(false);
@@ -1403,10 +1403,10 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
 
     return (
-            <motion.div
+        <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x:, opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
@@ -1534,7 +1534,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-formula-status ok">✓ {t.formulaOk}</div>
                                 )}
 
-                                {/* ПОДСКАЗКИ (ТОЛЬКО ЕСЛИ РАЗРЕШЕНО В АДМИНКЕ) */}
+                                {/* ПОДСКАЗКИ */}
                                 {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
                                         {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
