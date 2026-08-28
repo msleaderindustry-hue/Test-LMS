@@ -80,7 +80,7 @@ const DIFFICULTY_MAP = {
     ЕСЛИ:"easy", И:"easy", ИЛИ:"easy", ЕСЛИОШИБКА:"medium", ЕСНД:"medium", НЕ:"easy", ИСТИНА:"easy", ЛОЖЬ:"easy", ЕСЛИМН:"medium", ПЕРЕКЛЮЧ:"medium", ИСКЛИЛИ:"medium",
     СЦЕПИТЬ:"easy", СЦЕП:"easy", ОБЪЕДИНИТЬ:"medium", ЛЕВСИМВ:"easy", ПРАВСИМВ:"easy", ПСТР:"medium", ДЛСТР:"easy",
     НАЙТИ:"medium", ПОИСК:"medium", ЗАМЕНИТЬ:"medium", ПОДСТАВИТЬ:"medium", ПРОПИСН:"easy", СТРОЧН:"easy", ПРОПНАЧ:"easy",
-    СЖПРОБЕЛЫ:"easy", ТЕСТ:"medium", ЗНАЧЕН:"easy", СОВПАД:"medium", ПОВТОР:"easy", СИМВОЛ:"medium", КОДСИМВ:"medium", ПЕЧСИМВ:"hard",
+    СЖПРОБЕЛЫ:"easy", ТЕКСТ:"medium", ЗНАЧЕН:"easy", СОВПАД:"medium", ПОВТОР:"easy", СИМВОЛ:"medium", КОДСИМВ:"medium", ПЕЧСИМВ:"hard",
     СЕГОДНЯ:"easy", ТДАТА:"easy", ДЕНЬ:"easy", МЕСЯЦ:"easy", ГОД:"easy", ДАТА:"easy", ДЕНЬНЕД:"medium", ЧАС:"easy", МИНУТЫ:"easy", СЕКУНДЫ:"easy", ВРЕМЯ:"easy",
     РАБДЕНЬ:"medium", "РАБДЕНЬ.МЕЖД":"hard", ЧИСТРАБДНИ:"medium", "ЧИСТРАБДНИ.МЕЖД":"hard", ДОЛЯГОДА:"hard", НОМНЕДЕЛИ:"medium", "НОМНЕДЕЛИ.ISO":"medium",
     ДАТАМЕС:"medium", КОНМЕСЯЦ:"medium", РАЗНДАТ:"medium", ДАТАЗНАЧ:"medium", ВРЕМЗНАЧ:"medium",
