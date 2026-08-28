@@ -166,7 +166,18 @@ body.light .et-shell,
   --border: var(--glass-border, rgba(15,23,42,.08));
 }
 
-.et-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:22px;}
+.et-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 100; /* Шапка всегда поверх основного контента */
+}
 .et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
 .et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
   background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-green) 100%);box-shadow:0 6px 18px rgba(34,211,238,.25);}
@@ -174,13 +185,116 @@ body.light .et-shell,
 .et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
 .et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
-.et-gsearch{position:relative;width:240px;max-width:40vw;}
-.et-gsearch input{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-size:13px;outline:none;}
-.et-gsearch input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15);}
-.et-gsearch-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-elevated);border:1px solid var(--border);
-  border-radius:12px;overflow:hidden;z-index:20;box-shadow:0 12px 30px rgba(0,0,0,.35);max-height:220px;overflow-y:auto;}
-.et-gsearch-item{padding:9px 14px;font-size:13px;font-weight:600;color:var(--text-main);cursor:pointer;}
-.et-gsearch-item:hover{background:rgba(139,92,246,.15);}
+/* =========================================================================
+   ПОИСК И НЕПРОЗРАЧНЫЙ ВЫПАДАЮЩИЙ СПИСОК
+   ========================================================================= */
+.et-gsearch{
+  position: relative;
+  width: 250px;
+  max-width: 40vw;
+  z-index: 101;
+}
+.et-gsearch input{
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+.et-gsearch input:focus{
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(34,211,238,.18);
+  background: var(--bg-panel);
+}
+.et-gsearch-icon{
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--text-sec);
+  pointer-events: none;
+}
+
+/* Выпадающий список: 100% плотный непрозрачный фон и максимальный z-index */
+.et-gsearch-drop{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 260px;
+  background: #0d1428; /* Плотный темный фон */
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  overflow: hidden;
+  z-index: 99999; /* Поверх любых элементов и анимаций */
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+/* Светлая тема для выпадающего списка */
+.et-shell.theme-light .et-gsearch-drop,
+html.light .et-shell .et-gsearch-drop,
+body.light .et-shell .et-gsearch-drop,
+[data-theme='light'] .et-shell .et-gsearch-drop,
+.light .et-shell .et-gsearch-drop {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.et-gsearch-drop::-webkit-scrollbar{width:5px;}
+.et-gsearch-drop::-webkit-scrollbar-track{background:transparent;}
+.et-gsearch-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.et-gsearch-item{
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.et-gsearch-item:hover{
+  background: rgba(56, 189, 248, 0.16);
+  color: var(--accent-cyan);
+}
+.et-shell.theme-light .et-gsearch-item:hover,
+html.light .et-shell .et-gsearch-item:hover,
+body.light .et-shell .et-gsearch-item:hover,
+[data-theme='light'] .et-shell .et-gsearch-item:hover,
+.light .et-shell .et-gsearch-item:hover {
+  background: #f1f5f9;
+  color: #0284c7;
+}
+
+.et-gsearch-cat{
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-sec);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.et-shell.theme-light .et-gsearch-cat,
+html.light .et-shell .et-gsearch-cat,
+body.light .et-shell .et-gsearch-cat,
+[data-theme='light'] .et-shell .et-gsearch-cat,
+.light .et-shell .et-gsearch-cat {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
 .et-langswitch{display:flex;gap:4px;background:rgba(0,0,0,.15);padding:5px;border-radius:14px;border:1px solid var(--border);}
 .et-shell.theme-light .et-langswitch,
@@ -275,9 +389,7 @@ body.light .et-shell .et-progress-bar-track,
 .et-box-label{font-size:11.5px;color:var(--text-sec);text-transform:uppercase;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:6px;}
 .et-def-text{font-size:15px;color:var(--text-main);line-height:1.6;margin-top:8px;}
 
-/* =========================================================================
-   БЛОК СИНТАКСИСА И СТИЛЬНАЯ КНОПКА КОПИРОВАНИЯ
-   ========================================================================= */
+/* БЛОК СИНТАКСИСА */
 .et-syntax-box{
   background: #090e24;
   padding: 16px 20px;
@@ -677,20 +789,32 @@ function GlobalSearch({ t, onPick }) {
 
     return (
         <div className="et-gsearch">
+            <span className="et-gsearch-icon">🔍</span>
             <input
                 value={q}
                 placeholder={t.globalSearchPlaceholder}
                 onChange={(e) => { setQ(e.target.value); setOpen(true); }}
                 onFocus={() => setOpen(true)}
-                onBlur={() => setTimeout(() => setOpen(false), 150)}
+                onBlur={() => setTimeout(() => setOpen(false), 200)}
             />
             {open && matches.length > 0 && (
                 <div className="et-gsearch-drop">
-                    {matches.map((m) => (
-                        <div key={m.f} className="et-gsearch-item" onMouseDown={() => { onPick(m.cat, m.f); setQ(""); setOpen(false); }}>
-                            {m.f} <span style={{ opacity: .5, fontWeight: 500 }}>· {m.cat}</span>
-                        </div>
-                    ))}
+                    {matches.map((m) => {
+                        const diff = DIFFICULTY_MAP[m.f] || "medium";
+                        return (
+                            <div 
+                                key={m.f} 
+                                className="et-gsearch-item" 
+                                onMouseDown={() => { onPick(m.cat, m.f); setQ(""); setOpen(false); }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span className={`et-fn-dot ${diff}`} />
+                                    <span>{m.f}</span>
+                                </div>
+                                <span className="et-gsearch-cat">{m.cat}</span>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
