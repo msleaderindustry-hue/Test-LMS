@@ -372,31 +372,9 @@ body.light .et-shell .et-progress-bar-track,
 .et-badge-diff-hard{background:rgba(239,68,68,.14);color:#f87171;}
 .et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
 
-/* БЛОК ОПРЕДЕЛЕНИЯ (РАСШИРЕННЫЙ) */
-.et-def-box{
-  background: var(--bg-card);
-  padding: 20px 22px;
-  border-radius: 14px;
-  border-left: 4px solid var(--accent-green);
-  margin-bottom: 18px;
-}
-.et-box-label{
-  font-size: 11.5px;
-  color: var(--text-sec);
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: .6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.et-def-text{
-  font-size: 15px;
-  color: var(--text-main);
-  line-height: 1.68;
-  margin-top: 10px;
-  white-space: pre-line;
-}
+.et-def-box{background:var(--bg-card);padding:18px;border-radius:14px;border-left:4px solid var(--accent-green);margin-bottom:16px;}
+.et-box-label{font-size:11.5px;color:var(--text-sec);text-transform:uppercase;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:6px;}
+.et-def-text{font-size:15px;color:var(--text-main);line-height:1.6;margin-top:8px;}
 
 /* БЛОК СИНТАКСИСА */
 .et-syntax-box{
@@ -738,6 +716,7 @@ body.light .et-shell .et-hint-link:hover,
   transform: translateY(-1px);
 }
 
+/* Кнопка заблокированного экзамена */
 .et-action-exam{
   background: rgba(239, 68, 68, 0.1);
   border: 1px dashed rgba(239, 68, 68, 0.35);
@@ -1122,7 +1101,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на Firebase (настройки админки)
+    // Подписка на Firebase (слушаем настройки админки)
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1185,7 +1164,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         ];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-        // ОБНОВЛЕННЫЙ ПРОМПТ С ТРЕБОВАНИЕМ К БОЛЕЕ ОБЪЕМНОМУ И СОДЕРЖАТЕЛЬНОМУ ОПРЕДЕЛЕНИЮ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -1197,9 +1175,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
           "xp": число от 50 до 200 в зависимости от сложности,
           "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; \\"Текст\\"; X1:X10)",
           "def": {
-             "ru": "Развернутое, интересное и понятное объяснение функции на русском языке (3-5 предложений, 1-2 абзаца). Опиши: 1) Для чего нужна функция и какую проблему решает. 2) Подробный жизненный пример из выбранной темы, показывающий практическую пользу. 3) Полезный совет или нюанс ее работы (как обрабатывает аргументы, частые ошибки или удобные фишки).",
-             "en": "Detailed and clear explanation of the function in English (3-5 sentences, 1-2 paragraphs), including purpose, practical real-world example from the chosen theme, and a useful tip or nuance.",
-             "uz": "Функциянинг ишлаши ҳақида кенгроқ ва тушунарли изоҳ (3-5 гап, 1-2 хатбоши). Функциянинг мақсади, мавзуга мос ҳаётий батафсил мисол ва ишлатиш бўйича фойдали тавсия (Кирилл алифбосида)."
+             "ru": "Подробное, простое объяснение функции на русском. Обязательно короткий пример из жизни, связанный с темой.",
+             "en": "The exact same explanation and life example translated to English.",
+             "uz": "Функциянинг ишлаши ҳақида батафсил тушунтириш ва ҳаётдан мисол (Кирилл алифбосида)."
           },
           "taskDesc": {
              "ru": "Напишите формулу, которая посчитает [ЧТО-ТО].",
@@ -1230,8 +1208,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         6. ЗАПРЕТ ШАБЛОНОВ: Не используй слова "Иванов", "Петров", "Товар", "Цена", "Категория", если они не подходят к выбранной теме.
         7. "hint" НЕ должен содержать готовую формулу или прямой ответ — только направление мысли.
         8. Все значения в "table" должны математически соответствовать "expected" и "result". Перед тем как вернуть JSON, самостоятельно пересчитай результат.
-        9. "difficulty" и "xp" должны реально соответствовать сложности выбранной функции.
-        10. ОБЪЕМ ОПРЕДЕЛЕНИЯ ("def"): Текст в поле "def" должен быть развернутым, информативным и интересным (не 1-2 коротких предложения, а полноценное доступное объяснение с контекстом и полезным советом).`;
+        9. "difficulty" и "xp" должны реально соответствовать сложности выбранной функции.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -1349,7 +1326,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x:, opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
@@ -1426,7 +1403,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     </div>
                                 </div>
 
-                                {/* РАСШИРЕННЫЙ БЛОК ОПРЕДЕЛЕНИЯ */}
                                 <div className="et-def-box">
                                     <div className="et-box-label">📖 {t.defTitle}</div>
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
@@ -1509,7 +1485,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     )}
                                 </AnimatePresence>
 
-                                {/* КНОПКИ ДЕЙСТВИЙ */}
+                                {/* КНОПКИ ДЕЙСТВИЙ (3 КНОПКИ В РЯД) */}
                                 <div className="et-actions">
                                     {!showSuccess ? (
                                         <>
