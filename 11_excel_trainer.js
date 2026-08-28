@@ -3,96 +3,41 @@ const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
 /* =========================================================================
-   1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
+   1. ДАННЫЕ — база функций
    ========================================================================= */
 const EXCEL_DATABASE = {
-    "Математические": [
-        "СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ОКРУГЛТ", 
-        "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "СЛМЕЖДУ", "ЦЕЛОЕ", "ОТБР", "ЧАСТНОЕ", 
-        "СУММПРОИЗВ", "АБС", "ЗНАК", "ЧЁТН", "НЕЧЁТ", "ФАКТР", "ПИ", "РИМСКОЕ", "АРАБСКОЕ"
-    ],
-    "Динамические массивы": [
-        "ПРОСМОТРX", "ФИЛЬТР", "УНИК", "СОРТ", "СОРТПО", "ПОСЛЕДОВ", "СЛМАССИВ", 
-        "ТЕКСТДО", "ТЕКСТПОСЛЕ", "ТЕКСТРАЗДЕЛ", "ВСТРОКУ", "ВСТОЛБЕЦ", "ВЫБОРСТОЛБЦОВ", "ВЫБОРСТРОК"
-    ],
-    "Поиск и ссылки": [
-        "ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "ПОИСКПОЗX", "СМЕЩ", "ДВССЫЛ", 
-        "СТРОКА", "СТРОКИ", "СТОЛБЕЦ", "СТОЛБЦЫ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП", "АДРЕС", "ГИПЕРССЫЛКА", "ФОРМУЛАТЕКСТ"
-    ],
-    "Логические": [
-        "ЕСЛИ", "И", "ИЛИ", "ЕСЛИОШИБКА", "ЕСНД", "НЕ", "ИСТИНА", "ЛОЖЬ", "ЕСЛИМН", "ПЕРЕКЛЮЧ", "ИСКЛИЛИ"
-    ],
-    "Текстовые": [
-        "СЦЕПИТЬ", "СЦЕП", "ОБЪЕДИНИТЬ", "ЛЕВСИМВ", "ПРАВСИМВ", "ПСТР", "ДЛСТР", 
-        "НАЙТИ", "ПОИСК", "ЗАМЕНИТЬ", "ПОДСТАВИТЬ", "ПРОПИСН", "СТРОЧН", "ПРОПНАЧ", 
-        "СЖПРОБЕЛЫ", "ТЕКСТ", "ЗНАЧЕН", "СОВПАД", "ПОВТОР", "СИМВОЛ", "КОДСИМВ", "ПЕЧСИМВ"
-    ],
-    "Дата и время": [
-        "СЕГОДНЯ", "ТДАТА", "ДЕНЬ", "МЕСЯЦ", "ГОД", "ДАТА", "ДЕНЬНЕД", "ЧАС", "МИНУТЫ", "СЕКУНДЫ", "ВРЕМЯ", 
-        "РАБДЕНЬ", "РАБДЕНЬ.МЕЖД", "ЧИСТРАБДНИ", "ЧИСТРАБДНИ.МЕЖД", "ДОЛЯГОДА", "НОМНЕДЕЛИ", "НОМНЕДЕЛИ.ISO", 
-        "ДАТАМЕС", "КОНМЕСЯЦ", "РАЗНДАТ", "ДАТАЗНАЧ", "ВРЕМЗНАЧ"
-    ],
-    "Статистические": [
-        "СРЗНАЧ", "СРЗНАЧЕСЛИ", "СРЗНАЧЕСЛИМН", "МАКС", "МИН", "МАКСЕСЛИ", "МИНЕСЛИ", 
-        "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "СЧИТАТЬПУСТОТЫ", "МЕДИАНА", "МОДА", "МОДА.ОДН", 
-        "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "РАНГ", "РАНГ.РВ", "СРГЕОМ", "СРГАРМ", "ДИСП", "СТАНДОТКЛОН", "КВАРТИЛЬ", "ПЕРСЕНТИЛЬ", "КОРРЕЛ"
-    ],
-    "Финансовые": [
-        "ПЛТ", "БС", "КПЕР", "СТАВКА", "ПРПЛТ", "ОСПЛТ", "ЧПС", "ВНДОХ", "ЭФФЕКТ", "НОМИНАЛ", "АМОРТИЗ"
-    ],
-    "Базы данных": [
-        "БДСУММ", "БДСРЗНАЧ", "БДМАКС", "БДМИН", "БДСЧЁТ", "БДСЧЁТА", "БДПРОИЗВЕД", "БДИЗВЛЕЧЬ"
-    ],
-    "Информационные": [
-        "ЕПУСТО", "ЕЧИСЛО", "ЕТЕКСТ", "ЕНЕТЕКСТ", "ЕЛОГИЧ", "ЕОШИБКА", "ЕОШ", "ЕНД", 
-        "ТИП", "ТИП.ОШИБКИ", "ЯЧЕЙКА", "ЛИСТ", "ЛИСТЫ", "Ч"
-    ],
-    "Инженерные": [
-        "ДЕС.В.ДВ", "ДЕС.В.ШЕСТН", "ДЕС.В.ВОСЬМ", "ДВ.В.ДЕС", "ДВ.В.ШЕСТН", 
-        "ШЕСТН.В.ДЕС", "ШЕСТН.В.ДВ", "ПРЕОБР", "ДЕЛЬТА", "ПОРОГ"
-    ]
+    "Математические": ["СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "ЦЕЛОЕ", "СУММПРОИЗВ", "АБС"],
+    "Статистические": ["СРЗНАЧ", "СРЗНАЧЕСЛИ", "МАКС", "МИН", "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "МЕДИАНА", "МОДА", "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "СЧИТАТЬПУСТОТЫ"],
+    "Логические": ["ЕСЛИ", "И", "ИЛИ", "ЕСЛИОШИБКА", "НЕ", "ИСТИНА", "ЛОЖЬ", "ЕСЛИМН", "ЕПУСТО", "ЕЧИСЛО", "ЕТЕКСТ"],
+    "Текстовые": ["СЦЕПИТЬ", "ЛЕВСИМВ", "ПРАВСИМВ", "ПСТР", "ДЛСТР", "НАЙТИ", "ПОИСК", "ЗАМЕНИТЬ", "ПОДСТАВИТЬ", "ПРОПИСН", "СТРОЧН", "СЖПРОБЕЛЫ", "ТЕКСТ"],
+    "Дата и время": ["СЕГОДНЯ", "ТДАТА", "ДЕНЬ", "МЕСЯЦ", "ГОД", "ДАТА", "ДЕНЬНЕД", "ЧАС", "МИНУТЫ", "РАБДЕНЬ", "ДОЛЯГОДА", "НОМНЕДЕЛИ"],
+    "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТОЛБЕЦ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП"]
 };
 
 // Иконки категорий для сайдбара
 const CATEGORY_ICONS = {
     "Математические": "Σ",
-    "Динамические массивы": "⚡",
-    "Поиск и ссылки": "🔎",
+    "Статистические": "📈",
     "Логические": "◆",
     "Текстовые": "Aa",
     "Дата и время": "🕐",
-    "Статистические": "📈",
-    "Финансовые": "💰",
-    "Базы данных": "🗄️",
-    "Информационные": "ℹ️",
-    "Инженерные": "⚙️"
+    "Поиск и ссылки": "🔎"
 };
 
 // Сложность функций
 const DIFFICULTY_MAP = {
-    СУММ:"easy", СУММЕСЛИ:"medium", СУММЕСЛИМН:"hard", ОКРУГЛ:"easy", ОКРУГЛВВЕРХ:"easy", ОКРУГЛВНИЗ:"easy", ОКРУГЛТ:"medium",
-    ПРОИЗВЕД:"easy", ОСТАТ:"easy", КОРЕНЬ:"easy", СТЕПЕНЬ:"easy", СЛЧИС:"easy", СЛМЕЖДУ:"easy", ЦЕЛОЕ:"easy", ОТБР:"easy", ЧАСТНОЕ:"easy",
-    СУММПРОИЗВ:"hard", АБС:"easy", ЗНАК:"easy", ЧЁТН:"easy", НЕЧЁТ:"easy", ФАКТР:"medium", ПИ:"easy", РИМСКОЕ:"medium", АРАБСКОЕ:"medium",
-    ПРОСМОТРX:"medium", ФИЛЬТР:"medium", УНИК:"medium", СОРТ:"medium", СОРТПО:"hard", ПОСЛЕДОВ:"medium", СЛМАССИВ:"hard",
-    ТЕКСТДО:"easy", ТЕКСТПОСЛЕ:"easy", ТЕКСТРАЗДЕЛ:"medium", ВСТРОКУ:"hard", ВСТОЛБЕЦ:"hard", ВЫБОРСТОЛБЦОВ:"hard", ВЫБОРСТРОК:"hard",
-    ВПР:"medium", ГПР:"medium", ИНДЕКС:"hard", ПОИСКПОЗ:"hard", ПОИСКПОЗX:"hard", СМЕЩ:"hard", ДВССЫЛ:"hard",
-    СТРОКА:"easy", СТРОКИ:"easy", СТОЛБЕЦ:"easy", СТОЛБЦЫ:"easy", ПРОСМОТР:"hard", ВЫБОР:"medium", ТРАНСП:"medium", АДРЕС:"hard", ГИПЕРССЫЛКА:"easy", ФОРМУЛАТЕКСТ:"easy",
-    ЕСЛИ:"easy", И:"easy", ИЛИ:"easy", ЕСЛИОШИБКА:"medium", ЕСНД:"medium", НЕ:"easy", ИСТИНА:"easy", ЛОЖЬ:"easy", ЕСЛИМН:"medium", ПЕРЕКЛЮЧ:"medium", ИСКЛИЛИ:"medium",
-    СЦЕПИТЬ:"easy", СЦЕП:"easy", ОБЪЕДИНИТЬ:"medium", ЛЕВСИМВ:"easy", ПРАВСИМВ:"easy", ПСТР:"medium", ДЛСТР:"easy",
-    НАЙТИ:"medium", ПОИСК:"medium", ЗАМЕНИТЬ:"medium", ПОДСТАВИТЬ:"medium", ПРОПИСН:"easy", СТРОЧН:"easy", ПРОПНАЧ:"easy",
-    СЖПРОБЕЛЫ:"easy", ТЕСТ:"medium", ЗНАЧЕН:"easy", СОВПАД:"medium", ПОВТОР:"easy", СИМВОЛ:"medium", КОДСИМВ:"medium", ПЕЧСИМВ:"hard",
-    СЕГОДНЯ:"easy", ТДАТА:"easy", ДЕНЬ:"easy", МЕСЯЦ:"easy", ГОД:"easy", ДАТА:"easy", ДЕНЬНЕД:"medium", ЧАС:"easy", МИНУТЫ:"easy", СЕКУНДЫ:"easy", ВРЕМЯ:"easy",
-    РАБДЕНЬ:"medium", "РАБДЕНЬ.МЕЖД":"hard", ЧИСТРАБДНИ:"medium", "ЧИСТРАБДНИ.МЕЖД":"hard", ДОЛЯГОДА:"hard", НОМНЕДЕЛИ:"medium", "НОМНЕДЕЛИ.ISO":"medium",
-    ДАТАМЕС:"medium", КОНМЕСЯЦ:"medium", РАЗНДАТ:"medium", ДАТАЗНАЧ:"medium", ВРЕМЗНАЧ:"medium",
-    СРЗНАЧ:"easy", СРЗНАЧЕСЛИ:"medium", СРЗНАЧЕСЛИМН:"hard", МАКС:"easy", МИН:"easy", МАКСЕСЛИ:"medium", МИНЕСЛИ:"medium",
-    СЧЁТ:"easy", СЧЁТЕСЛИ:"medium", СЧЁТЕСЛИМН:"hard", СЧЁТЗ:"easy", СЧИТАТЬПУСТОТЫ:"easy", МЕДИАНА:"medium", МОДА:"medium", "МОДА.ОДН":"medium",
-    НАИБОЛЬШИЙ:"medium", НАИМЕНЬШИЙ:"medium", РАНГ:"medium", "РАНГ.РВ":"medium", СРГЕОМ:"hard", СРГАРМ:"hard", ДИСП:"hard", СТАНДОТКЛОН:"hard", КВАРТИЛЬ:"hard", ПЕРСЕНТИЛЬ:"hard", КОРРЕЛ:"hard",
-    ПЛТ:"hard", БС:"hard", КПЕР:"hard", СТАВКА:"hard", ПРПЛТ:"hard", ОСПЛТ:"hard", ЧПС:"hard", ВНДОХ:"hard", ЭФФЕКТ:"medium", НОМИНАЛ:"medium", АМОРТИЗ:"hard",
-    БДСУММ:"hard", БДСРЗНАЧ:"hard", БДМАКС:"hard", БДМИН:"hard", БДСЧЁТ:"hard", БДСЧЁТА:"hard", БДПРОИЗВЕД:"hard", БДИЗВЛЕЧЬ:"hard",
-    ЕПУСТО:"easy", ЕЧИСЛО:"easy", ЕТЕКСТ:"easy", ЕНЕТЕКСТ:"easy", ЕЛОГИЧ:"easy", ЕОШИБКА:"medium", ЕОШ:"medium", ЕНД:"medium",
-    ТИП:"medium", "ТИП.ОШИБКИ":"medium", ЯЧЕЙКА:"hard", ЛИСТ:"easy", ЛИСТЫ:"easy", Ч:"easy",
-    "ДЕС.В.ДВ":"medium", "ДЕС.В.ШЕСТН":"medium", "ДЕС.В.ВОСЬМ":"medium", "ДВ.В.ДЕС":"medium", "ДВ.В.ШЕСТН":"medium",
-    "ШЕСТН.В.ДЕС":"medium", "ШЕСТН.В.ДВ":"medium", ПРЕОБР:"hard", ДЕЛЬТА:"medium", ПОРОГ:"medium"
+    СУММ:"easy", СУММЕСЛИ:"medium", СУММЕСЛИМН:"hard", ОКРУГЛ:"easy", ОКРУГЛВВЕРХ:"easy", ОКРУГЛВНИЗ:"easy",
+    ПРОИЗВЕД:"easy", ОСТАТ:"easy", КОРЕНЬ:"easy", СТЕПЕНЬ:"easy", СЛЧИС:"easy", ЦЕЛОЕ:"easy", СУММПРОИЗВ:"hard", АБС:"easy",
+    СРЗНАЧ:"easy", СРЗНАЧЕСЛИ:"medium", МАКС:"easy", МИН:"easy", СЧЁТ:"easy", СЧЁТЕСЛИ:"medium", СЧЁТЕСЛИМН:"hard",
+    СЧЁТЗ:"easy", МЕДИАНА:"medium", МОДА:"medium", НАИБОЛЬШИЙ:"medium", НАИМЕНЬШИЙ:"medium", СЧИТАТЬПУСТОТЫ:"easy",
+    ЕСЛИ:"easy", И:"easy", ИЛИ:"easy", ЕСЛИОШИБКА:"medium", НЕ:"easy", ИСТИНА:"easy", ЛОЖЬ:"easy", ЕСЛИМН:"medium",
+    ЕПУСТО:"easy", ЕЧИСЛО:"easy", ЕТЕКСТ:"easy",
+    СЦЕПИТЬ:"easy", ЛЕВСИМВ:"easy", ПРАВСИМВ:"easy", ПСТР:"medium", ДЛСТР:"easy", НАЙТИ:"medium", ПОИСК:"medium",
+    ЗАМЕНИТЬ:"medium", ПОДСТАВИТЬ:"medium", ПРОПИСН:"easy", СТРОЧН:"easy", СЖПРОБЕЛЫ:"easy", ТЕКСТ:"medium",
+    СЕГОДНЯ:"easy", ТДАТА:"easy", ДЕНЬ:"easy", МЕСЯЦ:"easy", ГОД:"easy", ДАТА:"easy", ДЕНЬНЕД:"medium", ЧАС:"easy",
+    МИНУТЫ:"easy", РАБДЕНЬ:"medium", ДОЛЯГОДА:"hard", НОМНЕДЕЛИ:"medium",
+    ВПР:"medium", ГПР:"medium", ИНДЕКС:"hard", ПОИСКПОЗ:"hard", СМЕЩ:"hard", ДВССЫЛ:"hard", СТРОКА:"easy",
+    СТОЛБЕЦ:"easy", ПРОСМОТР:"hard", ВЫБОР:"medium", ТРАНСП:"medium"
 };
 
 const XP_BY_DIFFICULTY = { easy: 60, medium: 100, hard: 160 };
@@ -110,7 +55,7 @@ const UI_DICT = {
         syntaxTitle: "Примеры синтаксиса", practice: "Практика",
         successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
         btnAnother: "🔄 Другая задача", btnHint: "👀 Подсказка", btnExam: "🔒 Экзамен", btnCheck: "Проверить",
-        globalSearchPlaceholder: "Поиск по всем функциям...",
+        globalSearchPlaceholder: "Поиск по функциям...",
         copy: "Копировать", copied: "Скопировано",
         easy: "Легко", medium: "Средне", hard: "Сложно",
         xp: "XP", level: "Уровень",
@@ -133,7 +78,7 @@ const UI_DICT = {
         syntaxTitle: "Syntax examples", practice: "Practice",
         successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
         btnAnother: "🔄 Another task", btnHint: "👀 Hint", btnExam: "🔒 Exam", btnCheck: "Check",
-        globalSearchPlaceholder: "Search all functions...",
+        globalSearchPlaceholder: "Search functions...",
         copy: "Copy", copied: "Copied",
         easy: "Easy", medium: "Medium", hard: "Hard",
         xp: "XP", level: "Level",
@@ -156,7 +101,7 @@ const UI_DICT = {
         syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
         successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
         btnAnother: "🔄 Бошқа вазифа", btnHint: "👀 Ёрдам", btnExam: "🔒 Имтиҳон", btnCheck: "Текшириш",
-        globalSearchPlaceholder: "Барча функцияларни қидириш...",
+        globalSearchPlaceholder: "Функцияларни қидириш...",
         copy: "Нусха олиш", copied: "Нусха олинди",
         easy: "Осон", medium: "Ўртача", hard: "Мураккаб",
         xp: "XP", level: "Даража",
@@ -238,7 +183,7 @@ body.light .et-shell,
 .et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
 /* ПОИСК */
-.et-gsearch{position:relative;width:260px;max-width:40vw;z-index:101;}
+.et-gsearch{position:relative;width:250px;max-width:40vw;z-index:101;}
 .et-gsearch input{
   width: 100%;
   padding: 10px 14px 10px 36px;
@@ -270,14 +215,14 @@ body.light .et-shell,
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  min-width: 270px;
+  min-width: 260px;
   background: #0d1428;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 14px;
   overflow: hidden;
   z-index: 99999;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  max-height: 290px;
+  max-height: 280px;
   overflow-y: auto;
   padding: 6px;
 }
@@ -296,7 +241,7 @@ body.light .et-shell .et-gsearch-drop,
 .et-gsearch-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
 .et-gsearch-item{
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: 9px;
   font-size: 13px;
   font-weight: 700;
@@ -322,11 +267,11 @@ body.light .et-shell .et-gsearch-item:hover,
 }
 
 .et-gsearch-cat{
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-sec);
   background: rgba(255, 255, 255, 0.08);
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 6px;
 }
 .et-shell.theme-light .et-gsearch-cat,
@@ -374,8 +319,8 @@ body.light .et-shell .et-langswitch,
 .et-cat-chevron.open{transform:rotate(180deg);}
 .et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
 
-.et-fn-btn{padding:7px 12px;border-radius:18px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);
-  font-weight:700;font-size:12px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
+.et-fn-btn{padding:7px 13px;border-radius:18px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);
+  font-weight:700;font-size:12.5px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
 .et-fn-btn:hover{border-color:var(--accent-cyan);transform:translateY(-1px);}
 .et-fn-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;border:none;box-shadow:0 4px 14px rgba(59,130,246,.4);}
 .et-fn-dot{width:6px;height:6px;border-radius:50%;flex:none;}
@@ -427,7 +372,7 @@ body.light .et-shell .et-progress-bar-track,
 .et-badge-diff-hard{background:rgba(239,68,68,.14);color:#f87171;}
 .et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
 
-/* БЛОК ОПРЕДЕЛЕНИЯ */
+/* БЛОК ОПРЕДЕЛЕНИЯ (РАСШИРЕННЫЙ) */
 .et-def-box{
   background: var(--bg-card);
   padding: 20px 22px;
@@ -932,7 +877,7 @@ function GlobalSearch({ t, onPick }) {
     const [open, setOpen] = useState(false);
     const allFns = Object.entries(EXCEL_DATABASE).flatMap(([cat, fns]) => fns.map((f) => ({ f, cat })));
     const matches = q.trim()
-        ? allFns.filter((x) => x.f.toUpperCase().includes(q.trim().toUpperCase())).slice(0, 10)
+        ? allFns.filter((x) => x.f.toUpperCase().includes(q.trim().toUpperCase())).slice(0, 8)
         : [];
 
     return (
@@ -1157,7 +1102,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => observer.disconnect();
     }, [propTheme]);
 
-    // Статус подсказок из Firebase (настройки админки)
+    // Статус подсказок из Firebase (управляется только из админки)
     const [hintsEnabled, setHintsEnabled] = useState(true);
 
     const [error, setError] = useState(false);
@@ -1177,7 +1122,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на Firebase
+    // Подписка на Firebase (настройки админки)
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1236,12 +1181,11 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             "покупка деталей для сборки мощного ПК",
             "сбор урожая яблок и картофеля на ферме",
             "меню и заказы блюд в ресторане",
-            "продажи билетов на музыкальный концерт",
-            "инвестиционный портфель и расчет процентов",
-            "анализ складских запасов и логистики"
+            "продажи билетов на музыкальный концерт"
         ];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
+        // ОБНОВЛЕННЫЙ ПРОМПТ С ТРЕБОВАНИЕМ К БОЛЕЕ ОБЪЕМНОМУ И СОДЕРЖАТЕЛЬНОМУ ОПРЕДЕЛЕНИЮ
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
         Пользователь выбрал функцию: "${formulaName}".
         Создай НОВУЮ уникальную интерактивную задачу по этой функции.
@@ -1390,7 +1334,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const handleNextTask = () => generateAIFormula(activeFormulaName);
 
     const handleNextFunction = () => {
-        const list = EXCEL_DATABASE[activeCategory] || Object.values(EXCEL_DATABASE)[0];
+        const list = EXCEL_DATABASE[activeCategory];
         const idx = list.indexOf(activeFormulaName);
         const nextName = list[(idx + 1) % list.length];
         setActiveFormulaName(nextName);
@@ -1443,7 +1387,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                         </Button>
                     </div>
 
-                    {/* СКРОЛЛИРУЕМЫЙ СПИСОК ВСЕХ КАТЕГОРИЙ */}
+                    {/* СКРОЛЛИРУЕМЫЙ СПИСОК КАТЕГОРИЙ */}
                     <div className="et-cat-list modern-scroll">
                         <CategoryAccordion
                             categories={categories}
@@ -1482,11 +1426,13 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     </div>
                                 </div>
 
+                                {/* РАСШИРЕННЫЙ БЛОК ОПРЕДЕЛЕНИЯ */}
                                 <div className="et-def-box">
                                     <div className="et-box-label">📖 {t.defTitle}</div>
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
+                                {/* БЛОК СИНТАКСИСА */}
                                 <div className="et-syntax-box">
                                     <div className="et-syntax-header">
                                         <div className="et-box-label">⚡ {t.syntaxTitle}</div>
@@ -1533,7 +1479,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-formula-status ok">✓ {t.formulaOk}</div>
                                 )}
 
-                                {/* ПОДСКАЗКИ */}
+                                {/* ПОДСКАЗКИ (ТОЛЬКО ЕСЛИ РАЗРЕШЕНО В АДМИНКЕ) */}
                                 {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
                                         {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
