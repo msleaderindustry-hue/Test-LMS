@@ -65,8 +65,7 @@ const UI_DICT = {
         nextTask: "Следующая задача", nextFunction: "Следующая функция", repeatTheory: "Повторить теорию",
         taskDone: "Задание выполнено", incorrectMsg: "Пока не верно, попробуйте ещё раз",
         loadingTitle: "ИИ создаёт урок", errorTitle: "Не удалось создать урок", errorSub: "Проверьте связь и попробуйте снова",
-        retry: "Повторить", examOnLabel: "🔒 Экзамен", examOffLabel: "🔓 Обычный режим",
-        attempts: "Попыток", formulaOk: "Формула правильная", formulaBad: "Проверьте формулу",
+        retry: "Повторить", attempts: "Попыток", formulaOk: "Формула правильная", formulaBad: "Проверьте формулу",
         notFoundInDb: "Функции нет в локальной базе.", createWithAI: "✨ Создать урок с помощью ИИ",
         toastLessonReady: "Урок создан", toastCopied: "Формула скопирована"
     },
@@ -89,8 +88,7 @@ const UI_DICT = {
         nextTask: "Next task", nextFunction: "Next function", repeatTheory: "Review theory",
         taskDone: "Task completed", incorrectMsg: "Not quite, try again",
         loadingTitle: "AI is building the lesson", errorTitle: "Couldn't generate the lesson", errorSub: "Check your connection and try again",
-        retry: "Retry", examOnLabel: "🔒 Exam", examOffLabel: "🔓 Normal mode",
-        attempts: "Attempts", formulaOk: "Formula looks correct", formulaBad: "Check your formula",
+        retry: "Retry", attempts: "Attempts", formulaOk: "Formula looks correct", formulaBad: "Check your formula",
         notFoundInDb: "This function isn't in the local database.", createWithAI: "✨ Generate lesson with AI",
         toastLessonReady: "Lesson ready", toastCopied: "Formula copied"
     },
@@ -113,8 +111,7 @@ const UI_DICT = {
         nextTask: "Кейинги вазифа", nextFunction: "Кейинги функция", repeatTheory: "Назарияни такрорлаш",
         taskDone: "Вазифа бажарилди", incorrectMsg: "Ҳали тўғри эмас, яна уриниб кўринг",
         loadingTitle: "ИИ дарсни яратмоқда", errorTitle: "Дарсни яратиб бўлмади", errorSub: "Алоқани текшириб, яна уриниб кўринг",
-        retry: "Такрорлаш", examOnLabel: "🔒 Имтиҳон", examOffLabel: "🔓 Оддий режим",
-        attempts: "Уринишлар", formulaOk: "Формула тўғри", formulaBad: "Формулани текширинг",
+        retry: "Такрорлаш", attempts: "Уринишлар", formulaOk: "Формула тўғри", formulaBad: "Формулани текширинг",
         notFoundInDb: "Функция локал базада йўқ.", createWithAI: "✨ ИИ билан дарс яратиш",
         toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди"
     }
@@ -176,7 +173,7 @@ body.light .et-shell,
   padding-bottom: 18px;
   margin-bottom: 22px;
   position: relative;
-  z-index: 100; /* Шапка всегда поверх основного контента */
+  z-index: 100;
 }
 .et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
 .et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
@@ -185,15 +182,8 @@ body.light .et-shell,
 .et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
 .et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
-/* =========================================================================
-   ПОИСК И НЕПРОЗРАЧНЫЙ ВЫПАДАЮЩИЙ СПИСОК
-   ========================================================================= */
-.et-gsearch{
-  position: relative;
-  width: 250px;
-  max-width: 40vw;
-  z-index: 101;
-}
+/* ПОИСК */
+.et-gsearch{position:relative;width:250px;max-width:40vw;z-index:101;}
 .et-gsearch input{
   width: 100%;
   padding: 10px 14px 10px 36px;
@@ -220,25 +210,22 @@ body.light .et-shell,
   pointer-events: none;
 }
 
-/* Выпадающий список: 100% плотный непрозрачный фон и максимальный z-index */
 .et-gsearch-drop{
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
   min-width: 260px;
-  background: #0d1428; /* Плотный темный фон */
+  background: #0d1428;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 14px;
   overflow: hidden;
-  z-index: 99999; /* Поверх любых элементов и анимаций */
+  z-index: 99999;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
   max-height: 280px;
   overflow-y: auto;
   padding: 6px;
 }
-
-/* Светлая тема для выпадающего списка */
 .et-shell.theme-light .et-gsearch-drop,
 html.light .et-shell .et-gsearch-drop,
 body.light .et-shell .et-gsearch-drop,
@@ -677,21 +664,106 @@ body.light .et-shell .et-hint-link:hover,
 .et-success-sub{color:#6ee7b7;font-size:14.5px;font-weight:600;}
 .et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;}
 
-.et-actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
-.et-action-btn{flex:1 1 150px;height:48px;border-radius:12px;border:1px solid transparent;font-weight:800;font-size:12.5px;
-  text-transform:uppercase;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
-.et-action-btn:disabled{opacity:.45;cursor:not-allowed;}
-.et-action-secondary{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.35);color:#38bdf8;}
-.et-action-warning{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#fbbf24;}
-.et-action-exam{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171;}
-.et-action-exam.on{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border-color:transparent;}
-.et-action-primary{background:linear-gradient(135deg,var(--accent-green),#059669);color:#fff;box-shadow:0 4px 15px rgba(16,185,129,.3);}
+/* ПАНЕЛЬ КНОПОК */
+.et-actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.et-action-btn{
+  flex: 1 1 150px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  user-select: none;
+}
+.et-action-btn:disabled{
+  opacity: .5;
+  cursor: not-allowed;
+}
 
-.et-attempts{font-size:12px;color:var(--text-sec);font-weight:700;align-self:center;padding:0 6px;}
+.et-action-secondary{
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+.et-action-secondary:hover:not(:disabled){
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
 
-.et-toast-wrap{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:50;pointer-events:none;}
-.et-toast{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-main);padding:10px 16px;border-radius:11px;
-  font-size:13px;font-weight:700;box-shadow:0 10px 25px rgba(0,0,0,.3);}
+.et-action-warning{
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fbbf24;
+}
+.et-action-warning:hover:not(:disabled){
+  background: rgba(251, 191, 36, 0.2);
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+}
+
+/* Кнопка заблокированного экзамена */
+.et-action-exam{
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  opacity: 0.7;
+}
+
+.et-action-primary{
+  background: linear-gradient(135deg, var(--accent-green), #059669);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+.et-action-primary:hover:not(:disabled){
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Кнопки в светлой теме */
+.et-shell.theme-light .et-action-secondary,
+html.light .et-shell .et-action-secondary,
+body.light .et-shell .et-action-secondary,
+[data-theme='light'] .et-shell .et-action-secondary,
+.light .et-shell .et-action-secondary {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0284c7;
+}
+
+.et-shell.theme-light .et-action-warning,
+html.light .et-shell .et-action-warning,
+body.light .et-shell .et-action-warning,
+[data-theme='light'] .et-shell .et-action-warning,
+.light .et-shell .et-action-warning {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #b45309;
+}
+
+.et-shell.theme-light .et-action-exam,
+html.light .et-shell .et-action-exam,
+body.light .et-shell .et-action-exam,
+[data-theme='light'] .et-shell .et-action-exam,
+.light .et-shell .et-action-exam {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
 
 @media (max-width:760px){
   .et-gsearch{display:none;}
@@ -1009,12 +1081,11 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => observer.disconnect();
     }, [propTheme]);
 
-    // Подсказки, разрешённые настройками (Firebase)
+    // Статус подсказок из Firebase (управляется только из админки)
     const [hintsEnabled, setHintsEnabled] = useState(true);
 
     const [error, setError] = useState(false);
     const [hintLevel, setHintLevel] = useState(0);
-    const [examMode, setExamMode] = useState(false);
     const [attempts, setAttempts] = useState(0);
     const [answerStatus, setAnswerStatus] = useState("idle");
     const [selectedCell, setSelectedCell] = useState(null);
@@ -1030,7 +1101,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на Firebase
+    // Подписка на Firebase (слушаем настройки админки)
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1233,7 +1304,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     };
 
     const handleHintClick = () => {
-        if (!hintsEnabled || examMode) return;
+        if (!hintsEnabled) return;
         setHintLevel((prev) => Math.min(3, prev + 1));
     };
 
@@ -1337,7 +1408,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
-                                {/* БЛОК СИНТАКСИСА С КРАСИВОЙ ШАПКОЙ */}
+                                {/* БЛОК СИНТАКСИСА */}
                                 <div className="et-syntax-box">
                                     <div className="et-syntax-header">
                                         <div className="et-box-label">⚡ {t.syntaxTitle}</div>
@@ -1358,7 +1429,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                             <div className="et-practice-card">
                                 <div className="et-practice-top">
                                     <div className="et-practice-title">🎯 {t.practice}</div>
-                                    {examMode && <span className="et-attempts">🔒 {t.attempts}: {attempts}</span>}
+                                    {!hintsEnabled && (
+                                        <span className="et-badge et-badge-diff-hard">🔒 {t.btnExam}</span>
+                                    )}
                                 </div>
 
                                 <p className="et-task-text">{getTranslatedText(currentLesson.taskDesc, lang)}</p>
@@ -1382,8 +1455,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-formula-status ok">✓ {t.formulaOk}</div>
                                 )}
 
-                                {/* ПОДСКАЗКИ */}
-                                {!showSuccess && !examMode && hintsEnabled && hintLevel > 0 && (
+                                {/* ПОДСКАЗКИ (ТОЛЬКО ЕСЛИ РАЗРЕШЕНО В АДМИНКЕ) */}
+                                {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
                                         {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
                                         {hintLevel >= 2 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
@@ -1412,26 +1485,44 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     )}
                                 </AnimatePresence>
 
-                                {/* КНОПКИ */}
+                                {/* КНОПКИ ДЕЙСТВИЙ (3 КНОПКИ В РЯД) */}
                                 <div className="et-actions">
                                     {!showSuccess ? (
                                         <>
                                             <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
                                                 {t.btnAnother}
                                             </button>
-                                            {hintsEnabled && (
-                                                <button
-                                                    className={`et-action-btn et-action-exam ${examMode ? "on" : ""}`}
-                                                    onClick={() => setExamMode((v) => !v)}
-                                                >
-                                                    {examMode ? t.examOnLabel : t.examOffLabel}
-                                                </button>
-                                            )}
-                                            {hintsEnabled && !examMode && (
-                                                <button className="et-action-btn et-action-warning" onClick={handleHintClick} disabled={hintLevel >= 3}>
-                                                    {t.btnHint}
-                                                </button>
-                                            )}
+
+                                            <AnimatePresence mode="wait">
+                                                {hintsEnabled ? (
+                                                    <motion.button
+                                                        key="hint-btn"
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        transition={{ duration: 0.2 }}
+                                                        className="et-action-btn et-action-warning"
+                                                        onClick={handleHintClick}
+                                                        disabled={hintLevel >= 3}
+                                                    >
+                                                        {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
+                                                    </motion.button>
+                                                ) : (
+                                                    <motion.button
+                                                        key="exam-btn"
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        transition={{ duration: 0.2 }}
+                                                        className="et-action-btn et-action-exam"
+                                                        disabled={true}
+                                                        title="Подсказки отключены преподавателем"
+                                                    >
+                                                        {t.btnExam}
+                                                    </motion.button>
+                                                )}
+                                            </AnimatePresence>
+
                                             <button className="et-action-btn et-action-primary" onClick={checkAnswer}>
                                                 {t.btnCheck}
                                             </button>
