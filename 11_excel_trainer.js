@@ -53,6 +53,7 @@ const EXCEL_DATABASE = {
     ]
 };
 
+// Иконки категорий для сайдбара
 const CATEGORY_ICONS = {
     "Математические": "Σ",
     "Динамические массивы": "⚡",
@@ -67,6 +68,7 @@ const CATEGORY_ICONS = {
     "Инженерные": "⚙️"
 };
 
+// Сложность функций
 const DIFFICULTY_MAP = {
     СУММ:"easy", СУММЕСЛИ:"medium", СУММЕСЛИМН:"hard", ОКРУГЛ:"easy", ОКРУГЛВВЕРХ:"easy", ОКРУГЛВНИЗ:"easy", ОКРУГЛТ:"medium",
     ПРОИЗВЕД:"easy", ОСТАТ:"easy", КОРЕНЬ:"easy", СТЕПЕНЬ:"easy", СЛЧИС:"easy", СЛМЕЖДУ:"easy", ЦЕЛОЕ:"easy", ОТБР:"easy", ЧАСТНОЕ:"easy",
@@ -78,7 +80,7 @@ const DIFFICULTY_MAP = {
     ЕСЛИ:"easy", И:"easy", ИЛИ:"easy", ЕСЛИОШИБКА:"medium", ЕСНД:"medium", НЕ:"easy", ИСТИНА:"easy", ЛОЖЬ:"easy", ЕСЛИМН:"medium", ПЕРЕКЛЮЧ:"medium", ИСКЛИЛИ:"medium",
     СЦЕПИТЬ:"easy", СЦЕП:"easy", ОБЪЕДИНИТЬ:"medium", ЛЕВСИМВ:"easy", ПРАВСИМВ:"easy", ПСТР:"medium", ДЛСТР:"easy",
     НАЙТИ:"medium", ПОИСК:"medium", ЗАМЕНИТЬ:"medium", ПОДСТАВИТЬ:"medium", ПРОПИСН:"easy", СТРОЧН:"easy", ПРОПНАЧ:"easy",
-    СЖПРОБЕЛЫ:"easy", ТЕКСТ:"medium", ЗНАЧЕН:"easy", СОВПАД:"medium", ПОВТОР:"easy", СИМВОЛ:"medium", КОДСИМВ:"medium", ПЕЧСИМВ:"hard",
+    СЖПРОБЕЛЫ:"easy", ТЕСТ:"medium", ЗНАЧЕН:"easy", СОВПАД:"medium", ПОВТОР:"easy", СИМВОЛ:"medium", КОДСИМВ:"medium", ПЕЧСИМВ:"hard",
     СЕГОДНЯ:"easy", ТДАТА:"easy", ДЕНЬ:"easy", МЕСЯЦ:"easy", ГОД:"easy", ДАТА:"easy", ДЕНЬНЕД:"medium", ЧАС:"easy", МИНУТЫ:"easy", СЕКУНДЫ:"easy", ВРЕМЯ:"easy",
     РАБДЕНЬ:"medium", "РАБДЕНЬ.МЕЖД":"hard", ЧИСТРАБДНИ:"medium", "ЧИСТРАБДНИ.МЕЖД":"hard", ДОЛЯГОДА:"hard", НОМНЕДЕЛИ:"medium", "НОМНЕДЕЛИ.ISO":"medium",
     ДАТАМЕС:"medium", КОНМЕСЯЦ:"medium", РАЗНДАТ:"medium", ДАТАЗНАЧ:"medium", ВРЕМЗНАЧ:"medium",
@@ -95,6 +97,9 @@ const DIFFICULTY_MAP = {
 
 const XP_BY_DIFFICULTY = { easy: 60, medium: 100, hard: 160 };
 
+/* =========================================================================
+   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА
+   ========================================================================= */
 const UI_DICT = {
     ru: {
         title: "Энциклопедия Excel", subtitle: "Умный тренажер функций с ИИ",
@@ -167,6 +172,9 @@ const UI_DICT = {
     }
 };
 
+/* =========================================================================
+   3. CSS — стили интерфейса
+   ========================================================================= */
 const ET_STYLES = `
 .et-shell{
   --bg-main: var(--bg-body, #050816);
@@ -341,6 +349,8 @@ body.light .et-shell .et-langswitch,
 .et-lang-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.4);}
 
 .et-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
+
+/* САЙДБАР */
 .et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:14px;}
 
 .et-ai-card{background:var(--bg-panel);border:1px solid var(--border);padding:18px;border-radius:var(--radius-lg);position:relative;overflow:hidden;}
@@ -350,6 +360,7 @@ body.light .et-shell .et-langswitch,
 .et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
 .et-ai-input:focus{border-color:var(--accent-cyan);}
 
+/* СПИСОК КАТЕГОРИЙ */
 .et-cat-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:6px;}
 .et-cat-list::-webkit-scrollbar{width:5px;}
 .et-cat-list::-webkit-scrollbar-track{background:transparent;}
@@ -373,6 +384,7 @@ body.light .et-shell .et-langswitch,
 .et-fn-dot.hard{background:var(--accent-red);}
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
+/* КАРТОЧКА ПРОГРЕССА */
 .et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
 .et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
 .et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
@@ -798,6 +810,7 @@ body.light .et-shell .et-hint-link:hover,
   transform: translateY(-1px);
 }
 
+/* Кнопки в светлой теме */
 .et-shell.theme-light .et-action-secondary,
 html.light .et-shell .et-action-secondary,
 body.light .et-shell .et-action-secondary,
@@ -1110,6 +1123,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const [lang, setLang] = useState("ru");
 
+    // Определение и авто-синхронизация темы
     const detectTheme = () => {
         if (typeof propTheme !== 'undefined') return propTheme;
         if (typeof document === 'undefined') return 'dark';
@@ -1143,6 +1157,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => observer.disconnect();
     }, [propTheme]);
 
+    // Статус подсказок из Firebase (настройки админки)
     const [hintsEnabled, setHintsEnabled] = useState(true);
 
     const [error, setError] = useState(false);
@@ -1162,6 +1177,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
+    // Подписка на Firebase
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1185,6 +1201,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setAttempts(0);
         setAnswerStatus("idle");
         setSelectedCell(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFormulaName]);
 
     const toggleCat = (cat) => {
