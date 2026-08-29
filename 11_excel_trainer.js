@@ -1768,7 +1768,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x:, opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
