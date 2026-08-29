@@ -119,7 +119,15 @@ const UI_DICT = {
         toastLessonReady: "Урок создан", toastCopied: "Формула скопирована",
         masteryTitle: "Функция успешно освоена!",
         btnReinforce: "Закрепить навык",
-        streakStatus: "Прогресс освоения:"
+        streakStatus: "Прогресс освоения:",
+        student: "Ученик",
+        totalXp: "Всего XP",
+        solvedTasks: "Решено",
+        streak: "Серия",
+        rankNovice: "Новичок",
+        rankAnalyst: "Аналитик",
+        rankMaster: "Мастер Excel",
+        nextLvlGoal: "До след. уровня"
     },
     en: {
         title: "Excel Encyclopedia", subtitle: "Smart AI function trainer",
@@ -145,7 +153,15 @@ const UI_DICT = {
         toastLessonReady: "Lesson ready", toastCopied: "Formula copied",
         masteryTitle: "Function mastered!",
         btnReinforce: "Practice again",
-        streakStatus: "Mastery progress:"
+        streakStatus: "Mastery progress:",
+        student: "Student",
+        totalXp: "Total XP",
+        solvedTasks: "Solved",
+        streak: "Streak",
+        rankNovice: "Novice",
+        rankAnalyst: "Analyst",
+        rankMaster: "Excel Master",
+        nextLvlGoal: "To next level"
     },
     uz: {
         title: "Excel Энциклопедияси", subtitle: "ИИ ёрдамида ақлли функция тренажёри",
@@ -171,7 +187,15 @@ const UI_DICT = {
         toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди",
         masteryTitle: "Функция муваффақиятли ўзлаштирилди!",
         btnReinforce: "Малакани мустаҳкамлаш",
-        streakStatus: "Ўзлаштириш жараёни:"
+        streakStatus: "Ўзлаштириш жараёни:",
+        student: "Ўқувчи",
+        totalXp: "Жами XP",
+        solvedTasks: "Бажарилди",
+        streak: "Серия",
+        rankNovice: "Бошловчи",
+        rankAnalyst: "Таҳлилчи",
+        rankMaster: "Excel Устаси",
+        nextLvlGoal: "Кейинги даражагача"
     }
 };
 
@@ -383,10 +407,103 @@ body.light .et-shell .et-langswitch,
 .et-fn-dot.hard{background:var(--accent-red);}
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
-.et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
-.et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
-.et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
-.et-progress-row{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:6px;}
+/* =========================================================================
+   ОБНОВЛЕННАЯ КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
+   ========================================================================= */
+.et-progress-card{
+  margin-top: 14px;
+  background: linear-gradient(145deg, rgba(17, 25, 54, 0.95), rgba(9, 14, 32, 0.98));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.et-progress-card::before{
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.et-user-profile{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.et-user-avatar{
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 18px;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  flex-shrink: 0;
+  text-transform: uppercase;
+  user-select: none;
+}
+.et-user-meta{min-width:0;flex:1;}
+.et-user-email{
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.et-user-rank{
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+/* СЕТКА СТАТИСТИКИ */
+.et-stats-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.et-stat-chip{
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+.et-stat-val{
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text-main);
+}
+.et-stat-lbl{
+  font-size: 10px;
+  color: var(--text-sec);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.et-progress-row{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--text-sec);margin-bottom:6px;}
 .et-progress-bar-track{height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;}
 .et-shell.theme-light .et-progress-bar-track,
 html.light .et-shell .et-progress-bar-track,
@@ -394,7 +511,42 @@ body.light .et-shell .et-progress-bar-track,
 [data-theme='light'] .et-shell .et-progress-bar-track {
   background:rgba(15,23,42,.08);
 }
-.et-progress-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));transition:width .4s ease;}
+.et-progress-bar-fill{
+  height:100%;
+  border-radius:5px;
+  background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));
+  position: relative;
+  overflow: hidden;
+}
+.et-progress-bar-fill::after{
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: et-shimmer-bar 2.4s infinite;
+}
+@keyframes et-shimmer-bar{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+
+/* Светлая тема для профиля */
+.et-shell.theme-light .et-progress-card,
+html.light .et-shell .et-progress-card,
+body.light .et-shell .et-progress-card,
+[data-theme='light'] .et-shell .et-progress-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+.et-shell.theme-light .et-stat-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.et-shell.theme-light .et-stat-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
 
 .et-main{flex:3 1 520px;display:flex;flex-direction:column;gap:18px;min-width:0;}
 
@@ -1145,16 +1297,91 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
     );
 }
 
-function ProgressCard({ t, progress }) {
+/* =========================================================================
+   ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
+   ========================================================================= */
+function ProgressCard({ t, progress, userInfo }) {
     const xpIntoLevel = progress.xp % 500;
     const pct = Math.min(100, Math.round((xpIntoLevel / 500) * 100));
+    
+    // Получаем первую букву для аватара
+    const userInitial = (userInfo.displayName || userInfo.email || "U").charAt(0).toUpperCase();
+    
+    // Определение ранга по уровню
+    const rankTitle = progress.level >= 5 ? t.rankMaster : progress.level >= 3 ? t.rankAnalyst : t.rankNovice;
+
     return (
-        <div className="et-progress-card">
-            <div className="et-progress-title">💎 {t.progressTitle}</div>
-            <div className="et-progress-sub">{t.progressSub}</div>
-            <div className="et-progress-row"><span>{t.level} {progress.level}</span><span>{xpIntoLevel} / 500 {t.xp}</span></div>
-            <div className="et-progress-bar-track"><div className="et-progress-bar-fill" style={{ width: `${pct}%` }} /></div>
-        </div>
+        <motion.div 
+            className="et-progress-card"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+        >
+            {/* Блок ученика */}
+            <div className="et-user-profile">
+                <motion.div 
+                    className="et-user-avatar"
+                    whileHover={{ scale: 1.08, rotate: 4 }}
+                    transition={{ type: "spring", stiffness: 350 }}
+                >
+                    {userInitial}
+                </motion.div>
+                <div className="et-user-meta">
+                    <div className="et-user-email" title={userInfo.email || userInfo.displayName}>
+                        {userInfo.displayName || userInfo.email || t.student}
+                    </div>
+                    <div className="et-user-rank">
+                        <motion.span 
+                            animate={{ rotate: [0, 360] }} // ИСПРАВЛЕНО
+                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                        >
+                            ⭐
+                        </motion.span>
+                        <span>{t.level} {progress.level} • {rankTitle}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Дашборд показателей с интерактивным наведением */}
+            <div className="et-stats-grid">
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val">⚡ {progress.xp}</div>
+                    <div className="et-stat-lbl">{t.totalXp}</div>
+                </motion.div>
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val">🎯 {progress.completedLessons}</div>
+                    <div className="et-stat-lbl">{t.solvedTasks}</div>
+                </motion.div>
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val">
+                        {progress.streak > 0 ? (
+                            <motion.span 
+                                style={{ display: 'inline-block' }}
+                                animate={{ scale: [1, 1.2, 1] }} // ИСПРАВЛЕНО
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                                🔥
+                            </motion.span>
+                        ) : "🔥"} {progress.streak || 0}
+                    </div>
+                    <div className="et-stat-lbl">{t.streak}</div>
+                </motion.div>
+            </div>
+
+            {/* Прогресс-бар с анимацией заполнения */}
+            <div className="et-progress-row">
+                <span>{t.nextLvlGoal}</span>
+                <span>{xpIntoLevel} / 500 XP ({pct}%)</span>
+            </div>
+            <div className="et-progress-bar-track">
+                <motion.div 
+                    className="et-progress-bar-fill" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+            </div>
+        </motion.div>
     );
 }
 
@@ -1297,6 +1524,12 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const [lang, setLang] = useState("ru");
 
+    // Данные пользователя
+    const [userInfo, setUserInfo] = useState({
+        email: window.auth?.currentUser?.email || "",
+        displayName: window.auth?.currentUser?.displayName || ""
+    });
+
     const detectTheme = () => {
         if (typeof propTheme !== 'undefined') return propTheme;
         if (typeof document === 'undefined') return 'dark';
@@ -1347,7 +1580,14 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     }, []);
 
     useEffect(() => {
-        const uid = window.auth?.currentUser?.uid;
+        const user = window.auth?.currentUser;
+        if (user) {
+            setUserInfo({
+                email: user.email || "",
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : "")
+            });
+        }
+        const uid = user?.uid;
         if (!uid || !window.db) return;
 
         const unsub = window.db.collection('users').doc(uid).onSnapshot(doc => {
@@ -1587,7 +1827,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }} // ИСПРАВЛЕНО
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
@@ -1637,8 +1877,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                         />
                     </div>
 
-                    {/* КАРТОЧКА ПРОГРЕССА */}
-                    <ProgressCard t={t} progress={progress} />
+                    {/* КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ */}
+                    <ProgressCard t={t} progress={progress} userInfo={userInfo} />
                 </div>
 
                 {/* ОСНОВНОЙ КОНТЕНТ */}
