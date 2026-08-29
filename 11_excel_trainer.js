@@ -411,14 +411,17 @@ body.light .et-shell .et-langswitch,
    ОБНОВЛЕННАЯ КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
    ========================================================================= */
 .et-progress-card{
+  margin-top: 14px; /* Дополнительный отступ вниз от списка */
   background: linear-gradient(145deg, rgba(17, 25, 54, 0.95), rgba(9, 14, 32, 0.98));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 18px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .et-progress-card::before{
   content: "";
   position: absolute;
@@ -438,23 +441,24 @@ body.light .et-shell .et-langswitch,
   margin-bottom: 14px;
 }
 .et-user-avatar{
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
   background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  font-size: 17px;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+  font-size: 18px;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
   flex-shrink: 0;
   text-transform: uppercase;
+  user-select: none;
 }
 .et-user-meta{min-width:0;flex:1;}
 .et-user-email{
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--text-main);
   white-space: nowrap;
@@ -468,7 +472,7 @@ body.light .et-shell .et-langswitch,
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* СЕТКА СТАТИСТИКИ */
@@ -484,6 +488,8 @@ body.light .et-shell .et-langswitch,
   border-radius: 10px;
   padding: 8px 6px;
   text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 .et-stat-val{
   font-size: 13px;
@@ -505,7 +511,24 @@ body.light .et-shell .et-progress-bar-track,
 [data-theme='light'] .et-shell .et-progress-bar-track {
   background:rgba(15,23,42,.08);
 }
-.et-progress-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));transition:width .4s ease;}
+.et-progress-bar-fill{
+  height:100%;
+  border-radius:5px;
+  background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));
+  position: relative;
+  overflow: hidden;
+}
+.et-progress-bar-fill::after{
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: et-shimmer-bar 2.4s infinite;
+}
+@keyframes et-shimmer-bar{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
 
 /* Светлая тема для профиля */
 .et-shell.theme-light .et-progress-card,
@@ -513,12 +536,16 @@ html.light .et-shell .et-progress-card,
 body.light .et-shell .et-progress-card,
 [data-theme='light'] .et-shell .et-progress-card {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 .et-shell.theme-light .et-stat-chip {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+}
+.et-shell.theme-light .et-stat-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .et-main{flex:3 1 520px;display:flex;flex-direction:column;gap:18px;min-width:0;}
@@ -1271,7 +1298,7 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
 }
 
 /* =========================================================================
-   ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ
+   ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
    ========================================================================= */
 function ProgressCard({ t, progress, userInfo }) {
     const xpIntoLevel = progress.xp % 500;
@@ -1284,45 +1311,77 @@ function ProgressCard({ t, progress, userInfo }) {
     const rankTitle = progress.level >= 5 ? t.rankMaster : progress.level >= 3 ? t.rankAnalyst : t.rankNovice;
 
     return (
-        <div className="et-progress-card">
+        <motion.div 
+            className="et-progress-card"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+        >
             {/* Блок ученика */}
             <div className="et-user-profile">
-                <div className="et-user-avatar">{userInitial}</div>
+                <motion.div 
+                    className="et-user-avatar"
+                    whileHover={{ scale: 1.08, rotate: 4 }}
+                    transition={{ type: "spring", stiffness: 350 }}
+                >
+                    {userInitial}
+                </motion.div>
                 <div className="et-user-meta">
                     <div className="et-user-email" title={userInfo.email || userInfo.displayName}>
                         {userInfo.displayName || userInfo.email || t.student}
                     </div>
                     <div className="et-user-rank">
-                        <span>⭐ {t.level} {progress.level} • {rankTitle}</span>
+                        <motion.span 
+                            animate={{ rotate: }}
+                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                        >
+                            ⭐
+                        </motion.span>
+                        <span>{t.level} {progress.level} • {rankTitle}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Дашборд показателей */}
+            {/* Дашборд показателей с интерактивным наведением */}
             <div className="et-stats-grid">
-                <div className="et-stat-chip">
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val">⚡ {progress.xp}</div>
                     <div className="et-stat-lbl">{t.totalXp}</div>
-                </div>
-                <div className="et-stat-chip">
+                </motion.div>
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val">🎯 {progress.completedLessons}</div>
                     <div className="et-stat-lbl">{t.solvedTasks}</div>
-                </div>
-                <div className="et-stat-chip">
-                    <div className="et-stat-val">🔥 {progress.streak || 0}</div>
+                </motion.div>
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val">
+                        {progress.streak > 0 ? (
+                            <motion.span 
+                                style={{ display: 'inline-block' }}
+                                animate={{ scale: }} 
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                                🔥
+                            </motion.span>
+                        ) : "🔥"} {progress.streak || 0}
+                    </div>
                     <div className="et-stat-lbl">{t.streak}</div>
-                </div>
+                </motion.div>
             </div>
 
-            {/* Прогресс-бар до следующего уровня */}
+            {/* Прогресс-бар с анимацией заполнения */}
             <div className="et-progress-row">
                 <span>{t.nextLvlGoal}</span>
                 <span>{xpIntoLevel} / 500 XP ({pct}%)</span>
             </div>
             <div className="et-progress-bar-track">
-                <div className="et-progress-bar-fill" style={{ width: `${pct}%` }} />
+                <motion.div 
+                    className="et-progress-bar-fill" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                />
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -1764,13 +1823,14 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
     const isMastered = masteryCount >= REQUIRED_MASTERY_STREAK;
 
-    return (
+return (
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
             animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
-        >
+        > 
+
             <ToastStack toasts={toasts} />
 
             {/* ШАПКА */}
