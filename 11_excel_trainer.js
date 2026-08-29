@@ -2,6 +2,9 @@ const { useState, useEffect, useRef, useCallback } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
+// Необходимое количество решенных задач для перехода к следующей функции
+const REQUIRED_MASTERY_STREAK = 2;
+
 /* =========================================================================
    1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
    ========================================================================= */
@@ -53,22 +56,13 @@ const EXCEL_DATABASE = {
     ]
 };
 
-// Иконки категорий для сайдбара
 const CATEGORY_ICONS = {
-    "Математические": "Σ",
-    "Динамические массивы": "⚡",
-    "Поиск и ссылки": "🔎",
-    "Логические": "◆",
-    "Текстовые": "Aa",
-    "Дата и время": "🕐",
-    "Статистические": "📈",
-    "Финансовые": "💰",
-    "Базы данных": "🗄️",
-    "Информационные": "ℹ️",
-    "Инженерные": "⚙️"
+    "Математические": "Σ", "Динамические массивы": "⚡", "Поиск и ссылки": "🔎",
+    "Логические": "◆", "Текстовые": "Aa", "Дата и время": "🕐",
+    "Статистические": "📈", "Финансовые": "💰", "Базы данных": "🗄️",
+    "Информационные": "ℹ️", "Инженерные": "⚙️"
 };
 
-// Сложность функций
 const DIFFICULTY_MAP = {
     СУММ:"easy", СУММЕСЛИ:"medium", СУММЕСЛИМН:"hard", ОКРУГЛ:"easy", ОКРУГЛВВЕРХ:"easy", ОКРУГЛВНИЗ:"easy", ОКРУГЛТ:"medium",
     ПРОИЗВЕД:"easy", ОСТАТ:"easy", КОРЕНЬ:"easy", СТЕПЕНЬ:"easy", СЛЧИС:"easy", СЛМЕЖДУ:"easy", ЦЕЛОЕ:"easy", ОТБР:"easy", ЧАСТНОЕ:"easy",
@@ -122,7 +116,10 @@ const UI_DICT = {
         loadingTitle: "ИИ создаёт урок", errorTitle: "Не удалось создать урок", errorSub: "Проверьте связь и попробуйте снова",
         retry: "Повторить", attempts: "Попыток", formulaOk: "Формула правильная", formulaBad: "Проверьте формулу",
         notFoundInDb: "Функции нет в локальной базе.", createWithAI: "✨ Создать урок с помощью ИИ",
-        toastLessonReady: "Урок создан", toastCopied: "Формула скопирована"
+        toastLessonReady: "Урок создан", toastCopied: "Формула скопирована",
+        masteryTitle: "Функция успешно освоена!",
+        btnReinforce: "🔄 Закрепить навык",
+        streakStatus: "Прогресс освоения:"
     },
     en: {
         title: "Excel Encyclopedia", subtitle: "Smart AI function trainer",
@@ -145,7 +142,10 @@ const UI_DICT = {
         loadingTitle: "AI is building the lesson", errorTitle: "Couldn't generate the lesson", errorSub: "Check your connection and try again",
         retry: "Retry", attempts: "Attempts", formulaOk: "Formula looks correct", formulaBad: "Check your formula",
         notFoundInDb: "This function isn't in the local database.", createWithAI: "✨ Generate lesson with AI",
-        toastLessonReady: "Lesson ready", toastCopied: "Formula copied"
+        toastLessonReady: "Lesson ready", toastCopied: "Formula copied",
+        masteryTitle: "Function mastered!",
+        btnReinforce: "🔄 Practice again",
+        streakStatus: "Mastery progress:"
     },
     uz: {
         title: "Excel Энциклопедияси", subtitle: "ИИ ёрдамида ақлли функция тренажёри",
@@ -168,7 +168,10 @@ const UI_DICT = {
         loadingTitle: "ИИ дарсни яратмоқда", errorTitle: "Дарсни яратиб бўлмади", errorSub: "Алоқани текшириб, яна уриниб кўринг",
         retry: "Такрорлаш", attempts: "Уринишлар", formulaOk: "Формула тўғри", formulaBad: "Формулани текширинг",
         notFoundInDb: "Функция локал базада йўқ.", createWithAI: "✨ ИИ билан дарс яратиш",
-        toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди"
+        toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди",
+        masteryTitle: "Функция муваффақиятли ўзлаштирилди!",
+        btnReinforce: "🔄 Малакани мустаҳкамлаш",
+        streakStatus: "Ўзлаштириш жараёни:"
     }
 };
 
@@ -203,7 +206,6 @@ const ET_STYLES = `
   position: relative;
 }
 
-/* Светлая тема */
 .et-shell.theme-light,
 html.light .et-shell,
 body.light .et-shell,
@@ -237,7 +239,6 @@ body.light .et-shell,
 .et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
 .et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
-/* ПОИСК */
 .et-gsearch{position:relative;width:260px;max-width:40vw;z-index:101;}
 .et-gsearch input{
   width: 100%;
@@ -290,7 +291,6 @@ body.light .et-shell .et-gsearch-drop,
   border: 1px solid #cbd5e1;
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
-
 .et-gsearch-drop::-webkit-scrollbar{width:5px;}
 .et-gsearch-drop::-webkit-scrollbar-track{background:transparent;}
 .et-gsearch-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -360,7 +360,6 @@ body.light .et-shell .et-langswitch,
 .et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
 .et-ai-input:focus{border-color:var(--accent-cyan);}
 
-/* СПИСОК КАТЕГОРИЙ */
 .et-cat-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:6px;}
 .et-cat-list::-webkit-scrollbar{width:5px;}
 .et-cat-list::-webkit-scrollbar-track{background:transparent;}
@@ -384,7 +383,6 @@ body.light .et-shell .et-langswitch,
 .et-fn-dot.hard{background:var(--accent-red);}
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
-/* КАРТОЧКА ПРОГРЕССА */
 .et-progress-card{background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.10));border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
 .et-progress-title{font-size:13px;font-weight:800;color:var(--text-main);margin-bottom:4px;display:flex;align-items:center;gap:7px;}
 .et-progress-sub{font-size:11.5px;color:var(--text-sec);margin-bottom:14px;line-height:1.4;}
@@ -427,7 +425,6 @@ body.light .et-shell .et-progress-bar-track,
 .et-badge-diff-hard{background:rgba(239,68,68,.14);color:#f87171;}
 .et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
 
-/* БЛОК ОПРЕДЕЛЕНИЯ */
 .et-def-box{
   background: var(--bg-card);
   padding: 20px 22px;
@@ -453,9 +450,7 @@ body.light .et-shell .et-progress-bar-track,
   white-space: pre-line;
 }
 
-/* =========================================================================
-   БЛОК СИНТАКСИСА (CODE TERMINAL STYLE)
-   ========================================================================= */
+/* БЛОК СИНТАКСИСА */
 .et-syntax-box {
   background: radial-gradient(120% 120% at 50% 0%, #0d1530 0%, #070b1a 100%);
   border-radius: 16px;
@@ -582,7 +577,6 @@ body.light .et-shell .et-progress-bar-track,
   word-break: break-all;
 }
 
-/* Элементы подсветки синтаксиса */
 .tok-fn { color: #38bdf8; font-weight: 700; }
 .tok-range { color: #fbbf24; font-weight: 600; }
 .tok-str { color: #34d399; }
@@ -590,7 +584,6 @@ body.light .et-shell .et-progress-bar-track,
 .tok-paren { color: #c084fc; font-weight: 600; }
 .tok-num { color: #f472b6; }
 
-/* Светлая тема для синтаксиса */
 .et-shell.theme-light .et-syntax-box,
 html.light .et-shell .et-syntax-box,
 body.light .et-shell .et-syntax-box,
@@ -693,7 +686,6 @@ body.light .et-shell .et-line-code,
   outline-offset: -2px;
 }
 
-/* СВЕТЛАЯ ТЕМА ТАБЛИЦЫ */
 .et-shell.theme-light .et-table-wrap,
 html.light .et-shell .et-table-wrap,
 body.light .et-shell .et-table-wrap,
@@ -848,10 +840,26 @@ body.light .et-shell .et-hint-link:hover,
   color: #b45309;
 }
 
+/* УСПЕХ И ЗАКРЕПЛЕНИЕ */
 .et-success-card{background:rgba(34,230,138,.08);border:2px solid var(--accent-green);padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;overflow:hidden;flex-wrap:wrap;margin-bottom:8px;}
 .et-success-title{margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
 .et-success-sub{color:#6ee7b7;font-size:14.5px;font-weight:600;}
 .et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;}
+
+.et-mastery-banner{
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(139, 92, 246, 0.18));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  padding: 12px 18px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-top: 10px;
+}
 
 /* ПАНЕЛЬ КНОПОК */
 .et-actions{
@@ -915,7 +923,6 @@ body.light .et-shell .et-hint-link:hover,
   transform: translateY(-1px);
 }
 
-/* Кнопки в светлой теме */
 .et-shell.theme-light .et-action-secondary,
 html.light .et-shell .et-action-secondary,
 body.light .et-shell .et-action-secondary,
@@ -1006,7 +1013,6 @@ function getFormulaStart(lesson, defaultName) {
     return "=";
 }
 
-// Парсер токенов формул Excel для подсветки синтаксиса
 function renderHighlightedFormula(lineText) {
     if (!lineText) return null;
     
@@ -1286,9 +1292,11 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Счетчик закрепления текущей функции (для системы освоения)
+    const [masteryCount, setMasteryCount] = useState(0);
+
     const [lang, setLang] = useState("ru");
 
-    // Определение и синхронизация темы
     const detectTheme = () => {
         if (typeof propTheme !== 'undefined') return propTheme;
         if (typeof document === 'undefined') return 'dark';
@@ -1308,9 +1316,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             setTheme(propTheme);
             return;
         }
-        const updateTheme = () => {
-            setTheme(detectTheme());
-        };
+        const updateTheme = () => setTheme(detectTheme());
         updateTheme();
         const observer = new MutationObserver(updateTheme);
         if (document.documentElement) {
@@ -1322,9 +1328,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => observer.disconnect();
     }, [propTheme]);
 
-    // Статус подсказок из Firebase
     const [hintsEnabled, setHintsEnabled] = useState(true);
-
     const [error, setError] = useState(false);
     const [hintLevel, setHintLevel] = useState(0);
     const [attempts, setAttempts] = useState(0);
@@ -1342,7 +1346,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 2600);
     }, []);
 
-    // Подписка на изменения прав в реальном времени из Firebase
     useEffect(() => {
         const uid = window.auth?.currentUser?.uid;
         if (!uid || !window.db) return;
@@ -1359,7 +1362,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => unsub();
     }, []);
 
+    // При смене функции обнуляем счетчик закрепления
     useEffect(() => {
+        setMasteryCount(0);
         generateAIFormula(activeFormulaName);
         setOpenCats((prev) => new Set(prev).add(activeCategory));
         setHintLevel(0);
@@ -1408,29 +1413,29 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
         const prompt = `Ты профессиональный преподаватель Microsoft Excel. 
-Пользователь выбрал функцию: "${formulaName}".
-Создай НОВУЮ уникальную интерактивную задачу по этой функции.
-Верни ТОЛЬКО чистый валидный JSON (без markdown) строго в таком формате:
+Пользователь изучает функцию: "${formulaName}".
+Создай НОВУЮ интерактивную практическую задачу по этой функции.
+Верни ТОЛЬКО чистый валидный JSON (без markdown и без кавычек \`\`\`) строго по схеме:
 {
   "name": "${formulaName}",
   "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
   "difficulty": "easy | medium | hard",
-  "xp": число от 50 до 200 в зависимости от сложности,
-  "syntax": "=ФУНКЦИЯ(Z1:Z10)\\n=ФУНКЦИЯ(Z1; \\"Текст\\"; X1:X10)",
+  "xp": число от 50 до 200,
+  "syntax": "=ФУНКЦИЯ(K1; 10)\\n=ФУНКЦИЯ(Z5:Z12)",
   "def": {
-     "ru": "Развернутое, интересное и понятное объяснение функции на русском языке (3-5 предложений, 1-2 абзаца). Опиши: 1) Для чего нужна функция и какую проблему решает. 2) Подробный жизненный пример из выбранной темы, показывающий практическую пользу. 3) Полезный совет или нюанс ее работы (как обрабатывает аргументы, частые ошибки или удобные фишки).",
-     "en": "Detailed and clear explanation of the function in English (3-5 sentences, 1-2 paragraphs), including purpose, practical real-world example from the chosen theme, and a useful tip or nuance.",
-     "uz": "Функциянинг ишлаши ҳақида кенгроқ ва тушунарли изоҳ (3-5 гап, 1-2 хатбоши). Функциянинг мақсади, мавзуга мос ҳаётий батафсил мисол ва ишлатиш бўйича фойдали тавсия (Кирилл алифбосида)."
+     "ru": "Развернутое объяснение функции (3-5 предложений): назначение, жизненный пример по теме \\"${randomTheme}\\", совет по аргументам.",
+     "en": "Detailed explanation of the function in English.",
+     "uz": "Функция ҳақида кенгроқ маълумот (Кирилл алифбосида)."
   },
   "taskDesc": {
      "ru": "Посчитайте [ЧТО-ТО] на основе данных таблицы.",
-     "en": "Calculate [SOMETHING] based on the table data.",
-     "uz": "Жадвал маълумотлари асосида [НИМАНИДИР] ҳисобланг (Кирилл алифбосида)."
+     "en": "Calculate [SOMETHING] based on table data.",
+     "uz": "Жадвал маълумотлари асосида [НИМАНИДИР] ҳисобланг."
   },
   "hint": {
-     "ru": "Короткая подсказка на русском без готового ответа.",
-     "en": "A short hint in English without the full answer.",
-     "uz": "Тайёр жавобсиз қисқа маслаҳат (Кирилл алифбосида)."
+     "ru": "Короткая подсказка без готового ответа.",
+     "en": "A short hint without the full answer.",
+     "uz": "Тайёр жавобсиз қисқа маслаҳат."
   },
   "table": [
     ["Название", "Показатель 1", "Показатель 2"],
@@ -1442,13 +1447,16 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 }
 
 КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-1. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО ПИСАТЬ ФОРМУЛЫ В ТАБЛИЦЕ: В массиве "table" должны быть ТОЛЬКО исходные данные (числа, строки, даты). Ни одна ячейка таблицы НЕ ДОЛЖНА начинаться со знака "=" или содержать готовую формулу/ответ! Если есть колонка под расчет, оставь ячейки пустыми строками "" или не создавай колонку под формулу.
-2. ЗАПРЕТ УПОМИНАНИЯ ЦЕЛЕВЫХ ЯЧЕЕК: В поле "taskDesc" КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО писать "для ячейки C2", "вставьте формулу в ячейку C2", "напишите в C3". Формулируй задачу только по смыслу (например: "Вычислите квадратный корень из показателя дисперсии для игры Cyber Odyssey").
-3. СИНТАКСИС БЕЗ СЛОВ: В поле "syntax" пиши ТОЛЬКО примеры формул с абстрактными ячейками (Z1, X2).
-4. ЛОГИКА ОЖИДАЕМОГО ОТВЕТА ("expected"): Добавь ВСЕ правильные варианты формулы.
-5. ЕДИНАЯ ТЕМА: Тема задачи: "${randomTheme}". Поля "def", "table" и "taskDesc" должны быть СТРОГО на эту тему.
-6. "hint" НЕ должен содержать готовую формулу или прямой ответ — только направление мысли.
-7. Все значения в "table" должны математически соответствовать "expected" и "result".`;
+1. СИНТАКСИС ("syntax") БЕЗ СЛОВ И БЕЗ СПОЙЛЕРОВ:
+   - В поле "syntax" пиши ТОЛЬКО 1-2 примера рабочих формул с АБСТРАКТНЫМИ ячейками (K, Z, Y, W) или числами (например: =СТЕПЕНЬ(K2; 3) или =СУММ(Z1:Z10)).
+   - КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО писать русские или английские слова-заполнители внутри формул (НИКАКИХ "число", "степень", "степерь", "диапазон", "текст", "number", "power", "range").
+   - КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать ячейки из текущей таблицы задачи (A1, B2, C2), чтобы синтаксис не был ответом на задачу!
+2. ТАБЛИЦА ("table") БЕЗ ФОРМУЛ:
+   - В ячейках таблицы "table" должны быть ТОЛЬКО исходные числа/тексты. НИ ОДНА ячейка не должна содержать формулу (начинающуюся с "=") или ответ!
+3. ОПИСАНИЕ ЗАДАЧИ ("taskDesc"):
+   - Запрещено упоминать ячейки для ввода (не пиши "для ячейки C2", "в ячейку C2"). Формулируй только смысл задачи.
+4. ТЕМА: Задача строго на тему "${randomTheme}".
+5. Все вычисления в "expected" и "result" должны быть точными.`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -1466,12 +1474,12 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
             const parsedFormula = JSON.parse(jsonMatch[0]);
 
-            // АВТОМАТИЧЕСКАЯ ЗАЩИТА: Очищаем формулы из таблицы, если ИИ их вернул
+            // Автоматическая санитизация таблицы (удаляем случайные формулы из ячеек таблицы)
             if (Array.isArray(parsedFormula.table)) {
                 parsedFormula.table = parsedFormula.table.map(row => 
                     row.map(cell => {
                         if (typeof cell === 'string' && cell.trim().startsWith('=')) {
-                            return ""; // Стираем формулу-спойлер из ячейки
+                            return "";
                         }
                         return cell;
                     })
@@ -1527,6 +1535,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             const diff = getDifficulty(activeFormulaName, currentLesson);
             const xpGain = getXp(currentLesson, diff);
 
+            // Увеличиваем счетчик закрепления для текущей функции
+            setMasteryCount((prev) => prev + 1);
+
             setProgress((prev) => {
                 const nextXp = prev.xp + xpGain;
                 const nextLevel = 1 + Math.floor(nextXp / 500);
@@ -1572,6 +1583,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const difficulty = currentLesson ? getDifficulty(activeFormulaName, currentLesson) : "medium";
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
+
+    // Функция считается освоенной, если решено >= REQUIRED_MASTERY_STREAK задач
+    const isMastered = masteryCount >= REQUIRED_MASTERY_STREAK;
 
     return (
         <motion.div
@@ -1659,7 +1673,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
-                                {/* ТЕРМИНАЛЬНЫЙ БЛОК СИНТАКСИСА */}
+                                {/* СИНТАКСИС */}
                                 <SyntaxBlock
                                     syntax={currentLesson.syntax}
                                     t={t}
@@ -1715,15 +1729,28 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     </div>
                                 )}
 
-                                {/* УСПЕХ */}
+                                {/* УСПЕХ И ПЛАШКА ОСВОЕНИЯ */}
                                 <AnimatePresence>
                                     {showSuccess && (
                                         <motion.div className="et-success-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                            <div>
+                                            <div style={{ flex: '1 1 100%' }}>
                                                 <h4 className="et-success-title">{t.successMsg}</h4>
                                                 <span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span>
                                             </div>
                                             <div className="et-success-xp">+{xpForLesson} XP ✨</div>
+
+                                            {/* Индикатор освоения */}
+                                            {isMastered ? (
+                                                <div className="et-mastery-banner" style={{ width: '100%' }}>
+                                                    <span>🏆 {t.masteryTitle}</span>
+                                                    <span>✓ {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="et-mastery-banner" style={{ width: '100%', borderColor: 'rgba(251, 191, 36, 0.35)', color: '#fbbf24' }}>
+                                                    <span>🎯 {t.streakStatus}</span>
+                                                    <span>{masteryCount} из {REQUIRED_MASTERY_STREAK} задач</span>
+                                                </div>
+                                            )}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -1759,12 +1786,22 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                         </>
                                     ) : (
                                         <>
+                                            {/* Кнопка следующей задачи для закрепления */}
                                             <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
-                                                🔄 {t.nextTask}
+                                                {isMastered ? `🔄 ${t.btnAnother}` : `🔄 ${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
                                             </button>
-                                            <button className="et-action-btn et-action-primary" onClick={handleNextFunction}>
-                                                {t.nextFunction} →
-                                            </button>
+
+                                            {/* Кнопка "Следующая функция" появляется ТОЛЬКО когда навык освоен (>= 2 решенных задач) */}
+                                            {isMastered && (
+                                                <motion.button 
+                                                    initial={{ opacity: 0, scale: 0.9 }} 
+                                                    animate={{ opacity: 1, scale: 1 }} 
+                                                    className="et-action-btn et-action-primary" 
+                                                    onClick={handleNextFunction}
+                                                >
+                                                    {t.nextFunction} →
+                                                </motion.button>
+                                            )}
                                         </>
                                     )}
                                 </div>
