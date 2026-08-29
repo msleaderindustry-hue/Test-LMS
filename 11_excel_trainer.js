@@ -92,7 +92,7 @@ const DIFFICULTY_MAP = {
 const XP_BY_DIFFICULTY = { easy: 60, medium: 100, hard: 160 };
 
 /* =========================================================================
-   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА
+   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА (БЕЗ ДУБЛИРУЮЩИХ ЭМОДЗИ)
    ========================================================================= */
 const UI_DICT = {
     ru: {
@@ -103,7 +103,7 @@ const UI_DICT = {
         theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
         syntaxTitle: "Примеры синтаксиса", practice: "Практика",
         successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
-        btnAnother: "🔄 Другая задача", btnHint: "👀 Подсказка", btnExam: "🔒 Экзамен", btnCheck: "Проверить",
+        btnAnother: "Другая задача", btnHint: "Подсказка", btnExam: "Экзамен", btnCheck: "Проверить",
         globalSearchPlaceholder: "Поиск по всем функциям...",
         copy: "Копировать", copied: "Скопировано",
         easy: "Легко", medium: "Средне", hard: "Сложно",
@@ -115,10 +115,10 @@ const UI_DICT = {
         taskDone: "Задание выполнено", incorrectMsg: "Пока не верно, попробуйте ещё раз",
         loadingTitle: "ИИ создаёт урок", errorTitle: "Не удалось создать урок", errorSub: "Проверьте связь и попробуйте снова",
         retry: "Повторить", attempts: "Попыток", formulaOk: "Формула правильная", formulaBad: "Проверьте формулу",
-        notFoundInDb: "Функции нет в локальной базе.", createWithAI: "✨ Создать урок с помощью ИИ",
+        notFoundInDb: "Функции нет в локальной базе.", createWithAI: "Создать урок с помощью ИИ",
         toastLessonReady: "Урок создан", toastCopied: "Формула скопирована",
         masteryTitle: "Функция успешно освоена!",
-        btnReinforce: "🔄 Закрепить навык",
+        btnReinforce: "Закрепить навык",
         streakStatus: "Прогресс освоения:"
     },
     en: {
@@ -129,7 +129,7 @@ const UI_DICT = {
         theory: "Theory", defTitle: "Definition", enVersion: "English version:",
         syntaxTitle: "Syntax examples", practice: "Practice",
         successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
-        btnAnother: "🔄 Another task", btnHint: "👀 Hint", btnExam: "🔒 Exam", btnCheck: "Check",
+        btnAnother: "Another task", btnHint: "Hint", btnExam: "Exam", btnCheck: "Check",
         globalSearchPlaceholder: "Search all functions...",
         copy: "Copy", copied: "Copied",
         easy: "Easy", medium: "Medium", hard: "Hard",
@@ -141,10 +141,10 @@ const UI_DICT = {
         taskDone: "Task completed", incorrectMsg: "Not quite, try again",
         loadingTitle: "AI is building the lesson", errorTitle: "Couldn't generate the lesson", errorSub: "Check your connection and try again",
         retry: "Retry", attempts: "Attempts", formulaOk: "Formula looks correct", formulaBad: "Check your formula",
-        notFoundInDb: "This function isn't in the local database.", createWithAI: "✨ Generate lesson with AI",
+        notFoundInDb: "This function isn't in the local database.", createWithAI: "Generate lesson with AI",
         toastLessonReady: "Lesson ready", toastCopied: "Formula copied",
         masteryTitle: "Function mastered!",
-        btnReinforce: "🔄 Practice again",
+        btnReinforce: "Practice again",
         streakStatus: "Mastery progress:"
     },
     uz: {
@@ -155,7 +155,7 @@ const UI_DICT = {
         theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
         syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
         successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
-        btnAnother: "🔄 Бошқа вазифа", btnHint: "👀 Ёрдам", btnExam: "🔒 Имтиҳон", btnCheck: "Текшириш",
+        btnAnother: "Бошқа вазифа", btnHint: "Ёрдам", btnExam: "Имтиҳон", btnCheck: "Текшириш",
         globalSearchPlaceholder: "Барча функцияларни қидириш...",
         copy: "Нусха олиш", copied: "Нусха олинди",
         easy: "Осон", medium: "Ўртача", hard: "Мураккаб",
@@ -167,10 +167,10 @@ const UI_DICT = {
         taskDone: "Вазифа бажарилди", incorrectMsg: "Ҳали тўғри эмас, яна уриниб кўринг",
         loadingTitle: "ИИ дарсни яратмоқда", errorTitle: "Дарсни яратиб бўлмади", errorSub: "Алоқани текшириб, яна уриниб кўринг",
         retry: "Такрорлаш", attempts: "Уринишлар", formulaOk: "Формула тўғри", formulaBad: "Формулани текширинг",
-        notFoundInDb: "Функция локал базада йўқ.", createWithAI: "✨ ИИ билан дарс яратиш",
+        notFoundInDb: "Функция локал базада йўқ.", createWithAI: "ИИ билан дарс яратиш",
         toastLessonReady: "Дарс тайёр", toastCopied: "Формула нусха олинди",
         masteryTitle: "Функция муваффақиятли ўзлаштирилди!",
-        btnReinforce: "🔄 Малакани мустаҳкамлаш",
+        btnReinforce: "Малакани мустаҳкамлаш",
         streakStatus: "Ўзлаштириш жараёни:"
     }
 };
@@ -1292,7 +1292,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const [customSearch, setCustomSearch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Счетчик закрепления текущей функции (для системы освоения)
+    // Счетчик закрепления текущей функции
     const [masteryCount, setMasteryCount] = useState(0);
 
     const [lang, setLang] = useState("ru");
@@ -1362,7 +1362,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         return () => unsub();
     }, []);
 
-    // При смене функции обнуляем счетчик закрепления
     useEffect(() => {
         setMasteryCount(0);
         generateAIFormula(activeFormulaName);
@@ -1474,7 +1473,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
 
             const parsedFormula = JSON.parse(jsonMatch[0]);
 
-            // Автоматическая санитизация таблицы (удаляем случайные формулы из ячеек таблицы)
             if (Array.isArray(parsedFormula.table)) {
                 parsedFormula.table = parsedFormula.table.map(row => 
                     row.map(cell => {
@@ -1535,7 +1533,6 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             const diff = getDifficulty(activeFormulaName, currentLesson);
             const xpGain = getXp(currentLesson, diff);
 
-            // Увеличиваем счетчик закрепления для текущей функции
             setMasteryCount((prev) => prev + 1);
 
             setProgress((prev) => {
@@ -1584,14 +1581,13 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const xpForLesson = currentLesson ? getXp(currentLesson, difficulty) : XP_BY_DIFFICULTY[difficulty];
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
 
-    // Функция считается освоенной, если решено >= REQUIRED_MASTERY_STREAK задач
     const isMastered = masteryCount >= REQUIRED_MASTERY_STREAK;
 
     return (
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x:, opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
@@ -1760,7 +1756,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     {!showSuccess ? (
                                         <>
                                             <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
-                                                {t.btnAnother}
+                                                🔄 {t.btnAnother}
                                             </button>
 
                                             <AnimatePresence>
@@ -1775,7 +1771,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                                         onClick={handleHintClick}
                                                         disabled={hintLevel >= 3}
                                                     >
-                                                        {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
+                                                        👀 {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
                                                     </motion.button>
                                                 )}
                                             </AnimatePresence>
@@ -1786,9 +1782,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                         </>
                                     ) : (
                                         <>
-                                            {/* Кнопка следующей задачи для закрепления */}
+                                            {/* Кнопка следующей задачи */}
                                             <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
-                                                {isMastered ? `🔄 ${t.btnAnother}` : `🔄 ${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
+                                                🔄 {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
                                             </button>
 
                                             {/* Кнопка "Следующая функция" появляется ТОЛЬКО когда навык освоен (>= 2 решенных задач) */}
