@@ -34,9 +34,11 @@ const LowPolyBackground = ({ theme }) => {
         const lightVector = { x: -0.4, y: -0.6, z: 0.6 };
 
         // Твои цвета для темной и светлой темы
+// Твои цвета для темной и светлой темы
         const themes = {
             light: { base: [224, 195, 252], light: [255, 241, 235] },
-            dark: { base: [15, 12, 41], light: [74, 28, 64] }
+            // ИСПРАВЛЕНО НА СТРОГИЙ ЧЕРНО-СЕРЫЙ ЦВЕТ
+            dark: { base: [8, 12, 18], light: [38, 48, 65] } 
         };
 
         let width, height;
