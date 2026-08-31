@@ -1,6 +1,6 @@
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
 const { 
-  useState, useEffect, motion, AnimatePresence,
+  useState, useEffect, useRef, motion, AnimatePresence,
   computeFingerprint, DISCORD_WEBHOOK, shuffleArray,
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
@@ -10,9 +10,172 @@ const {
   CodePlayground,
   FlashcardsLMS,
   ExcelTrainerLMS,
-  WebBuilderLMS, // <-- ИЗМЕНЕН ИМПОРТ НА WEB BUILDER
+  WebBuilderLMS,
   LandingView
 } = window;
+
+// =========================================================================
+// НОВЫЙ КОМПОНЕНТ: ИДЕАЛЬНЫЙ 3D LOW-POLY ФОН (вместо размытых кругов)
+// =========================================================================
+const LowPolyBackground = ({ theme }) => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+
+        const config = {
+            gridSize: 150,
+            xyWander: 40,
+            zDepth: 70,
+            speed: 0.0005
+        };
+
+        const lightVector = { x: -0.4, y: -0.6, z: 0.6 };
+
+        // Твои цвета для темной и светлой темы
+        const themes = {
+            light: { base: [224, 195, 252], light: [255, 241, 235] },
+            dark: { base: [15, 12, 41], light: [74, 28, 64] }
+        };
+
+        let width, height;
+        let points = [], triangles = [];
+        
+        // Начальный цвет устанавливается по текущей теме
+        const initialTheme = canvas.dataset.theme || 'light';
+        let currentColor = { 
+            base: [...themes[initialTheme].base], 
+            light: [...themes[initialTheme].light] 
+        };
+
+        let animationId;
+
+        const initMesh = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            points = [];
+            triangles = [];
+
+            const cols = Math.ceil(width / config.gridSize) + 4;
+            const rows = Math.ceil(height / config.gridSize) + 4;
+            const startX = -config.gridSize * 2;
+            const startY = -config.gridSize * 2;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    points.push({
+                        bx: startX + j * config.gridSize,
+                        by: startY + i * config.gridSize,
+                        x: 0, y: 0, z: 0,
+                        phaseX: Math.random() * Math.PI * 2,
+                        phaseY: Math.random() * Math.PI * 2,
+                        phaseZ: Math.random() * Math.PI * 2,
+                        speed: 0.3 + Math.random() * 0.7
+                    });
+                }
+            }
+
+            for (let i = 0; i < rows - 1; i++) {
+                for (let j = 0; j < cols - 1; j++) {
+                    const p1 = i * cols + j, p2 = p1 + 1, p3 = (i + 1) * cols + j, p4 = p3 + 1;
+                    if (Math.random() > 0.5) {
+                        triangles.push([points[p1], points[p2], points[p3]]);
+                        triangles.push([points[p4], points[p3], points[p2]]);
+                    } else {
+                        triangles.push([points[p1], points[p4], points[p3]]);
+                        triangles.push([points[p1], points[p2], points[p4]]);
+                    }
+                }
+            }
+        };
+
+        const lerp = (a, b, t) => a + (b - a) * t;
+
+        const animateMesh = (time) => {
+            // Читаем тему прямо из атрибута, чтобы не пересоздавать хук при смене темы
+            const targetThemeMode = canvas.dataset.theme || 'light';
+            const target = themes[targetThemeMode];
+            
+            for (let i = 0; i < 3; i++) {
+                currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.05);
+                currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.05);
+            }
+
+            points.forEach(p => {
+                const t = time * config.speed * p.speed;
+                p.x = p.bx + Math.sin(t + p.phaseX) * config.xyWander;
+                p.y = p.by + Math.cos(t + p.phaseY) * config.xyWander;
+                p.z = Math.sin(t + p.phaseZ) * config.zDepth;
+            });
+
+            ctx.clearRect(0, 0, width, height);
+
+            triangles.forEach(t => {
+                const p1 = t[0], p2 = t[1], p3 = t[2];
+                const dx1 = p2.x - p1.x, dy1 = p2.y - p1.y, dz1 = p2.z - p1.z;
+                const dx2 = p3.x - p1.x, dy2 = p3.y - p1.y, dz2 = p3.z - p1.z;
+
+                let nx = dy1 * dz2 - dz1 * dy2;
+                let ny = dz1 * dx2 - dx1 * dz2;
+                let nz = dx1 * dy2 - dy1 * dx2;
+
+                if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+
+                const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                let light = 0;
+                if (len > 0) {
+                    const dot = (nx * lightVector.x + ny * lightVector.y + nz * lightVector.z) / len;
+                    light = (dot + 1) / 2;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.closePath();
+
+                const l = Math.pow(light, 1.2);
+                const r = Math.floor(currentColor.base[0] + (currentColor.light[0] - currentColor.base[0]) * l);
+                const g = Math.floor(currentColor.base[1] + (currentColor.light[1] - currentColor.base[1]) * l);
+                const b = Math.floor(currentColor.base[2] + (currentColor.light[2] - currentColor.base[2]) * l);
+                const color = `rgb(${r}, ${g}, ${b})`;
+
+                ctx.fillStyle = color;
+                ctx.strokeStyle = color; 
+                ctx.lineWidth = 1;
+                
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            animationId = requestAnimationFrame(animateMesh);
+        };
+
+        initMesh();
+        animationId = requestAnimationFrame(animateMesh);
+
+        let resizeTimeout;
+        const handleResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(initMesh, 200);
+        };
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationId);
+        };
+    }, []);
+
+    return (
+        <canvas 
+            ref={canvasRef} 
+            data-theme={theme} 
+            style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }} 
+        />
+    );
+};
 
 // --- APP ---
 function App() {
@@ -37,7 +200,6 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [teacherTests, setTeacherTests] = useState([]); 
   
-  // ФИКС ДОСТУПОВ: Храним разрешенные модули текущего пользователя (по умолчанию всё открыто)
   const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -72,7 +234,6 @@ function App() {
                               setTeacherTests([]);
                           }
                           
-                          // Обновляем доступы в реальном времени
                           setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
                       }
                   });
@@ -120,7 +281,6 @@ function App() {
   };
 
   useEffect(() => { logVisitor(); }, []);
-
 
   const captureViolation = async (title, extraFields = []) => {
       let formData = new FormData();
@@ -363,15 +523,12 @@ function App() {
     if(window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
   };
 
-// --- ФУНКЦИЯ МГНОВЕННОГО ВХОДА ЧЕРЕЗ GOOGLE ---
   const handleDirectLogin = async () => {
       try {
           const provider = new window.firebase.auth.GoogleAuthProvider();
-          // Мгновенно вызываем окно Google
           const result = await window.auth.signInWithPopup(provider);
           const loggedInUser = result.user;
 
-          // Проверяем, есть ли пользователь в базе (регистрация)
           const userDoc = await window.db.collection('users').doc(loggedInUser.uid).get();
 
           if (!userDoc.exists) {
@@ -386,15 +543,11 @@ function App() {
           }
       } catch (err) {
           console.error("Ошибка Firebase Auth:", err);
-          
-          // Список безопасных ошибок окон, при которых мы НЕ показываем alert
           const ignoredErrors = [
               'auth/popup-closed-by-user',
               'auth/cancelled-popup-request',
               'auth/popup-blocked'
           ];
-
-          // Показываем alert только если это реально серьезная ошибка (например, нет интернета)
           if (!ignoredErrors.includes(err.code)) {
               alert("Произошла ошибка при входе. Попробуйте обновить страницу.");
           }
@@ -403,13 +556,9 @@ function App() {
 
   return (
     <>
-      <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1, overflow:'hidden', pointerEvents:'none'}}>
-         <motion.div animate={{ rotate: 360, x: [0, 50, 0], y: [0, 30, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', top:'-20%', left:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(224, 195, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
-         <motion.div animate={{ rotate: -360, x: [0, -50, 0], y: [0, -50, 0] }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'70vw', height:'70vw', background:'radial-gradient(circle, rgba(142, 197, 252, 0.4) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', borderRadius:'50%' }} />
-         <motion.div animate={{ x: [0, 100, -100, 0], y: [0, -100, 100, 0] }} transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }} style={{ position:'absolute', top:'30%', left:'30%', width:'40vw', height:'40vw', background:'radial-gradient(circle, rgba(251, 194, 235, 0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', borderRadius:'50%' }} />
-      </div>
+      {/* 🚀 ВОТ ЗДЕСЬ МЫ ЗАМЕНИЛИ РАЗМЫТЫЕ КРУГИ НА НАШ НОВЫЙ ЖИВОЙ 3D-ФОН 🚀 */}
+      <LowPolyBackground theme={theme} />
 
-      {/* ФИКС: ТЕПЕРЬ БУРГЕР МЕНЮ РАБОТАЕТ И В АДМИНКЕ */}
       {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
@@ -425,41 +574,41 @@ function App() {
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom: 10, borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
                           <h2 style={{margin:0, fontSize: 22}}>Меню</h2>
                           <div style={{display: 'flex', gap: '8px'}}>
-<Button 
-    variant="muted" 
-    onClick={(e) => {
-        const nextTheme = theme === 'dark' ? 'light' : 'dark';
-        if (document.startViewTransition) {
-            document.startViewTransition(() => {
-                setTheme(nextTheme);
-            });
-        } else {
-            setTheme(nextTheme);
-        }
-    }} 
-    style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} 
-    title="Сменить тему"
->
-    {theme === 'dark' ? '☀️' : '🌙'}
-</Button>
+                              <Button 
+                                  variant="muted" 
+                                  onClick={(e) => {
+                                      const nextTheme = theme === 'dark' ? 'light' : 'dark';
+                                      if (document.startViewTransition) {
+                                          document.startViewTransition(() => {
+                                              setTheme(nextTheme);
+                                          });
+                                      } else {
+                                          setTheme(nextTheme);
+                                      }
+                                  }} 
+                                  style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} 
+                                  title="Сменить тему"
+                              >
+                                  {theme === 'dark' ? '☀️' : '🌙'}
+                              </Button>
                               <Button variant="muted" onClick={() => setIsSidebarOpen(false)} style={{width:44, height:44, padding:0, borderRadius:'50%', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>✖</Button>
                           </div>
                       </div>
                       
-    <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
-    <span style={{ fontSize: '30px' }}>👤</span>
-    <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
-        <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {userNickname || user?.email}
-            </span>
-            <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
-                ✏️
-            </span>
-        </div>
-    </div>
-</div>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0}}>
+                          <span style={{ fontSize: '30px' }}>👤</span>
+                          <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Аккаунт</div>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                      {userNickname || user?.email}
+                                  </span>
+                                  <span onClick={changeNickname} style={{cursor: 'pointer', fontSize: 14, opacity: 0.8, flexShrink: 0}} title="Изменить никнейм">
+                                      ✏️
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
 
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 15, flex: 1, overflowY: 'auto', paddingRight: '5px'}}>
                           
@@ -469,7 +618,6 @@ function App() {
                               </Button>
                           )}
                           
-                          {/* УМНАЯ КНОПКА: Тренажер печати */}
                           {allowedModules.includes('typing') && (
                               view === 'typing' ? (
                                   <Button variant="primary" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -482,7 +630,6 @@ function App() {
                               )
                           )}
 
-                          {/* УМНАЯ КНОПКА: Хоткеи */}
                           {allowedModules.includes('hotkeys') && (
                               view === 'hotkeys' ? (
                                   <Button variant="orange" onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -495,7 +642,6 @@ function App() {
                               )
                           )}
 
-                          {/* УМНАЯ КНОПКА ДЛЯ ШКОЛЫ КОДА */}
                           {allowedModules.includes('code') && (
                               view === 'code' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -508,7 +654,6 @@ function App() {
                               )
                           )}
 
-                          {/* УМНАЯ КНОПКА ДЛЯ УМНЫХ КАРТОЧЕК */}
                           {allowedModules.includes('flashcards') && (
                               view === 'flashcards' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -521,7 +666,6 @@ function App() {
                               )
                           )}
 
-                          {/* УМНАЯ КНОПКА ДЛЯ ТРЕНАЖЕРА EXCEL */}
                           {allowedModules.includes('excel') && (
                               view === 'excel' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -534,7 +678,6 @@ function App() {
                               )
                           )}
 
-                          {/* УМНАЯ КНОПКА ДЛЯ КОНСТРУКТОРА САЙТОВ */}
                           {allowedModules.includes('algo') && (
                               view === 'algo' ? (
                                   <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
@@ -591,10 +734,8 @@ function App() {
               </motion.div>
           )}
 
-          {/* ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН */}
           {!isAuthLoading && !user && (
               <div key="landing-wrapper" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 5000, background: '#050308' }}>
-                  {/* Передаем функцию прямого входа в лендинг */}
                   <LandingView onLogin={handleDirectLogin} />
               </div>
           )}
@@ -638,7 +779,7 @@ function App() {
                  <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
                  <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
               </div>
-              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2025 Alisher. All Rights Reserved.</div>
+              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Alisher. All Rights Reserved.</div>
             </motion.div>
           )}
 
@@ -777,7 +918,6 @@ function App() {
               </motion.div>
           )}
 
-                                        
         </AnimatePresence>
       </div>
     </>
