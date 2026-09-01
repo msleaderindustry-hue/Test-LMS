@@ -92,7 +92,7 @@ const DIFFICULTY_MAP = {
 const XP_BY_DIFFICULTY = { easy: 60, medium: 100, hard: 160 };
 
 /* =========================================================================
-   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА (БЕЗ ДУБЛИРУЮЩИХ ЭМОДЗИ)
+   2. СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА
    ========================================================================= */
 const UI_DICT = {
     ru: {
@@ -200,26 +200,26 @@ const UI_DICT = {
 };
 
 /* =========================================================================
-   3. CSS — СТИЛИ ИНТЕРФЕЙСА
+   3. CSS — СТИЛИ ИНТЕРФЕЙСА (МЯГКИЙ ТЕМНЫЙ СТИЛЬ - SOFT DARK SLATE)
    ========================================================================= */
 const ET_STYLES = `
 .et-shell{
-  --bg-main: var(--bg-body, #050816);
-  --bg-panel: var(--bg-panel, #0D1328);
-  --bg-card: var(--bg-card, #111936);
-  --bg-elevated: var(--bg-elevated, #151d3d);
+  --bg-main: var(--bg-body, #0f172a);
+  --bg-panel: var(--bg-panel, #162032);
+  --bg-card: var(--bg-card, #1c283d);
+  --bg-elevated: var(--bg-elevated, #223049);
   --accent-purple: #8b5cf6;
   --accent-blue: #3b82f6;
   --accent-cyan: #22d3ee;
   --accent-green: #22e68a;
   --accent-red: #ef4444;
-  --text-main: var(--text-main, #f8fafc);
+  --text-main: var(--text-main, #f1f5f9);
   --text-sec: var(--text-sec, #94a3b8);
-  --border: var(--glass-border, rgba(255,255,255,.08));
+  --border: var(--glass-border, rgba(255, 255, 255, 0.09));
   --radius-lg: 22px;
   --radius-md: 14px;
   --radius-sm: 10px;
-  background: var(--bg-main);
+  background: radial-gradient(120% 120% at 50% 0%, #162033 0%, var(--bg-main) 100%);
   color: var(--text-main);
   border-radius: 24px;
   padding: 28px;
@@ -228,6 +228,7 @@ const ET_STYLES = `
   margin: 0 auto;
   font-family: inherit;
   position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
 .et-shell.theme-light,
@@ -241,7 +242,9 @@ body.light .et-shell,
   --bg-elevated: var(--bg-elevated, #eef1fb);
   --text-main: var(--text-main, #0f172a);
   --text-sec: var(--text-sec, #64748b);
-  --border: var(--glass-border, rgba(15,23,42,.08));
+  --border: var(--glass-border, rgba(15, 23, 42, 0.08));
+  background: var(--bg-main);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .et-header{
@@ -296,12 +299,12 @@ body.light .et-shell,
   left: 0;
   right: 0;
   min-width: 270px;
-  background: #0d1428;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #152033;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   overflow: hidden;
   z-index: 99999;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
   max-height: 290px;
   overflow-y: auto;
   padding: 6px;
@@ -408,17 +411,17 @@ body.light .et-shell .et-langswitch,
 .et-fn-btn:disabled{opacity:.45;cursor:wait;}
 
 /* =========================================================================
-   ОБНОВЛЕННАЯ КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
+   МЯГКАЯ КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
    ========================================================================= */
 .et-progress-card{
   margin-top: 14px;
-  background: linear-gradient(145deg, rgba(17, 25, 54, 0.95), rgba(9, 14, 32, 0.98));
+  background: linear-gradient(145deg, rgba(26, 37, 58, 0.95), rgba(16, 23, 38, 0.98));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 18px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -483,8 +486,8 @@ body.light .et-shell .et-langswitch,
   margin-bottom: 14px;
 }
 .et-stat-chip{
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 8px 6px;
   text-align: center;
@@ -602,12 +605,12 @@ body.light .et-shell .et-progress-card,
   white-space: pre-line;
 }
 
-/* БЛОК СИНТАКСИСА */
+/* БЛОК СИНТАКСИСА (SOFT TERMINAL STYLE) */
 .et-syntax-box {
-  background: radial-gradient(120% 120% at 50% 0%, #0d1530 0%, #070b1a 100%);
+  background: radial-gradient(120% 120% at 50% 0%, #152136 0%, #0e1626 100%);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   overflow: hidden;
   position: relative;
   transition: border-color 0.25s, box-shadow 0.25s;
@@ -615,7 +618,7 @@ body.light .et-shell .et-progress-card,
 
 .et-syntax-box:hover {
   border-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 238, 0.08);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45), 0 0 20px rgba(34, 211, 238, 0.08);
 }
 
 .et-syntax-header {
@@ -779,13 +782,13 @@ body.light .et-shell .et-line-code,
 .et-practice-title{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent-green);text-transform:uppercase;font-weight:900;letter-spacing:1px;}
 .et-task-text{margin:0 0 22px;color:var(--text-main);font-size:16.5px;font-weight:600;line-height:1.55;}
 
-/* ТАБЛИЦА EXCEL */
+/* ТАБЛИЦА EXCEL (МЯГКИЙ ТЕМНЫЙ ФОН) */
 .et-table-wrap{
   overflow-x: auto;
-  background: #090e1f;
+  background: #111a2c;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   margin-bottom: 26px;
 }
 .et-table{
@@ -797,7 +800,7 @@ body.light .et-shell .et-line-code,
   color: #f1f5f9;
 }
 .et-table thead tr{
-  background: #111936;
+  background: #182338;
   border-bottom: 3px solid var(--accent-green, #22e68a);
 }
 .et-table th{
@@ -808,19 +811,19 @@ body.light .et-shell .et-line-code,
 }
 .et-table th.et-corner{
   width: 42px;
-  background: #0b1124;
+  background: #131d30;
   color: #64748b;
 }
 .et-table td{
   border-right: 1px solid rgba(255, 255, 255, 0.07);
   padding: 10px 8px;
   color: #e2e8f0;
-  background: #090e1f;
+  background: #111a2c;
   cursor: default;
   transition: background .12s;
 }
 .et-table td.et-rownum{
-  background: #0b1124;
+  background: #131d30;
   font-weight: 700;
   color: #64748b;
   cursor: default;
@@ -1298,7 +1301,7 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
 }
 
 /* =========================================================================
-   ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
+   КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
    ========================================================================= */
 function ProgressCard({ t, progress, userInfo }) {
     const xpIntoLevel = progress.xp % 500;
@@ -1332,7 +1335,7 @@ function ProgressCard({ t, progress, userInfo }) {
                     </div>
                     <div className="et-user-rank">
                         <motion.span 
-                            animate={{ rotate: [0, 360] }} // ИСПРАВЛЕНО
+                            animate={{ rotate: [0, 12, -12, 0] }}
                             transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
                         >
                             ⭐
@@ -1342,7 +1345,7 @@ function ProgressCard({ t, progress, userInfo }) {
                 </div>
             </div>
 
-            {/* Дашборд показателей с интерактивным наведением */}
+            {/* Дашборд показателей */}
             <div className="et-stats-grid">
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val">⚡ {progress.xp}</div>
@@ -1357,7 +1360,7 @@ function ProgressCard({ t, progress, userInfo }) {
                         {progress.streak > 0 ? (
                             <motion.span 
                                 style={{ display: 'inline-block' }}
-                                animate={{ scale: [1, 1.2, 1] }} // ИСПРАВЛЕНО
+                                animate={{ scale: }} 
                                 transition={{ duration: 1.5, repeat: Infinity }}
                             >
                                 🔥
@@ -1368,7 +1371,7 @@ function ProgressCard({ t, progress, userInfo }) {
                 </motion.div>
             </div>
 
-            {/* Прогресс-бар с анимацией заполнения */}
+            {/* Прогресс-бар */}
             <div className="et-progress-row">
                 <span>{t.nextLvlGoal}</span>
                 <span>{xpIntoLevel} / 500 XP ({pct}%)</span>
@@ -1827,7 +1830,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }} // ИСПРАВЛЕНО
+            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
