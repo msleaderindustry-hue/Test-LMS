@@ -46,7 +46,6 @@ const AVAILABLE_MODULES = [
     { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' }
 ];
 
-// ДОБАВЛЕНА НОВАЯ ВКЛАДКА "СТАТИСТИКА"
 const TABS = [
     { id: 'control', icon: 'user', label: 'Управление', color: '#38bdf8' },
     { id: 'settings', icon: 'settings', label: 'Настройки', color: '#a855f7' },
@@ -225,7 +224,7 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                             {!isSelf ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', width: '100%' }}>
                                     <Button variant={u.role === 'admin' ? "orange" : "muted"} onClick={() => toggleAdmin(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.role === 'admin' ? "Снять админа" : "Дать админа"}</Button>
-                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justify-content: 'center', gap: '7px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
+                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
                                         <Icon name="folder" size={14} color="#fff" /> Назначить тест <input type="file" accept=".json" style={{ display: 'none' }} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                     </label>
                                     <Button variant={u.isBanned ? "green" : "red"} onClick={() => toggleBan(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.isBanned ? "Разбанить" : "Забанить"}</Button>
@@ -493,7 +492,7 @@ const AdminPanel = ({ onKicked }) => {
             <AnimatePresence>{accessRevoked && <AccessRevokedOverlay reason={accessRevoked} />}</AnimatePresence>
 
             <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="glass-panel" style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', borderRadius: '26px' }}>
-                <header style={{ display: 'flex', justify-content: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '22px', marginBottom: '22px' }}>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '22px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ width: '52px', height: '52px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444, #f97316)', boxShadow: '0 10px 24px -8px rgba(239,68,68,0.5)' }}>
                             <Icon name="shield" size={24} color="#fff" strokeWidth={1.8} />
