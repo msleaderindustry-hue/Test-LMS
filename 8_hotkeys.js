@@ -1020,10 +1020,17 @@
                     setScore(prev => prev + 1);
                     setTimeout(() => setSuccessPulse(false), 200);
 
-                    if (currentIndex < tasks.length - 1) {
+if (currentIndex < tasks.length - 1) {
                         setCurrentIndex(prev => prev + 1);
                     } else {
                         setIsFinished(true);
+                        
+                        // --- СОХРАНЕНИЕ СТАТИСТИКИ ХОТКЕЕВ ---
+                        const existing = JSON.parse(localStorage.getItem('hotkey_stats') || '{"maxScore":0, "sessionsPlayed":0}');
+                        localStorage.setItem('hotkey_stats', JSON.stringify({
+                            maxScore: Math.max(existing.maxScore, score + 1),
+                            sessionsPlayed: existing.sessionsPlayed + 1
+                        }));
                     }
                 } else {
                     setShake(true);
