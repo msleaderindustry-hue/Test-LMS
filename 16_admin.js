@@ -46,10 +46,12 @@ const AVAILABLE_MODULES = [
     { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' }
 ];
 
+// ДОБАВЛЕНА НОВАЯ ВКЛАДКА "СТАТИСТИКА"
 const TABS = [
     { id: 'control', icon: 'user', label: 'Управление', color: '#38bdf8' },
     { id: 'settings', icon: 'settings', label: 'Настройки', color: '#a855f7' },
-    { id: 'tests', icon: 'fileText', label: 'Тесты', color: '#10b981' }
+    { id: 'tests', icon: 'fileText', label: 'Тесты', color: '#10b981' },
+    { id: 'stats', icon: 'barChart', label: 'Статистика', color: '#f59e0b' } 
 ];
 
 const AVATAR_PALETTE = [
@@ -162,6 +164,14 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
     const [activeTab, setActiveTab] = useState('control');
     const testCount = (u.assignedTests && u.assignedTests.length) || 0;
 
+    // ИЗВЛЕКАЕМ СТАТИСТИКУ ИЗ БАЗЫ ПОЛЬЗОВАТЕЛЯ
+    const excelStats = u.excelProgress || { level: 1, xp: 0, completedLessons: 0, streak: 0 };
+    const typingStats = u.typingProgress || { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
+    const hotkeyStats = u.hotkeyProgress || { maxScore: 0, sessionsPlayed: 0 };
+    const testHistory = u.testHistory || [];
+    const totalTestsDone = testHistory.length;
+    const avgPercent = totalTestsDone ? Math.round(testHistory.reduce((s, h) => s + h.percent, 0) / totalTestsDone) : 0;
+
     return (
         <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
             style={{ background: 'var(--bg-body)', border: isSelf ? '1.5px solid rgba(56,189,248,0.35)' : '1px solid var(--glass-border)', borderRadius: '22px', padding: '22px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', position: 'relative', opacity: pending ? 0.7 : 1, pointerEvents: pending ? 'none' : 'auto', transition: 'opacity 0.2s' }}>
@@ -209,12 +219,13 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
 
             <AnimatePresence mode="wait">
                 <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}>
+                    
                     {activeTab === 'control' && (
                         <div>
                             {!isSelf ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', width: '100%' }}>
                                     <Button variant={u.role === 'admin' ? "orange" : "muted"} onClick={() => toggleAdmin(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.role === 'admin' ? "Снять админа" : "Дать админа"}</Button>
-                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
+                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justify-content: 'center', gap: '7px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
                                         <Icon name="folder" size={14} color="#fff" /> Назначить тест <input type="file" accept=".json" style={{ display: 'none' }} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                     </label>
                                     <Button variant={u.isBanned ? "green" : "red"} onClick={() => toggleBan(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.isBanned ? "Разбанить" : "Забанить"}</Button>
@@ -227,6 +238,7 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                             )}
                         </div>
                     )}
+                    
                     {activeTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)' }}>
@@ -255,6 +267,36 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                             </div>
                         </div>
                     )}
+                    
+                    {/* НОВАЯ ВКЛАДКА СТАТИСТИКИ */}
+                    {activeTab === 'stats' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="barChart" size={14}/> EXCEL</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Уровень:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.level} ({excelStats.xp} XP)</b></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Решено формул:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.completedLessons}</b></div>
+                            </div>
+
+                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#38bdf8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="keyboard" size={14}/> ПЕЧАТЬ</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.maxWpm} WPM</b></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Пройдено:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.testsCompleted}</b></div>
+                            </div>
+
+                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="zap" size={14}/> ХОТКЕИ</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.maxScore}</b></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Сессий:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.sessionsPlayed}</b></div>
+                            </div>
+
+                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#a855f7', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="fileText" size={14}/> ТЕСТЫ</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Сдано:</span> <b style={{color: 'var(--text-main)'}}>{totalTestsDone}</b></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Ср. балл:</span> <b style={{color: 'var(--text-main)'}}>{avgPercent}%</b></div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'tests' && (
                         <div>
                             {testCount === 0 ? (
@@ -307,8 +349,6 @@ const AdminPanel = ({ onKicked }) => {
         setAccessRevoked(reason);
     };
 
-    // Fire onKicked shortly after showing the lockout screen, so the user
-    // sees *why* they were removed instead of the panel just vanishing.
     useEffect(() => {
         if (!accessRevoked || kickedRef.current) return;
         kickedRef.current = true;
@@ -316,11 +356,6 @@ const AdminPanel = ({ onKicked }) => {
         return () => clearTimeout(t);
     }, [accessRevoked, onKicked]);
 
-    // Primary data source: all users. IMPORTANT — this listener must have an
-    // error handler. Firestore rules typically only let admins list the whole
-    // collection, so the instant an admin is demoted/banned this listener
-    // gets a permission-denied error. Without a handler that error is silent
-    // and `users` simply freezes, which is why the panel used to stay open.
     useEffect(() => {
         if (!window.db) return;
         const unsub = window.db.collection('users').onSnapshot(
@@ -330,9 +365,6 @@ const AdminPanel = ({ onKicked }) => {
         return () => unsub();
     }, []);
 
-    // Defense in depth: listen directly to the current user's own document.
-    // This catches ban/demotion even in setups where the collection-wide
-    // listener above keeps working (e.g. more permissive rules).
     useEffect(() => {
         if (!window.db || !currentUserUid) return;
         const unsub = window.db.collection('users').doc(currentUserUid).onSnapshot(
@@ -461,7 +493,7 @@ const AdminPanel = ({ onKicked }) => {
             <AnimatePresence>{accessRevoked && <AccessRevokedOverlay reason={accessRevoked} />}</AnimatePresence>
 
             <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="glass-panel" style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', borderRadius: '26px' }}>
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '22px', marginBottom: '22px' }}>
+                <header style={{ display: 'flex', justify-content: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '22px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ width: '52px', height: '52px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444, #f97316)', boxShadow: '0 10px 24px -8px rgba(239,68,68,0.5)' }}>
                             <Icon name="shield" size={24} color="#fff" strokeWidth={1.8} />
