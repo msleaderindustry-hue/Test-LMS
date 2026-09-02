@@ -159,9 +159,23 @@ const TypingTest = ({ onBack }) => {
                 setCombo(newCombo);
                 if (newCombo > maxCombo) setMaxCombo(newCombo);
 
-                const nextIndex = currentIndex + 1;
+const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
-                if (nextIndex === text.length) setEndTime(Date.now());
+                if (nextIndex === text.length) {
+                    setEndTime(Date.now());
+                    
+                    // --- СОХРАНЕНИЕ СТАТИСТИКИ ПЕЧАТИ ---
+                    const timeElapsed = (Date.now() - startTime) / 1000 / 60;
+                    const wordsTyped = text.length / 5;
+                    const wpm = timeElapsed > 0 ? Math.round(wordsTyped / timeElapsed) : 0;
+                    const existing = JSON.parse(localStorage.getItem('typing_stats') || '{"maxWpm":0, "maxCombo":0, "testsCompleted":0}');
+                    
+                    localStorage.setItem('typing_stats', JSON.stringify({
+                        maxWpm: Math.max(existing.maxWpm, wpm),
+                        maxCombo: Math.max(existing.maxCombo, newCombo > maxCombo ? newCombo : maxCombo),
+                        testsCompleted: existing.testsCompleted + 1
+                    }));
+                }
             } else {
                 setIsErrorKey(true);
                 setErrors(prev => prev + 1);
