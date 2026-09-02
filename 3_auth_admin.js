@@ -24,7 +24,7 @@ const AuthScreen = React.memo(() => {
                     role: 'student',
                     isBanned: false,
                     registeredAt: new Date().toISOString(),
-                    allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo'],
+                    allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel'],
                     excelHintsEnabled: true // По умолчанию подсказки включены
                 });
             }
