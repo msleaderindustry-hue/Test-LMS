@@ -768,7 +768,7 @@ function App() {
                  <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
                  <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
               </div>
-              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Alisher. All Rights Reserved.</div>
+              <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
             </motion.div>
           )}
 
