@@ -3,19 +3,53 @@ const { useState, useEffect, useRef, useMemo } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
 
+/* ---------------- Icon system (inline SVG, no external deps) ---------------- */
+
+const ICON_PATHS = {
+    chat: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
+    keyboard: <><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" /></>,
+    zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />,
+    code: <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>,
+    layers: <><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></>,
+    barChart: <><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></>,
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+    settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>,
+    fileText: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></>,
+    ban: <><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></>,
+    alertTriangle: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
+    checkCircle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+    info: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>,
+    folder: <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />,
+    cloud: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />,
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+    star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+    inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
+    shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+    lightbulb: <><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></>,
+};
+
+const Icon = ({ name, size = 16, color = 'currentColor', style = {}, strokeWidth = 2 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0, ...style }}>
+        {ICON_PATHS[name] || null}
+    </svg>
+);
+
 const AVAILABLE_MODULES = [
-    { id: 'chat', icon: '💬', label: 'Чат', color: '#06b6d4' },
-    { id: 'typing', icon: '⌨️', label: 'Печать', color: '#818cf8' },
-    { id: 'hotkeys', icon: '⚡', label: 'Хоткеи', color: '#fbbf24' },
-    { id: 'code', icon: '💻', label: 'VS School', color: '#2dd4bf' },
-    { id: 'flashcards', icon: '🎴', label: 'Карточки', color: '#3b82f6' },
-    { id: 'excel', icon: '📊', label: 'Excel', color: '#10b981' }
+    { id: 'chat', icon: 'chat', label: 'Чат', color: '#06b6d4' },
+    { id: 'typing', icon: 'keyboard', label: 'Печать', color: '#818cf8' },
+    { id: 'hotkeys', icon: 'zap', label: 'Хоткеи', color: '#fbbf24' },
+    { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
+    { id: 'flashcards', icon: 'layers', label: 'Карточки', color: '#3b82f6' },
+    { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' }
 ];
 
 const TABS = [
-    { id: 'control', icon: '👤', label: 'Управление', color: '#38bdf8' },
-    { id: 'settings', icon: '⚙️', label: 'Настройки', color: '#a855f7' },
-    { id: 'tests', icon: '📝', label: 'Тесты', color: '#10b981' }
+    { id: 'control', icon: 'user', label: 'Управление', color: '#38bdf8' },
+    { id: 'settings', icon: 'settings', label: 'Настройки', color: '#a855f7' },
+    { id: 'tests', icon: 'fileText', label: 'Тесты', color: '#10b981' }
 ];
 
 const AVATAR_PALETTE = [
@@ -51,7 +85,7 @@ const ToastStack = ({ toasts }) => (
             {toasts.map(t => (
                 <motion.div key={t.id} layout initial={{ opacity: 0, x: 60, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 60, scale: 0.9 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '13px 16px', borderRadius: '14px', fontSize: '13px', fontWeight: 700, color: '#fff', boxShadow: '0 12px 28px -8px rgba(0,0,0,0.35)', background: t.type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #10b981, #059669)' }}>
-                    <span style={{ fontSize: '16px' }}>{t.type === 'error' ? '⚠️' : '✅'}</span>
+                    <Icon name={t.type === 'error' ? 'alertTriangle' : 'checkCircle'} size={17} color="#fff" />
                     <span style={{ lineHeight: 1.35 }}>{t.message}</span>
                 </motion.div>
             ))}
@@ -69,8 +103,8 @@ const ConfirmDialog = ({ state, onCancel, onConfirm }) => (
                 <motion.div initial={{ opacity: 0, scale: 0.92, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 12 }} transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                     onClick={(e) => e.stopPropagation()}
                     style={{ background: 'var(--bg-body)', border: '1px solid var(--glass-border)', borderRadius: '22px', padding: '26px', width: '100%', maxWidth: '380px', boxShadow: '0 24px 60px -12px rgba(0,0,0,0.45)' }}>
-                    <div style={{ width: '46px', height: '46px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', marginBottom: '16px', background: state.danger ? 'rgba(239,68,68,0.12)' : 'rgba(56,189,248,0.12)' }}>
-                        {state.danger ? '⚠️' : 'ℹ️'}
+                    <div style={{ width: '46px', height: '46px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', background: state.danger ? 'rgba(239,68,68,0.12)' : 'rgba(56,189,248,0.12)' }}>
+                        <Icon name={state.danger ? 'alertTriangle' : 'info'} size={22} color={state.danger ? '#ef4444' : '#38bdf8'} />
                     </div>
                     <div style={{ fontWeight: 900, fontSize: '17px', marginBottom: '8px', color: 'var(--text-main)' }}>{state.title}</div>
                     <div style={{ fontSize: '13.5px', color: 'var(--text-sec)', lineHeight: 1.5, marginBottom: '22px' }}>{state.message}</div>
@@ -90,7 +124,9 @@ const AccessRevokedOverlay = ({ reason }) => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, zIndex: 10002, background: 'rgba(8,10,20,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
         <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             style={{ background: 'var(--bg-body)', borderRadius: '24px', padding: '34px', textAlign: 'center', maxWidth: '340px', boxShadow: '0 30px 80px -20px rgba(0,0,0,0.6)' }}>
-            <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.6 }} style={{ fontSize: '46px', marginBottom: '14px' }}>🔒</motion.div>
+            <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.6 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+                <Icon name="lock" size={42} color="#ef4444" strokeWidth={1.8} />
+            </motion.div>
             <div style={{ fontWeight: 900, fontSize: '17px', marginBottom: '8px', color: 'var(--text-main)' }}>Доступ отозван</div>
             <div style={{ fontSize: '13.5px', color: 'var(--text-sec)', lineHeight: 1.5 }}>{reason}</div>
             <div style={{ marginTop: '20px', height: '4px', borderRadius: '2px', background: 'var(--glass-border)', overflow: 'hidden' }}>
@@ -132,14 +168,14 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
 
             {pending && (
                 <div style={{ position: 'absolute', top: '18px', right: '18px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 800, color: 'var(--text-sec)' }}>
-                    <span style={{ display: 'inline-block', width: '11px', height: '11px', borderRadius: '50%', border: '2px solid var(--glass-border)', borderTopColor: '#38bdf8' }} />
+                    <Spinner />
                     Сохранение…
                 </div>
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: u.isBanned ? '20px' : '15px', fontWeight: 900, color: '#fff', background: u.isBanned ? 'rgba(239, 68, 68, 0.85)' : avatarGradient(u.id), border: `1.5px solid ${u.isBanned ? 'rgba(239,68,68,0.4)' : 'transparent'}`, boxShadow: u.isBanned ? 'none' : '0 6px 16px -6px rgba(56,189,248,0.5)' }}>
-                    {u.isBanned ? '🚫' : getInitials(u.nickname || u.email)}
+                <div style={{ width: '50px', height: '50px', borderRadius: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#fff', background: u.isBanned ? 'rgba(239, 68, 68, 0.85)' : avatarGradient(u.id), border: `1.5px solid ${u.isBanned ? 'rgba(239,68,68,0.4)' : 'transparent'}`, boxShadow: u.isBanned ? 'none' : '0 6px 16px -6px rgba(56,189,248,0.5)' }}>
+                    {u.isBanned ? <Icon name="ban" size={20} color="#fff" /> : <span style={{ fontSize: '15px' }}>{getInitials(u.nickname || u.email)}</span>}
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
@@ -162,7 +198,10 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                     return (
                         <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ position: 'relative', cursor: 'pointer', padding: '8px 15px', borderRadius: '12px', fontWeight: 800, fontSize: '12.5px', transition: 'color 0.2s', whiteSpace: 'nowrap', color: isActive ? tab.color : 'var(--text-sec)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {isActive && <motion.div layoutId={`tab-bg-${u.id}`} transition={{ type: 'spring', stiffness: 500, damping: 35 }} style={{ position: 'absolute', inset: 0, borderRadius: '12px', background: `${tab.color}17`, border: `1px solid ${tab.color}40` }} />}
-                            <span style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>{tab.icon} {tab.label}{tab.id === 'tests' ? ` (${testCount})` : ''}</span>
+                            <span style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Icon name={tab.icon} size={14} color={isActive ? tab.color : 'currentColor'} />
+                                {tab.label}{tab.id === 'tests' ? ` (${testCount})` : ''}
+                            </span>
                         </div>
                     );
                 })}
@@ -175,20 +214,28 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                             {!isSelf ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', width: '100%' }}>
                                     <Button variant={u.role === 'admin' ? "orange" : "muted"} onClick={() => toggleAdmin(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.role === 'admin' ? "Снять админа" : "Дать админа"}</Button>
-                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
-                                        📁 Назначить тест <input type="file" accept=".json" style={{ display: 'none' }} onChange={(e) => handleAssignTestFile(e, u.id)} />
+                                    <label style={{ width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', borderRadius: '13px', height: '44px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
+                                        <Icon name="folder" size={14} color="#fff" /> Назначить тест <input type="file" accept=".json" style={{ display: 'none' }} onChange={(e) => handleAssignTestFile(e, u.id)} />
                                     </label>
                                     <Button variant={u.isBanned ? "green" : "red"} onClick={() => toggleBan(u)} style={{ height: '44px', borderRadius: '13px', fontSize: '11px', textTransform: 'uppercase' }}>{u.isBanned ? "Разбанить" : "Забанить"}</Button>
                                 </div>
-                            ) : (<div style={{ padding: '16px', background: 'rgba(245, 158, 11, 0.08)', border: '1px dashed #f59e0b', borderRadius: '14px', color: '#d97706', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>⚠️ Вы не можете изменять базовые права собственного аккаунта</div>)}
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px', background: 'rgba(245, 158, 11, 0.08)', border: '1px dashed #f59e0b', borderRadius: '14px', color: '#d97706', fontSize: '13px', fontWeight: 600, textAlign: 'center', justifyContent: 'center' }}>
+                                    <Icon name="alertTriangle" size={16} color="#d97706" />
+                                    Вы не можете изменять базовые права собственного аккаунта
+                                </div>
+                            )}
                         </div>
                     )}
                     {activeTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)' }}>
-                                <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '12px' }}>⚙️ Настройки режимов</div>
-                                <Button variant={u.excelHintsEnabled !== false ? "green" : "red"} onClick={() => toggleExcelHints(u)} style={{ height: '44px', borderRadius: '12px', fontSize: '11.5px', textTransform: 'uppercase' }}>
-                                    {u.excelHintsEnabled !== false ? "💡 Подсказки Excel: включены" : "🔒 Подсказки Excel: режим экзамена"}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '12px' }}>
+                                    <Icon name="settings" size={12} /> Настройки режимов
+                                </div>
+                                <Button variant={u.excelHintsEnabled !== false ? "green" : "red"} onClick={() => toggleExcelHints(u)} style={{ height: '44px', borderRadius: '12px', fontSize: '11.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <Icon name={u.excelHintsEnabled !== false ? 'lightbulb' : 'lock'} size={14} />
+                                    {u.excelHintsEnabled !== false ? "Подсказки Excel: включены" : "Подсказки Excel: режим экзамена"}
                                 </Button>
                             </div>
                             <div style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)' }}>
@@ -198,9 +245,9 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                                         const access = hasAccess(u, module.id);
                                         return (
                                             <motion.div key={module.id} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => toggleModuleAccess(u, module.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '7px 13px', borderRadius: '11px', cursor: 'pointer', background: access ? `${module.color}17` : 'var(--bg-body)', border: `1.5px solid ${access ? `${module.color}55` : 'var(--glass-border)'}`, color: access ? module.color : 'var(--text-sec)', opacity: access ? 1 : 0.55 }}>
-                                                <span style={{ fontSize: '14px', filter: access ? 'none' : 'grayscale(100%)' }}>{module.icon}</span>
+                                                <Icon name={module.icon} size={14} />
                                                 <span style={{ fontSize: '12px', fontWeight: 800 }}>{module.label}</span>
-                                                {access && <span style={{ fontSize: '10px' }}>✓</span>}
+                                                {access && <Icon name="checkCircle" size={12} />}
                                             </motion.div>
                                         );
                                     })}
@@ -211,13 +258,18 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                     {activeTab === 'tests' && (
                         <div>
                             {testCount === 0 ? (
-                                <div style={{ padding: '24px 18px', textAlign: 'center', color: 'var(--text-sec)', fontSize: '13px', fontWeight: 600, background: 'var(--bg-panel)', borderRadius: '14px', border: '1px dashed var(--glass-border)' }}>📭 Нет назначенных персональных тестов<br />Перейдите во вкладку «Управление», чтобы назначить новый тест</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '24px 18px', textAlign: 'center', color: 'var(--text-sec)', fontSize: '13px', fontWeight: 600, background: 'var(--bg-panel)', borderRadius: '14px', border: '1px dashed var(--glass-border)' }}>
+                                    <Icon name="inbox" size={22} />
+                                    <span>Нет назначенных персональных тестов<br />Перейдите во вкладку «Управление», чтобы назначить новый тест</span>
+                                </div>
                             ) : (
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                     {u.assignedTests.map(test => (
                                         <div key={test.id} style={{ background: 'var(--bg-panel)', border: '1px dashed #3b82f6', color: '#3b82f6', fontSize: '13px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '8px 12px 8px 14px', borderRadius: '12px' }}>
-                                            <span>☁️ {test.title}</span>
-                                            <div onClick={() => removeTest(u, test.id, test.title)} style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '10px' }}>✖</div>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}><Icon name="cloud" size={14} /> {test.title}</span>
+                                            <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} onClick={() => removeTest(u, test.id, test.title)} style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                                                <Icon name="x" size={11} strokeWidth={2.5} />
+                                            </motion.div>
                                         </div>
                                     ))}
                                 </div>
@@ -411,14 +463,16 @@ const AdminPanel = ({ onKicked }) => {
             <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="glass-panel" style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', borderRadius: '26px' }}>
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '22px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '52px', height: '52px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: 'linear-gradient(135deg, #ef4444, #f97316)', boxShadow: '0 10px 24px -8px rgba(239,68,68,0.5)' }}>🛡️</div>
+                        <div style={{ width: '52px', height: '52px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444, #f97316)', boxShadow: '0 10px 24px -8px rgba(239,68,68,0.5)' }}>
+                            <Icon name="shield" size={24} color="#fff" strokeWidth={1.8} />
+                        </div>
                         <div style={{ textAlign: 'left' }}><h2 style={{ margin: 0, fontSize: '23px', fontWeight: 900 }}>Панель управления</h2><div style={{ fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600 }}>Настройка доступов и тестов</div></div>
                     </div>
                     {users && users.length > 0 && (
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                            <div style={{ padding: '8px 14px', borderRadius: '12px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', fontSize: '12px', fontWeight: 800 }}>👥 {users.length} всего</div>
-                            <div style={{ padding: '8px 14px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '12px', fontWeight: 800, color: '#d97706' }}>⭐ {adminCount} админов</div>
-                            {bannedCount > 0 && <div style={{ padding: '8px 14px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', fontSize: '12px', fontWeight: 800, color: '#ef4444' }}>🚫 {bannedCount} забанено</div>}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '12px', background: 'var(--bg-body)', border: '1px solid var(--glass-border)', fontSize: '12px', fontWeight: 800 }}><Icon name="users" size={13} /> {users.length} всего</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '12px', fontWeight: 800, color: '#d97706' }}><Icon name="star" size={13} color="#d97706" /> {adminCount} админов</div>
+                            {bannedCount > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', fontSize: '12px', fontWeight: 800, color: '#ef4444' }}><Icon name="ban" size={13} color="#ef4444" /> {bannedCount} забанено</div>}
                         </div>
                     )}
                 </header>
@@ -426,7 +480,7 @@ const AdminPanel = ({ onKicked }) => {
                 {users && users.length > 0 && (
                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' }}>
                         <div style={{ position: 'relative', flex: '1 1 220px', minWidth: '200px' }}>
-                            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', opacity: 0.6 }}>🔍</span>
+                            <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, display: 'flex' }}><Icon name="search" size={15} /></span>
                             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по имени или email…"
                                 style={{ width: '100%', height: '42px', borderRadius: '13px', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', fontSize: '13px', fontWeight: 600, padding: '0 14px 0 38px', outline: 'none', boxSizing: 'border-box' }} />
                         </div>
