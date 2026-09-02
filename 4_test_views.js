@@ -127,7 +127,7 @@ const rankColor = (i) => (i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? 
 const StatsView = ({ history, setHistory, userData }) => {
     const [activeTab, setActiveTab] = useState('tests');
     
-    // БЕРЕМ ДАННЫЕ ИЗ БАЗЫ FIREBASE (userData)
+    // --- ИЗМЕНЕНО: БЕРЕМ ДАННЫЕ ИЗ БАЗЫ FIREBASE (userData) ---
     const historyToUse = userData?.testHistory || history || [];
     const sortedHistory = [...historyToUse].sort((a, b) => b.percent - a.percent);
 
@@ -176,12 +176,11 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕНО: Добавлен maxWidth 100%, overflowX auto, и flexShrink 0 для дочерних элементов */}
-            <div className="modern-scroll" style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
-                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
+                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1 }}>
                             {isActive && (
                                 <motion.div layoutId="tab-bg" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                     style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
