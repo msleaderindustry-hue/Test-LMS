@@ -90,7 +90,7 @@ const ChartIcon = () => {
     );
 };
 
-// НОВАЯ ИКОНКА СТАТИСТИКИ
+// ИКОНКА СТАТИСТИКИ
 const StatsIcon = () => (
     <motion.svg width="18" height="18" viewBox="0 0 24 24" fill="none" variants={iconWrap}>
         <path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -147,6 +147,7 @@ const backButtonStyle = (gradient) => ({
     ...navButtonBaseStyle(gradient), fontWeight: 700, textTransform: 'uppercase', fontSize: 13, filter: 'grayscale(0.15) brightness(0.92)'
 });
 
+// УМНАЯ КНОПКА (МЕНЯЕТСЯ НА "В МЕНЮ" ЕСЛИ АКТИВНА)
 const NavButton = ({ isActive, gradient, Icon, label, onClick }) => (
     <motion.div initial="rest" whileHover="hover" animate="rest" whileTap={{ scale: 0.97 }} style={{ ['--sidebar-bg']: 'transparent', width: '100%' }}>
         <motion.div variants={{ rest: { scale: 1 }, hover: { scale: 1.02 } }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
@@ -203,16 +204,16 @@ const SidebarMenu = ({ isOpen, onClose, theme, setTheme, user, userNickname, cha
                             </div>
                         </div>
 
-                        {/* НАВИГАЦИЯ (ИСПРАВЛЕНА ТРЯСКА С ПОМОЩЬЮ OVERFLOW-X И PADDING) */}
+                        {/* НАВИГАЦИЯ БЕЗ ГОРИЗОНТАЛЬНОГО СКРОЛЛА */}
                         <div className="modern-scroll" style={{ 
                             display: 'flex', flexDirection: 'column', gap: 10, 
                             marginTop: 16, flex: 1, 
                             overflowY: 'auto', 
-                            overflowX: 'hidden', /* Убирает горизонтальный скролл */
-                            padding: '4px 8px 20px 4px' /* Дает место для расширения кнопок */
+                            overflowX: 'hidden',
+                            padding: '4px 8px 20px 4px'
                         }}>
                             
-                            {/* НОВАЯ КНОПКА СТАТИСТИКИ */}
+                            {/* СТАТИСТИКА (ПРЕВРАЩАЕТСЯ В "МЕНЮ", ЕСЛИ ВЫ В НЕЙ) */}
                             <NavButton
                                 isActive={view === 'stats'}
                                 gradient="linear-gradient(135deg, #f97316 0%, #ea580c 100%)"
