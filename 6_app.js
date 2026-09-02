@@ -10,7 +10,6 @@ const {
   CodePlayground,
   FlashcardsLMS,
   ExcelTrainerLMS,
-  WebBuilderLMS,
   LandingView
 } = window;
 
@@ -202,7 +201,7 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [teacherTests, setTeacherTests] = useState([]); 
   
-  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
+  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -236,7 +235,7 @@ function App() {
                               setTeacherTests([]);
                           }
                           
-                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo']);
+                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel']);
                       }
                   });
               return () => unsubscribeBan();
@@ -539,7 +538,7 @@ function App() {
                   role: 'student',
                   isBanned: false,
                   registeredAt: new Date().toISOString(),
-                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'algo'],
+                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel'],
                   excelHintsEnabled: true
               });
           }
@@ -561,7 +560,7 @@ function App() {
       {/* 🚀 ВОТ ЗДЕСЬ МЫ ЗАМЕНИЛИ РАЗМЫТЫЕ КРУГИ НА НАШ НОВЫЙ ЖИВОЙ 3D-ФОН 🚀 */}
       <LowPolyBackground theme={theme} />
 
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'algo' || view === 'admin') && (
+      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
           <div className="mobile-burger-fixed">
               <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
           </div>
@@ -676,18 +675,6 @@ function App() {
                               ) : (
                                   <Button onClick={() => { setView('excel'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
                                       <span style={{marginRight: 10}}>📊</span> Тренажер Excel
-                                  </Button>
-                              )
-                          )}
-
-                          {allowedModules.includes('algo') && (
-                              view === 'algo' ? (
-                                  <Button onClick={() => { setView('menu'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                      <span style={{marginRight: 10}}>⬅</span> В МЕНЮ
-                                  </Button>
-                              ) : (
-                                  <Button onClick={() => { setView('algo'); setIsSidebarOpen(false); }} style={{justifyContent: 'flex-start', padding: '0 20px', height: 54, minHeight: 54, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', border: 'none', fontWeight: 'bold', textTransform: 'uppercase'}}>
-                                      <span style={{marginRight: 10}}>🧩</span> Конструктор сайтов
                                   </Button>
                               )
                           )}
@@ -910,13 +897,6 @@ function App() {
           {!isAuthLoading && user && view === 'excel' && (
               <motion.div key="excel_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
                   <ExcelTrainerLMS onBack={() => setView('menu')} />
-              </motion.div>
-          )}
-
-          {/* ЭКРАН КОНСТРУКТОРА САЙТОВ */}
-          {!isAuthLoading && user && view === 'algo' && (
-              <motion.div key="algo_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
-                  <WebBuilderLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
