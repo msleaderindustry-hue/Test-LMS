@@ -136,7 +136,6 @@ const AVAILABLE_MODULES = [
     { id: 'code', icon: '💻', label: 'VS School', color: '#2dd4bf' },
     { id: 'flashcards', icon: '🎴', label: 'Карточки', color: '#3b82f6' },
     { id: 'excel', icon: '📊', label: 'Excel', color: '#10b981' },
-    { id: 'algo', icon: '🧩', label: 'Конструктор', color: '#0ea5e9' }
 ];
 
 const TABS = [
