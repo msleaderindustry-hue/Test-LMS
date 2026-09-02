@@ -1,21 +1,17 @@
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
 const { 
   useState, useEffect, useRef, motion, AnimatePresence,
-  computeFingerprint, DISCORD_WEBHOOK, shuffleArray,
+  computeFingerprint, shuffleArray, // DISCORD_WEBHOOK отсюда удален
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
-  TypingTest,
-  HotkeyTrainer,
-  CodePlayground,
-  FlashcardsLMS,
-  ExcelTrainerLMS,
-  LandingView,
-  SidebarMenu // <--- ДОБАВЛЕН ИМПОРТ НАШЕГО НОВОГО МЕНЮ
+  TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, LandingView,
+  SidebarMenu, 
+  logVisitor, captureViolation, sendTestResultToDiscord // <--- ЧИСТЫЙ ИМПОРТ ИЗ 15_discord.js
 } = window;
 
 // =========================================================================
-// НОВЫЙ КОМПОНЕНТ: ИДЕАЛЬНЫЙ 3D LOW-POLY ФОН (вместо размытых кругов)
+// 3D LOW-POLY ФОН (Строгий темный цвет)
 // =========================================================================
 const LowPolyBackground = ({ theme }) => {
     const canvasRef = useRef(null);
@@ -242,67 +238,34 @@ function App() {
       return () => unsubscribeAuth();
   }, []);
 
-  const logVisitor = async () => {
-      try {
-          const ipReq = await fetch('https://ipapi.co/json/');
-          const ipData = await ipReq.json();
-          const deviceInfo = navigator.userAgent;
+  // Логирование посетителя (используем импортированную функцию)
+  useEffect(() => { 
+      if (typeof logVisitor === 'function') logVisitor(); 
+  }, []);
 
-          const mapsLink = ipData.latitude && ipData.longitude 
-              ? `https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}` 
-              : null;
-
-          let payload = {
-              username: "LMS Spy Monitor", 
-              avatar_url: "https://i.imgur.com/4M34hi2.png",
-              embeds: [{
-                  title: "👁️ НОВЫЙ ПОСЕТИТЕЛЬ НА САЙТЕ", 
-                  color: 16753920,
-                  fields: [
-                      { name: "📍 Локация", value: `${ipData.country_name || 'Скрыто'}, ${ipData.region || 'Скрыто'}, ${ipData.city || 'Скрыто'}`, inline: false },
-                      { name: "🗺️ На карте", value: mapsLink ? `[📍 Открыть Google Maps](${mapsLink})` : 'Нет данных', inline: true },
-                      { name: "🌐 IP Адрес", value: `\`${ipData.ip || 'Скрыто'}\``, inline: true },
-                      { name: "📡 Провайдер", value: `\`${ipData.org || 'Скрыто'}\``, inline: true },
-                      { name: "💻 Устройство", value: `\`\`\`${deviceInfo}\`\`\``, inline: false }
-                  ],
-                  timestamp: new Date().toISOString()
-              }]
-          };
-          
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-      } catch (e) {
-          console.error("Ошибка логгера:", e);
-      }
-  };
-
-  useEffect(() => { logVisitor(); }, []);
-
-  const captureViolation = async (title, extraFields = []) => {
-      let formData = new FormData();
-      const isPlanned = title.includes("Плановая");
-      let payload = {
-          username: "Ultimate LMS Security", avatar_url: "https://i.imgur.com/4M34hi2.png",
-          embeds: [{
-              title: title, color: isPlanned ? 3447003 : 15158332,
-              fields: [...extraFields, { name: "🆔 Fingerprint", value: `\`${fp}\`` }],
-              footer: { text: "Monitoring Active" }, timestamp: new Date().toISOString()
-          }]
-      };
-
-      formData.append('payload_json', JSON.stringify(payload));
-      try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
-  };
-
+  // Перехват нарушений (используем импортированную функцию)
   useEffect(() => {
       if (view !== 'test') return;
-      const handleVisibility = () => { if (document.hidden) captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание"); };
-      const handleBlur = () => captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)");
-      const handlePaste = (e) => { captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", [{ name: "Содержимое", value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\`` }]); };
-      const handleKeys = (e) => { if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode === 85)) captureViolation("🚫 ЗАПРЕТ: Попытка открыть DevTools"); };
-      window.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleBlur); window.addEventListener('paste', handlePaste); window.addEventListener('keydown', handleKeys);
-      return () => { window.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleBlur); window.removeEventListener('paste', handlePaste); window.removeEventListener('keydown', handleKeys); };
+      const handleVisibility = () => { if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp); };
+      const handleBlur = () => { if (typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)", fp); };
+      const handlePaste = (e) => { if (typeof captureViolation === 'function') captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", fp, [{ name: "Содержимое", value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\`` }]); };
+      const handleKeys = (e) => { 
+          if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode === 85)) {
+              if (typeof captureViolation === 'function') captureViolation("🚫 ЗАПРЕТ: Попытка открыть DevTools", fp); 
+          }
+      };
+      
+      window.addEventListener('visibilitychange', handleVisibility); 
+      window.addEventListener('blur', handleBlur); 
+      window.addEventListener('paste', handlePaste); 
+      window.addEventListener('keydown', handleKeys);
+      
+      return () => { 
+          window.removeEventListener('visibilitychange', handleVisibility); 
+          window.removeEventListener('blur', handleBlur); 
+          window.removeEventListener('paste', handlePaste); 
+          window.removeEventListener('keydown', handleKeys); 
+      };
   }, [view, fp]);
 
   useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
@@ -441,53 +404,24 @@ function App() {
     setIsResultSaved(false); setView('test');
   };
 
+  // СОХРАНЕНИЕ РЕЗУЛЬТАТОВ (Использует функцию из 15_discord.js)
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
       
-      try {
-          const failedQuestions = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-          let embedFields = [
-              { name: "👤 Студент", value: `**${scoreData.student}**`, inline: true },
-              { name: "📧 Email", value: `**${user ? user.email : "Неизвестно"}**`, inline: true },
-              { name: "🎯 Результат", value: `\`${scoreData.percent}%\``, inline: true },
-              { name: "📚 Тема", value: scoreData.topic, inline: true },
-              { name: "📝 Точный счет", value: `${scoreData.score} из ${scoreData.total}`, inline: true },
-              { name: "🆔 Fingerprint", value: `\`${fp}\``, inline: false }
-          ];
-
-          if (failedQuestions.length > 0) {
-              embedFields.push({ name: "▬▬▬ ОШИБКИ ▬▬▬", value: "Список неверных ответов:", inline: false });
-              failedQuestions.forEach(q => {
-                  const originalIndex = testSession.questions.indexOf(q);
-                  const userAnsIdx = testSession.answers[originalIndex];
-                  const userAnsText = userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил";
-                  const correctAnsText = q.variants[q.correctIndex].text;
-
-                  embedFields.push({
-                      name: `❓ ${q.question.replace(/<[^>]+>/g, '')}`, 
-                      value: `❌ Ответил: ${userAnsText}\n✅ Правильный: ${correctAnsText}`,
-                      inline: false
-                  });
-              });
-          }
-
-          let payload = {
-              username: "System Monitor", avatar_url: "https://i.imgur.com/4M34hi2.png",
-              embeds: [{
-                  title: "📊 Новый результат теста", 
-                  color: failedQuestions.length > 0 ? 16711680 : 3066993, 
-                  fields: embedFields,
-                  timestamp: new Date().toISOString()
-              }]
+      const failedQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
+      const failedQuestions = failedQuestionsRaw.map(q => {
+          const originalIndex = testSession.questions.indexOf(q);
+          const userAnsIdx = testSession.answers[originalIndex];
+          return {
+              question: q.question.replace(/<[^>]+>/g, ''),
+              userAnsText: userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил",
+              correctAnsText: q.variants[q.correctIndex].text
           };
+      });
 
-          let formData = new FormData(); 
-          formData.append('payload_json', JSON.stringify(payload));
-          await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
-          
-      } catch (e) {
-          console.error("Ошибка при отправке в Discord:", e);
+      if (typeof sendTestResultToDiscord === 'function') {
+          sendTestResultToDiscord(scoreData, failedQuestions, user ? user.email : "Неизвестно", fp);
       }
       
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
