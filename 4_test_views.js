@@ -65,11 +65,6 @@ const ReviewView = ({ questions, answers, onBack }) => {
 
 /* =========================================================================
    СТАТИСТИКА — НОВЫЙ ДИЗАЙН
-   Единый визуальный язык: кольцевой индикатор (radial gauge) как главный
-   акцент каждой вкладки + горизонтальная "рейка" второстепенных метрик,
-   разделённых тонкими линиями (никаких одинаковых квадратных карточек).
-   Для истории тестов — вертикальная таймлайн-лента с ранговыми метками,
-   а не список плашек.
    ========================================================================= */
 
 // Кольцевой индикатор — главный визуальный элемент каждой вкладки статистики
@@ -131,23 +126,38 @@ const rankColor = (i) => (i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? 
 
 const StatsView = ({ history, setHistory, userData }) => {
     const [activeTab, setActiveTab] = useState('tests');
-    const sortedHistory = [...history].sort((a, b) => b.percent - a.percent);
+    
+    // --- ИЗМЕНЕНО: БЕРЕМ ДАННЫЕ ИЗ БАЗЫ FIREBASE (userData) ---
+    const historyToUse = userData?.testHistory || history || [];
+    const sortedHistory = [...historyToUse].sort((a, b) => b.percent - a.percent);
 
     const excelStats = userData?.excelProgress || { level: 1, xp: 0, completedLessons: 0, streak: 0 };
-    const typingStats = JSON.parse(localStorage.getItem('typing_stats') || '{"maxWpm":0, "maxCombo":0, "testsCompleted":0}');
-    const hotkeyStats = JSON.parse(localStorage.getItem('hotkey_stats') || '{"maxScore":0, "sessionsPlayed":0}');
+    const typingStats = userData?.typingProgress || { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
+    const hotkeyStats = userData?.hotkeyProgress || { maxScore: 0, sessionsPlayed: 0 };
 
-    // Производные показатели по тестам — считаются из истории, а не берутся напрямую
-    const totalTests = history.length;
-    const avgPercent = totalTests ? Math.round(history.reduce((s, h) => s + h.percent, 0) / totalTests) : 0;
-    const bestPercent = totalTests ? Math.max(...history.map(h => h.percent)) : 0;
-    const passRate = totalTests ? Math.round((history.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
+    // Производные показатели по тестам
+    const totalTests = historyToUse.length;
+    const avgPercent = totalTests ? Math.round(historyToUse.reduce((s, h) => s + h.percent, 0) / totalTests) : 0;
+    const bestPercent = totalTests ? Math.max(...historyToUse.map(h => h.percent)) : 0;
+    const passRate = totalTests ? Math.round((historyToUse.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
 
-    const removeEntry = (id) => {
+    const removeEntry = async (id) => {
         if (!confirm('Удалить запись?')) return;
-        const nh = history.filter(item => item.id !== id);
+        const nh = historyToUse.filter(item => item.id !== id);
+        
+        // Локально обновляем экран
         setHistory(nh);
         localStorage.setItem('test_history_v1', JSON.stringify(nh));
+        
+        // Удаляем из базы Firebase
+        try {
+            const uid = window.auth?.currentUser?.uid;
+            if (uid && window.db) {
+                await window.db.collection('users').doc(uid).set({ testHistory: nh }, { merge: true });
+            }
+        } catch (e) {
+            console.error("Ошибка при удалении теста из Firebase", e);
+        }
     };
 
     const TABS = [
@@ -236,8 +246,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {/* ==================== EXCEL ==================== */}
                     {activeTab === 'excel' && (
                         <motion.div key="t-excel" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            {/* Заполнение кольца — прогресс XP до следующего уровня. Формула xp-за-уровень (1000)
-                                условная — подставьте свою, если у вас другая кривая левелинга. */}
                             <RadialGauge
                                 value={excelStats.xp % 1000}
                                 max={1000}
@@ -257,7 +265,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {/* ==================== ПЕЧАТЬ ==================== */}
                     {activeTab === 'typing' && (
                         <motion.div key="t-typing" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            {/* Максимум шкалы (120 WPM) — ориентир для быстрой печати, скорректируйте под свою аудиторию. */}
                             <RadialGauge
                                 value={typingStats.maxWpm}
                                 max={120}
@@ -276,7 +283,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {/* ==================== ХОТКЕИ ==================== */}
                     {activeTab === 'hotkeys' && (
                         <motion.div key="t-hotkeys" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            {/* Потолок шкалы считается от личного рекорда, чтобы кольцо всегда было информативным. */}
                             <RadialGauge
                                 value={hotkeyStats.maxScore}
                                 max={Math.max(hotkeyStats.maxScore * 1.25, 100)}
