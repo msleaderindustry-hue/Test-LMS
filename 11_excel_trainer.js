@@ -1301,7 +1301,7 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
 }
 
 /* =========================================================================
-   КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
+   ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
    ========================================================================= */
 function ProgressCard({ t, progress, userInfo }) {
     const xpIntoLevel = progress.xp % 500;
@@ -1335,7 +1335,7 @@ function ProgressCard({ t, progress, userInfo }) {
                     </div>
                     <div className="et-user-rank">
                         <motion.span 
-                            animate={{ rotate: [0, 12, -12, 0] }}
+                            animate={{ rotate: [0, 360] }} 
                             transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
                         >
                             ⭐
@@ -1345,7 +1345,7 @@ function ProgressCard({ t, progress, userInfo }) {
                 </div>
             </div>
 
-            {/* Дашборд показателей */}
+            {/* Дашборд показателей с интерактивным наведением */}
             <div className="et-stats-grid">
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val">⚡ {progress.xp}</div>
@@ -1360,7 +1360,7 @@ function ProgressCard({ t, progress, userInfo }) {
                         {progress.streak > 0 ? (
                             <motion.span 
                                 style={{ display: 'inline-block' }}
-                                animate={{ scale: }} 
+                                animate={{ scale: [1, 1.2, 1] }} 
                                 transition={{ duration: 1.5, repeat: Infinity }}
                             >
                                 🔥
@@ -1371,7 +1371,7 @@ function ProgressCard({ t, progress, userInfo }) {
                 </motion.div>
             </div>
 
-            {/* Прогресс-бар */}
+            {/* Прогресс-бар с анимацией заполнения */}
             <div className="et-progress-row">
                 <span>{t.nextLvlGoal}</span>
                 <span>{xpIntoLevel} / 500 XP ({pct}%)</span>
@@ -1830,7 +1830,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
         <motion.div
             className={`et-shell glass-panel theme-${theme}`}
             initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }} 
             transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
         >
             <ToastStack toasts={toasts} />
