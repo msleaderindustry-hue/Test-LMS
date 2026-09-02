@@ -1795,7 +1795,15 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             setProgress((prev) => {
                 const nextXp = prev.xp + xpGain;
                 const nextLevel = 1 + Math.floor(nextXp / 500);
-                const next = { level: nextLevel, xp: nextXp, completedLessons: prev.completedLessons + 1, streak: prev.streak };
+                
+                // Увеличиваем серию (streak)
+                const next = { 
+                    level: nextLevel, 
+                    xp: nextXp, 
+                    completedLessons: prev.completedLessons + 1, 
+                    streak: (prev.streak || 0) + 1 
+                };
+                
                 try {
                     const uid = window.auth?.currentUser?.uid;
                     if (uid && window.db) {
@@ -1808,6 +1816,19 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             setShake(true);
             setAnswerStatus("wrong");
             setAttempts((prev) => prev + 1);
+            
+            // Сбрасываем серию (streak) в ноль
+            setProgress((prev) => {
+                const next = { ...prev, streak: 0 };
+                try {
+                    const uid = window.auth?.currentUser?.uid;
+                    if (uid && window.db) {
+                        window.db.collection('users').doc(uid).set({ excelProgress: next }, { merge: true });
+                    }
+                } catch (e) {}
+                return next;
+            });
+
             setTimeout(() => setShake(false), 400);
         }
     };
