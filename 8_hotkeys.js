@@ -1025,12 +1025,22 @@ if (currentIndex < tasks.length - 1) {
                     } else {
                         setIsFinished(true);
                         
-                        // --- СОХРАНЕНИЕ СТАТИСТИКИ ХОТКЕЕВ ---
-                        const existing = JSON.parse(localStorage.getItem('hotkey_stats') || '{"maxScore":0, "sessionsPlayed":0}');
-                        localStorage.setItem('hotkey_stats', JSON.stringify({
-                            maxScore: Math.max(existing.maxScore, score + 1),
-                            sessionsPlayed: existing.sessionsPlayed + 1
-                        }));
+                        // --- ОТПРАВЛЯЕМ СТАТИСТИКУ ХОТКЕЕВ В FIREBASE ---
+                        try {
+                            const uid = window.auth?.currentUser?.uid;
+                            if (uid && window.db) {
+                                window.db.collection('users').doc(uid).get().then(doc => {
+                                    const data = doc.data() || {};
+                                    const existing = data.hotkeyProgress || { maxScore: 0, sessionsPlayed: 0 };
+                                    window.db.collection('users').doc(uid).set({
+                                        hotkeyProgress: {
+                                            maxScore: Math.max(existing.maxScore, score + 1),
+                                            sessionsPlayed: existing.sessionsPlayed + 1
+                                        }
+                                    }, { merge: true });
+                                });
+                            }
+                        } catch(e) { console.error(e); }
                     }
                 } else {
                     setShake(true);
