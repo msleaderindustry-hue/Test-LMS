@@ -161,20 +161,30 @@ const TypingTest = ({ onBack }) => {
 
 const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
-                if (nextIndex === text.length) {
+if (nextIndex === text.length) {
                     setEndTime(Date.now());
                     
-                    // --- СОХРАНЕНИЕ СТАТИСТИКИ ПЕЧАТИ ---
+                    // --- ОТПРАВЛЯЕМ СТАТИСТИКУ ПЕЧАТИ В FIREBASE ---
                     const timeElapsed = (Date.now() - startTime) / 1000 / 60;
                     const wordsTyped = text.length / 5;
                     const wpm = timeElapsed > 0 ? Math.round(wordsTyped / timeElapsed) : 0;
-                    const existing = JSON.parse(localStorage.getItem('typing_stats') || '{"maxWpm":0, "maxCombo":0, "testsCompleted":0}');
                     
-                    localStorage.setItem('typing_stats', JSON.stringify({
-                        maxWpm: Math.max(existing.maxWpm, wpm),
-                        maxCombo: Math.max(existing.maxCombo, newCombo > maxCombo ? newCombo : maxCombo),
-                        testsCompleted: existing.testsCompleted + 1
-                    }));
+                    try {
+                        const uid = window.auth?.currentUser?.uid;
+                        if (uid && window.db) {
+                            window.db.collection('users').doc(uid).get().then(doc => {
+                                const data = doc.data() || {};
+                                const existing = data.typingProgress || { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
+                                window.db.collection('users').doc(uid).set({
+                                    typingProgress: {
+                                        maxWpm: Math.max(existing.maxWpm, wpm),
+                                        maxCombo: Math.max(existing.maxCombo, newCombo > maxCombo ? newCombo : maxCombo),
+                                        testsCompleted: existing.testsCompleted + 1
+                                    }
+                                }, { merge: true });
+                            });
+                        }
+                    } catch(e) { console.error(e); }
                 }
             } else {
                 setIsErrorKey(true);
