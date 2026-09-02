@@ -1,13 +1,13 @@
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
 const { 
   useState, useEffect, useRef, motion, AnimatePresence,
-  computeFingerprint, shuffleArray, // DISCORD_WEBHOOK отсюда удален
+  computeFingerprint, shuffleArray, 
   GooeyText, Button, Input,
   AuthScreen, AdminPanel, ChatPanel,
   TestQuestionCard, ReviewView, StatsView,
   TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, LandingView,
   SidebarMenu, 
-  logVisitor, captureViolation, sendTestResultToDiscord // <--- ЧИСТЫЙ ИМПОРТ ИЗ 15_discord.js
+  logVisitor, captureViolation, sendTestResultToDiscord 
 } = window;
 
 // =========================================================================
@@ -192,6 +192,7 @@ function App() {
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [teacherTests, setTeacherTests] = useState([]); 
+  const [userData, setUserData] = useState(null);
   
   const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel']);
 
@@ -214,6 +215,7 @@ function App() {
                   .onSnapshot((doc) => {
                       if (doc.exists) {
                           const data = doc.data();
+                          setUserData(data);
                           if (data.isBanned === true) {
                               alert("Доступ закрыт! Вы были исключены администратором.");
                               window.auth.signOut();
@@ -238,12 +240,12 @@ function App() {
       return () => unsubscribeAuth();
   }, []);
 
-  // Логирование посетителя (используем импортированную функцию)
+  // Логирование посетителя
   useEffect(() => { 
       if (typeof logVisitor === 'function') logVisitor(); 
   }, []);
 
-  // Перехват нарушений (используем импортированную функцию)
+  // Перехват нарушений
   useEffect(() => {
       if (view !== 'test') return;
       const handleVisibility = () => { if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp); };
@@ -296,7 +298,7 @@ function App() {
     const raw = localStorage.getItem('test_sets_list'); 
     setSets(raw ? JSON.parse(raw) : []); 
     if(!raw) { 
-        localStorage.setItem('test_sets_list', JSON.stringify([]));       
+        localStorage.setItem('test_sets_list', JSON.stringify([]));        
     }
     setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
   };
@@ -404,7 +406,7 @@ function App() {
     setIsResultSaved(false); setView('test');
   };
 
-  // СОХРАНЕНИЕ РЕЗУЛЬТАТОВ (Использует функцию из 15_discord.js)
+  // --- ОБНОВЛЕННОЕ СОХРАНЕНИЕ РЕЗУЛЬТАТОВ (ОТПРАВКА В FIREBASE) ---
   const saveResult = async (name) => {
       if(!name.trim()) return alert('Введите имя!');
       const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
@@ -425,6 +427,18 @@ function App() {
       }
       
       const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
+      
+      try {
+          if (user && window.db) {
+              const userDoc = await window.db.collection('users').doc(user.uid).get();
+              const currentHistory = userDoc.exists ? (userDoc.data().testHistory || []) : [];
+              const updatedHistory = [...currentHistory, newRecord];
+              await window.db.collection('users').doc(user.uid).set({ testHistory: updatedHistory }, { merge: true });
+          }
+      } catch (e) {
+          console.error("Ошибка сохранения в Firebase", e);
+      }
+      
       const newHistory = [...history, newRecord]; 
       setHistory(newHistory); 
       localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
@@ -489,13 +503,12 @@ function App() {
     <>
       <LowPolyBackground theme={theme} />
 
-{!isAuthLoading && user && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
-    <div className="mobile-burger-fixed">
-        <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
-    </div>
-)}
+      {!isAuthLoading && user && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
+          <div className="mobile-burger-fixed">
+              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
+          </div>
+      )}
 
-      {/* ЗДЕСЬ ИСПОЛЬЗУЕМ НАШ НОВЫЙ КОМПОНЕНТ БОКОВОГО МЕНЮ */}
       <SidebarMenu 
           isOpen={isSidebarOpen} 
           onClose={() => setIsSidebarOpen(false)} 
@@ -547,10 +560,6 @@ function App() {
               
               <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
               
-              <div style={{display:'flex', justifyContent:'center', marginBottom:25}}>
-                 <Button variant="orange" style={{maxWidth:300}} onClick={() => setView('stats')}>📊 Статистика</Button>
-              </div>
-
               <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                 
                 {teacherTests.map(test => (
@@ -671,7 +680,7 @@ function App() {
           )}
 
           {!isAuthLoading && user && view === 'stats' && (
-             <StatsView history={history} setHistory={setHistory} onBack={()=>setView('menu')} />
+             <StatsView history={history} setHistory={setHistory} userData={userData} />
           )}
 
           {/* Экран тренажера печати */}
