@@ -176,8 +176,8 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕННАЯ ПАНЕЛЬ С ВЛАДКАМИ: Добавлены свойства для горизонтального скролла на мобильных */}
-            <div className="modern-scroll" style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
+            {/* ИСПРАВЛЕНО: Добавлен maxWidth 100%, overflowX auto, и flexShrink 0 для дочерних элементов */}
+            <div className="modern-scroll" style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
