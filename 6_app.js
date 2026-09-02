@@ -489,11 +489,11 @@ function App() {
     <>
       <LowPolyBackground theme={theme} />
 
-      {!isAuthLoading && user && (view === 'menu' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
-          <div className="mobile-burger-fixed">
-              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
-          </div>
-      )}
+{!isAuthLoading && user && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
+    <div className="mobile-burger-fixed">
+        <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
+    </div>
+)}
 
       {/* ЗДЕСЬ ИСПОЛЬЗУЕМ НАШ НОВЫЙ КОМПОНЕНТ БОКОВОГО МЕНЮ */}
       <SidebarMenu 
