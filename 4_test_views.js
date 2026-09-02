@@ -64,10 +64,10 @@ const ReviewView = ({ questions, answers, onBack }) => {
 };
 
 /* =========================================================================
-   СТАТИСТИКА — НОВЫЙ ДИЗАЙН
+   СТАТИСТИКА — НОВЫЙ ДИЗАЙН С ПОДДЕРЖКОЙ ТЕМ
    ========================================================================= */
 
-// Кольцевой индикатор — главный визуальный элемент каждой вкладки статистики
+// Кольцевой индикатор
 const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, valueDisplay, label }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
@@ -75,7 +75,7 @@ const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, va
     return (
         <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--glass-border)" strokeWidth={strokeWidth} />
                 <motion.circle
                     cx={size / 2} cy={size / 2} r={radius} fill="none"
                     stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"
@@ -89,26 +89,26 @@ const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, va
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
                 <span style={{ fontSize: 15, marginBottom: 2 }}>{icon}</span>
-                <span style={{ fontSize: size * 0.19, fontWeight: 900, color: '#f4f4f5', lineHeight: 1, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>{valueDisplay}</span>
-                <span style={{ fontSize: 11.5, color: '#71717a', fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: size * 0.19, fontWeight: 900, color: 'var(--text-main)', lineHeight: 1, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>{valueDisplay}</span>
+                <span style={{ fontSize: 11.5, color: 'var(--text-sec)', fontWeight: 600 }}>{label}</span>
             </div>
         </div>
     );
 };
 
-// Горизонтальная рейка второстепенных метрик, разделённых тонкими линиями
+// Горизонтальная рейка
 const StatRail = ({ items }) => (
-    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 18, overflow: 'hidden', marginTop: 26 }}>
+    <div style={{ display: 'flex', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: 18, overflow: 'hidden', marginTop: 26, boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
         {items.map((it, i) => (
-            <div key={i} style={{ flex: 1, padding: '18px 10px', textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: it.color || '#f4f4f5', fontVariantNumeric: 'tabular-nums' }}>{it.value}</div>
-                <div style={{ fontSize: 11.5, color: '#71717a', marginTop: 4, fontWeight: 600 }}>{it.label}</div>
+            <div key={i} style={{ flex: 1, padding: '18px 10px', textAlign: 'center', borderLeft: i > 0 ? '1px solid var(--glass-border)' : 'none' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: it.color || 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>{it.value}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-sec)', marginTop: 4, fontWeight: 600 }}>{it.label}</div>
             </div>
         ))}
     </div>
 );
 
-// Ряд точек-сессий — для метрик без длинной истории (хоткеи)
+// Ряд точек-сессий
 const PipTrail = ({ total, color, cap = 24 }) => {
     const shown = Math.min(total, cap);
     return (
@@ -117,7 +117,7 @@ const PipTrail = ({ total, color, cap = 24 }) => {
                 <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.02 }}
                     style={{ width: 8, height: 8, borderRadius: '50%', background: color, opacity: 0.85 }} />
             ))}
-            {total > cap && <span style={{ fontSize: 12, color: '#71717a', fontWeight: 700, marginLeft: 4 }}>+{total - cap}</span>}
+            {total > cap && <span style={{ fontSize: 12, color: 'var(--text-sec)', fontWeight: 700, marginLeft: 4 }}>+{total - cap}</span>}
         </div>
     );
 };
@@ -140,6 +140,45 @@ const StatsView = ({ history, setHistory, userData }) => {
     const avgPercent = totalTests ? Math.round(historyToUse.reduce((s, h) => s + h.percent, 0) / totalTests) : 0;
     const bestPercent = totalTests ? Math.max(...historyToUse.map(h => h.percent)) : 0;
     const passRate = totalTests ? Math.round((historyToUse.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
+
+    const chartRef = useRef(null);
+    const chartInstance = useRef(null);
+
+    useEffect(() => {
+        if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
+            if (chartInstance.current) chartInstance.current.destroy();
+            const ctx = chartRef.current.getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
+            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
+
+            chartInstance.current = new window.Chart(ctx, {
+                type: 'bar',
+                data: { 
+                    labels: sortedHistory.slice(0,10).map(i => i.student), 
+                    datasets: [{ 
+                        label: '%', 
+                        data: sortedHistory.slice(0,10).map(i => i.percent), 
+                        backgroundColor: gradient, 
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barPercentage: 0.5
+                    }] 
+                },
+                options: { 
+                    scales: { 
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
+                        x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
+                    }, 
+                    plugins: { legend: { display: false } }, 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                }
+            });
+        }
+        return () => { if (chartInstance.current) chartInstance.current.destroy(); }
+    }, [activeTab, sortedHistory]);
 
     const removeEntry = async (id) => {
         if (!confirm('Удалить запись?')) return;
@@ -171,13 +210,12 @@ const StatsView = ({ history, setHistory, userData }) => {
         <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
 
             <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, #ffffff, #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
+                <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, var(--text-main), #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
                     Мой прогресс
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕНО: Добавлен maxWidth 100%, overflowX auto, и flexShrink 0 для дочерних элементов */}
-            <div className="modern-scroll" style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
+            <div className="modern-scroll" style={{ display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
@@ -188,7 +226,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 />
                             )}
                             <span style={{ fontSize: '16px', filter: isActive ? 'none' : 'grayscale(1)', opacity: isActive ? 1 : 0.6 }}>{t.icon}</span>
-                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : '#64748b', transition: 'color 0.2s' }}>{t.label}</span>
+                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
                         </div>
                     );
                 })}
@@ -201,17 +239,27 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {activeTab === 'tests' && (
                         <motion.div key="t-tests" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
                             {totalTests === 0 ? (
-                                <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 0', fontSize: '16px', fontWeight: 600 }}>Вы еще не проходили тесты</p>
+                                <p style={{ textAlign: 'center', color: 'var(--text-sec)', padding: '40px 0', fontSize: '16px', fontWeight: 600 }}>Вы еще не проходили тесты</p>
                             ) : (
                                 <>
+                                    {/* ГРАФИК */}
+                                    <div style={{
+                                        position: 'relative', height: '280px', minHeight: '280px', width: '100%',
+                                        background:'var(--bg-panel)', 
+                                        padding:'24px', borderRadius:'20px', marginBottom:'24px', 
+                                        border: '1px solid var(--glass-border)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+                                    }}>
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+
                                     <StatRail items={[
                                         { label: 'Средний балл', value: `${avgPercent}%`, color: '#a855f7' },
                                         { label: 'Лучший результат', value: `${bestPercent}%`, color: '#fbbf24' },
                                         { label: 'Успешных попыток', value: `${passRate}%`, color: '#34d399' },
-                                        { label: 'Всего тестов', value: totalTests, color: '#f4f4f5' },
+                                        { label: 'Всего тестов', value: totalTests, color: 'var(--text-main)' },
                                     ]} />
 
-                                    <div style={{ fontSize: '12px', color: '#71717a', fontWeight: 700, marginTop: '32px', marginBottom: '14px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', fontWeight: 700, marginTop: '32px', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                         История прохождений
                                     </div>
 
@@ -220,18 +268,18 @@ const StatsView = ({ history, setHistory, userData }) => {
                                             <div key={h.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 20, paddingTop: 6 }}>
                                                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: rankColor(i), boxShadow: i < 3 ? `0 0 10px ${rankColor(i)}` : 'none', flexShrink: 0 }} />
-                                                    {i < sortedHistory.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 34, background: 'rgba(255,255,255,0.08)', marginTop: 4 }} />}
+                                                    {i < sortedHistory.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 34, background: 'var(--glass-border)', marginTop: 4 }} />}
                                                 </div>
                                                 <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} style={{ flex: 1, minWidth: 0, paddingBottom: 22 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-                                                        <span style={{ fontWeight: 800, fontSize: 14.5, color: '#f4f4f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.topic}</span>
+                                                        <span style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.topic}</span>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                                                             <span style={{ fontWeight: 900, fontSize: 15, color: h.percent >= 50 ? '#34d399' : '#f87171', fontVariantNumeric: 'tabular-nums' }}>{h.percent}%</span>
-                                                            <button onClick={() => removeEntry(h.id)} style={{ background: 'none', border: 'none', color: '#52525b', fontSize: 15, cursor: 'pointer', padding: 2 }} title="Удалить">✕</button>
+                                                            <button onClick={() => removeEntry(h.id)} style={{ background: 'none', border: 'none', color: 'var(--text-sec)', fontSize: 15, cursor: 'pointer', padding: 2 }} title="Удалить">✕</button>
                                                         </div>
                                                     </div>
-                                                    <div style={{ fontSize: 12, color: '#71717a', fontWeight: 600, marginTop: 2 }}>{h.student} · {h.date}</div>
-                                                    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', marginTop: 9, overflow: 'hidden' }}>
+                                                    <div style={{ fontSize: 12, color: 'var(--text-sec)', fontWeight: 600, marginTop: 2 }}>{h.student} · {h.date}</div>
+                                                    <div style={{ height: 4, borderRadius: 2, background: 'var(--glass-border)', marginTop: 9, overflow: 'hidden' }}>
                                                         <motion.div initial={{ width: 0 }} animate={{ width: `${h.percent}%` }} transition={{ duration: 0.7, delay: i * 0.03 }}
                                                             style={{ height: '100%', borderRadius: 2, background: h.percent >= 50 ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#f87171,#ef4444)' }} />
                                                     </div>
@@ -276,7 +324,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                             />
                             <StatRail items={[
                                 { label: 'Лучшее комбо', value: `x${typingStats.maxCombo}`, color: '#a855f7' },
-                                { label: 'Пройдено текстов', value: typingStats.testsCompleted, color: '#2dd4bf' },
+                                { label: 'Пройдено текстов', value: typingStats.testsCompleted, color: 'var(--text-main)' },
                             ]} />
                         </motion.div>
                     )}
@@ -292,7 +340,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 valueDisplay={hotkeyStats.maxScore}
                                 label="рекорд за сессию"
                             />
-                            <div style={{ textAlign: 'center', fontSize: 12, color: '#71717a', fontWeight: 700, marginTop: 28 }}>
+                            <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-main)', fontWeight: 700, marginTop: 28 }}>
                                 Сыграно сессий: {hotkeyStats.sessionsPlayed}
                             </div>
                             <PipTrail total={hotkeyStats.sessionsPlayed} color="#22c55e" />
