@@ -603,3 +603,93 @@ input:focus { outline: none; border-color: #C850C0 !important; }
 @media (prefers-reduced-motion: reduce){
   .landing-wrapper .float-badge, .landing-wrapper .cap-badge, .landing-wrapper .pin-badge { animation: none; }
 }
+/* =========================================================
+   Добавления для обновлённого 13_landing.js
+   Вставить в конец styles.css (после существующего блока
+   "СТИЛИ ДЛЯ LANDING PAGE"). Использует те же переменные
+   (--grad, --border, --border-hi, --text-dim, --text-dimmer),
+   что и остальной лендинг, поэтому цвета совпадут 1-в-1.
+   ========================================================= */
+
+/* --- Появление хиро-блока при загрузке (один орк. момент) --- */
+.landing-wrapper .hero-content > * {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .7s ease, transform .7s cubic-bezier(.16, 1, .3, 1);
+}
+.landing-wrapper .hero-content.in > * { opacity: 1; transform: none; }
+.landing-wrapper .hero-content.in > *:nth-child(1) { transition-delay: .02s; }
+.landing-wrapper .hero-content.in > *:nth-child(2) { transition-delay: .10s; }
+.landing-wrapper .hero-content.in > *:nth-child(3) { transition-delay: .20s; }
+.landing-wrapper .hero-content.in > *:nth-child(4) { transition-delay: .30s; }
+.landing-wrapper .hero-content.in > *:nth-child(5) { transition-delay: .38s; }
+
+/* --- Обёртка наклона ноутбука за курсором --- */
+.landing-wrapper .laptop-tilt { transform-style: preserve-3d; will-change: transform; }
+.landing-wrapper .bar-row div { transform-origin: bottom; }
+
+/* --- Секция реальных возможностей платформы
+       (заменяет .stats / .stat — тот блок больше не используется в JS,
+       можно оставить в файле или удалить, конфликтов нет) --- */
+.landing-wrapper .capabilities { position: relative; z-index: 2; padding: 44px 40px 8px; }
+.landing-wrapper .cap-head { text-align: center; font-size: 11.5px; color: var(--text-dimmer); font-weight: 600; margin-bottom: 18px; }
+.landing-wrapper .cap-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.landing-wrapper .cap-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 15px 17px; border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.landing-wrapper .cap-item:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-hi);
+    box-shadow: 0 14px 28px rgba(90,30,180,0.2);
+}
+.landing-wrapper .cap-ic {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(140deg, rgba(150,95,255,0.25), rgba(99,102,241,0.12));
+    border: 1px solid rgba(150,100,255,0.3);
+}
+.landing-wrapper .cap-ic svg { width: 16px; height: 16px; stroke: #c9b3ff; }
+.landing-wrapper .cap-label { font-size: 13px; font-weight: 700; color: var(--text); }
+
+@media (max-width: 960px) {
+    .landing-wrapper .cap-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+/* --- Секция "О платформе" (id="about" — раньше ссылка в шапке никуда не вела) --- */
+.landing-wrapper .about { position: relative; z-index: 2; padding: 70px 40px; }
+.landing-wrapper .about-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: center;
+}
+.landing-wrapper .about-media {
+    border-radius: 20px; overflow: hidden; aspect-ratio: 4/3;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 50px rgba(90,30,180,0.22);
+}
+.landing-wrapper .about-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.landing-wrapper .about-text p { color: var(--text-dim); line-height: 1.65; margin-top: 14px; font-size: 14px; }
+.landing-wrapper .about-text h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; margin-top: 8px; }
+.landing-wrapper .about-text h2 .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Единственный дополнительный reveal-момент на странице — появление при скролле */
+.landing-wrapper .about-media,
+.landing-wrapper .about-text {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1);
+}
+.landing-wrapper .about.visible .about-media { opacity: 1; transform: none; }
+.landing-wrapper .about.visible .about-text { opacity: 1; transform: none; transition-delay: .12s; }
+
+@media (max-width: 960px) {
+    .landing-wrapper .about-inner { grid-template-columns: 1fr; }
+    .landing-wrapper .about-media { aspect-ratio: 16/10; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .landing-wrapper .hero-content > *,
+    .landing-wrapper .about-media,
+    .landing-wrapper .about-text { transition: none; opacity: 1; transform: none; }
+}
