@@ -1,5 +1,5 @@
 const { useState, useEffect, useRef, memo } = React;
-const { motion } = window.Motion;
+const { motion, AnimatePresence } = window.Motion;
 const { Button } = window; 
 
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
@@ -73,116 +73,182 @@ const ReviewView = ({ questions, answers, onBack }) => {
       );
 };
 
-const StatsView = ({ history, setHistory, onBack, userData }) => {
+/* =========================================================================
+   СТАТИСТИКА: Вкладки и Карточки
+   ========================================================================= */
+const TabBtn = ({ active, label, icon, gradient, onClick }) => {
+    return (
+        <motion.button
+            onClick={onClick}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+                flex: 1, minWidth: 120, height: 46, borderRadius: 14, border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5,
+                background: active ? gradient : 'var(--text-main)',
+                color: active ? '#fff' : 'var(--bg-panel)',
+                boxShadow: active ? `0 8px 16px -4px rgba(0,0,0,0.25)` : '0 4px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.3s ease'
+            }}
+        >
+            <span style={{ fontSize: 16 }}>{icon}</span> {label}
+        </motion.button>
+    );
+};
+
+const StatCard = ({ title, value, icon, color, bgRgba, fullWidth }) => (
+    <motion.div
+        whileHover={{ y: -4, scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 300 }}
+        style={{
+            background: bgRgba,
+            border: `1px solid ${bgRgba.replace('0.05', '0.15').replace('0.04', '0.1')}`,
+            borderRadius: 20, padding: '24px 20px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            textAlign: 'center', gridColumn: fullWidth ? '1 / -1' : 'auto',
+            minHeight: 140
+        }}
+    >
+        <div style={{ fontSize: 11, color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            {title}
+        </div>
+        <div style={{ fontSize: 46, fontWeight: 900, color: color, display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1 }}>
+            {icon && <span>{icon}</span>}
+            {value}
+        </div>
+    </motion.div>
+);
+
+const StatsView = ({ history, setHistory, userData }) => {
     const [activeTab, setActiveTab] = useState('tests');
     const sortedHistory = [...history].sort((a,b) => b.percent - a.percent);
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
+    // Подгрузка данных
     const excelStats = userData?.excelProgress || { level: 1, xp: 0, completedLessons: 0, streak: 0 };
     const typingStats = JSON.parse(localStorage.getItem('typing_stats') || '{"maxWpm":0, "maxCombo":0, "testsCompleted":0}');
     const hotkeyStats = JSON.parse(localStorage.getItem('hotkey_stats') || '{"maxScore":0, "sessionsPlayed":0}');
 
+    // Отрисовка графика (только для вкладки Тесты)
     useEffect(() => {
         if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
             if (chartInstance.current) chartInstance.current.destroy();
             const ctx = chartRef.current.getContext('2d');
             chartInstance.current = new window.Chart(ctx, {
                 type: 'bar',
-                data: { labels: sortedHistory.slice(0,10).map(i=>i.student), datasets: [{ label: '%', data: sortedHistory.slice(0,10).map(i=>i.percent), backgroundColor:'#667eea', borderRadius:4 }] },
-                options: { scales: { y: { beginAtZero: true, max: 100, ticks:{color:'#718096'} }, x:{ ticks:{color:'#718096'} } }, plugins: { legend: { display: false } }, responsive:true, maintainAspectRatio:false }
+                data: { 
+                    labels: sortedHistory.slice(0,10).map(i => i.student), 
+                    datasets: [{ 
+                        label: '%', 
+                        data: sortedHistory.slice(0,10).map(i => i.percent), 
+                        backgroundColor: '#6366f1', 
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    }] 
+                },
+                options: { 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, max: 100, 
+                            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+                            ticks: { color: '#64748b', font: { weight: '600' } } 
+                        }, 
+                        x: { 
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#64748b', font: { weight: '600' } } 
+                        } 
+                    }, 
+                    plugins: { legend: { display: false } }, 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                }
             });
         }
         return () => { if (chartInstance.current) chartInstance.current.destroy(); }
     }, [activeTab, sortedHistory]);
 
     return (
-       <motion.div key="stats" initial={{opacity:0}} animate={{opacity:1}} className="glass-panel" style={{width:'100%', maxWidth:800, maxHeight:'90vh', overflowY:'auto', display:'flex', flexDirection:'column'}}>
-           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
-               <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13, margin: 0}} onClick={onBack}>⬅ Назад</Button>
-               <h2 style={{margin:0}}>📊 Мой Прогресс</h2>
-               <div style={{width: 80}}></div>
+       <motion.div key="stats" initial={{opacity:0, scale: 0.98}} animate={{opacity:1, scale: 1}} className="glass-panel" style={{width:'100%', maxWidth:850, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', padding: '36px 40px', borderRadius: 28}}>
+           
+           {/* Шапка (Без кнопки Назад) */}
+           <div style={{textAlign: 'center', marginBottom: 28}}>
+               <h2 style={{margin:0, fontSize: 26, fontWeight: 900, color: 'var(--text-main)'}}>📊 Мой Прогресс</h2>
            </div>
 
-           <div className="modern-scroll" style={{display:'flex', gap:10, marginBottom:20, overflowX:'auto', paddingBottom:5}}>
-               <Button variant={activeTab === 'tests' ? 'primary' : 'muted'} onClick={() => setActiveTab('tests')} style={{flex:1, minWidth:120, height:40, margin:0}}>📝 Тесты</Button>
-               <Button variant={activeTab === 'excel' ? 'primary' : 'muted'} onClick={() => setActiveTab('excel')} style={{flex:1, minWidth:120, height:40, margin:0, background: activeTab === 'excel' ? '#10b981' : '', color: activeTab === 'excel' ? '#fff' : ''}}>📊 Excel</Button>
-               <Button variant={activeTab === 'typing' ? 'primary' : 'muted'} onClick={() => setActiveTab('typing')} style={{flex:1, minWidth:120, height:40, margin:0, background: activeTab === 'typing' ? '#8b5cf6' : '', color: activeTab === 'typing' ? '#fff' : ''}}>⌨️ Печать</Button>
-               <Button variant={activeTab === 'hotkeys' ? 'primary' : 'muted'} onClick={() => setActiveTab('hotkeys')} style={{flex:1, minWidth:120, height:40, margin:0, background: activeTab === 'hotkeys' ? '#f59e0b' : '', color: activeTab === 'hotkeys' ? '#fff' : ''}}>⚡ Хоткеи</Button>
+           {/* Вкладки переключения модулей */}
+           <div className="modern-scroll" style={{display:'flex', gap: 12, marginBottom: 28, overflowX:'auto', paddingBottom: 8}}>
+               <TabBtn active={activeTab === 'tests'} gradient="linear-gradient(135deg, #a855f7 0%, #c084fc 100%)" icon="📝" label="Тесты" onClick={() => setActiveTab('tests')} />
+               <TabBtn active={activeTab === 'excel'} gradient="linear-gradient(135deg, #10b981 0%, #34d399 100%)" icon="📊" label="Excel" onClick={() => setActiveTab('excel')} />
+               <TabBtn active={activeTab === 'typing'} gradient="linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)" icon="⌨️" label="Печать" onClick={() => setActiveTab('typing')} />
+               <TabBtn active={activeTab === 'hotkeys'} gradient="linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)" icon="⚡" label="Хоткеи" onClick={() => setActiveTab('hotkeys')} />
            </div>
 
-           {activeTab === 'tests' && (
-               <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}}>
-                   {sortedHistory.length === 0 ? <p style={{textAlign:'center', color:'var(--text-sec)', padding: '40px 0'}}>Вы еще не проходили тесты</p> : (
-                       <>
-                           <div style={{background:'var(--variant-default)', padding:15, borderRadius:20, marginBottom:25, height:220}}><canvas ref={chartRef}></canvas></div>
-                           <table style={{width:'100%', borderCollapse:'collapse'}}>
-                              <thead><tr style={{borderBottom:'2px solid var(--glass-border)', color:'var(--text-sec)'}}><th style={{textAlign:'left', padding:10}}>Тест / Дата</th><th style={{padding:10}}>%</th><th style={{padding:10}}></th></tr></thead>
-                              <tbody>
-                                {sortedHistory.map(h => (
-                                    <tr key={h.id} style={{borderBottom:'1px solid rgba(128,128,128,0.1)'}}>
-                                       <td style={{padding:15}}><div style={{fontWeight:700}}>{h.topic}</div><div style={{fontSize:12, opacity:0.6}}>{h.student} • {h.date}</div></td>
-                                       <td style={{textAlign:'center', fontWeight:'800', color:h.percent>=50?'#10b981':'#ef4444'}}>{h.percent}%</td>
-                                       <td style={{textAlign:'right'}}><button onClick={()=>{if(confirm('Удалить запись?')){const nh=history.filter(i=>i.id!==h.id);setHistory(nh);localStorage.setItem('test_history_v1',JSON.stringify(nh));}}} style={{border:'none', background:'transparent', color:'var(--text-sec)', fontSize:18, cursor:'pointer'}}>✕</button></td>
-                                    </tr>
-                                ))}
-                              </tbody>
-                           </table>
-                       </>
-                   )}
-               </motion.div>
-           )}
+           <AnimatePresence mode="wait">
+               {/* Вкладка 1: Тесты */}
+               {activeTab === 'tests' && (
+                   <motion.div key="t-tests" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}}>
+                       {sortedHistory.length === 0 ? <p style={{textAlign:'center', color:'var(--text-sec)', padding: '40px 0', fontWeight: 600}}>Вы еще не проходили тесты</p> : (
+                           <>
+                               <div style={{background:'rgba(255,255,255,0.02)', padding:20, borderRadius:20, marginBottom:25, height:240, border: '1px solid rgba(255,255,255,0.05)'}}>
+                                   <canvas ref={chartRef}></canvas>
+                               </div>
+                               <table style={{width:'100%', borderCollapse:'collapse', marginTop: 10}}>
+                                  <thead>
+                                      <tr style={{borderBottom:'1px solid rgba(255,255,255,0.1)', color:'var(--text-sec)', fontSize: 12, textTransform: 'uppercase'}}>
+                                          <th style={{textAlign:'left', padding:'12px 10px'}}>Тест / Дата</th>
+                                          <th style={{padding:'12px 10px', textAlign:'right'}}>%</th>
+                                          <th style={{padding:'12px 10px', width: 40}}></th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    {sortedHistory.map(h => (
+                                        <tr key={h.id} style={{borderBottom:'1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s'}}>
+                                           <td style={{padding:'16px 10px'}}>
+                                               <div style={{fontWeight:800, fontSize: 15, color:'var(--text-main)', marginBottom: 4}}>{h.topic}</div>
+                                               <div style={{fontSize:12, color:'var(--text-sec)'}}>{h.student} • {h.date}</div>
+                                           </td>
+                                           <td style={{textAlign:'right', fontWeight:'900', fontSize: 16, color:h.percent>=50?'#10b981':'#ef4444'}}>{h.percent}%</td>
+                                           <td style={{textAlign:'right', paddingRight: 10}}>
+                                               <button onClick={()=>{if(confirm('Удалить запись?')){const nh=history.filter(i=>i.id!==h.id);setHistory(nh);localStorage.setItem('test_history_v1',JSON.stringify(nh));}}} style={{border:'none', background:'transparent', color:'var(--text-sec)', fontSize:18, cursor:'pointer', transition: 'color 0.2s'}}>✕</button>
+                                           </td>
+                                        </tr>
+                                    ))}
+                                  </tbody>
+                               </table>
+                           </>
+                       )}
+                   </motion.div>
+               )}
 
-           {activeTab === 'excel' && (
-               <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:15, marginTop: 10}}>
-                   <div style={{background:'rgba(16, 185, 129, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(16, 185, 129, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Текущий уровень</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#10b981', margin: '5px 0'}}>{excelStats.level}</div>
-                   </div>
-                   <div style={{background:'rgba(59, 130, 246, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(59, 130, 246, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Заработано XP</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#3b82f6', margin: '5px 0'}}>⚡ {excelStats.xp}</div>
-                   </div>
-                   <div style={{background:'rgba(245, 158, 11, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(245, 158, 11, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Решено формул</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#f59e0b', margin: '5px 0'}}>{excelStats.completedLessons}</div>
-                   </div>
-                   <div style={{background:'rgba(239, 68, 68, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(239, 68, 68, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Серия без ошибок</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#ef4444', margin: '5px 0'}}>🔥 {excelStats.streak}</div>
-                   </div>
-               </motion.div>
-           )}
+               {/* Вкладка 2: Excel */}
+               {activeTab === 'excel' && (
+                   <motion.div key="t-excel" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:15}}>
+                       <StatCard title="Текущий уровень" value={excelStats.level} color="#10b981" bgRgba="rgba(16, 185, 129, 0.05)" />
+                       <StatCard title="Заработано XP" value={excelStats.xp} icon="⚡" color="#3b82f6" bgRgba="rgba(59, 130, 246, 0.05)" />
+                       <StatCard title="Решено формул" value={excelStats.completedLessons} color="#f59e0b" bgRgba="rgba(245, 158, 11, 0.05)" />
+                       <StatCard title="Серия без ошибок" value={excelStats.streak} icon="🔥" color="#ef4444" bgRgba="rgba(239, 68, 68, 0.05)" />
+                   </motion.div>
+               )}
 
-           {activeTab === 'typing' && (
-               <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:15, marginTop: 10}}>
-                   <div style={{background:'rgba(139, 92, 246, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(139, 92, 246, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Рекорд скорости</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#8b5cf6', margin: '5px 0'}}>{typingStats.maxWpm} <span style={{fontSize: 16}}>WPM</span></div>
-                   </div>
-                   <div style={{background:'rgba(14, 165, 233, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(14, 165, 233, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Лучшее комбо</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#0ea5e9', margin: '5px 0'}}>x{typingStats.maxCombo}</div>
-                   </div>
-                   <div style={{gridColumn: '1 / -1', background:'var(--variant-default)', padding:25, borderRadius:16, border:'1px solid var(--glass-border)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Пройдено текстов</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'var(--text-main)', margin: '5px 0'}}>{typingStats.testsCompleted}</div>
-                   </div>
-               </motion.div>
-           )}
+               {/* Вкладка 3: Печать */}
+               {activeTab === 'typing' && (
+                   <motion.div key="t-typing" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:15}}>
+                       <StatCard title="Рекорд скорости" value={`${typingStats.maxWpm} WPM`} color="#a855f7" bgRgba="rgba(168, 85, 247, 0.05)" />
+                       <StatCard title="Лучшее комбо" value={`x${typingStats.maxCombo}`} color="#0ea5e9" bgRgba="rgba(14, 165, 233, 0.05)" />
+                       <StatCard title="Пройдено текстов" value={typingStats.testsCompleted} color="var(--text-main)" bgRgba="var(--nav-item-bg)" fullWidth={true} />
+                   </motion.div>
+               )}
 
-           {activeTab === 'hotkeys' && (
-               <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:15, marginTop: 10}}>
-                   <div style={{background:'rgba(245, 158, 11, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(245, 158, 11, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Рекорд за сессию</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#f59e0b', margin: '5px 0'}}>⚡ {hotkeyStats.maxScore}</div>
-                   </div>
-                   <div style={{background:'rgba(34, 197, 94, 0.08)', padding:25, borderRadius:16, border:'1px solid rgba(34, 197, 94, 0.2)', textAlign:'center'}}>
-                       <div style={{fontSize:12, color:'var(--text-sec)', textTransform:'uppercase', fontWeight:800}}>Сыграно сессий</div>
-                       <div style={{fontSize:42, fontWeight:900, color:'#22c55e', margin: '5px 0'}}>{hotkeyStats.sessionsPlayed}</div>
-                   </div>
-               </motion.div>
-           )}
+               {/* Вкладка 4: Хоткеи */}
+               {activeTab === 'hotkeys' && (
+                   <motion.div key="t-hotkeys" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:15}}>
+                       <StatCard title="Рекорд за сессию" value={hotkeyStats.maxScore} icon="⚡" color="#f59e0b" bgRgba="rgba(245, 158, 11, 0.05)" />
+                       <StatCard title="Сыграно сессий" value={hotkeyStats.sessionsPlayed} color="#22c55e" bgRgba="rgba(34, 197, 94, 0.05)" />
+                   </motion.div>
+               )}
+           </AnimatePresence>
 
        </motion.div>
     )
