@@ -189,6 +189,25 @@ const BackIcon = () => (
     </motion.svg>
 );
 
+// Бейдж-подложка под иконку — даёт глубину и отделяет иконку от текста,
+// вместо того чтобы она "плавала" прямо на градиенте.
+const IconBadge = ({ children, size = 34 }) => (
+    <motion.span
+        variants={{ rest: { scale: 1 }, hover: { scale: 1.08 } }}
+        transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+        style={{
+            width: size, height: size, minWidth: size, borderRadius: '30%',
+            background: 'rgba(255,255,255,0.16)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.35), 0 2px 6px -2px rgba(0,0,0,0.35)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+        }}
+    >
+        {children}
+    </motion.span>
+);
+
 /* =========================================================================
    КОНФИГ МОДУЛЕЙ
    ========================================================================= */
@@ -239,8 +258,8 @@ const NavButton = ({ isActive, gradient, Icon, label, onClick }) => (
                 onClick={onClick}
                 style={isActive ? backButtonStyle(gradient) : navButtonBaseStyle(gradient)}
             >
-                <span style={{ marginRight: 12, display: 'inline-flex' }}>
-                    {isActive ? <BackIcon /> : <Icon />}
+                <span style={{ marginRight: 13, display: 'inline-flex' }}>
+                    <IconBadge>{isActive ? <BackIcon /> : <Icon />}</IconBadge>
                 </span>
                 {isActive ? 'В меню' : label}
             </Button>
@@ -387,7 +406,9 @@ const SidebarMenu = ({
                                             onClick={() => { setIsChatOpen(true); onClose(); }}
                                             style={{ justifyContent: 'flex-start', padding: '0 18px', height: 56, minHeight: 56, borderRadius: 16 }}
                                         >
-                                            <span style={{ marginRight: 12, display: 'inline-flex' }}><ChatIcon /></span>
+                                            <span style={{ marginRight: 13, display: 'inline-flex' }}>
+                                                <IconBadge><ChatIcon /></IconBadge>
+                                            </span>
                                             Открыть чат
                                         </Button>
                                     </motion.div>
@@ -419,8 +440,8 @@ const SidebarMenu = ({
                                                     height: 56, minHeight: 56, borderRadius: 16, fontWeight: 700,
                                                 }}
                                             >
-                                                <span style={{ marginRight: 12, display: 'inline-flex' }}>
-                                                    {view === 'admin' ? <BackIcon /> : <ShieldIcon />}
+                                                <span style={{ marginRight: 13, display: 'inline-flex' }}>
+                                                    <IconBadge>{view === 'admin' ? <BackIcon /> : <ShieldIcon />}</IconBadge>
                                                 </span>
                                                 {view === 'admin' ? 'В меню' : 'Админка'}
                                             </Button>
