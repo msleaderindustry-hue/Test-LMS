@@ -1,6 +1,6 @@
 const { useState, useEffect, useRef, memo } = React;
 const { motion, AnimatePresence } = window.Motion;
-const { Button } = window; 
+const { Button } = window;
 
 // --- КОМПОНЕНТЫ ТЕСТА (НЕ ТРОГАЕМ, ЧТОБЫ НЕ СЛОМАТЬ ЛОГИКУ) ---
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
@@ -64,203 +64,237 @@ const ReviewView = ({ questions, answers, onBack }) => {
 };
 
 /* =========================================================================
-   СТАТИСТИКА: ПРЕМИУМ ДИЗАЙН ПО СКРИНШОТАМ
+   СТАТИСТИКА — НОВЫЙ ДИЗАЙН
+   Единый визуальный язык: кольцевой индикатор (radial gauge) как главный
+   акцент каждой вкладки + горизонтальная "рейка" второстепенных метрик,
+   разделённых тонкими линиями (никаких одинаковых квадратных карточек).
+   Для истории тестов — вертикальная таймлайн-лента с ранговыми метками,
+   а не список плашек.
    ========================================================================= */
 
-// Дизайн карточек: строго по фото (Иконка и текст вверху, Цифра внизу)
-const StatCard = ({ title, value, icon, color, postfix, fullWidth }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.015 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        style={{
-            background: 'linear-gradient(145deg, #1f232b 0%, #15181e 100%)',
-            border: `1px solid rgba(255,255,255,0.03)`,
-            borderRadius: '20px', 
-            padding: '24px 28px',
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            gridColumn: fullWidth ? '1 / -1' : 'auto',
-            minHeight: '160px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-            position: 'relative', overflow: 'hidden'
-        }}
-    >
-        {/* Еле заметное свечение под цвет модуля в углу */}
-        <div style={{ position: 'absolute', bottom: -50, right: -50, width: 150, height: 150, background: color, filter: 'blur(70px)', opacity: 0.1, pointerEvents: 'none' }} />
-        
-        {/* Шапка карточки: Иконка + Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${color}15`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px' }}>
-                {icon}
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                {title}
+// Кольцевой индикатор — главный визуальный элемент каждой вкладки статистики
+const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, valueDisplay, label }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const pct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
+    return (
+        <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+                <motion.circle
+                    cx={size / 2} cy={size / 2} r={radius} fill="none"
+                    stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    initial={{ strokeDashoffset: circumference }}
+                    animate={{ strokeDashoffset: circumference - pct * circumference }}
+                    transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                    style={{ filter: `drop-shadow(0 0 8px ${color}66)` }}
+                />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                <span style={{ fontSize: 15, marginBottom: 2 }}>{icon}</span>
+                <span style={{ fontSize: size * 0.19, fontWeight: 900, color: '#f4f4f5', lineHeight: 1, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>{valueDisplay}</span>
+                <span style={{ fontSize: 11.5, color: '#71717a', fontWeight: 600 }}>{label}</span>
             </div>
         </div>
+    );
+};
 
-        {/* Значение: Большие цифры внизу */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '24px', position: 'relative', zIndex: 1 }}>
-            <span style={{ fontSize: '52px', fontWeight: 900, color: color, lineHeight: 1, letterSpacing: '-1px' }}>
-                {value}
-            </span>
-            {postfix && <span style={{ fontSize: '18px', fontWeight: 800, color: '#64748b' }}>{postfix}</span>}
-        </div>
-    </motion.div>
+// Горизонтальная рейка второстепенных метрик, разделённых тонкими линиями
+const StatRail = ({ items }) => (
+    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 18, overflow: 'hidden', marginTop: 26 }}>
+        {items.map((it, i) => (
+            <div key={i} style={{ flex: 1, padding: '18px 10px', textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: it.color || '#f4f4f5', fontVariantNumeric: 'tabular-nums' }}>{it.value}</div>
+                <div style={{ fontSize: 11.5, color: '#71717a', marginTop: 4, fontWeight: 600 }}>{it.label}</div>
+            </div>
+        ))}
+    </div>
 );
+
+// Ряд точек-сессий — для метрик без длинной истории (хоткеи)
+const PipTrail = ({ total, color, cap = 24 }) => {
+    const shown = Math.min(total, cap);
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 6 }}>
+            {Array.from({ length: shown }).map((_, i) => (
+                <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.02 }}
+                    style={{ width: 8, height: 8, borderRadius: '50%', background: color, opacity: 0.85 }} />
+            ))}
+            {total > cap && <span style={{ fontSize: 12, color: '#71717a', fontWeight: 700, marginLeft: 4 }}>+{total - cap}</span>}
+        </div>
+    );
+};
+
+const rankColor = (i) => (i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? '#c2854b' : '#3f3f46');
 
 const StatsView = ({ history, setHistory, userData }) => {
     const [activeTab, setActiveTab] = useState('tests');
-    const sortedHistory = [...history].sort((a,b) => b.percent - a.percent);
-    const chartRef = useRef(null);
-    const chartInstance = useRef(null);
+    const sortedHistory = [...history].sort((a, b) => b.percent - a.percent);
 
-    // Статистика модулей
     const excelStats = userData?.excelProgress || { level: 1, xp: 0, completedLessons: 0, streak: 0 };
     const typingStats = JSON.parse(localStorage.getItem('typing_stats') || '{"maxWpm":0, "maxCombo":0, "testsCompleted":0}');
     const hotkeyStats = JSON.parse(localStorage.getItem('hotkey_stats') || '{"maxScore":0, "sessionsPlayed":0}');
 
-    // Красивый график
-    useEffect(() => {
-        if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
-            if (chartInstance.current) chartInstance.current.destroy();
-            const ctx = chartRef.current.getContext('2d');
-            chartInstance.current = new window.Chart(ctx, {
-                type: 'bar',
-                data: { 
-                    labels: sortedHistory.slice(0,10).map(i => i.student), 
-                    datasets: [{ 
-                        label: '%', 
-                        data: sortedHistory.slice(0,10).map(i => i.percent), 
-                        backgroundColor: '#6366f1', 
-                        borderRadius: 4,
-                        barPercentage: 0.6
-                    }] 
-                },
-                options: { 
-                    scales: { 
-                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false }, ticks: { color: '#64748b', font: { weight: '600' } } }, 
-                        x: { grid: { display: false, drawBorder: false }, ticks: { color: '#64748b', font: { weight: '600' } } } 
-                    }, 
-                    plugins: { legend: { display: false } }, 
-                    responsive: true, maintainAspectRatio: false 
-                }
-            });
-        }
-        return () => { if (chartInstance.current) chartInstance.current.destroy(); }
-    }, [activeTab, sortedHistory]);
+    // Производные показатели по тестам — считаются из истории, а не берутся напрямую
+    const totalTests = history.length;
+    const avgPercent = totalTests ? Math.round(history.reduce((s, h) => s + h.percent, 0) / totalTests) : 0;
+    const bestPercent = totalTests ? Math.max(...history.map(h => h.percent)) : 0;
+    const passRate = totalTests ? Math.round((history.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
+
+    const removeEntry = (id) => {
+        if (!confirm('Удалить запись?')) return;
+        const nh = history.filter(item => item.id !== id);
+        setHistory(nh);
+        localStorage.setItem('test_history_v1', JSON.stringify(nh));
+    };
 
     const TABS = [
-        { id: 'tests', label: 'ТЕСТЫ', icon: '📝', color: '#a855f7' },
-        { id: 'excel', label: 'EXCEL', icon: '📊', color: '#10b981' },
-        { id: 'typing', label: 'ПЕЧАТЬ', icon: '⌨️', color: '#3b82f6' },
-        { id: 'hotkeys', label: 'ХОТКЕИ', icon: '⚡', color: '#f59e0b' }
+        { id: 'tests', label: 'Тесты', icon: '📝', color: '#a855f7' },
+        { id: 'excel', label: 'Excel', icon: '📊', color: '#22c55e' },
+        { id: 'typing', label: 'Печать', icon: '⌨️', color: '#38bdf8' },
+        { id: 'hotkeys', label: 'Хоткеи', icon: '⚡', color: '#f59e0b' }
     ];
 
     return (
-       <motion.div key="stats" initial={{opacity:0, scale: 0.98}} animate={{opacity:1, scale: 1}} className="glass-panel" style={{width:'100%', maxWidth:900, maxHeight:'88vh', overflowY:'auto', display:'flex', flexDirection:'column', padding: '40px', borderRadius: '32px'}}>
-           
-           {/* Заголовок */}
-           <div style={{textAlign: 'center', marginBottom: 30}}>
-               <h2 style={{margin:0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, #ffffff, #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block'}}>
-                   Мой Прогресс
-               </h2>
-           </div>
+        <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
 
-           {/* Секция вкладок в стиле Segmented Control */}
-           <div style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
-               {TABS.map(t => {
-                   const isActive = activeTab === t.id;
-                   return (
-                       <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1 }}>
-                           {isActive && (
-                               <motion.div layoutId="tab-bg" transition={{ type: 'spring', stiffness: 400, damping: 30 }} 
-                                   style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }} 
-                               />
-                           )}
-                           <span style={{ fontSize: '16px', filter: isActive ? 'none' : 'grayscale(1)', opacity: isActive ? 1 : 0.6 }}>{t.icon}</span>
-                           <span style={{ fontSize: '13px', fontWeight: 800, color: isActive ? '#fff' : '#64748b', transition: 'color 0.2s' }}>{t.label}</span>
-                       </div>
-                   );
-               })}
-           </div>
+            <div style={{ textAlign: 'center', marginBottom: 30 }}>
+                <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, #ffffff, #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
+                    Мой прогресс
+                </h2>
+            </div>
 
-           <div style={{ flex: 1 }}>
-               <AnimatePresence mode="wait">
-                   
-                   {/* ==================== ТЕСТЫ ==================== */}
-                   {activeTab === 'tests' && (
-                       <motion.div key="t-tests" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}}>
-                           {sortedHistory.length === 0 ? <p style={{textAlign:'center', color:'#64748b', padding: '40px 0', fontSize: '16px', fontWeight: 600}}>Вы еще не проходили тесты</p> : (
-                               <>
-                                   {/* График */}
-                                   <div style={{background:'linear-gradient(145deg, #1f232b 0%, #15181e 100%)', padding:'24px', borderRadius:'20px', marginBottom:'30px', height:'240px', border: '1px solid rgba(255,255,255,0.03)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)'}}>
-                                       <canvas ref={chartRef}></canvas>
-                                   </div>
-                                   
-                                   {/* Список */}
-                                   <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
-                                       История прохождений
-                                   </div>
-                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                       {sortedHistory.map((h, i) => {
-                                           const isGood = h.percent >= 50;
-                                           const color = isGood ? '#10b981' : '#ef4444';
-                                           return (
-                                               <motion.div key={h.id} initial={{opacity:0, x:-20}} animate={{opacity:1, x:0}} transition={{delay: i * 0.05}}
-                                                   style={{ background: 'rgba(30, 33, 40, 0.6)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                       <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${color}15`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                                                           {isGood ? '🏆' : '💔'}
-                                                       </div>
-                                                       <div>
-                                                           <div style={{ fontWeight: 800, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>{h.topic}</div>
-                                                           <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>{h.student} • {h.date}</div>
-                                                       </div>
-                                                   </div>
-                                                   <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                                       <span style={{ fontWeight: 900, fontSize: '20px', color: color }}>{h.percent}%</span>
-                                                       <button onClick={()=>{if(confirm('Удалить запись?')){const nh=history.filter(item=>item.id!==h.id);setHistory(nh);localStorage.setItem('test_history_v1',JSON.stringify(nh));}}} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '20px', cursor: 'pointer', padding: '5px' }} title="Удалить">✕</button>
-                                                   </div>
-                                               </motion.div>
-                                           )
-                                       })}
-                                   </div>
-                               </>
-                           )}
-                       </motion.div>
-                   )}
+            <div style={{ display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)' }}>
+                {TABS.map(t => {
+                    const isActive = activeTab === t.id;
+                    return (
+                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1 }}>
+                            {isActive && (
+                                <motion.div layoutId="tab-bg" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
+                                />
+                            )}
+                            <span style={{ fontSize: '16px', filter: isActive ? 'none' : 'grayscale(1)', opacity: isActive ? 1 : 0.6 }}>{t.icon}</span>
+                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : '#64748b', transition: 'color 0.2s' }}>{t.label}</span>
+                        </div>
+                    );
+                })}
+            </div>
 
-                   {/* ==================== EXCEL ==================== */}
-                   {activeTab === 'excel' && (
-                       <motion.div key="t-excel" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'20px'}}>
-                           <StatCard title="Текущий уровень" value={excelStats.level} icon="📈" color="#10b981" />
-                           <StatCard title="Заработано XP" value={excelStats.xp} icon="⚡" color="#3b82f6" />
-                           <StatCard title="Решено формул" value={excelStats.completedLessons} icon="🧠" color="#f59e0b" />
-                           <StatCard title="Серия без ошибок" value={excelStats.streak} icon="🔥" color="#ef4444" />
-                       </motion.div>
-                   )}
+            <div style={{ flex: 1 }}>
+                <AnimatePresence mode="wait">
 
-                   {/* ==================== ПЕЧАТЬ ==================== */}
-                   {activeTab === 'typing' && (
-                       <motion.div key="t-typing" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'20px'}}>
-                           <StatCard title="Рекорд скорости" value={typingStats.maxWpm} postfix="WPM" icon="🚀" color="#a855f7" />
-                           <StatCard title="Лучшее комбо" value={typingStats.maxCombo} prefix="x" icon="✨" color="#0ea5e9" />
-                           <StatCard title="Пройдено текстов" value={typingStats.testsCompleted} icon="📚" color="#2dd4bf" fullWidth={true} />
-                       </motion.div>
-                   )}
+                    {/* ==================== ТЕСТЫ ==================== */}
+                    {activeTab === 'tests' && (
+                        <motion.div key="t-tests" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
+                            {totalTests === 0 ? (
+                                <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 0', fontSize: '16px', fontWeight: 600 }}>Вы еще не проходили тесты</p>
+                            ) : (
+                                <>
+                                    <StatRail items={[
+                                        { label: 'Средний балл', value: `${avgPercent}%`, color: '#a855f7' },
+                                        { label: 'Лучший результат', value: `${bestPercent}%`, color: '#fbbf24' },
+                                        { label: 'Успешных попыток', value: `${passRate}%`, color: '#34d399' },
+                                        { label: 'Всего тестов', value: totalTests, color: '#f4f4f5' },
+                                    ]} />
 
-                   {/* ==================== ХОТКЕИ ==================== */}
-                   {activeTab === 'hotkeys' && (
-                       <motion.div key="t-hotkeys" initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-15}} transition={{duration:0.2}} style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'20px'}}>
-                           <StatCard title="Рекорд за сессию" value={hotkeyStats.maxScore} icon="⚡" color="#f59e0b" />
-                           <StatCard title="Сыграно сессий" value={hotkeyStats.sessionsPlayed} icon="🎮" color="#22c55e" />
-                       </motion.div>
-                   )}
+                                    <div style={{ fontSize: '12px', color: '#71717a', fontWeight: 700, marginTop: '32px', marginBottom: '14px' }}>
+                                        История прохождений
+                                    </div>
 
-               </AnimatePresence>
-           </div>
-       </motion.div>
+                                    <div>
+                                        {sortedHistory.map((h, i) => (
+                                            <div key={h.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 20, paddingTop: 6 }}>
+                                                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: rankColor(i), boxShadow: i < 3 ? `0 0 10px ${rankColor(i)}` : 'none', flexShrink: 0 }} />
+                                                    {i < sortedHistory.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 34, background: 'rgba(255,255,255,0.08)', marginTop: 4 }} />}
+                                                </div>
+                                                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} style={{ flex: 1, minWidth: 0, paddingBottom: 22 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+                                                        <span style={{ fontWeight: 800, fontSize: 14.5, color: '#f4f4f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.topic}</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                                                            <span style={{ fontWeight: 900, fontSize: 15, color: h.percent >= 50 ? '#34d399' : '#f87171', fontVariantNumeric: 'tabular-nums' }}>{h.percent}%</span>
+                                                            <button onClick={() => removeEntry(h.id)} style={{ background: 'none', border: 'none', color: '#52525b', fontSize: 15, cursor: 'pointer', padding: 2 }} title="Удалить">✕</button>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontSize: 12, color: '#71717a', fontWeight: 600, marginTop: 2 }}>{h.student} · {h.date}</div>
+                                                    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', marginTop: 9, overflow: 'hidden' }}>
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${h.percent}%` }} transition={{ duration: 0.7, delay: i * 0.03 }}
+                                                            style={{ height: '100%', borderRadius: 2, background: h.percent >= 50 ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#f87171,#ef4444)' }} />
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* ==================== EXCEL ==================== */}
+                    {activeTab === 'excel' && (
+                        <motion.div key="t-excel" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
+                            {/* Заполнение кольца — прогресс XP до следующего уровня. Формула xp-за-уровень (1000)
+                                условная — подставьте свою, если у вас другая кривая левелинга. */}
+                            <RadialGauge
+                                value={excelStats.xp % 1000}
+                                max={1000}
+                                color="#22c55e"
+                                icon="📊"
+                                valueDisplay={excelStats.level}
+                                label="уровень"
+                            />
+                            <StatRail items={[
+                                { label: 'Решено формул', value: excelStats.completedLessons, color: '#f59e0b' },
+                                { label: 'Серия без ошибок', value: excelStats.streak, color: '#ef4444' },
+                                { label: 'Всего XP', value: excelStats.xp, color: '#3b82f6' },
+                            ]} />
+                        </motion.div>
+                    )}
+
+                    {/* ==================== ПЕЧАТЬ ==================== */}
+                    {activeTab === 'typing' && (
+                        <motion.div key="t-typing" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
+                            {/* Максимум шкалы (120 WPM) — ориентир для быстрой печати, скорректируйте под свою аудиторию. */}
+                            <RadialGauge
+                                value={typingStats.maxWpm}
+                                max={120}
+                                color="#38bdf8"
+                                icon="🚀"
+                                valueDisplay={typingStats.maxWpm}
+                                label="WPM рекорд"
+                            />
+                            <StatRail items={[
+                                { label: 'Лучшее комбо', value: `x${typingStats.maxCombo}`, color: '#a855f7' },
+                                { label: 'Пройдено текстов', value: typingStats.testsCompleted, color: '#2dd4bf' },
+                            ]} />
+                        </motion.div>
+                    )}
+
+                    {/* ==================== ХОТКЕИ ==================== */}
+                    {activeTab === 'hotkeys' && (
+                        <motion.div key="t-hotkeys" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
+                            {/* Потолок шкалы считается от личного рекорда, чтобы кольцо всегда было информативным. */}
+                            <RadialGauge
+                                value={hotkeyStats.maxScore}
+                                max={Math.max(hotkeyStats.maxScore * 1.25, 100)}
+                                color="#f59e0b"
+                                icon="⚡"
+                                valueDisplay={hotkeyStats.maxScore}
+                                label="рекорд за сессию"
+                            />
+                            <div style={{ textAlign: 'center', fontSize: 12, color: '#71717a', fontWeight: 700, marginTop: 28 }}>
+                                Сыграно сессий: {hotkeyStats.sessionsPlayed}
+                            </div>
+                            <PipTrail total={hotkeyStats.sessionsPlayed} color="#22c55e" />
+                        </motion.div>
+                    )}
+
+                </AnimatePresence>
+            </div>
+        </motion.div>
     )
 };
 
