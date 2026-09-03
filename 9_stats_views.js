@@ -247,40 +247,48 @@ const StatsView = ({ history, setHistory, userData }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
+    // ИСПРАВЛЕНИЕ #1: Добавлен таймаут 350мс, чтобы график рендерился ПОСЛЕ завершения анимации Framer Motion
     useEffect(() => {
         if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
-            if (chartInstance.current) chartInstance.current.destroy();
-            const ctx = chartRef.current.getContext('2d');
-            
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
-            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
+            const renderTimer = setTimeout(() => {
+                if (chartInstance.current) chartInstance.current.destroy();
+                if (!chartRef.current) return;
+                const ctx = chartRef.current.getContext('2d');
+                
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
+                gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
 
-            chartInstance.current = new window.Chart(ctx, {
-                type: 'bar',
-                data: { 
-                    labels: sortedHistory.slice(0,10).map(i => i.student), 
-                    datasets: [{ 
-                        label: '%', 
-                        data: sortedHistory.slice(0,10).map(i => i.percent), 
-                        backgroundColor: gradient, 
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barPercentage: 0.5
-                    }] 
-                },
-                options: { 
-                    scales: { 
-                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
-                        x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
-                    }, 
-                    plugins: { legend: { display: false } }, 
-                    responsive: true, 
-                    maintainAspectRatio: false 
-                }
-            });
+                chartInstance.current = new window.Chart(ctx, {
+                    type: 'bar',
+                    data: { 
+                        labels: sortedHistory.slice(0,10).map(i => i.student), 
+                        datasets: [{ 
+                            label: '%', 
+                            data: sortedHistory.slice(0,10).map(i => i.percent), 
+                            backgroundColor: gradient, 
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.5
+                        }] 
+                    },
+                    options: { 
+                        scales: { 
+                            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
+                            x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
+                        }, 
+                        plugins: { legend: { display: false } }, 
+                        responsive: true, 
+                        maintainAspectRatio: false 
+                    }
+                });
+            }, 350); 
+
+            return () => { 
+                clearTimeout(renderTimer);
+                if (chartInstance.current) chartInstance.current.destroy(); 
+            }
         }
-        return () => { if (chartInstance.current) chartInstance.current.destroy(); }
     }, [activeTab, sortedHistory]);
 
     const removeEntry = async (id) => {
@@ -313,7 +321,6 @@ const StatsView = ({ history, setHistory, userData }) => {
     return (
         <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel hide-scroll" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
             
-            {/* СТИЛИ ДЛЯ СКРОЛЛБАРА И ПРЕДОТВРАЩЕНИЯ ГОРИЗОНТАЛЬНОГО СКРОЛЛА */}
             <style>{`
                 .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
                 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -336,11 +343,12 @@ const StatsView = ({ history, setHistory, userData }) => {
                     return (
                         <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
                             {isActive && (
-                                <motion.div layoutId="tab-bg" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                     style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
                                 />
                             )}
-                            <motion.span animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }} transition={{ duration: 0.3 }} style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
+                            {/* ИСПРАВЛЕНИЕ #2: Статичный скейл вместо массива, чтобы кнопка не дергалась при перерендере */}
+                            <motion.span animate={{ scale: isActive ? 1.05 : 1 }} transition={{ duration: 0.2 }} style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
                             </motion.span>
                             <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
