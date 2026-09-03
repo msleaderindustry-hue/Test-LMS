@@ -6,6 +6,44 @@ const { Button } = window;
 const REQUIRED_MASTERY_STREAK = 2;
 
 /* =========================================================================
+   SVG ИКОНКИ ДЛЯ ИНТЕРФЕЙСА
+   ========================================================================= */
+const EXCEL_ICONS = {
+    barchart: <><path d="M12 20V10 M18 20V4 M6 20v-4" /></>,
+    search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+    sparkles: <><path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/></>,
+    math: <><path d="M18 6H6l6 6-6 6h12"/></>,
+    zap: <><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></>,
+    logic: <><path d="M12 2l10 10-10 10L2 12z"/></>,
+    text: <><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></>,
+    time: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+    stats: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+    finance: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
+    database: <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>,
+    info: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>,
+    engineering: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+    star: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    target: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+    flame: <><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></>,
+    book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
+    copy: <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
+    check: <><polyline points="20 6 9 17 4 12"/></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+    warning: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+    bulb: <><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></>,
+    trophy: <><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></>,
+    refresh: <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+    arrowRight: <><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></>
+};
+
+const ExcelIcon = ({ name, size = 16, color = 'currentColor', style = {}, strokeWidth = 2 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'inline-block', verticalAlign: 'middle', ...style }}>
+        {EXCEL_ICONS[name] || null}
+    </svg>
+);
+
+/* =========================================================================
    1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
    ========================================================================= */
 const EXCEL_DATABASE = {
@@ -57,10 +95,10 @@ const EXCEL_DATABASE = {
 };
 
 const CATEGORY_ICONS = {
-    "Математические": "Σ", "Динамические массивы": "⚡", "Поиск и ссылки": "🔎",
-    "Логические": "◆", "Текстовые": "Aa", "Дата и время": "🕐",
-    "Статистические": "📈", "Финансовые": "💰", "Базы данных": "🗄️",
-    "Информационные": "ℹ️", "Инженерные": "⚙️"
+    "Математические": "math", "Динамические массивы": "zap", "Поиск и ссылки": "search",
+    "Логические": "logic", "Текстовые": "text", "Дата и время": "time",
+    "Статистические": "stats", "Финансовые": "finance", "Базы данных": "database",
+    "Информационные": "info", "Инженерные": "engineering"
 };
 
 const DIFFICULTY_MAP = {
@@ -102,7 +140,7 @@ const UI_DICT = {
         aiTitle: "Готовим материалы для", aiSub: "ИИ пишет уникальную задачу и таблицу",
         theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
         syntaxTitle: "Примеры синтаксиса", practice: "Практика",
-        successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
+        successMsg: "Формула написана верно!", resultMsg: "Результат вычисления:",
         btnAnother: "Другая задача", btnHint: "Подсказка", btnExam: "Экзамен", btnCheck: "Проверить",
         globalSearchPlaceholder: "Поиск по всем функциям...",
         copy: "Копировать", copied: "Скопировано",
@@ -136,7 +174,7 @@ const UI_DICT = {
         aiTitle: "Preparing materials for", aiSub: "AI is writing a unique task and table",
         theory: "Theory", defTitle: "Definition", enVersion: "English version:",
         syntaxTitle: "Syntax examples", practice: "Practice",
-        successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
+        successMsg: "Formula is correct!", resultMsg: "Calculation result:",
         btnAnother: "Another task", btnHint: "Hint", btnExam: "Exam", btnCheck: "Check",
         globalSearchPlaceholder: "Search all functions...",
         copy: "Copy", copied: "Copied",
@@ -170,7 +208,7 @@ const UI_DICT = {
         aiTitle: "Материаллар тайёрланмоқда:", aiSub: "ИИ ноёб вазифа ва жадвал ёзмоқда",
         theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
         syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
-        successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
+        successMsg: "Формула тўғри ёзилган!", resultMsg: "Ҳисоблаш натижаси:",
         btnAnother: "Бошқа вазифа", btnHint: "Ёрдам", btnExam: "Имтиҳон", btnCheck: "Текшириш",
         globalSearchPlaceholder: "Барча функцияларни қидириш...",
         copy: "Нусха олиш", copied: "Нусха олинди",
@@ -260,7 +298,7 @@ body.light .et-shell,
   z-index: 100;
 }
 .et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
-.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
+.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-green) 100%);box-shadow:0 6px 18px rgba(34,211,238,.25);}
 .et-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.3px;color:var(--text-main);}
 .et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
@@ -288,7 +326,8 @@ body.light .et-shell,
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 13px;
+  display: flex;
+  align-items: center;
   color: var(--text-sec);
   pointer-events: none;
 }
@@ -395,7 +434,7 @@ body.light .et-shell .et-langswitch,
 .et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
 .et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
 .et-cat-head-left{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-sec);}
-.et-cat-icon{font-size:13px;color:var(--accent-cyan);}
+.et-cat-icon{color:var(--accent-cyan); display: flex; align-items: center;}
 .et-cat-chevron{transition:transform .2s;color:var(--text-sec);font-size:11px;}
 .et-cat-chevron.open{transform:rotate(180deg);}
 .et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
@@ -498,6 +537,10 @@ body.light .et-shell .et-langswitch,
   font-size: 13px;
   font-weight: 900;
   color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .et-stat-lbl{
   font-size: 10px;
@@ -561,7 +604,6 @@ body.light .et-shell .et-progress-card,
 
 .et-error-card{background:var(--bg-panel);border:1px solid rgba(239,68,68,.35);border-radius:var(--radius-lg);padding:28px;text-align:center;min-height:300px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
-.et-error-icon{font-size:34px;}
 .et-error-title{font-size:17px;font-weight:800;color:var(--text-main);}
 .et-error-sub{font-size:13px;color:var(--text-sec);}
 .et-retry-btn{margin-top:8px;padding:10px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));
@@ -573,7 +615,7 @@ body.light .et-shell .et-progress-card,
 .et-fn-en{color:var(--text-sec);font-size:14px;font-weight:600;}
 .et-fn-en b{color:var(--accent-green);font-weight:800;}
 .et-badges{display:flex;gap:8px;flex-wrap:wrap;}
-.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.et-badge{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
 .et-badge-theory{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-easy{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
@@ -997,9 +1039,9 @@ body.light .et-shell .et-hint-link:hover,
 
 /* УСПЕХ И ЗАКРЕПЛЕНИЕ */
 .et-success-card{background:rgba(34,230,138,.08);border:2px solid var(--accent-green);padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;overflow:hidden;flex-wrap:wrap;margin-bottom:8px;}
-.et-success-title{margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
+.et-success-title{display:flex;align-items:center;gap:8px;margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
 .et-success-sub{color:#6ee7b7;font-size:14.5px;font-weight:600;}
-.et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;}
+.et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;display:flex;align-items:center;gap:6px;}
 
 .et-mastery-banner{
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(139, 92, 246, 0.18));
@@ -1223,7 +1265,7 @@ function GlobalSearch({ t, onPick }) {
 
     return (
         <div className="et-gsearch">
-            <span className="et-gsearch-icon">🔍</span>
+            <span className="et-gsearch-icon"><ExcelIcon name="search" size={14} /></span>
             <input
                 value={q}
                 placeholder={t.globalSearchPlaceholder}
@@ -1257,7 +1299,7 @@ function GlobalSearch({ t, onPick }) {
 
 function DifficultyBadge({ difficulty, t }) {
     const label = t[difficulty] || difficulty;
-    return <span className={`et-badge et-badge-diff-${difficulty}`}>★ {label}</span>;
+    return <span className={`et-badge et-badge-diff-${difficulty}`}><ExcelIcon name="star" size={12} style={{marginRight: 4}} /> {label}</span>;
 }
 
 function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName, isGenerating, onPick }) {
@@ -1269,7 +1311,7 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
                     <div className="et-cat" key={category}>
                         <div className="et-cat-head" onClick={() => toggleCat(category)}>
                             <div className="et-cat-head-left">
-                                <span className="et-cat-icon">{CATEGORY_ICONS[category] || "•"}</span>
+                                <span className="et-cat-icon"><ExcelIcon name={CATEGORY_ICONS[category] || "zap"} size={14} /></span>
                                 {category}
                             </div>
                             <span className={`et-cat-chevron ${isOpen ? "open" : ""}`}>▾</span>
@@ -1335,10 +1377,11 @@ function ProgressCard({ t, progress, userInfo }) {
                     </div>
                     <div className="et-user-rank">
                         <motion.span 
+                            style={{ display: 'inline-flex', alignItems: 'center' }}
                             animate={{ rotate: [0, 360] }} 
-                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2, ease: "linear" }}
                         >
-                            ⭐
+                            <ExcelIcon name="star" size={14} color="var(--accent-cyan)" />
                         </motion.span>
                         <span>{t.level} {progress.level} • {rankTitle}</span>
                     </div>
@@ -1348,24 +1391,24 @@ function ProgressCard({ t, progress, userInfo }) {
             {/* Дашборд показателей с интерактивным наведением */}
             <div className="et-stats-grid">
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val">⚡ {progress.xp}</div>
+                    <div className="et-stat-val"><ExcelIcon name="zap" size={14} color="#f59e0b" /> {progress.xp}</div>
                     <div className="et-stat-lbl">{t.totalXp}</div>
                 </motion.div>
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val">🎯 {progress.completedLessons}</div>
+                    <div className="et-stat-val"><ExcelIcon name="target" size={14} color="#38bdf8" /> {progress.completedLessons}</div>
                     <div className="et-stat-lbl">{t.solvedTasks}</div>
                 </motion.div>
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val">
                         {progress.streak > 0 ? (
                             <motion.span 
-                                style={{ display: 'inline-block' }}
-                                animate={{ scale: [1, 1.2, 1] }} 
+                                style={{ display: 'inline-flex', alignItems: 'center' }}
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }} 
                                 transition={{ duration: 1.5, repeat: Infinity }}
                             >
-                                🔥
+                                <ExcelIcon name="flame" size={14} color="#f97316" />
                             </motion.span>
-                        ) : "🔥"} {progress.streak || 0}
+                        ) : <span style={{ display: 'inline-flex', alignItems: 'center' }}><ExcelIcon name="flame" size={14} color="#64748b" /></span>} {progress.streak || 0}
                     </div>
                     <div className="et-stat-lbl">{t.streak}</div>
                 </motion.div>
@@ -1392,7 +1435,7 @@ function LoadingSkeleton({ t, name }) {
     return (
         <div className="et-skeleton-card">
             <div className="et-skel-title">
-                <motion.span animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}>✨</motion.span>
+                <motion.span style={{ display: 'inline-flex', alignItems: 'center' }} animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}><ExcelIcon name="sparkles" size={18} color="var(--accent-cyan)"/></motion.span>
                 {t.loadingTitle}{name ? ` — ${name}` : ""}
             </div>
             <div className="et-skel-line" style={{ width: "45%", height: 26 }} />
@@ -1407,7 +1450,7 @@ function LoadingSkeleton({ t, name }) {
 function ErrorCard({ t, onRetry }) {
     return (
         <div className="et-error-card">
-            <div className="et-error-icon">⚠️</div>
+            <div className="et-error-icon"><ExcelIcon name="warning" size={38} color="#ef4444" /></div>
             <div className="et-error-title">{t.errorTitle}</div>
             <div className="et-error-sub">{t.errorSub}</div>
             <button className="et-retry-btn" onClick={onRetry}>{t.retry}</button>
@@ -1477,7 +1520,7 @@ function SyntaxBlock({ syntax, t, onCopy, copied }) {
                         <span className="et-terminal-dot et-dot-green" />
                     </div>
                     <div className="et-syntax-title-wrap">
-                        <span className="et-box-label">⚡ {t.syntaxTitle}</span>
+                        <span className="et-box-label"><ExcelIcon name="zap" size={14} color="var(--text-sec)" style={{marginRight: 4}} /> {t.syntaxTitle}</span>
                         <span className="et-syntax-badge">Formula</span>
                     </div>
                 </div>
@@ -1486,7 +1529,7 @@ function SyntaxBlock({ syntax, t, onCopy, copied }) {
                     onClick={onCopy}
                     title={t.copy}
                 >
-                    <span>{copied ? "✓" : "📋"}</span>
+                    <span style={{display: 'inline-flex', alignItems: 'center'}}><ExcelIcon name={copied ? "check" : "copy"} size={14} /></span>
                     <span>{copied ? t.copied : t.copy}</span>
                 </button>
             </div>
@@ -1873,7 +1916,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             {/* ШАПКА */}
             <header className="et-header">
                 <div className="et-header-left">
-                    <div className="et-logo">📊</div>
+                    <div className="et-logo"><ExcelIcon name="barchart" size={28} color="#0f172a" /></div>
                     <div style={{ minWidth: 0 }}>
                         <h2 className="et-title">{t.title}</h2>
                         <div className="et-subtitle">{t.subtitle}</div>
@@ -1889,7 +1932,12 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                 {/* САЙДБАР */}
                 <div className="et-sidebar">
                     <div className="et-ai-card">
-                        <div className="et-ai-title">✨ {t.magic}</div>
+                        <div className="et-ai-title">
+                            <motion.span style={{display:'inline-flex', alignItems:'center'}} animate={{rotate: 180}} transition={{duration: 2, repeat: Infinity, ease: "linear"}}>
+                                <ExcelIcon name="sparkles" size={16} color="var(--accent-cyan)"/>
+                            </motion.span> 
+                            {t.magic}
+                        </div>
                         <input
                             className="et-ai-input"
                             type="text"
@@ -1937,13 +1985,13 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     </div>
                                     <div className="et-badges">
                                         <DifficultyBadge difficulty={difficulty} t={t} />
-                                        <span className="et-badge et-badge-xp">⚡ {xpForLesson} {t.xp}</span>
-                                        <span className="et-badge et-badge-theory">📘 {t.theory}</span>
+                                        <span className="et-badge et-badge-xp"><ExcelIcon name="zap" size={12} style={{marginRight: 4}} /> {xpForLesson} {t.xp}</span>
+                                        <span className="et-badge et-badge-theory"><ExcelIcon name="book" size={12} style={{marginRight: 4}} /> {t.theory}</span>
                                     </div>
                                 </div>
 
                                 <div className="et-def-box">
-                                    <div className="et-box-label">📖 {t.defTitle}</div>
+                                    <div className="et-box-label"><ExcelIcon name="book" size={14} style={{marginRight: 4}} /> {t.defTitle}</div>
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
@@ -1959,9 +2007,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                             {/* ПРАКТИКА */}
                             <div className="et-practice-card">
                                 <div className="et-practice-top">
-                                    <div className="et-practice-title">🎯 {t.practice}</div>
+                                    <div className="et-practice-title"><ExcelIcon name="target" size={18} style={{marginRight: 6}} /> {t.practice}</div>
                                     {!hintsEnabled && (
-                                        <span className="et-badge et-badge-diff-hard">🔒 {t.btnExam}</span>
+                                        <span className="et-badge et-badge-diff-hard"><ExcelIcon name="lock" size={12} style={{marginRight: 4}} /> {t.btnExam}</span>
                                     )}
                                 </div>
 
@@ -1980,18 +2028,18 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     />
                                 </div>
                                 {answerStatus === "wrong" && !showSuccess && (
-                                    <div className="et-formula-status bad">⚠ {t.formulaBad}</div>
+                                    <div className="et-formula-status bad"><ExcelIcon name="warning" size={14} style={{marginRight: 4}} /> {t.formulaBad}</div>
                                 )}
                                 {showSuccess && (
-                                    <div className="et-formula-status ok">✓ {t.formulaOk}</div>
+                                    <div className="et-formula-status ok"><ExcelIcon name="check" size={14} style={{marginRight: 4}} /> {t.formulaOk}</div>
                                 )}
 
                                 {/* ПОДСКАЗКИ */}
                                 {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
-                                        {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
-                                        {hintLevel >= 2 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
-                                        {hintLevel >= 3 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel3} <code>{hintStep3}</code></div>}
+                                        {hintLevel >= 1 && <div style={{display:'flex', alignItems:'center'}}><ExcelIcon name="bulb" size={14} style={{marginRight: 6}} /> {t.hintLevel1}</div>}
+                                        {hintLevel >= 2 && <div style={{ marginTop: 6, display:'flex', alignItems:'center' }}><ExcelIcon name="bulb" size={14} style={{marginRight: 6}} /> {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
+                                        {hintLevel >= 3 && <div style={{ marginTop: 6, display:'flex', alignItems:'center' }}><ExcelIcon name="bulb" size={14} style={{marginRight: 6}} /> {t.hintLevel3} <code style={{marginLeft: 6}}>{hintStep3}</code></div>}
                                         <div className="et-hint-actions">
                                             {hintLevel < 3 && <button className="et-hint-link" onClick={handleHintClick}>{t.hintOf} {hintLevel + 1}/3</button>}
                                             {hintLevel === 3 && (
@@ -2008,20 +2056,20 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     {showSuccess && (
                                         <motion.div className="et-success-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                                             <div style={{ flex: '1 1 100%' }}>
-                                                <h4 className="et-success-title">{t.successMsg}</h4>
+                                                <h4 className="et-success-title"><ExcelIcon name="check" size={20} /> {t.successMsg}</h4>
                                                 <span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span>
                                             </div>
-                                            <div className="et-success-xp">+{xpForLesson} XP ✨</div>
+                                            <div className="et-success-xp">+{xpForLesson} XP <ExcelIcon name="sparkles" size={15} color="#c4b5fd" /></div>
 
                                             {/* Индикатор освоения */}
                                             {isMastered ? (
                                                 <div className="et-mastery-banner" style={{ width: '100%' }}>
-                                                    <span>🏆 {t.masteryTitle}</span>
-                                                    <span>✓ {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
+                                                    <span style={{display: 'inline-flex', alignItems: 'center'}}><ExcelIcon name="trophy" size={16} style={{marginRight: 6}} /> {t.masteryTitle}</span>
+                                                    <span style={{display: 'inline-flex', alignItems: 'center'}}><ExcelIcon name="check" size={14} style={{marginRight: 4}} /> {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
                                                 </div>
                                             ) : (
                                                 <div className="et-mastery-banner" style={{ width: '100%', borderColor: 'rgba(251, 191, 36, 0.35)', color: '#fbbf24' }}>
-                                                    <span>🎯 {t.streakStatus}</span>
+                                                    <span style={{display: 'inline-flex', alignItems: 'center'}}><ExcelIcon name="target" size={16} style={{marginRight: 6}} /> {t.streakStatus}</span>
                                                     <span>{masteryCount} из {REQUIRED_MASTERY_STREAK} задач</span>
                                                 </div>
                                             )}
@@ -2034,7 +2082,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     {!showSuccess ? (
                                         <>
                                             <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
-                                                🔄 {t.btnAnother}
+                                                <ExcelIcon name="refresh" size={14} /> {t.btnAnother}
                                             </button>
 
                                             <AnimatePresence>
@@ -2049,7 +2097,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                                         onClick={handleHintClick}
                                                         disabled={hintLevel >= 3}
                                                     >
-                                                        👀 {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
+                                                        <ExcelIcon name="eye" size={14} /> {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
                                                     </motion.button>
                                                 )}
                                             </AnimatePresence>
@@ -2062,7 +2110,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                         <>
                                             {/* Кнопка следующей задачи */}
                                             <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
-                                                🔄 {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
+                                                <ExcelIcon name="refresh" size={14} /> {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
                                             </button>
 
                                             {/* Кнопка "Следующая функция" появляется ТОЛЬКО когда навык освоен (>= 2 решенных задач) */}
@@ -2073,7 +2121,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                                     className="et-action-btn et-action-primary" 
                                                     onClick={handleNextFunction}
                                                 >
-                                                    {t.nextFunction} →
+                                                    {t.nextFunction} <ExcelIcon name="arrowRight" size={14} style={{marginLeft: 4}} />
                                                 </motion.button>
                                             )}
                                         </>
