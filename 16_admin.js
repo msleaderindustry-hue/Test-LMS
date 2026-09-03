@@ -159,7 +159,7 @@ const Spinner = () => (
 
 /* ---------------- User card ---------------- */
 
-const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggleBan, handleAssignTestFile, toggleExcelHints, toggleModuleAccess, hasAccess, removeTest }) => {
+const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggleBan, handleAssignTestFile, toggleExcelHints, toggleModuleAccess, hasAccess, removeTest, clearUserStats }) => {
     const [activeTab, setActiveTab] = useState('control');
     const testCount = (u.assignedTests && u.assignedTests.length) || 0;
 
@@ -269,29 +269,36 @@ const UserAdminCard = ({ u, currentUserUid, isSelf, pending, toggleAdmin, toggle
                     
                     {/* НОВАЯ ВКЛАДКА СТАТИСТИКИ */}
                     {activeTab === 'stats' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="barChart" size={14}/> EXCEL</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Уровень:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.level} ({excelStats.xp} XP)</b></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Решено формул:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.completedLessons}</b></div>
-                            </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                                <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="barChart" size={14}/> EXCEL</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Уровень:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.level} ({excelStats.xp} XP)</b></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Решено формул:</span> <b style={{color: 'var(--text-main)'}}>{excelStats.completedLessons}</b></div>
+                                </div>
 
-                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#38bdf8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="keyboard" size={14}/> ПЕЧАТЬ</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.maxWpm} WPM</b></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Пройдено:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.testsCompleted}</b></div>
-                            </div>
+                                <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#38bdf8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="keyboard" size={14}/> ПЕЧАТЬ</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.maxWpm} WPM</b></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Пройдено:</span> <b style={{color: 'var(--text-main)'}}>{typingStats.testsCompleted}</b></div>
+                                </div>
 
-                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="zap" size={14}/> ХОТКЕИ</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.maxScore}</b></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Сессий:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.sessionsPlayed}</b></div>
-                            </div>
+                                <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="zap" size={14}/> ХОТКЕИ</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Рекорд:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.maxScore}</b></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Сессий:</span> <b style={{color: 'var(--text-main)'}}>{hotkeyStats.sessionsPlayed}</b></div>
+                                </div>
 
-                            <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#a855f7', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="fileText" size={14}/> ТЕСТЫ</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Сдано:</span> <b style={{color: 'var(--text-main)'}}>{totalTestsDone}</b></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Ср. балл:</span> <b style={{color: 'var(--text-main)'}}>{avgPercent}%</b></div>
+                                <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#a855f7', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="fileText" size={14}/> ТЕСТЫ</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}><span style={{color: 'var(--text-sec)'}}>Сдано:</span> <b style={{color: 'var(--text-main)'}}>{totalTestsDone}</b></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}><span style={{color: 'var(--text-sec)'}}>Ср. балл:</span> <b style={{color: 'var(--text-main)'}}>{avgPercent}%</b></div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                <Button variant="red" onClick={() => clearUserStats(u)} style={{ height: '36px', borderRadius: '10px', fontSize: '11px', textTransform: 'uppercase', padding: '0 16px' }}>
+                                    🗑 Сбросить статистику
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -414,6 +421,24 @@ const AdminPanel = ({ onKicked }) => {
             onConfirm: () => {
                 setConfirmState(null);
                 withPending(u.id, () => window.db.collection('users').doc(u.id).update({ role: willBeAdmin ? 'admin' : 'student' }), willBeAdmin ? 'Права администратора выданы' : 'Права администратора сняты');
+            }
+        });
+    };
+
+    const clearUserStats = (u) => {
+        setConfirmState({
+            title: 'Сбросить статистику?',
+            message: `Вся статистика (Excel, Печать, Хоткеи, Тесты) для ${u.nickname || u.email} будет обнулена безвозвратно.`,
+            danger: true,
+            confirmLabel: 'Сбросить',
+            onConfirm: () => {
+                setConfirmState(null);
+                withPending(u.id, () => window.db.collection('users').doc(u.id).update({
+                    testHistory: [],
+                    excelProgress: { level: 1, xp: 0, completedLessons: 0, streak: 0 },
+                    typingProgress: { maxWpm: 0, maxCombo: 0, testsCompleted: 0 },
+                    hotkeyProgress: { maxScore: 0, sessionsPlayed: 0 }
+                }), 'Статистика успешно сброшена');
             }
         });
     };
@@ -541,7 +566,7 @@ const AdminPanel = ({ onKicked }) => {
                         {filteredUsers.map(u => (
                             <UserAdminCard key={u.id} u={u} currentUserUid={currentUserUid} isSelf={u.id === currentUserUid} pending={pendingIds.has(u.id)}
                                 toggleAdmin={toggleAdmin} toggleBan={toggleBan} handleAssignTestFile={handleAssignTestFile}
-                                toggleExcelHints={toggleExcelHints} toggleModuleAccess={toggleModuleAccess} hasAccess={hasAccess} removeTest={removeTest} />
+                                toggleExcelHints={toggleExcelHints} toggleModuleAccess={toggleModuleAccess} hasAccess={hasAccess} removeTest={removeTest} clearUserStats={clearUserStats} />
                         ))}
                     </AnimatePresence>
                 </div>
