@@ -24,6 +24,7 @@ const CAPABILITIES = [
             </svg>
         ),
     },
+    
     {
         id: 'excel',
         label: 'Тренажёр Excel',
