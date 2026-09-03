@@ -57,8 +57,8 @@
         { descKey: "findReplace", key: "h", shift: false, visual: "Ctrl + H" },
         { descKey: "redo", key: "y", shift: false, visual: "Ctrl + Y" },
         { descKey: "hyperlink", key: "k", shift: false, visual: "Ctrl + K" },
-        { descKey: "fontSmaller", key: "1", shift: true, visual: "Ctrl + Shift + 1" },
-        { descKey: "fontBigger", key: "9", shift: true, visual: "Ctrl + Shift + 9" },
+        { descKey: "fontBigger", key: "1", shift: true, visual: "Ctrl + Shift + 1" },
+        { descKey: "fontSmaller", key: "9", shift: true, visual: "Ctrl + Shift + 9" },
         { descKey: "doubleUnderline", key: "d", shift: true, visual: "Ctrl + Shift + D" },
         { descKey: "allCaps", key: "a", shift: true, visual: "Ctrl + Shift + A" },
         { descKey: "underlineWords", key: "w", shift: true, visual: "Ctrl + Shift + W" },
@@ -1020,7 +1020,7 @@
                     setScore(prev => prev + 1);
                     setTimeout(() => setSuccessPulse(false), 200);
 
-if (currentIndex < tasks.length - 1) {
+                    if (currentIndex < tasks.length - 1) {
                         setCurrentIndex(prev => prev + 1);
                     } else {
                         setIsFinished(true);
