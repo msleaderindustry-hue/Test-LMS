@@ -209,13 +209,15 @@ const StatsView = ({ history, setHistory, userData }) => {
     return (
         <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
 
-            <div style={{ textAlign: 'center', marginBottom: 30 }}>
+            {/* ДОБАВЛЕНО: flexShrink: 0 чтобы заголовок не плющило */}
+            <div style={{ textAlign: 'center', marginBottom: 30, flexShrink: 0 }}>
                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, var(--text-main), #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
                     Мой прогресс
                 </h2>
             </div>
 
-            <div className="modern-scroll" style={{ display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+            {/* ИСПРАВЛЕНО: Добавлен flexShrink: 0 чтобы блок с вкладками не плющило по вертикали */}
+            <div className="modern-scroll" style={{ flexShrink: 0, display: 'flex', background: 'rgba(20, 22, 28, 0.6)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
