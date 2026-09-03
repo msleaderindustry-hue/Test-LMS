@@ -1,6 +1,32 @@
-const { useState, useEffect, useRef, memo } = React;
+const { useState, useEffect, useRef, memo, useMemo } = React;
 const { motion, AnimatePresence } = window.Motion;
 const { Button } = window;
+
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ АВАТАРОК ---
+const AVATAR_PALETTE = [
+    ['#38bdf8', '#6366f1'], ['#f472b6', '#ec4899'], ['#34d399', '#10b981'],
+    ['#fbbf24', '#f59e0b'], ['#a78bfa', '#8b5cf6'], ['#2dd4bf', '#06b6d4'],
+    ['#fb7185', '#f43f5e'], ['#60a5fa', '#3b82f6']
+];
+
+function hashString(str) {
+    let h = 0;
+    for (let i = 0; i < (str || '').length; i++) { h = (h << 5) - h + str.charCodeAt(i); h |= 0; }
+    return Math.abs(h);
+}
+
+function getInitials(nameOrEmail) {
+    if (!nameOrEmail) return '?';
+    const clean = nameOrEmail.split('@')[0].trim();
+    const parts = clean.split(/[\s._-]+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return clean.slice(0, 2).toUpperCase();
+}
+
+function avatarGradient(id) {
+    const pair = AVATAR_PALETTE[hashString(id) % AVATAR_PALETTE.length];
+    return `linear-gradient(135deg, ${pair[0]}, ${pair[1]})`;
+}
 
 // --- КОМПОНЕНТЫ ТЕСТА (НЕ ТРОГАЕМ, ЧТОБЫ НЕ СЛОМАТЬ ЛОГИКУ) ---
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
@@ -141,6 +167,66 @@ const StatsView = ({ history, setHistory, userData }) => {
     const bestPercent = totalTests ? Math.max(...historyToUse.map(h => h.percent)) : 0;
     const passRate = totalTests ? Math.round((historyToUse.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
 
+    // --- СОСТОЯНИЯ ДЛЯ РЕЙТИНГА ---
+    const [lbCategory, setLbCategory] = useState('excel');
+    const [lbUsers, setLbUsers] = useState(null);
+    const [loadingLb, setLoadingLb] = useState(false);
+    const [lbError, setLbError] = useState(null);
+
+    // Загрузка глобального рейтинга из Firebase
+    useEffect(() => {
+        if (activeTab === 'leaderboard' && !lbUsers && !loadingLb) {
+            setLoadingLb(true);
+            try {
+                if (window.db) {
+                    window.db.collection('users').get().then(snap => {
+                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        setLbUsers(data);
+                        setLoadingLb(false);
+                    }).catch(e => {
+                        console.error(e);
+                        setLbError('Нет доступа к базе (возможно, вы не админ).');
+                        setLoadingLb(false);
+                    });
+                } else {
+                    setLbError('База данных не подключена.');
+                    setLoadingLb(false);
+                }
+            } catch(e) {
+                setLbError('Ошибка загрузки рейтинга.');
+                setLoadingLb(false);
+            }
+        }
+    }, [activeTab, lbUsers, loadingLb]);
+
+    // Сортировка и фильтрация рейтинга
+    const sortedLb = useMemo(() => {
+        if (!lbUsers) return [];
+        let list = [...lbUsers];
+        if (lbCategory === 'excel') {
+            list = list.sort((a, b) => (b.excelProgress?.xp || 0) - (a.excelProgress?.xp || 0));
+        } else if (lbCategory === 'typing') {
+            list = list.sort((a, b) => (b.typingProgress?.maxWpm || 0) - (a.typingProgress?.maxWpm || 0));
+        } else if (lbCategory === 'hotkeys') {
+            list = list.sort((a, b) => (b.hotkeyProgress?.maxScore || 0) - (a.hotkeyProgress?.maxScore || 0));
+        } else if (lbCategory === 'tests') {
+            list = list.sort((a, b) => {
+                const aTests = a.testHistory?.length || 0;
+                const bTests = b.testHistory?.length || 0;
+                return bTests - aTests;
+            });
+        }
+        
+        return list.filter(u => {
+            if (lbCategory === 'excel') return (u.excelProgress?.xp || 0) > 0;
+            if (lbCategory === 'typing') return (u.typingProgress?.maxWpm || 0) > 0;
+            if (lbCategory === 'hotkeys') return (u.hotkeyProgress?.maxScore || 0) > 0;
+            if (lbCategory === 'tests') return (u.testHistory?.length || 0) > 0;
+            return false;
+        }).slice(0, 50); // Берем ТОП-50
+    }, [lbUsers, lbCategory]);
+
+
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
@@ -203,7 +289,8 @@ const StatsView = ({ history, setHistory, userData }) => {
         { id: 'tests', label: 'Тесты', icon: '📝', color: '#a855f7' },
         { id: 'excel', label: 'Excel', icon: '📊', color: '#22c55e' },
         { id: 'typing', label: 'Печать', icon: '⌨️', color: '#38bdf8' },
-        { id: 'hotkeys', label: 'Хоткеи', icon: '⚡', color: '#f59e0b' }
+        { id: 'hotkeys', label: 'Хоткеи', icon: '⚡', color: '#f59e0b' },
+        { id: 'leaderboard', label: 'Рейтинг', icon: '🏆', color: '#fbbf24' } // ДОБАВЛЕНА НОВАЯ ВКЛАДКА
     ];
 
     return (
@@ -215,7 +302,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕНО: background: 'var(--bg-panel)' для адаптации к светлой/темной теме */}
             <div className="modern-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
@@ -345,6 +431,80 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 Сыграно сессий: {hotkeyStats.sessionsPlayed}
                             </div>
                             <PipTrail total={hotkeyStats.sessionsPlayed} color="#22c55e" />
+                        </motion.div>
+                    )}
+
+                    {/* ==================== НОВАЯ ВКЛАДКА: ГЛОБАЛЬНЫЙ РЕЙТИНГ ==================== */}
+                    {activeTab === 'leaderboard' && (
+                        <motion.div key="t-leaderboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px', justifyContent: 'center' }}>
+                                {[
+                                    {id: 'excel', label: '📊 Excel XP'}, 
+                                    {id: 'typing', label: '⌨️ Печать WPM'}, 
+                                    {id: 'hotkeys', label: '⚡ Хоткеи'}, 
+                                    {id: 'tests', label: '📝 Тесты'}
+                                ].map(cat => (
+                                    <button key={cat.id} onClick={() => setLbCategory(cat.id)} style={{
+                                        padding: '8px 16px', borderRadius: '12px', 
+                                        border: lbCategory === cat.id ? 'none' : '1px solid var(--glass-border)',
+                                        background: lbCategory === cat.id ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'var(--bg-panel)',
+                                        color: lbCategory === cat.id ? '#fff' : 'var(--text-sec)', 
+                                        fontWeight: 800, fontSize: '12.5px', cursor: 'pointer',
+                                        boxShadow: lbCategory === cat.id ? '0 4px 12px rgba(245, 158, 11, 0.4)' : 'none', 
+                                        transition: 'all 0.2s'
+                                    }}>
+                                        {cat.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {loadingLb ? (
+                                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-sec)', fontWeight: 700 }}>Загрузка рейтинга...</div>
+                            ) : lbError ? (
+                                <div style={{ textAlign: 'center', padding: '40px 0', color: '#ef4444', fontWeight: 700 }}>{lbError}</div>
+                            ) : sortedLb.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-sec)', fontWeight: 700 }}>Пока нет результатов в этой категории</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {sortedLb.map((u, i) => {
+                                        const isMe = window.auth?.currentUser?.uid === u.id;
+                                        let val = 0;
+                                        if (lbCategory === 'excel') val = u.excelProgress?.xp || 0;
+                                        else if (lbCategory === 'typing') val = u.typingProgress?.maxWpm || 0;
+                                        else if (lbCategory === 'hotkeys') val = u.hotkeyProgress?.maxScore || 0;
+                                        else if (lbCategory === 'tests') val = u.testHistory?.length || 0;
+
+                                        return (
+                                            <div key={u.id} style={{
+                                                display: 'flex', alignItems: 'center', padding: '14px 18px',
+                                                background: isMe ? 'var(--bg-elevated)' : 'var(--bg-panel)',
+                                                border: isMe ? '2px solid #38bdf8' : '1px solid var(--glass-border)',
+                                                borderRadius: '18px', gap: '15px',
+                                                boxShadow: isMe ? '0 4px 20px rgba(56, 189, 248, 0.15)' : 'none'
+                                            }}>
+                                                <div style={{ width: '36px', fontWeight: 900, fontSize: '20px', color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : 'var(--text-sec)', textAlign: 'center', flexShrink: 0 }}>
+                                                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                                                </div>
+                                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: avatarGradient(u.id), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, flexShrink: 0, fontSize: '15px' }}>
+                                                    {getInitials(u.nickname || u.email)}
+                                                </div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {u.nickname || u.email || 'Аноним'}
+                                                        {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px' }}>ВЫ</span>}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600 }}>{u.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div>
+                                                </div>
+                                                <div style={{ fontWeight: 900, fontSize: '22px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
+                                                    {val} <span style={{ fontSize: '12px', color: 'var(--text-sec)' }}>
+                                                        {lbCategory === 'excel' ? 'XP' : lbCategory === 'typing' ? 'WPM' : ''}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </motion.div>
                     )}
 
