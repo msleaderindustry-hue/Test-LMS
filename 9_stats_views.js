@@ -110,24 +110,33 @@ const ReviewView = ({ questions, answers, onBack }) => {
    СТАТИСТИКА — НОВЫЙ ДИЗАЙН С ПОДДЕРЖКОЙ ТЕМ
    ========================================================================= */
 
-// Кольцевой индикатор
+// ИСПРАВЛЕНИЕ: Кольцевой индикатор переведен на чистый CSS для устранения бага пустого кольца
 const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, valueDisplay, label }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-    const pct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
+    const targetPct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
+    const [pct, setPct] = useState(0);
+
+    // Запускаем анимацию сразу после рендера, чтобы линия 100% появилась
+    useEffect(() => {
+        const t = setTimeout(() => setPct(targetPct), 50);
+        return () => clearTimeout(t);
+    }, [targetPct]);
+
     return (
         <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                 <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--glass-border)" strokeWidth={strokeWidth} />
-                <motion.circle
+                <circle
                     cx={size / 2} cy={size / 2} r={radius} fill="none"
                     stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"
                     strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: circumference - pct * circumference }}
-                    transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                    strokeDashoffset={circumference - pct * circumference}
                     transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    style={{ filter: `drop-shadow(0 0 8px ${color}66)` }}
+                    style={{ 
+                        transition: 'stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1)',
+                        filter: `drop-shadow(0 0 8px ${color}66)`
+                    }}
                 />
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
@@ -247,7 +256,6 @@ const StatsView = ({ history, setHistory, userData }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
-    // ИСПРАВЛЕНИЕ #1: Добавлен таймаут 350мс, чтобы график рендерился ПОСЛЕ завершения анимации Framer Motion
     useEffect(() => {
         if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
             const renderTimer = setTimeout(() => {
@@ -342,15 +350,13 @@ const StatsView = ({ history, setHistory, userData }) => {
                     const isActive = activeTab === t.id;
                     return (
                         <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
+                            {/* ИСПРАВЛЕНИЕ #2: Заменили motion.div c layoutId на обычный div, чтобы фон больше не дергался */}
                             {isActive && (
-                                <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                    style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
-                                />
+                                <div style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }} />
                             )}
-                            {/* ИСПРАВЛЕНИЕ #2: Статичный скейл вместо массива, чтобы кнопка не дергалась при перерендере */}
-                            <motion.span animate={{ scale: isActive ? 1.05 : 1 }} transition={{ duration: 0.2 }} style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center', transition: 'opacity 0.2s' }}>
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
-                            </motion.span>
+                            </span>
                             <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
                         </div>
                     );
