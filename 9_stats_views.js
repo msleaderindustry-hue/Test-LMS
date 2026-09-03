@@ -311,7 +311,7 @@ const StatsView = ({ history, setHistory, userData }) => {
     ];
 
     return (
-        <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel custom-scroll" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
+        <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel hide-scroll" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
             
             {/* СТИЛИ ДЛЯ СКРОЛЛБАРА И ПРЕДОТВРАЩЕНИЯ ГОРИЗОНТАЛЬНОГО СКРОЛЛА */}
             <style>{`
