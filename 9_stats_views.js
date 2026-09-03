@@ -361,7 +361,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 <>
                                     {/* ГРАФИК */}
                                     <div style={{
-                                        position: 'relative', height: '280px', minHeight: '280px', width: '100%',
+                                        position: 'relative', height: '280px', minHeight: '280px', width: '100%', boxSizing: 'border-box',
                                         background:'var(--bg-panel)', 
                                         padding:'24px', borderRadius:'20px', marginBottom:'24px', 
                                         border: '1px solid var(--glass-border)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
