@@ -6,44 +6,6 @@ const { Button } = window;
 const REQUIRED_MASTERY_STREAK = 2;
 
 /* =========================================================================
-   SVG ИКОНКИ ДЛЯ ИНТЕРФЕЙСА
-   ========================================================================= */
-const EXCEL_ICONS = {
-    barchart: <><path d="M12 20V10 M18 20V4 M6 20v-4" /></>,
-    search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
-    sparkles: <><path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/></>,
-    math: <><path d="M18 6H6l6 6-6 6h12"/></>,
-    zap: <><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></>,
-    logic: <><path d="M12 2l10 10-10 10L2 12z"/></>,
-    text: <><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></>,
-    time: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-    stats: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
-    finance: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
-    database: <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>,
-    info: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>,
-    engineering: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
-    star: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
-    target: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
-    flame: <><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></>,
-    book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
-    copy: <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
-    check: <><polyline points="20 6 9 17 4 12"/></>,
-    lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
-    warning: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
-    bulb: <><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></>,
-    trophy: <><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></>,
-    refresh: <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
-    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
-    arrowRight: <><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></>
-};
-
-const ExcelIcon = ({ name, size = 16, color = 'currentColor', style = {}, strokeWidth = 2 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'inline-block', verticalAlign: 'middle', ...style }}>
-        {EXCEL_ICONS[name] || null}
-    </svg>
-);
-
-/* =========================================================================
    1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
    ========================================================================= */
 const EXCEL_DATABASE = {
@@ -140,9 +102,9 @@ const UI_DICT = {
         aiTitle: "Готовим материалы для", aiSub: "ИИ пишет уникальную задачу и таблицу",
         theory: "Теория", defTitle: "Определение", enVersion: "Английская версия:",
         syntaxTitle: "Примеры синтаксиса", practice: "Практика",
-        successMsg: "Формула написана верно!", resultMsg: "Результат вычисления:",
+        successMsg: "Формула написана верно! 🎉", resultMsg: "Результат вычисления:",
         btnAnother: "Другая задача", btnHint: "Подсказка", btnExam: "Экзамен", btnCheck: "Проверить",
-        globalSearchPlaceholder: "Поиск по всем функциям...",
+        globalSearchPlaceholder: "Поиск по всем функций...",
         copy: "Копировать", copied: "Скопировано",
         easy: "Легко", medium: "Средне", hard: "Сложно",
         xp: "XP", level: "Уровень",
@@ -174,7 +136,7 @@ const UI_DICT = {
         aiTitle: "Preparing materials for", aiSub: "AI is writing a unique task and table",
         theory: "Theory", defTitle: "Definition", enVersion: "English version:",
         syntaxTitle: "Syntax examples", practice: "Practice",
-        successMsg: "Formula is correct!", resultMsg: "Calculation result:",
+        successMsg: "Formula is correct! 🎉", resultMsg: "Calculation result:",
         btnAnother: "Another task", btnHint: "Hint", btnExam: "Exam", btnCheck: "Check",
         globalSearchPlaceholder: "Search all functions...",
         copy: "Copy", copied: "Copied",
@@ -208,7 +170,7 @@ const UI_DICT = {
         aiTitle: "Материаллар тайёрланмоқда:", aiSub: "ИИ ноёб вазифа ва жадвал ёзмоқда",
         theory: "Назария", defTitle: "Таъриф", enVersion: "Инглизча версияси:",
         syntaxTitle: "Синтаксис мисоллари", practice: "Амалиёт",
-        successMsg: "Формула тўғри ёзилган!", resultMsg: "Ҳисоблаш натижаси:",
+        successMsg: "Формула тўғри ёзилган! 🎉", resultMsg: "Ҳисоблаш натижаси:",
         btnAnother: "Бошқа вазифа", btnHint: "Ёрдам", btnExam: "Имтиҳон", btnCheck: "Текшириш",
         globalSearchPlaceholder: "Барча функцияларни қидириш...",
         copy: "Нусха олиш", copied: "Нусха олинди",
@@ -298,7 +260,7 @@ body.light .et-shell,
   z-index: 100;
 }
 .et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
-.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;
+.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
   background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-green) 100%);box-shadow:0 6px 18px rgba(34,211,238,.25);}
 .et-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.3px;color:var(--text-main);}
 .et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
@@ -326,8 +288,7 @@ body.light .et-shell,
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  display: flex;
-  align-items: center;
+  font-size: 13px;
   color: var(--text-sec);
   pointer-events: none;
 }
@@ -434,7 +395,7 @@ body.light .et-shell .et-langswitch,
 .et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
 .et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
 .et-cat-head-left{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-sec);}
-.et-cat-icon{color:var(--accent-cyan); display: flex; align-items: center;}
+.et-cat-icon{font-size:13px;color:var(--accent-cyan);}
 .et-cat-chevron{transition:transform .2s;color:var(--text-sec);font-size:11px;}
 .et-cat-chevron.open{transform:rotate(180deg);}
 .et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
@@ -537,10 +498,6 @@ body.light .et-shell .et-langswitch,
   font-size: 13px;
   font-weight: 900;
   color: var(--text-main);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
 }
 .et-stat-lbl{
   font-size: 10px;
@@ -604,6 +561,7 @@ body.light .et-shell .et-progress-card,
 
 .et-error-card{background:var(--bg-panel);border:1px solid rgba(239,68,68,.35);border-radius:var(--radius-lg);padding:28px;text-align:center;min-height:300px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.et-error-icon{font-size:34px;}
 .et-error-title{font-size:17px;font-weight:800;color:var(--text-main);}
 .et-error-sub{font-size:13px;color:var(--text-sec);}
 .et-retry-btn{margin-top:8px;padding:10px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));
@@ -615,7 +573,7 @@ body.light .et-shell .et-progress-card,
 .et-fn-en{color:var(--text-sec);font-size:14px;font-weight:600;}
 .et-fn-en b{color:var(--accent-green);font-weight:800;}
 .et-badges{display:flex;gap:8px;flex-wrap:wrap;}
-.et-badge{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
 .et-badge-theory{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-easy{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
@@ -1707,7 +1665,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
   "enName": "АНГЛИЙСКОЕ_НАЗВАНИЕ",
   "difficulty": "easy | medium | hard",
   "xp": число от 50 до 200,
-  "syntax": "=ФУНКЦИЯ(K1; 10)\\n=ФУНКЦИЯ(Z5:Z12)",
+  "syntax": "=ФУНКЦИЯ(A1:A10)\\n=ФУНКЦИЯ(B2; \\">10\\"; C2:C10)",
   "def": {
      "ru": "Развернутое объяснение функции (3-5 предложений): назначение, пример из жизни и практический совет.",
      "en": "Detailed explanation of the function in English.",
@@ -1749,13 +1707,14 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
   "result": "Ожидаемый ответ вычисления"
 }
 
-КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА ДЛЯ УСЛОВИЯ ЗАДАЧИ ("taskDesc"):
-1. ПОНЯТНОСТЬ ДЛЯ РЕБЕНКА: Не используй сухой канцелярит вроде «Рассчитайте агрегированные метрики». Пиши просто: «Используя данные из столбца "Баллы", посчитай средний балл всех учеников».
-2. ОБЯЗАТЕЛЬНО ссылайся на точные заголовки колонок из массива "table", чтобы ученик сразу понимал, куда смотреть глазами.
-3. БЕЗ СПОЙЛЕРОВ: Не пиши саму формулу, не называй адреса ячеек (A1, B2:B10) и не пиши знак равенства в тексте задания.
-4. В поле "steps" верни ровно 3 коротких шага-ориентира.
+КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
+1. ПОНЯТНОСТЬ ДЛЯ РЕБЕНКА: Не используй сухой канцелярит. Пиши просто: «Используя данные из столбца "Баллы", посчитай средний балл».
+2. ОБЯЗАТЕЛЬНО ссылайся на точные заголовки колонок из массива "table".
+3. БЕЗ СПОЙЛЕРОВ: Не пиши саму формулу и адреса ячеек (A1) в тексте задания (taskDesc, steps).
+4. В поле "steps" верни ровно 3 коротких шага.
 5. Тема задачи: "${randomTheme}".
-6. Все вычисления в "expected" и "result" должны быть математически точными.`;
+6. Вычисления в "expected" и "result" должны быть точными.
+7. ПРАВИЛО ДЛЯ "syntax": СТРОГО ЗАПРЕЩЕНО использовать слова-описания (например "диапазон", "условие", "range", "criteria"). В поле syntax должны быть ТОЛЬКО реальные примеры формул с адресами ячеек (A1, B2:B10) и значениями. Например: =${formulaName}(A1:A10) или =${formulaName}(A1:A10; ">50").`;
 
         try {
             const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
