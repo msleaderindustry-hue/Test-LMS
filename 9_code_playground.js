@@ -168,15 +168,32 @@ const CodePlayground = ({ onBack }) => {
 
     const [isAsking, setIsAsking] = useState(false);
     const [aiResponse, setAiResponse] = useState(null);
+    const [runtimeError, setRuntimeError] = useState(null);
+    const [justSaved, setJustSaved] = useState(false);
 
     const taRefs = useRef({});
     const preRefs = useRef({});
     const gutterRefs = useRef({});
+    const previewIframeRef = useRef(null);
+
+    // Маленький скрипт-«страховка»: ловит ошибки в коде ребёнка и вежливо
+    // сообщает о них родительскому окну, вместо того чтобы падать молча.
+    const ERROR_CATCHER = `
+        <script>
+            window.addEventListener('error', function (e) {
+                window.parent.postMessage({ __cqError: true, message: e.message, line: e.lineno }, '*');
+            });
+            window.addEventListener('unhandledrejection', function (e) {
+                window.parent.postMessage({ __cqError: true, message: String(e.reason && e.reason.message || e.reason) }, '*');
+            });
+        <\/script>
+    `;
 
     const buildDoc = (c) => `
         <!DOCTYPE html>
         <html>
             <head>
+                ${ERROR_CATCHER}
                 <style>${c.css}</style>
             </head>
             <body>
@@ -187,16 +204,40 @@ const CodePlayground = ({ onBack }) => {
     `;
 
     useEffect(() => {
-        const timeout = setTimeout(() => setSrcDoc(buildDoc(code)), 350);
+        const timeout = setTimeout(() => {
+            setRuntimeError(null);
+            setSrcDoc(buildDoc(code));
+        }, 350);
         return () => clearTimeout(timeout);
     }, [code]);
+
+    // Тихий пульс «✓ сохранено», отдельно от компиляции превью
+    useEffect(() => {
+        setJustSaved(true);
+        const t = setTimeout(() => setJustSaved(false), 900);
+        return () => clearTimeout(t);
+    }, [code]);
+
+    // Слушаем сообщения об ошибках из превью-iframe
+    useEffect(() => {
+        const onMessage = (e) => {
+            if (e.data && e.data.__cqError) {
+                setRuntimeError(e.data.message || 'Что-то пошло не так');
+            }
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, []);
 
     useEffect(() => {
         const ta = taRefs.current[activeTab];
         if (ta) updateCursor(ta);
     }, [activeTab]);
 
-    const runNow = () => setSrcDoc(buildDoc(code));
+    const runNow = () => {
+        setRuntimeError(null);
+        setSrcDoc(buildDoc(code));
+    };
 
     const goPreview = () => { runNow(); setMode('preview'); };
     const goCode = () => setMode('code');
@@ -545,20 +586,24 @@ const CodePlayground = ({ onBack }) => {
                                     <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}>⬇</button>
                                 </div>
 
-                                {/* Индикатор курсора — тихо, снизу слева */}
-                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}>
-                                    Стр. {cursor.line}:{cursor.col}
+                                {/* Индикатор курсора + автосохранение — тихо, снизу слева */}
+                                <div style={{ position: 'absolute', bottom: '10px', left: '58px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}>
+                                        Стр. {cursor.line}:{cursor.col}
+                                    </div>
+                                    <AnimatePresence>
+                                        {justSaved && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 4 }}
+                                                style={{ fontSize: '11px', color: 'var(--cq-mint)', fontWeight: 800, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}
+                                            >
+                                                ✓ сохранено
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-
-                                {/* Кнопка-мостик к результату */}
-                                <button
-                                    className="cq-fab"
-                                    onClick={goPreview}
-                                    title="Посмотреть сайт"
-                                    style={{ ...fabStyle('linear-gradient(135deg, #8b5cf6, #f472b6)'), position: 'absolute', bottom: '14px', right: '14px', width: '54px', height: '54px', fontSize: '20px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #f472b6)' }}
-                                >
-                                    🚀
-                                </button>
                             </div>
                         </motion.div>
                     ) : (
@@ -582,21 +627,39 @@ const CodePlayground = ({ onBack }) => {
                                     🔒 мой-сайт.детский-код
                                 </div>
                             </div>
-                            <iframe
-                                srcDoc={srcDoc}
-                                title="output"
-                                sandbox="allow-scripts"
-                                style={{ flex: 1, width: '100%', border: 'none', background: '#fff' }}
-                            />
+                            <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                                <iframe
+                                    ref={previewIframeRef}
+                                    srcDoc={srcDoc}
+                                    title="output"
+                                    sandbox="allow-scripts allow-modals allow-forms allow-popups"
+                                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', background: '#fff' }}
+                                />
 
-                            <button
-                                className="cq-fab"
-                                onClick={goCode}
-                                title="Редактировать код"
-                                style={{ position: 'absolute', bottom: '18px', right: '18px', width: '54px', height: '54px', fontSize: '19px', color: '#fff', background: 'linear-gradient(135deg, #8b5cf6, #38bdf8)' }}
-                            >
-                                ✏️
-                            </button>
+                                <AnimatePresence>
+                                    {runtimeError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 16 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 16 }}
+                                            style={{
+                                                position: 'absolute', left: '14px', right: '14px', bottom: '14px',
+                                                display: 'flex', alignItems: 'flex-start', gap: '10px',
+                                                background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239',
+                                                borderRadius: '14px', padding: '12px 14px', fontSize: '13px', fontWeight: 700,
+                                                boxShadow: '0 12px 26px rgba(159,18,57,0.18)'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '17px', lineHeight: 1 }}>🐞</span>
+                                            <div style={{ flex: 1 }}>
+                                                <div>Ой, в скрипте есть ошибка!</div>
+                                                <div style={{ fontWeight: 500, fontSize: '12.5px', marginTop: '3px', color: '#be123c', fontFamily: "'Cascadia Code', monospace" }}>{runtimeError}</div>
+                                            </div>
+                                            <button onClick={() => setRuntimeError(null)} style={{ background: 'transparent', border: 'none', color: '#9f1239', cursor: 'pointer', fontSize: '15px' }}>✖</button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
