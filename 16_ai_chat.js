@@ -26,7 +26,7 @@
     );
 
     /* =========================================================================
-       CSS СТИЛИ ВИДЖЕТА
+       CSS СТИЛИ ВИДЖЕТА (С ПОДДЕРЖКОЙ СВЕТЛОЙ ТЕМЫ)
        ========================================================================= */
     const STYLES = `
     .ai-widget-wrapper {
@@ -282,6 +282,81 @@
         gap: 8px;
         margin: 10px 0;
     }
+
+    /* === ПЕРЕОПРЕДЕЛЕНИЯ ДЛЯ СВЕТЛОЙ ТЕМЫ === */
+    html.light .ai-chat-panel,
+    body.light .ai-chat-panel,
+    .theme-light .ai-chat-panel {
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    }
+
+    html.light .ai-chat-header,
+    body.light .ai-chat-header,
+    .theme-light .ai-chat-header {
+        background: rgba(15, 23, 42, 0.02);
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    html.light .ai-title-text,
+    body.light .ai-title-text,
+    .theme-light .ai-title-text {
+        color: #0f172a;
+    }
+
+    html.light .ai-icon-btn,
+    body.light .ai-icon-btn,
+    .theme-light .ai-icon-btn {
+        background: rgba(15, 23, 42, 0.05);
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        color: #64748b;
+    }
+
+    html.light .ai-icon-btn:hover,
+    body.light .ai-icon-btn:hover,
+    .theme-light .ai-icon-btn:hover {
+        background: rgba(15, 23, 42, 0.1);
+        color: #0f172a;
+    }
+
+    html.light .ai-icon-btn.btn-call,
+    body.light .ai-icon-btn.btn-call,
+    .theme-light .ai-icon-btn.btn-call {
+        color: #d97706;
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    html.light .ai-msg-group.ai .ai-msg-bubble,
+    body.light .ai-msg-group.ai .ai-msg-bubble,
+    .theme-light .ai-msg-group.ai .ai-msg-bubble {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+    }
+
+    html.light .ai-input-wrapper,
+    body.light .ai-input-wrapper,
+    .theme-light .ai-input-wrapper {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    html.light .ai-text-input,
+    body.light .ai-text-input,
+    .theme-light .ai-text-input {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+    }
+
+    html.light .ai-text-input:focus,
+    body.light .ai-text-input:focus,
+    .theme-light .ai-text-input:focus {
+        border-color: #a855f7;
+        background: #ffffff;
+    }
     `;
 
     function useInjectAIStyles() {
@@ -304,7 +379,7 @@
         const [isOpen, setIsOpen] = useState(false);
         const [input, setInput] = useState("");
         const [messages, setMessages] = useState([
-            { id: 1, role: "ai", text: "Привет! Я ИИ-ассистент платформы Ultimate LMS. Задай мне любой вопрос по Word или Excel." }
+            { id: 1, role: "ai", text: "Привет! Я твой цифровой помощник на образовательной платформе Ultimate LMS. Моя задача — помочь тебе разобраться с материалами и ответить на вопросы по тестированию, тренажеру печати, карточкам, горячим клавишам, VS School и Excel. Чем могу помочь?" }
         ]);
         const [isTyping, setIsTyping] = useState(false);
         const [callStatus, setCallStatus] = useState(null); // 'calling', 'success', null
@@ -330,7 +405,7 @@
             setMessages(prev => [...prev, { id: Date.now(), role: "user", text: userText }]);
             setIsTyping(true);
 
-            // Промпт: Запрет на эмодзи и длинные тексты
+            // Промпт: Запрет на эмодзи и длинные тексты, поддержка всех разделов, запрет на прямые ответы к тестам
             const prompt = `Ты полезный ИИ-ассистент образовательной платформы Ultimate LMS.
 Ученик спрашивает: "${userText}"
 
@@ -338,7 +413,9 @@
 1. Отвечай кратко, доброжелательно и только по делу.
 2. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать эмодзи в ответе.
 3. Форматируй шаги списками (1. 2. 3. или дефисами).
-4. Помогай разобраться с функциями Excel и Word, но не делай за ученика целые задания.`;
+4. Помогай ученикам с любыми разделами платформы: Прохождение тестов, Тренажер печати, Умные карточки (Flashcards), Горячие клавиши, VS School (программирование) и Тренажер Excel.
+5. Не ограничивай себя только Excel и Word. Отвечай на вопросы по всем доступным тренажерам и тестам платформы.
+6. ВАЖНО: Если ученик просит дать прямой ответ на вопрос из теста или решить за него задание целиком — мягко откажи и направь его на правильный путь рассуждений, но не давай готовое решение.`;
 
             try {
                 const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
