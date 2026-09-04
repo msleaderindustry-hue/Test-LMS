@@ -45,7 +45,7 @@ const StatIcon = ({ name, size = 16, color = 'currentColor' }) => (
 );
 
 
-// --- КОМПОНЕНТЫ ТЕСТА (НЕ ТРОГАЕМ, ЧТОБЫ НЕ СЛОМАТЬ ЛОГИКУ) ---
+// --- КОМПОНЕНТЫ ТЕСТА ---
 const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
      const cardRef = useRef(null); 
      if (window.useMathJax) window.useMathJax(cardRef, [question]); 
@@ -107,7 +107,7 @@ const ReviewView = ({ questions, answers, onBack }) => {
 };
 
 /* =========================================================================
-   СТАТИСТИКА — НОВЫЙ ДИЗАЙН С ПОДДЕРЖКОЙ ТЕМ
+   СТАТИСТИКА
    ========================================================================= */
 
 // Кольцевой индикатор
@@ -117,7 +117,6 @@ const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, va
     const targetPct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
     const [pct, setPct] = useState(0);
 
-    // Запускаем анимацию сразу после рендера, чтобы линия 100% появилась
     useEffect(() => {
         const t = setTimeout(() => setPct(targetPct), 50);
         return () => clearTimeout(t);
@@ -360,26 +359,37 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
+            {/* ИСПРАВЛЕНО: Убраны анимации layout, чтобы предотвратить прыжки интерфейса */}
             <div className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
-                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
-                            {isActive && (
-                                <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                    style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
-                                />
-                            )}
-                            <motion.span animate={{ scale: isActive ? 1.05 : 1 }} transition={{ duration: 0.2 }} style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
+                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0, transition: 'all 0.2s ease' }}>
+                            {/* Статичный плавно появляющийся фон вместо прыгающего layoutId */}
+                            <div style={{ 
+                                position: 'absolute', inset: 0, background: t.color, 
+                                borderRadius: '14px', zIndex: -1, 
+                                opacity: isActive ? 1 : 0, 
+                                boxShadow: isActive ? `0 4px 15px ${t.color}50` : 'none',
+                                transition: 'opacity 0.2s ease, box-shadow 0.2s ease'
+                            }} />
+                            
+                            <span style={{ 
+                                opacity: isActive ? 1 : 0.6, 
+                                display: 'flex', alignItems: 'center',
+                                transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                                transition: 'all 0.2s ease'
+                            }}>
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
-                            </motion.span>
-                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
+                            </span>
+                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s ease' }}>{t.label}</span>
                         </div>
                     );
                 })}
             </div>
 
-            <div style={{ flex: 1 }}>
+            {/* ИСПРАВЛЕНО: Добавлен minHeight, чтобы окно не схлопывалось во время исчезновения контента */}
+            <div style={{ flex: 1, minHeight: '450px' }}>
                 <AnimatePresence mode="wait">
 
                     {/* ==================== ТЕСТЫ ==================== */}
