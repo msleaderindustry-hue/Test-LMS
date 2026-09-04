@@ -110,7 +110,7 @@ const ReviewView = ({ questions, answers, onBack }) => {
    СТАТИСТИКА — НОВЫЙ ДИЗАЙН С ПОДДЕРЖКОЙ ТЕМ
    ========================================================================= */
 
-// ИСПРАВЛЕНИЕ: Кольцевой индикатор переведен на чистый CSS для устранения бага пустого кольца
+// Кольцевой индикатор
 const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, valueDisplay, label }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
@@ -225,7 +225,7 @@ const StatsView = ({ history, setHistory, userData }) => {
         }
     }, [activeTab, lbUsers, loadingLb]);
 
-    // Сортировка и фильтрация рейтинга
+    // ИСПРАВЛЕНО: Сортировка тестов теперь идет по СРЕДНЕМУ ПРОЦЕНТУ, а не по количеству тестов
     const sortedLb = useMemo(() => {
         if (!lbUsers) return [];
         let list = [...lbUsers];
@@ -237,9 +237,9 @@ const StatsView = ({ history, setHistory, userData }) => {
             list = list.sort((a, b) => (b.hotkeyProgress?.maxScore || 0) - (a.hotkeyProgress?.maxScore || 0));
         } else if (lbCategory === 'tests') {
             list = list.sort((a, b) => {
-                const aTests = a.testHistory?.length || 0;
-                const bTests = b.testHistory?.length || 0;
-                return bTests - aTests;
+                const aAvg = a.testHistory?.length ? Math.round(a.testHistory.reduce((s, h) => s + h.percent, 0) / a.testHistory.length) : 0;
+                const bAvg = b.testHistory?.length ? Math.round(b.testHistory.reduce((s, h) => s + h.percent, 0) / b.testHistory.length) : 0;
+                return bAvg - aAvg; // Сортируем по убыванию среднего балла
             });
         }
         
@@ -350,13 +350,14 @@ const StatsView = ({ history, setHistory, userData }) => {
                     const isActive = activeTab === t.id;
                     return (
                         <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
-                            {/* ИСПРАВЛЕНИЕ #2: Заменили motion.div c layoutId на обычный div, чтобы фон больше не дергался */}
                             {isActive && (
-                                <div style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }} />
+                                <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
+                                />
                             )}
-                            <span style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center', transition: 'opacity 0.2s' }}>
+                            <motion.span animate={{ scale: isActive ? 1.05 : 1 }} transition={{ duration: 0.2 }} style={{ opacity: isActive ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
-                            </span>
+                            </motion.span>
                             <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
                         </div>
                     );
@@ -518,7 +519,8 @@ const StatsView = ({ history, setHistory, userData }) => {
                                         if (lbCategory === 'excel') val = u.excelProgress?.xp || 0;
                                         else if (lbCategory === 'typing') val = u.typingProgress?.maxWpm || 0;
                                         else if (lbCategory === 'hotkeys') val = u.hotkeyProgress?.maxScore || 0;
-                                        else if (lbCategory === 'tests') val = u.testHistory?.length || 0;
+                                        // ИСПРАВЛЕНИЕ РЕЙТИНГА ТЕСТОВ (Отображается средний процент)
+                                        else if (lbCategory === 'tests') val = u.testHistory?.length ? Math.round(u.testHistory.reduce((s, h) => s + h.percent, 0) / u.testHistory.length) : 0;
 
                                         return (
                                             <div key={u.id} style={{
@@ -543,7 +545,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                 </div>
                                                 <div style={{ fontWeight: 900, fontSize: '22px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
                                                     {val} <span style={{ fontSize: '12px', color: 'var(--text-sec)' }}>
-                                                        {lbCategory === 'excel' ? 'XP' : lbCategory === 'typing' ? 'WPM' : ''}
+                                                        {lbCategory === 'excel' ? 'XP' : lbCategory === 'typing' ? 'WPM' : lbCategory === 'tests' ? '% ср. балл' : ''}
                                                     </span>
                                                 </div>
                                             </div>
