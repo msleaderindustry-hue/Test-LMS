@@ -194,8 +194,7 @@ function App() {
   const [teacherTests, setTeacherTests] = useState([]); 
   const [userData, setUserData] = useState(null);
   
-  // Добавлен 'stats' по умолчанию, чтобы статистика скрывалась/показывалась по тумблеру
-  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
+  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -230,7 +229,7 @@ function App() {
                               setTeacherTests([]);
                           }
                           
-                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
+                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel']);
                       }
                   });
               return () => unsubscribeBan();
@@ -483,7 +482,7 @@ function App() {
                   role: 'student',
                   isBanned: false,
                   registeredAt: new Date().toISOString(),
-                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'],
+                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel'],
                   excelHintsEnabled: true
               });
           }
@@ -552,7 +551,7 @@ function App() {
               </div>
           )}
 
-          {!isAuthLoading && user && view === 'admin' && isAdmin && (
+          {!isAuthLoading && user && view === 'admin' && (
               <AdminPanel />
           )}
 
@@ -680,53 +679,46 @@ function App() {
               <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={()=>setView('menu')} />
           )}
 
-          {/* Защищенный роут Статистики */}
-          {!isAuthLoading && user && view === 'stats' && allowedModules.includes('stats') && (
+          {!isAuthLoading && user && view === 'stats' && (
              <StatsView history={history} setHistory={setHistory} userData={userData} />
           )}
 
           {/* Экран тренажера печати */}
-          {!isAuthLoading && user && view === 'typing' && allowedModules.includes('typing') && (
+          {!isAuthLoading && user && view === 'typing' && (
               <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
                   <TypingTest />
               </motion.div>
           )}
 
           {/* Экран хоткеев */}
-          {!isAuthLoading && user && view === 'hotkeys' && allowedModules.includes('hotkeys') && (
+          {!isAuthLoading && user && view === 'hotkeys' && (
               <motion.div key="hotkey_trainer" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '700px'}}>
                   <HotkeyTrainer />
               </motion.div>
           )}
 
           {/* ЭКРАН ШКОЛЫ КОДА */}
-          {!isAuthLoading && user && view === 'code' && allowedModules.includes('code') && (
+          {!isAuthLoading && user && view === 'code' && (
               <motion.div key="code_playground" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
                   <CodePlayground />
               </motion.div>
           )}
 
           {/* ЭКРАН УМНЫХ КАРТОЧЕК */}
-          {!isAuthLoading && user && view === 'flashcards' && allowedModules.includes('flashcards') && (
+          {!isAuthLoading && user && view === 'flashcards' && (
               <motion.div key="flashcards_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
                   <FlashcardsLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
           {/* ЭКРАН ТРЕНАЖЕРА EXCEL */}
-          {!isAuthLoading && user && view === 'excel' && allowedModules.includes('excel') && (
+          {!isAuthLoading && user && view === 'excel' && (
               <motion.div key="excel_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
                   <ExcelTrainerLMS onBack={() => setView('menu')} />
               </motion.div>
           )}
 
         </AnimatePresence>
-
-        {/* ПЛАВАЮЩИЙ ИИ-АССИСТЕНТ (Отображается только если есть доступ к 'chat') */}
-        {!isAuthLoading && user && allowedModules.includes('chat') && window.AIChatWidget && (
-            <window.AIChatWidget />
-        )}
-
       </div>
     </>
   );
