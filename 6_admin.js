@@ -43,7 +43,8 @@ const AVAILABLE_MODULES = [
     { id: 'hotkeys', icon: 'zap', label: 'Хоткеи', color: '#fbbf24' },
     { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
     { id: 'flashcards', icon: 'layers', label: 'Карточки', color: '#3b82f6' },
-    { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' }
+    { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' },
+    { id: 'stats', icon: 'user', label: 'Статистика', color: '#f59e0b' }
 ];
 
 const TABS = [
