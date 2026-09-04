@@ -256,45 +256,60 @@ const StatsView = ({ history, setHistory, userData }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
+    // ИСПРАВЛЕНИЕ 1: БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ CHART.JS
     useEffect(() => {
-        if (activeTab === 'tests' && chartRef.current && sortedHistory.length > 0) {
-            const renderTimer = setTimeout(() => {
-                if (chartInstance.current) chartInstance.current.destroy();
-                if (!chartRef.current) return;
-                const ctx = chartRef.current.getContext('2d');
-                
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
-                gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
+        let renderTimer;
+        
+        const tryRender = () => {
+            if (!chartRef.current) {
+                if (activeTab === 'tests') renderTimer = setTimeout(tryRender, 50);
+                return;
+            }
 
-                chartInstance.current = new window.Chart(ctx, {
-                    type: 'bar',
-                    data: { 
-                        labels: sortedHistory.slice(0,10).map(i => i.student), 
-                        datasets: [{ 
-                            label: '%', 
-                            data: sortedHistory.slice(0,10).map(i => i.percent), 
-                            backgroundColor: gradient, 
-                            borderRadius: 8,
-                            borderSkipped: false,
-                            barPercentage: 0.5
-                        }] 
-                    },
-                    options: { 
-                        scales: { 
-                            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
-                            x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
-                        }, 
-                        plugins: { legend: { display: false } }, 
-                        responsive: true, 
-                        maintainAspectRatio: false 
-                    }
-                });
-            }, 350); 
+            if (chartInstance.current) {
+                chartInstance.current.destroy();
+                chartInstance.current = null; 
+            }
+            
+            const ctx = chartRef.current.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
+            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
 
-            return () => { 
-                clearTimeout(renderTimer);
-                if (chartInstance.current) chartInstance.current.destroy(); 
+            chartInstance.current = new window.Chart(ctx, {
+                type: 'bar',
+                data: { 
+                    labels: sortedHistory.slice(0,10).map(i => i.student), 
+                    datasets: [{ 
+                        label: '%', 
+                        data: sortedHistory.slice(0,10).map(i => i.percent), 
+                        backgroundColor: gradient, 
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barPercentage: 0.5
+                    }] 
+                },
+                options: { 
+                    scales: { 
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
+                        x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
+                    }, 
+                    plugins: { legend: { display: false } }, 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                }
+            });
+        };
+
+        if (activeTab === 'tests' && sortedHistory.length > 0) {
+            renderTimer = setTimeout(tryRender, 200); 
+        }
+
+        return () => { 
+            clearTimeout(renderTimer);
+            if (chartInstance.current) {
+                chartInstance.current.destroy(); 
+                chartInstance.current = null;
             }
         }
     }, [activeTab, sortedHistory]);
@@ -345,11 +360,12 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            <div className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+            {/* ИСПРАВЛЕНИЕ 2: ИСПОЛЬЗУЕМ LAYOUTSCROLL ДЛЯ ПРЕДОТВРАЩЕНИЯ ПРЫЖКОВ ИНДИКАТОРА */}
+            <motion.div layoutScroll className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
-                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
+                        <motion.div layout key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
                             {isActive && (
                                 <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                     style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
@@ -359,10 +375,10 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
                             </motion.span>
                             <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
-                        </div>
+                        </motion.div>
                     );
                 })}
-            </div>
+            </motion.div>
 
             <div style={{ flex: 1 }}>
                 <AnimatePresence mode="wait">
@@ -519,7 +535,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                                         if (lbCategory === 'excel') val = u.excelProgress?.xp || 0;
                                         else if (lbCategory === 'typing') val = u.typingProgress?.maxWpm || 0;
                                         else if (lbCategory === 'hotkeys') val = u.hotkeyProgress?.maxScore || 0;
-                                        // ИСПРАВЛЕНИЕ РЕЙТИНГА ТЕСТОВ (Отображается средний процент)
                                         else if (lbCategory === 'tests') val = u.testHistory?.length ? Math.round(u.testHistory.reduce((s, h) => s + h.percent, 0) / u.testHistory.length) : 0;
 
                                         return (
@@ -544,7 +559,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                     <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600 }}>{u.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div>
                                                 </div>
                                                 
-                                                {/* ИСПРАВЛЕНИЕ: цифра и текст "% ср. балл" теперь расположены друг над другом для идеального отображения на мобилках */}
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, marginLeft: '5px' }}>
                                                     <div style={{ fontWeight: 900, fontSize: '20px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                                                         {val}
