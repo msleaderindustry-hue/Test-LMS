@@ -194,8 +194,8 @@ function App() {
   const [teacherTests, setTeacherTests] = useState([]); 
   const [userData, setUserData] = useState(null);
   
-  // Добавлен 'stats' по умолчанию, чтобы статистика скрывалась/показывалась по тумблеру
-  const [allowedModules, setAllowedModules] = useState(['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
+  // ДОБАВЛЕН 'ai_chat' В СПИСОК ПО УМОЛЧАНИЮ
+  const [allowedModules, setAllowedModules] = useState(['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -230,7 +230,8 @@ function App() {
                               setTeacherTests([]);
                           }
                           
-                          setAllowedModules(data.allowedModules || ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
+                          // ДОБАВЛЕН 'ai_chat' В СПИСОК ВОССТАНОВЛЕНИЯ
+                          setAllowedModules(data.allowedModules || ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
                       }
                   });
               return () => unsubscribeBan();
@@ -483,7 +484,8 @@ function App() {
                   role: 'student',
                   isBanned: false,
                   registeredAt: new Date().toISOString(),
-                  allowedModules: ['chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'],
+                  // ДОБАВЛЕН 'ai_chat' ПРИ РЕГИСТРАЦИИ НОВОГО ПОЛЬЗОВАТЕЛЯ
+                  allowedModules: ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'],
                   excelHintsEnabled: true
               });
           }
@@ -722,8 +724,8 @@ function App() {
 
         </AnimatePresence>
 
-        {/* ПЛАВАЮЩИЙ ИИ-АССИСТЕНТ (Отображается только если есть доступ к 'chat') */}
-        {!isAuthLoading && user && allowedModules.includes('chat') && window.AIChatWidget && (
+        {/* ПЛАВАЮЩИЙ ИИ-АССИСТЕНТ (Теперь зависит от ai_chat) */}
+        {!isAuthLoading && user && allowedModules.includes('ai_chat') && window.AIChatWidget && (
             <window.AIChatWidget />
         )}
 
