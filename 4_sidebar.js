@@ -90,7 +90,6 @@ const ChartIcon = () => {
     );
 };
 
-// ИКОНКА СТАТИСТИКИ
 const StatsIcon = () => (
     <motion.svg width="18" height="18" viewBox="0 0 24 24" fill="none" variants={iconWrap}>
         <path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -133,10 +132,10 @@ const IconBadge = ({ children, size = 34 }) => (
    ========================================================================= */
 const MODULE_CONFIG = {
     typing:     { Icon: KeyboardIcon, label: 'Тренажер печати',  gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)' },
-    hotkeys:    { Icon: BoltIcon,     label: 'Горячие клавиши',   gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-    code:       { Icon: CodeIcon,     label: 'VS School',         gradient: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)' },
-    flashcards: { Icon: CardsIcon,    label: 'Умные карточки',    gradient: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' },
-    excel:      { Icon: ChartIcon,    label: 'Тренажер Excel',    gradient: 'linear-gradient(135deg, #34d399 0%, #059669 100%)' },
+    hotkeys:    { Icon: BoltIcon,     label: 'Горячие клавиши',  gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+    code:       { Icon: CodeIcon,     label: 'VS School',        gradient: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)' },
+    flashcards: { Icon: CardsIcon,    label: 'Умные карточки',   gradient: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' },
+    excel:      { Icon: ChartIcon,    label: 'Тренажер Excel',   gradient: 'linear-gradient(135deg, #34d399 0%, #059669 100%)' },
 };
 
 const navButtonBaseStyle = (gradient) => ({
@@ -214,13 +213,15 @@ const SidebarMenu = ({ isOpen, onClose, theme, setTheme, user, userNickname, cha
                         }}>
                             
                             {/* СТАТИСТИКА (ПРЕВРАЩАЕТСЯ В "МЕНЮ", ЕСЛИ ВЫ В НЕЙ) */}
-                            <NavButton
-                                isActive={view === 'stats'}
-                                gradient="linear-gradient(135deg, #f97316 0%, #ea580c 100%)"
-                                Icon={StatsIcon}
-                                label="Статистика"
-                                onClick={goTo('stats')}
-                            />
+                            {allowedModules.includes('stats') && (
+                                <NavButton
+                                    isActive={view === 'stats'}
+                                    gradient="linear-gradient(135deg, #f97316 0%, #ea580c 100%)"
+                                    Icon={StatsIcon}
+                                    label="Статистика"
+                                    onClick={goTo('stats')}
+                                />
+                            )}
 
                             {allowedModules.includes('chat') && (
                                 <motion.div initial="rest" whileHover="hover" whileTap={{ scale: 0.97 }} style={{width: '100%'}}>
