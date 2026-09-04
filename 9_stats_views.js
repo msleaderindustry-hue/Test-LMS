@@ -256,7 +256,7 @@ const StatsView = ({ history, setHistory, userData }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
-    // ИСПРАВЛЕНИЕ 1: БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ CHART.JS
+    // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ CHART.JS
     useEffect(() => {
         let renderTimer;
         
@@ -360,12 +360,11 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕНИЕ 2: ИСПОЛЬЗУЕМ LAYOUTSCROLL ДЛЯ ПРЕДОТВРАЩЕНИЯ ПРЫЖКОВ ИНДИКАТОРА */}
-            <motion.div layoutScroll className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+            <div className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
-                        <motion.div layout key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
+                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0 }}>
                             {isActive && (
                                 <motion.div layoutId="stats-main-tabs" transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                     style={{ position: 'absolute', inset: 0, background: t.color, borderRadius: '14px', zIndex: -1, boxShadow: `0 4px 15px ${t.color}50` }}
@@ -375,10 +374,10 @@ const StatsView = ({ history, setHistory, userData }) => {
                                 <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
                             </motion.span>
                             <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s' }}>{t.label}</span>
-                        </motion.div>
+                        </div>
                     );
                 })}
-            </motion.div>
+            </div>
 
             <div style={{ flex: 1 }}>
                 <AnimatePresence mode="wait">
