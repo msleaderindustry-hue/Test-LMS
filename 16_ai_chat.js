@@ -4,7 +4,7 @@
     const { motion, AnimatePresence } = window.Motion;
 
     // ВСТАВЬ СЮДА СВОЙ ВЕБХУК DISCORD ДЛЯ УВЕДОМЛЕНИЙ
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/ТВОЙ_ВЕБХУК";
+    const DISCORD_WEBHOOK_URL = "https://discordwebhook.msleaderindustry.workers.dev";
 
     /* =========================================================================
        SVG ИКОНКИ (БЕЗ ЭМОДЗИ)
