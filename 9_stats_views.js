@@ -225,7 +225,7 @@ const StatsView = ({ history, setHistory, userData }) => {
         }
     }, [activeTab, lbUsers, loadingLb]);
 
-    // ИСПРАВЛЕНО: Сортировка тестов теперь идет по СРЕДНЕМУ ПРОЦЕНТУ, а не по количеству тестов
+    // Сортировка и фильтрация рейтинга
     const sortedLb = useMemo(() => {
         if (!lbUsers) return [];
         let list = [...lbUsers];
@@ -527,26 +527,31 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                 display: 'flex', alignItems: 'center', padding: '14px 18px',
                                                 background: isMe ? 'var(--bg-elevated)' : 'var(--bg-panel)',
                                                 border: isMe ? '2px solid #38bdf8' : '1px solid var(--glass-border)',
-                                                borderRadius: '18px', gap: '15px',
+                                                borderRadius: '18px', gap: '10px',
                                                 boxShadow: isMe ? '0 4px 20px rgba(56, 189, 248, 0.15)' : 'none'
                                             }}>
-                                                <div style={{ width: '36px', fontWeight: 900, fontSize: '20px', display: 'flex', justifyContent: 'center', color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : 'var(--text-sec)', flexShrink: 0 }}>
-                                                    {i < 3 ? <StatIcon name="medal" size={24} color={i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#d97706'} /> : i + 1}
+                                                <div style={{ width: '30px', fontWeight: 900, fontSize: '18px', display: 'flex', justifyContent: 'center', color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : 'var(--text-sec)', flexShrink: 0 }}>
+                                                    {i < 3 ? <StatIcon name="medal" size={22} color={i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#d97706'} /> : i + 1}
                                                 </div>
-                                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: avatarGradient(u.id), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, flexShrink: 0, fontSize: '15px' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: avatarGradient(u.id), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, flexShrink: 0, fontSize: '14px' }}>
                                                     {getInitials(u.nickname || u.email)}
                                                 </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
                                                     <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         {u.nickname || u.email || 'Аноним'}
-                                                        {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px' }}>ВЫ</span>}
+                                                        {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px', flexShrink: 0 }}>ВЫ</span>}
                                                     </div>
                                                     <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600 }}>{u.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div>
                                                 </div>
-                                                <div style={{ fontWeight: 900, fontSize: '22px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
-                                                    {val} <span style={{ fontSize: '12px', color: 'var(--text-sec)' }}>
+                                                
+                                                {/* ИСПРАВЛЕНИЕ: цифра и текст "% ср. балл" теперь расположены друг над другом для идеального отображения на мобилках */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, marginLeft: '5px' }}>
+                                                    <div style={{ fontWeight: 900, fontSize: '20px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                                                        {val}
+                                                    </div>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 700, marginTop: '4px', whiteSpace: 'nowrap' }}>
                                                         {lbCategory === 'excel' ? 'XP' : lbCategory === 'typing' ? 'WPM' : lbCategory === 'tests' ? '% ср. балл' : ''}
-                                                    </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
