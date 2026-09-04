@@ -64,30 +64,6 @@
       window.db = firebase.firestore();
 
     </script>
-<style>
-  body {
-    margin: 0;
-    /* Мягкий градиент с легким фиолетово-синим свечением по центру */
-    background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 50%, #050308 100%);
-    color: #f1f5f9;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-</style>
-
-<div id="root">
-    <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <!-- Спиннер стал чуть тоньше и с плавной анимацией -->
-        <div style="width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.05); border-top-color: #a855f7; border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin-bottom: 24px;"></div>
-        
-        <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 1.5px; color: #94a3b8; text-transform: uppercase;">
-            Запуск Ultimate LMS...
-        </h2>
-        
-        <style>
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
-    </div>
-</div>
 <!-- Разделенные модули приложения -->
 <script type="text/babel" src="1_logic.js"></script>
 <script type="text/babel" src="2_ui.js"></script>
