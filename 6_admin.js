@@ -30,6 +30,7 @@
         inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
         shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
         lightbulb: <><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></>,
+        sparkle: <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
     };
 
     const AdminIcon = ({ name, size = 16, color = 'currentColor', style = {}, strokeWidth = 2 }) => (
@@ -38,9 +39,10 @@
         </svg>
     );
 
-    // ЗДЕСЬ ДОБАВЛЕНА СТАТИСТИКА В ПАНЕЛЬ УПРАВЛЕНИЯ
+    // ЗДЕСЬ ДОБАВЛЕН ИИ АССИСТЕНТ
     const AVAILABLE_MODULES = [
         { id: 'chat', icon: 'chat', label: 'Чат', color: '#06b6d4' },
+        { id: 'ai_chat', icon: 'sparkle', label: 'ИИ Ассистент', color: '#a855f7' }, // <-- НОВЫЙ МОДУЛЬ
         { id: 'typing', icon: 'keyboard', label: 'Печать', color: '#818cf8' },
         { id: 'hotkeys', icon: 'zap', label: 'Хоткеи', color: '#fbbf24' },
         { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
