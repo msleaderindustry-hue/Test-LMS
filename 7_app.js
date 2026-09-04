@@ -6,7 +6,7 @@ const {
   AdminPanel, ChatPanel,
   StatsView,
   TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, LandingView,
-  SidebarMenu, TestsLMS, // <-- ДОБАВИЛИ TestsLMS
+  SidebarMenu, TestsLMS,
   logVisitor
 } = window;
 
@@ -175,23 +175,22 @@ function App() {
   const [view, setView] = useState('loading'); 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   
-  // Состояния для тестов, которые нужны в главном меню
   const [sets, setSets] = useState([]);
   const [currentSet, setCurrentSet] = useState(null);
   const [tests, setTests] = useState([]);
   const [history, setHistory] = useState([]);
   const [fp, setFp] = useState('');
 
-  // Состояния пользователя
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState('student');
   const [userNickname, setUserNickname] = useState(''); 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [teacherTests, setTeacherTests] = useState([]); 
   const [userData, setUserData] = useState(null);
-  const [allowedModules, setAllowedModules] = useState(['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
+  
+  // ИСПРАВЛЕНИЕ: Массив изначально пустой. Ничего не показываем, пока не загрузятся права.
+  const [allowedModules, setAllowedModules] = useState([]);
 
-  // UI Состояния
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -204,8 +203,7 @@ function App() {
       }
       const unsubscribeAuth = window.auth.onAuthStateChanged((currentUser) => {
           setUser(currentUser);
-          setIsAuthLoading(false);
-
+          
           if (currentUser && window.db) {
               const unsubscribeBan = window.db.collection('users').doc(currentUser.uid)
                   .onSnapshot((doc) => {
@@ -222,10 +220,15 @@ function App() {
                           setTeacherTests(data.assignedTests || []);
                           setAllowedModules(data.allowedModules || ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
                       }
+                      
+                      // ИСПРАВЛЕНИЕ: Снимаем экран загрузки только ПОСЛЕ получения данных из базы
+                      setIsAuthLoading(false);
                   });
               return () => unsubscribeBan();
           } else {
               setUserRole('student');
+              // Снимаем экран загрузки для гостей (неавторизованных)
+              setIsAuthLoading(false);
           }
       });
       return () => unsubscribeAuth();
