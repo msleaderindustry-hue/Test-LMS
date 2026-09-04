@@ -65,176 +65,29 @@
 
     </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
-
-  :root {
-    --bg-0: #06040f;
-    --bg-1: #14103080;
-    --violet: #8b6bf5;
-    --cyan: #3fc9e8;
-    --gold: #f5c26b;
-    --ink: #e7e4f3;
-    --dim: #746f92;
-  }
-
-  * { box-sizing: border-box; }
-
   body {
     margin: 0;
-    height: 100vh;
-    overflow: hidden;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 15%, rgba(139,107,245,0.16), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 85% 90%, rgba(63,201,232,0.14), transparent 60%),
-      radial-gradient(circle at 50% 50%, #150f2c 0%, #0a0718 55%, var(--bg-0) 100%);
-    background-size: 180% 180%, 180% 180%, 100% 100%;
-    animation: drift 22s ease-in-out infinite alternate;
-    color: var(--ink);
-    font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-  }
-
-  @keyframes drift {
-    0%   { background-position: 10% 0%, 90% 100%, center; }
-    100% { background-position: 30% 20%, 70% 80%, center; }
-  }
-
-  .stage {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 28px;
-  }
-
-  /* ---- orbiting mark ---- */
-  .mark-wrap { position: relative; width: 108px; height: 108px; animation: intro 0.9s cubic-bezier(0.2,0.8,0.2,1) both; }
-  @keyframes intro { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
-
-  .mark { width: 100%; height: 100%; overflow: visible; }
-
-  .ring {
-    fill: none;
-    stroke: url(#ringGrad);
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-dasharray: 34 16 8 16;
-    transform-origin: 54px 54px;
-    animation: spin 7s linear infinite;
-  }
-
-  .core {
-    fill: var(--gold);
-    filter: drop-shadow(0 0 6px rgba(245,194,107,0.75));
-    animation: pulse 2.6s ease-in-out infinite;
-    transform-origin: 54px 54px;
-  }
-
-  .orbit-a, .orbit-b { transform-origin: 54px 54px; }
-  .orbit-a { animation: spin 4.2s linear infinite; }
-  .orbit-b { animation: spin-rev 9s linear infinite; }
-  .orbit-a circle, .orbit-b circle { filter: drop-shadow(0 0 4px currentColor); }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes spin-rev { to { transform: rotate(-360deg); } }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50%      { transform: scale(1.35); opacity: 0.75; }
-  }
-
-  /* ---- wordmark ---- */
-  .wordmark {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    background: linear-gradient(90deg, var(--ink) 0%, var(--violet) 55%, var(--cyan) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* ---- status ---- */
-  .status {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--dim);
-    height: 16px;
-    transition: opacity 0.4s ease;
-  }
-
-  /* ---- progress track (indeterminate) ---- */
-  .track {
-    width: 180px;
-    height: 2px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.07);
-    overflow: hidden;
-    position: relative;
-  }
-  .track::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; height: 100%;
-    width: 40%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, transparent, var(--violet), var(--cyan), transparent);
-    animation: sweep 1.6s cubic-bezier(0.4,0,0.2,1) infinite;
-  }
-  @keyframes sweep {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(350%); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    body, .ring, .core, .orbit-a, .orbit-b, .mark-wrap, .track::after { animation: none !important; }
+    /* Мягкий градиент с легким фиолетово-синим свечением по центру */
+    background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 50%, #050308 100%);
+    color: #f1f5f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 </style>
 
 <div id="root">
-  <div class="stage">
-    <div class="mark-wrap">
-      <svg class="mark" viewBox="0 0 108 108">
-        <defs>
-          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#8b6bf5"/>
-            <stop offset="100%" stop-color="#3fc9e8"/>
-          </linearGradient>
-        </defs>
-        <circle class="ring" cx="54" cy="54" r="40"/>
-        <g class="orbit-a" style="color:#3fc9e8">
-          <circle cx="54" cy="14" r="3" fill="currentColor"/>
-        </g>
-        <g class="orbit-b" style="color:#8b6bf5">
-          <circle cx="54" cy="90" r="2.4" fill="currentColor"/>
-        </g>
-        <circle class="core" cx="54" cy="54" r="6"/>
-      </svg>
+    <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <!-- Спиннер стал чуть тоньше и с плавной анимацией -->
+        <div style="width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.05); border-top-color: #a855f7; border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin-bottom: 24px;"></div>
+        
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 1.5px; color: #94a3b8; text-transform: uppercase;">
+            Запуск Ultimate LMS...
+        </h2>
+        
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
     </div>
-
-    <div class="wordmark">Ultimate LMS</div>
-    <div class="status" id="status">Готовим ваше пространство обучения</div>
-    <div class="track"></div>
-  </div>
 </div>
-
-<script>
-  const phrases = [
-    "Готовим ваше пространство обучения",
-    "Синхронизируем курсы",
-    "Загружаем прогресс",
-    "Почти готово"
-  ];
-  const el = document.getElementById('status');
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced) {
-    let i = 0;
-    setInterval(() => {
-      i = (i + 1) % phrases.length;
-      el.style.opacity = 0;
-      setTimeout(() => { el.textContent = phrases[i]; el.style.opacity = 1; }, 400);
-    }, 2400);
-  }
-</script>
 <!-- Разделенные модули приложения -->
 <script type="text/babel" src="1_logic.js"></script>
 <script type="text/babel" src="2_ui.js"></script>
