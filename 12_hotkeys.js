@@ -35,46 +35,36 @@
         ';': ':', "'": '"', ',': '<', '.': '>', '/': '?', '`': '~'
     };
 
-    // Штатная база горячих клавиш. 
-    // ДОБАВЛЕНЫ: Функции Excel (Автосумма, Фиксация $ (F4), Ввод даты, Редактирование ячейки)
+    // Штатная база горячих клавиш. desc хранится "ключом перевода" (descKey),
+    // само отображаемое описание берётся из HOTKEY_DESC_TRANSLATIONS[lang][descKey] —
+    // так база остаётся одна для всех языков.
     const HOTKEYS_DB = [
-        { descKey: "alignRight", key: "r", shift: false, ctrl: true, visual: "Ctrl + R" },
-        { descKey: "alignLeft", key: "l", shift: false, ctrl: true, visual: "Ctrl + L" },
-        { descKey: "undo", key: "z", shift: false, ctrl: true, visual: "Ctrl + Z" },
-        { descKey: "cut", key: "x", shift: false, ctrl: true, visual: "Ctrl + X" },
-        { descKey: "alignCenter", key: "e", shift: false, ctrl: true, visual: "Ctrl + E" },
-        { descKey: "selectAll", key: "a", shift: false, ctrl: true, visual: "Ctrl + A" },
-        { descKey: "italic", key: "i", shift: false, ctrl: true, visual: "Ctrl + I" },
-        { descKey: "print", key: "p", shift: false, ctrl: true, visual: "Ctrl + P" },
-        { descKey: "underline", key: "u", shift: false, ctrl: true, visual: "Ctrl + U" },
-        { descKey: "save", key: "s", shift: false, ctrl: true, visual: "Ctrl + S" },
-        { descKey: "copy", key: "c", shift: false, ctrl: true, visual: "Ctrl + C" },
-        { descKey: "paste", key: "v", shift: false, ctrl: true, visual: "Ctrl + V" },
-        { descKey: "openFile", key: "o", shift: false, ctrl: true, visual: "Ctrl + O" },
-        { descKey: "closeDoc", key: "w", shift: false, ctrl: true, visual: "Ctrl + W" },
-        { descKey: "find", key: "f", shift: false, ctrl: true, visual: "Ctrl + F" },
-        { descKey: "findReplace", key: "h", shift: false, ctrl: true, visual: "Ctrl + H" },
-        { descKey: "redo", key: "y", shift: false, ctrl: true, visual: "Ctrl + Y" },
-        { descKey: "hyperlink", key: "k", shift: false, ctrl: true, visual: "Ctrl + K" },
-        { descKey: "fontBigger", key: "1", shift: true, ctrl: true, visual: "Ctrl + Shift + 1" },
-        { descKey: "fontSmaller", key: "9", shift: true, ctrl: true, visual: "Ctrl + Shift + 9" },
-        { descKey: "doubleUnderline", key: "d", shift: true, ctrl: true, visual: "Ctrl + Shift + D" },
-        { descKey: "allCaps", key: "a", shift: true, ctrl: true, visual: "Ctrl + Shift + A" },
-        { descKey: "underlineWords", key: "w", shift: true, ctrl: true, visual: "Ctrl + Shift + W" },
-        { descKey: "newTab", key: "t", shift: false, ctrl: true, visual: "Ctrl + T" },
-        { descKey: "newFile", key: "n", shift: false, ctrl: true, visual: "Ctrl + N" },
-        { descKey: "bold", key: "b", shift: false, ctrl: true, visual: "Ctrl + B" },
-
-        // НОВЫЕ ГОРЯЧИЕ КЛАВИШИ EXCEL ДЛЯ ФОРМУЛ И ДАННЫХ
-        { descKey: "autoSum", key: "=", shift: false, ctrl: false, alt: true, visual: "Alt + =" },
-        { descKey: "showFormulas", key: "`", shift: false, ctrl: true, visual: "Ctrl + `" },
-        { descKey: "fillDown", key: "d", shift: false, ctrl: true, visual: "Ctrl + D" },
-        { descKey: "insertDate", key: ";", shift: false, ctrl: true, visual: "Ctrl + ;" },
-        { descKey: "insertTime", key: ";", shift: true, ctrl: true, visual: "Ctrl + Shift + :" },
-        { descKey: "formatCells", key: "1", shift: false, ctrl: true, visual: "Ctrl + 1" },
-        { descKey: "absoluteRef", key: "f4", shift: false, ctrl: false, alt: false, visual: "F4" },
-        { descKey: "editCell", key: "f2", shift: false, ctrl: false, alt: false, visual: "F2" },
-        { descKey: "expandFormulaBar", key: "u", shift: true, ctrl: true, visual: "Ctrl + Shift + U" }
+        { descKey: "alignRight", key: "r", shift: false, visual: "Ctrl + R" },
+        { descKey: "alignLeft", key: "l", shift: false, visual: "Ctrl + L" },
+        { descKey: "undo", key: "z", shift: false, visual: "Ctrl + Z" },
+        { descKey: "cut", key: "x", shift: false, visual: "Ctrl + X" },
+        { descKey: "alignCenter", key: "e", shift: false, visual: "Ctrl + E" },
+        { descKey: "selectAll", key: "a", shift: false, visual: "Ctrl + A" },
+        { descKey: "italic", key: "i", shift: false, visual: "Ctrl + I" },
+        { descKey: "print", key: "p", shift: false, visual: "Ctrl + P" },
+        { descKey: "underline", key: "u", shift: false, visual: "Ctrl + U" },
+        { descKey: "save", key: "s", shift: false, visual: "Ctrl + S" },
+        { descKey: "copy", key: "c", shift: false, visual: "Ctrl + C" },
+        { descKey: "paste", key: "v", shift: false, visual: "Ctrl + V" },
+        { descKey: "openFile", key: "o", shift: false, visual: "Ctrl + O" },
+        { descKey: "closeDoc", key: "w", shift: false, visual: "Ctrl + W" },
+        { descKey: "find", key: "f", shift: false, visual: "Ctrl + F" },
+        { descKey: "findReplace", key: "h", shift: false, visual: "Ctrl + H" },
+        { descKey: "redo", key: "y", shift: false, visual: "Ctrl + Y" },
+        { descKey: "hyperlink", key: "k", shift: false, visual: "Ctrl + K" },
+        { descKey: "fontBigger", key: "1", shift: true, visual: "Ctrl + Shift + 1" },
+        { descKey: "fontSmaller", key: "9", shift: true, visual: "Ctrl + Shift + 9" },
+        { descKey: "doubleUnderline", key: "d", shift: true, visual: "Ctrl + Shift + D" },
+        { descKey: "allCaps", key: "a", shift: true, visual: "Ctrl + Shift + A" },
+        { descKey: "underlineWords", key: "w", shift: true, visual: "Ctrl + Shift + W" },
+        { descKey: "newTab", key: "t", shift: false, visual: "Ctrl + T" },
+        { descKey: "newFile", key: "n", shift: false, visual: "Ctrl + N" },
+        { descKey: "bold", key: "b", shift: false, visual: "Ctrl + B" }
     ];
 
     const HOTKEY_DESC_TRANSLATIONS = {
@@ -104,17 +94,7 @@
             underlineWords: "Подчёркивание только слов",
             newTab: "Открыть новую вкладку",
             newFile: "Создать новый файл или окно",
-            bold: "Жирный текст",
-            // Переводы Excel
-            autoSum: "Автосумма (Вставить формулу СУММ)",
-            showFormulas: "Показать/скрыть формулы в ячейках",
-            fillDown: "Заполнить вниз (скопировать верхнюю ячейку)",
-            insertDate: "Вставить текущую дату",
-            insertTime: "Вставить текущее время",
-            formatCells: "Открыть окно «Формат ячеек»",
-            absoluteRef: "Абсолютная ссылка (закрепить ячейку знаками $)",
-            editCell: "Редактировать активную ячейку",
-            expandFormulaBar: "Развернуть строку формул"
+            bold: "Жирный текст"
         },
         en: {
             alignRight: "Align text to the right",
@@ -142,17 +122,7 @@
             underlineWords: "Underline words only",
             newTab: "Open a new tab",
             newFile: "Create a new file or window",
-            bold: "Bold text",
-            // Excel translations
-            autoSum: "AutoSum (Insert SUM formula)",
-            showFormulas: "Show/hide formulas",
-            fillDown: "Fill down (Copy cell above)",
-            insertDate: "Insert current date",
-            insertTime: "Insert current time",
-            formatCells: "Format cells dialog",
-            absoluteRef: "Absolute reference (Lock cell with $)",
-            editCell: "Edit active cell",
-            expandFormulaBar: "Expand formula bar"
+            bold: "Bold text"
         },
         uz: {
             alignRight: "Матнни ўнг томонга текислаш",
@@ -180,17 +150,85 @@
             underlineWords: "Фақат сўзларни тагига чизиш",
             newTab: "Янги ойна (вкладка) очиш",
             newFile: "Янги файл ёки ойна яратиш",
-            bold: "Қалин (bold) матн",
-            // Excel translations
-            autoSum: "Автосумма (SUM формуласини қўйиш)",
-            showFormulas: "Формулаларни кўрсатиш/яшириш",
-            fillDown: "Пастга тўлдириш (юқоридаги катакни нусхалаш)",
-            insertDate: "Жорий санани қўйиш",
-            insertTime: "Жорий вақтни қўйиш",
-            formatCells: "Катаклар формати ойнасини очиш",
-            absoluteRef: "Абсолют ҳавола (катакни $ билан қотириш)",
-            editCell: "Фаол катакни таҳрирлаш",
-            expandFormulaBar: "Формулалар қаторини кенгайтириш"
+            bold: "Қалин (bold) матн"
+        }
+    };
+
+    const UI_TRANSLATIONS = {
+        ru: {
+            langName: "Русский",
+            title: "Хоткеи",
+            aiPowered: "AI powered",
+            subtitle: "Тренируй стандартную базу из твоих конспектов (Word, Система) или создай персональную для любой другой программы",
+            customPanelLabel: "Своя база для другой программы",
+            inputPlaceholder: "Напр. Word, Excel, Photoshop...",
+            generateButton: "Создать базу",
+            generating: "Ищем…",
+            loadedSuccess: (topic) => `База «${topic}» загружена`,
+            startTraining: "Начать тренировку",
+            theoryStep: "Шаг 1 из 2",
+            theoryTitle: "Теория",
+            theoryDesc: "Изучи комбинации, которые встретятся в этой тренировке, а затем закрепи их на практике.",
+            exit: "Выйти",
+            goToPractice: "Перейти к практике",
+            doCombination: "Выполните комбинацию",
+            escToExit: "Esc — выйти",
+            finishedTitle: "Отличная работа!",
+            finishedDesc: (score, total) => `Закреплено ${score} из ${total} горячих клавиш`,
+            repeat: "Пройти ещё раз",
+            errorNoTopic: "Сначала введи название программы",
+            errorFailed: "Не удалось получить список клавиш. Попробуй переформулировать запрос или повтори позже",
+            defaultBaseName: null
+        },
+        en: {
+            langName: "English",
+            title: "Hotkeys",
+            aiPowered: "AI powered",
+            subtitle: "Practice the standard set from your notes (Word, System), or create a custom one for any other program",
+            customPanelLabel: "Custom set for another program",
+            inputPlaceholder: "e.g. Word, Excel, Photoshop...",
+            generateButton: "Generate set",
+            generating: "Generating…",
+            loadedSuccess: (topic) => `"${topic}" set loaded`,
+            startTraining: "Start training",
+            theoryStep: "Step 1 of 2",
+            theoryTitle: "Theory",
+            theoryDesc: "Study the combinations you'll be tested on, then lock them in with practice.",
+            exit: "Exit",
+            goToPractice: "Go to practice",
+            doCombination: "Perform the combination",
+            escToExit: "Esc to exit",
+            finishedTitle: "Great job!",
+            finishedDesc: (score, total) => `You locked in ${score} of ${total} hotkeys`,
+            repeat: "Try again",
+            errorNoTopic: "Enter a program name first",
+            errorFailed: "Couldn't fetch the hotkey set. Try rephrasing the topic or retry later",
+            defaultBaseName: null
+        },
+        uz: {
+            langName: "O'zbek (кирилл)",
+            title: "Хоткейлар",
+            aiPowered: "AI powered",
+            subtitle: "Конспектларингиздаги стандарт базани (Word, Тизим) машқ қилинг ёки бошқа дастур учун ўзингизникини яратинг",
+            customPanelLabel: "Бошқа дастур учун ўз базангиз",
+            inputPlaceholder: "Масалан: Word, Excel, Photoshop...",
+            generateButton: "База яратиш",
+            generating: "Излаяпмиз…",
+            loadedSuccess: (topic) => `«${topic}» базаси юкланди`,
+            startTraining: "Машқни бошлаш",
+            theoryStep: "1-қадам, 2 тадан",
+            theoryTitle: "Назария",
+            theoryDesc: "Ушбу машқда учрайдиган комбинацияларни ўрганинг, сўнг уларни амалиётда мустаҳкамланг.",
+            exit: "Чиқиш",
+            goToPractice: "Амалиётга ўтиш",
+            doCombination: "Комбинацияни бажаринг",
+            escToExit: "Esc — чиқиш",
+            finishedTitle: "Ажойиб натижа!",
+            finishedDesc: (score, total) => `${total} тадан ${score} та хоткей мустаҳкамланди`,
+            repeat: "Яна бир бор такрорлаш",
+            errorNoTopic: "Аввал дастур номини киритинг",
+            errorFailed: "Хоткейлар рўйхатини олиб бўлмади. Мавзуни бошқача ёзиб кўринг ёки кейинроқ қайта уриниб кўринг",
+            defaultBaseName: null
         }
     };
 
@@ -391,17 +429,7 @@
         fontBigger: { icon: 'fontSize', color: 'yellow' },
         allCaps: { icon: 'caps', color: 'green' },
         newTab: { icon: 'tab', color: 'orange' },
-        newFile: { icon: 'filePlus', color: 'cyan' },
-        // Excel icons
-        autoSum: { icon: 'zap', color: 'green' },
-        showFormulas: { icon: 'search', color: 'cyan' },
-        fillDown: { icon: 'copy', color: 'blue' },
-        insertDate: { icon: 'folder', color: 'purple' },
-        insertTime: { icon: 'folder', color: 'purple' },
-        formatCells: { icon: 'tab', color: 'orange' },
-        absoluteRef: { icon: 'link', color: 'pink' },
-        editCell: { icon: 'select', color: 'yellow' },
-        expandFormulaBar: { icon: 'fontSize', color: 'cyan' }
+        newFile: { icon: 'filePlus', color: 'cyan' }
     };
 
     const HK_COLOR_CYCLE = ['purple', 'cyan', 'blue', 'orange', 'pink', 'green'];
@@ -867,7 +895,23 @@
             const controller = new AbortController();
             abortRef.current = controller;
 
-            const prompt = `Ты — техническая справочная система, а не творческий помощник. Твоя единственная задача — точно воспроизвести ОФИЦИАЛЬНО ЗАДОКУМЕНТИРОВАННЫЕ горячие клавиши программы "${cleanTopic}", без каких-либо фантазий, догадок или "правдоподобных" комбинаций. Верни 10 горячих клавиш (сочетания могут использовать Ctrl, Cmd, Alt, Shift или быть отдельными кнопками вроде F2/F4) для программы "${cleanTopic}". СТРОГИЕ ПРАВИЛА (нарушение недопустимо): 1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${cleanTopic}". 2. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие на ${AI_LANG_HINT[lang]}. 3. Поле "key" — ТОЛЬКО ОДНА строчная английская буква, цифра или название клавиши (например "f4", "=", "enter"). 4. Не повторяй одну и ту же комбинацию дважды. 5. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива. Формат строго такой: [{"desc": "Описание действия", "key": "c", "shift": false, "ctrl": true, "alt": false, "visual": "Ctrl + C"}, {"desc": "Автосумма", "key": "=", "shift": false, "ctrl": false, "alt": true, "visual": "Alt + ="}]`;
+            const prompt = `Ты — техническая справочная система, а не творческий помощник. Твоя единственная задача — точно воспроизвести ОФИЦИАЛЬНО ЗАДОКУМЕНТИРОВАННЫЕ горячие клавиши программы "${cleanTopic}", без каких-либо фантазий, догадок или "правдоподобных" комбинаций.
+
+Верни 10 горячих клавиш (с Ctrl или Cmd, некоторые могут дополнительно включать Shift) для программы "${cleanTopic}".
+
+СТРОГИЕ ПРАВИЛА (нарушение недопустимо):
+1. НЕ ПРИДУМЫВАЙ комбинации. Используй только те горячие клавиши, которые реально существуют и задокументированы в официальной справке/документации программы "${cleanTopic}". Если не уверен, что комбинация существует именно в этой программе — не включай её.
+2. Если для "${cleanTopic}" в принципе не существует 10 разных официальных комбинаций с Ctrl/Cmd — верни столько, сколько действительно существует (не меньше 5, не выдумывая недостающие).
+3. Никакой отсебятины в описаниях: поле "desc" должно точно и нейтрально описывать действие, без выдуманных деталей. Напиши поле "desc" на ${AI_LANG_HINT[lang]}.
+4. Поле "key" — ТОЛЬКО ОДНА строчная английская буква или цифра (физическая клавиша, которая нажимается вместе с Ctrl, без символов вроде "!" или "(" — если нужна цифра, пиши саму цифру).
+5. Не повторяй одну и ту же комбинацию дважды.
+6. Верни ТОЛЬКО чистый валидный JSON-массив объектов. Без markdown, без пояснений, без текста до или после массива.
+
+Формат строго такой:
+[
+  {"desc": "Описание действия", "key": "c", "shift": false, "visual": "Ctrl + C"},
+  {"desc": "Сохранить как", "key": "s", "shift": true, "visual": "Ctrl + Shift + S"}
+]`;
 
             try {
                 const response = await fetch("https://gemini-proxy-lms.msleaderindustry.workers.dev", {
@@ -894,11 +938,9 @@
                     .filter(hk => hk && typeof hk.key === 'string' && hk.key.trim().length > 0 && typeof hk.desc === 'string')
                     .map(hk => ({
                         desc: hk.desc.trim(),
-                        key: hk.key.trim().toLowerCase(), // Разрешаем "f4", "=" и т.д.
+                        key: hk.key.trim().toLowerCase().slice(0, 1),
                         shift: !!hk.shift,
-                        ctrl: hk.ctrl !== false, // По умолчанию считаем, что нужен Ctrl
-                        alt: !!hk.alt,
-                        visual: typeof hk.visual === 'string' && hk.visual.trim() ? hk.visual : `${hk.ctrl !== false ? 'Ctrl + ' : ''}${hk.alt ? 'Alt + ' : ''}${hk.shift ? 'Shift + ' : ''}${hk.key.trim().toUpperCase()}`
+                        visual: typeof hk.visual === 'string' && hk.visual.trim() ? hk.visual : `Ctrl${hk.shift ? ' + Shift' : ''} + ${hk.key.trim().toUpperCase()}`
                     }));
 
                 if (validated.length === 0) throw new Error("No valid hotkeys after validation");
@@ -941,7 +983,6 @@
             setGenError(null);
         };
 
-        // ОСНОВНОЙ ОБРАБОТЧИК КЛАВИАТУРЫ
         useEffect(() => {
             if (phase !== 'practice' || isFinished || tasks.length === 0) return;
 
@@ -953,25 +994,13 @@
                     leaveGame();
                     return;
                 }
-                
-                // Игнорируем нажатие только самих модификаторов, ждём конечную букву/цифру
                 if (e.key === "Control" || e.key === "Meta" || e.key === "Shift" || e.key === "Alt") return;
 
+                const isCtrlOrCmd = e.ctrlKey || e.metaKey;
                 const currentTask = tasks[currentIndex];
                 if (!currentTask) return;
 
-                // Считываем, что именно ожидается от пользователя
-                const reqCtrl = currentTask.ctrl !== false;
-                const reqAlt = !!currentTask.alt;
-                const reqShift = !!currentTask.shift;
-
-                // Считываем, что реально зажато сейчас
-                const isCtrlPressed = e.ctrlKey || e.metaKey;
-                const isAltPressed = e.altKey;
-                const isShiftPressed = e.shiftKey;
-
-                // Если модификаторы Ctrl или Alt не совпадают с ожидаемыми — сразу бракуем попытку
-                if (isCtrlPressed !== reqCtrl || isAltPressed !== reqAlt) {
+                if (!isCtrlOrCmd) {
                     setShake(true);
                     setTimeout(() => setShake(false), 300);
                     return;
@@ -979,12 +1008,14 @@
 
                 e.preventDefault();
 
+                const requiresShift = !!currentTask.shift;
+                const isShiftPressed = e.shiftKey;
                 const pressedKey = e.key.toLowerCase();
                 const expectedKey = currentTask.key.toLowerCase();
                 const expectedShiftedKey = SHIFT_SYMBOL_MAP[expectedKey] || expectedKey;
                 const keyMatches = pressedKey === expectedKey || pressedKey === expectedShiftedKey;
 
-                if (isShiftPressed === reqShift && keyMatches) {
+                if (isShiftPressed === requiresShift && keyMatches) {
                     setSuccessPulse(true);
                     setScore(prev => prev + 1);
                     setTimeout(() => setSuccessPulse(false), 200);
@@ -1265,20 +1296,9 @@
                             </motion.div>
 
                             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-                                
-                                {/* ДИНАМИЧЕСКИЙ РЕНДЕР МОДИФИКАТОРОВ */}
-                                {currentTask.ctrl !== false && (
-                                    <>
-                                        <KeyCap>Ctrl</KeyCap>
-                                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</span>
-                                    </>
-                                )}
-                                {currentTask.alt && (
-                                    <>
-                                        <KeyCap>Alt</KeyCap>
-                                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</span>
-                                    </>
-                                )}
+                                <KeyCap>Ctrl</KeyCap>
+                                <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-sec)', opacity: 0.5 }}>+</span>
+
                                 {currentTask.shift && (
                                     <>
                                         <KeyCap>Shift</KeyCap>
