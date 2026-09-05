@@ -1,5 +1,6 @@
 // --- 13_landing.js ---
 const { useState, useEffect, useRef } = React;
+const { motion, AnimatePresence } = window.Motion;
 
 // Реальные модули платформы (соответствуют файлам проекта) —
 // вместо выдуманных цифр показываем то, что действительно есть.
@@ -88,11 +89,80 @@ const CAPABILITIES = [
 
 const BAR_HEIGHTS = [35, 60, 42, 82, 52, 95, 68];
 
+const LEGAL_TEXTS = {
+    privacy: {
+        title: "Политика конфиденциальности",
+        content: "Ваша конфиденциальность очень важна для нас. Мы собираем минимально необходимое количество данных (email, имя, статистика обучения) исключительно для обеспечения работы платформы Ultimate LMS. Мы не передаем ваши данные третьим лицам. Использование платформы подразумевает ваше согласие на обработку этих данных."
+    },
+    terms: {
+        title: "Условия использования",
+        content: "Платформа Ultimate LMS предоставляется «как есть». Администрация оставляет за собой право блокировать пользователей за нарушение правил (читы, передача аккаунта, оскорбления в чате). Копирование материалов платформы без разрешения запрещено. Приятного обучения!"
+    }
+};
+
+const LegalModal = ({ type, onClose }) => {
+    if (!type) return null;
+    const data = LEGAL_TEXTS[type];
+
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999, 
+                background: 'rgba(5, 3, 8, 0.8)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+            }}
+        >
+            <motion.div 
+                initial={{ scale: 0.9, y: 20 }} 
+                animate={{ scale: 1, y: 0 }} 
+                onClick={(e) => e.stopPropagation()}
+                className="glass-panel"
+                style={{
+                    background: 'var(--bg-panel)', border: '1px solid var(--glass-border)',
+                    borderRadius: '24px', padding: '40px', maxWidth: '600px', width: '100%',
+                    position: 'relative', boxShadow: '0 25px 50px -12px rgba(168,85,247,0.25)'
+                }}
+            >
+                <button 
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute', top: '20px', right: '20px', 
+                        background: 'transparent', border: 'none', color: 'var(--text-sec)',
+                        fontSize: '24px', cursor: 'pointer', display: 'flex'
+                    }}
+                >
+                    ✕
+                </button>
+                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-main)', fontSize: '24px', fontWeight: 900 }}>
+                    {data.title}
+                </h2>
+                <p style={{ color: 'var(--text-sec)', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
+                    {data.content}
+                </p>
+                <button 
+                    onClick={onClose} 
+                    style={{ 
+                        width: '100%', marginTop: '30px', background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)', 
+                        color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' 
+                    }}
+                >
+                    Понятно
+                </button>
+            </motion.div>
+        </motion.div>
+    );
+};
+
 const LandingView = ({ onLogin }) => {
     const [heroIn, setHeroIn] = useState(false);
     const [barsIn, setBarsIn] = useState(false);
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
     const [aboutVisible, setAboutVisible] = useState(false);
+    const [activeLegalModal, setActiveLegalModal] = useState(null);
     const laptopWrapRef = useRef(null);
     const aboutRef = useRef(null);
 
@@ -396,11 +466,17 @@ const LandingView = ({ onLogin }) => {
                     </div>
                     <div className="copyright">© 2026 Ultimate LMS Platform. Все права защищены.</div>
                     <div className="footer-links">
-                        <a href="#">Политика конфиденциальности</a>
-                        <a href="#">Условия использования</a>
+                        <span onClick={() => setActiveLegalModal('privacy')} style={{ cursor: 'pointer', color: 'var(--text-sec)' }}>Политика конфиденциальности</span>
+                        <span onClick={() => setActiveLegalModal('terms')} style={{ cursor: 'pointer', color: 'var(--text-sec)' }}>Условия использования</span>
                     </div>
                 </div>
             </footer>
+            
+            <AnimatePresence>
+                {activeLegalModal && (
+                    <LegalModal type={activeLegalModal} onClose={() => setActiveLegalModal(null)} />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
