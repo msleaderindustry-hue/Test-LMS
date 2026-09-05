@@ -39,10 +39,9 @@
         </svg>
     );
 
-    // ЗДЕСЬ ДОБАВЛЕН ИИ АССИСТЕНТ
     const AVAILABLE_MODULES = [
         { id: 'chat', icon: 'chat', label: 'Чат', color: '#06b6d4' },
-        { id: 'ai_chat', icon: 'sparkle', label: 'ИИ Ассистент', color: '#a855f7' }, // <-- НОВЫЙ МОДУЛЬ
+        { id: 'ai_chat', icon: 'sparkle', label: 'ИИ Ассистент', color: '#a855f7' },
         { id: 'typing', icon: 'keyboard', label: 'Печать', color: '#818cf8' },
         { id: 'hotkeys', icon: 'zap', label: 'Хоткеи', color: '#fbbf24' },
         { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
@@ -51,9 +50,11 @@
         { id: 'stats', icon: 'user', label: 'Статистика', color: '#f59e0b' } 
     ];
 
+    // ИСПРАВЛЕНИЕ: Добавлена вкладка "Статистика"
     const TABS = [
         { id: 'control', icon: 'user', label: 'Управление', color: '#38bdf8' },
         { id: 'settings', icon: 'settings', label: 'Настройки', color: '#a855f7' },
+        { id: 'stats', icon: 'barChart', label: 'Статистика', color: '#f59e0b' },
         { id: 'tests', icon: 'fileText', label: 'Тесты', color: '#10b981' },
     ];
 
@@ -270,8 +271,9 @@
                                 </div>
                             </div>
                         )}
-                        
-                        {activeTab === 'tests' && (
+
+                        {/* ИСПРАВЛЕНИЕ: Вынесли статистику в отдельную вкладку 'stats' */}
+                        {activeTab === 'stats' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                                     <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
@@ -305,7 +307,7 @@
                                 </div>
                             </div>
                         )}
-
+                        
                         {activeTab === 'tests' && (
                             <div>
                                 {testCount === 0 ? (
