@@ -1,8 +1,9 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
+    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
 
-    const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp }) => {
+    // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
+    const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
         const [isResultSaved, setIsResultSaved] = useState(false);
@@ -186,6 +187,40 @@
 
         return (
             <AnimatePresence mode="wait">
+                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
+                {view === 'menu' && (
+                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+                        <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+                        
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                            {teacherTests?.map(test => (
+                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                                        <span style={{marginRight:8}}>☁️</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                                </div>
+                            ))}
+
+                            {sets?.map(name => (
+                                <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                                        <span style={{marginRight:8}}>📂</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                            <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
+                        </div>
+                        <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+                    </motion.div>
+                )}
+
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
                         <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
