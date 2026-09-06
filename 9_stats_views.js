@@ -565,7 +565,9 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                         {u.nickname || u.email || 'Аноним'}
                                                         {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px', flexShrink: 0 }}>ВЫ</span>}
                                                     </div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600 }}>{u.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {u.role === 'admin' ? 'Преподаватель' : 'Ученик'}
+                                                    </div>
                                                 </div>
                                                 
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, marginLeft: '5px' }}>
