@@ -2,32 +2,27 @@
 (function () {
     const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
 
-    // ==================== ИКОНКИ (заменяют эмодзи) ====================
-    const Icon = ({ children, size = 18, style, ...props }) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-             style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }} {...props}>
-            {children}
-        </svg>
-    );
-    const IconPlus = (p) => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></Icon>;
-    const IconArrowLeft = (p) => <Icon {...p}><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></Icon>;
-    const IconTrash = (p) => <Icon {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></Icon>;
-    const IconHome = (p) => <Icon {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></Icon>;
-    const IconPlay = (p) => <Icon {...p}><polygon points="5 3 19 12 5 21 5 3" /></Icon>;
-    const IconSave = (p) => <Icon {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></Icon>;
-    const IconCheckCircle = (p) => <Icon {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></Icon>;
-    const IconRotateCcw = (p) => <Icon {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><polyline points="3 3 3 8 8 8" /></Icon>;
-    const IconAlertTriangle = (p) => <Icon {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></Icon>;
-    const IconPrinter = (p) => <Icon {...p}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></Icon>;
-    const IconUpload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></Icon>;
-    const IconFolder = (p) => <Icon {...p}><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /></Icon>;
-    const IconCloud = (p) => <Icon {...p}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></Icon>;
-    const IconClock = (p) => <Icon {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></Icon>;
-    const IconHash = (p) => <Icon {...p}><line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" /></Icon>;
-    const IconSliders = (p) => <Icon {...p}><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></Icon>;
+    // --- НАБОР SVG ИКОНОК (ВМЕСТО ЭМОДЗИ) ---
+    const Icons = {
+        Cloud: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>,
+        Folder: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>,
+        Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/></svg>,
+        Plus: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5v14"/></svg>,
+        Print: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><path d="M6 14h12v8H6z"/></svg>,
+        Import: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>,
+        Play: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+        Settings: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+        Clock: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+        List: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+        Save: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+        Eye: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+        Repeat: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>,
+        Home: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+        Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+        ArrowLeft: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+        CheckCircle: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    };
 
-    // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
@@ -43,15 +38,15 @@
             const handleVisibility = () => { if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp); };
             const handleBlur = () => { if (typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)", fp); };
             const handlePaste = (e) => { if (typeof captureViolation === 'function') captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", fp, [{ name: "Содержимое", value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\`` }]); };
-
-            window.addEventListener('visibilitychange', handleVisibility);
-            window.addEventListener('blur', handleBlur);
-            window.addEventListener('paste', handlePaste);
-
-            return () => {
-                window.removeEventListener('visibilitychange', handleVisibility);
-                window.removeEventListener('blur', handleBlur);
-                window.removeEventListener('paste', handlePaste);
+            
+            window.addEventListener('visibilitychange', handleVisibility); 
+            window.addEventListener('blur', handleBlur); 
+            window.addEventListener('paste', handlePaste); 
+            
+            return () => { 
+                window.removeEventListener('visibilitychange', handleVisibility); 
+                window.removeEventListener('blur', handleBlur); 
+                window.removeEventListener('paste', handlePaste); 
             };
         }, [view, fp]);
 
@@ -68,24 +63,24 @@
 
         const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0' + sec : sec}`; };
 
-        // --- ЛОГИКА ТЕСТА (без изменений) ---
+        // --- ЛОГИКА ТЕСТА ---
         const importJSON = (e) => {
             const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-            reader.onload = ev => {
-                try {
-                    const data = JSON.parse(ev.target.result);
-                    const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex }));
-                    setTests(normalized);
-                    localStorage.setItem('tests_' + currentSet, JSON.stringify(normalized));
-                    alert(`✅ Импортировано: ${normalized.length}`);
-                } catch {
-                    alert('Ошибка JSON');
-                }
+            reader.onload = ev => { 
+                try { 
+                    const data = JSON.parse(ev.target.result); 
+                    const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex })); 
+                    setTests(normalized); 
+                    localStorage.setItem('tests_' + currentSet, JSON.stringify(normalized)); 
+                    alert(`Успешно импортировано вопросов: ${normalized.length}`); 
+                } catch { 
+                    alert('Ошибка чтения JSON файла.'); 
+                } 
             };
             reader.readAsText(file);
         };
 
-        const startTest = () => { if (tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
+        const startTest = () => { if (tests.length === 0) return alert('В этом тесте пока нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
 
         const launchTestWithTimer = async () => {
             const mins = parseInt(customTime) || 20;
@@ -99,27 +94,27 @@
                 varsWithFlag = shuffleArray(varsWithFlag);
                 return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
             });
-            setIsResultSaved(false); setTimeLeft(mins * 60);
-            setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 });
+            setIsResultSaved(false); setTimeLeft(mins * 60); 
+            setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
             setView('test');
         };
 
         const handleAnswer = (variantIdx) => {
-            if (testSession.answers[testSession.currentIdx] !== null) return;
+            if (testSession.answers[testSession.currentIdx] !== null) return; 
             const newAnswers = [...testSession.answers]; newAnswers[testSession.currentIdx] = variantIdx;
             setTestSession(prev => ({ ...prev, answers: newAnswers }));
             setIsAnimating(true);
-            setTimeout(() => {
+            setTimeout(() => { 
                 if (testSession.currentIdx < testSession.questions.length - 1) { setTestSession(prev => ({ ...prev, currentIdx: prev.currentIdx + 1 })); }
                 setIsAnimating(false);
             }, 700);
         };
 
         const handleNavClick = (i) => {
-            if (isAnimating) return;
+            if (isAnimating) return; 
             if (i === testSession.currentIdx) return;
             setIsAnimating(true); setTestSession(p => ({ ...p, currentIdx: i }));
-            setTimeout(() => setIsAnimating(false), 350);
+            setTimeout(() => setIsAnimating(false), 350); 
         };
 
         const finishTest = () => {
@@ -133,12 +128,12 @@
         useEffect(() => {
             if (view !== 'test') return;
             const handleKeyDown = (e) => {
-                if (isAnimating) return;
+                if (isAnimating) return; 
                 const { currentIdx, questions, answers } = testSession;
                 if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
                 else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
                 else if (e.key >= '1' && e.key <= '9') {
-                    const variantIndex = parseInt(e.key) - 1;
+                    const variantIndex = parseInt(e.key) - 1; 
                     if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
                         if (answers[currentIdx] === null) handleAnswer(variantIndex);
                     }
@@ -149,7 +144,7 @@
 
         const restartMistakes = async () => {
             const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-            if (wrongQuestionsRaw.length === 0) return;
+            if (wrongQuestionsRaw.length === 0) return; 
             const reShuffledQuestions = wrongQuestionsRaw.map(q => {
                const newVars = shuffleArray([...q.variants]);
                const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
@@ -161,16 +156,16 @@
         };
 
         const saveResult = async (name) => {
-            if (!name.trim()) return alert('Введите имя!');
+            if (!name.trim()) return alert('Пожалуйста, введите ваше имя.');
             const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
-
+            
             const failedQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
             const failedQuestions = failedQuestionsRaw.map(q => {
                 const originalIndex = testSession.questions.indexOf(q);
                 const userAnsIdx = testSession.answers[originalIndex];
                 return {
                     question: q.question.replace(/<[^>]+>/g, ''),
-                    userAnsText: userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил",
+                    userAnsText: userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропущено",
                     correctAnsText: q.variants[q.correctIndex].text
                 };
             });
@@ -178,9 +173,9 @@
             if (typeof sendTestResultToDiscord === 'function') {
                 sendTestResultToDiscord(scoreData, failedQuestions, user ? user.email : "Неизвестно", fp);
             }
-
+            
             const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
-
+            
             try {
                 if (user && window.db) {
                     const userDoc = await window.db.collection('users').doc(user.uid).get();
@@ -191,10 +186,10 @@
             } catch (e) {
                 console.error("Ошибка сохранения в Firebase", e);
             }
-
-            const newHistory = [...history, newRecord];
-            setHistory(newHistory);
-            localStorage.setItem('test_history_v1', JSON.stringify(newHistory));
+            
+            const newHistory = [...history, newRecord]; 
+            setHistory(newHistory); 
+            localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
             setIsResultSaved(true);
         };
 
@@ -206,137 +201,116 @@
               html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if (t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
               t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
             });
-            area.innerHTML = html;
+            area.innerHTML = html; 
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
-        // --- Вспомогательные хэндлеры для удобства (Enter для отправки) ---
-        const handleAddSetKeyDown = (e) => {
-            if (e.key === 'Enter') { const el = document.getElementById('newSetName'); addSet(el.value); el.value = ''; }
-        };
-        const handleSaveNameKeyDown = (e) => {
-            if (e.key === 'Enter') saveResult(document.getElementById('sName').value);
-        };
-
-        // Цвет/пульс таймера в зависимости от оставшегося времени
-        const timerUrgent = timeLeft <= 30;
-        const timerWarn = timeLeft > 30 && timeLeft <= 120;
-        const timerColor = timerUrgent ? '#f56565' : timerWarn ? '#f6ad55' : 'inherit';
-
+        // --- ОБЩИЕ СТИЛИ ДЛЯ ИНТЕРФЕЙСА ---
+        const btnIconStyle = { display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' };
+        
         return (
             <AnimatePresence mode="wait">
-                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
-                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-                        <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+                    <motion.div key="menu" initial={{opacity:0, y: 10}} animate={{opacity:1, y: 0}} exit={{opacity:0, y: -10}} className="glass-panel" style={{width:'100%', maxWidth:'800px', padding: '35px'}}>
+                        <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 35px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+                        
+                        <div style={{maxHeight: 350, overflowY:'auto', margin:'0 0 25px 0', paddingRight: '8px'}}>
+                            {/* Карточки тестов от учителя */}
+                            {teacherTests?.map(test => (
+                                <div key={test.id} style={{display:'flex', gap: 12, marginBottom: 12}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'12px 20px', minWidth: 0, height: 'auto', minHeight: '58px', borderRadius: '12px', border: '1px solid rgba(0, 198, 255, 0.4)', background: 'rgba(0, 198, 255, 0.05)', transition: 'all 0.2s' }}>
+                                        <div style={btnIconStyle}>
+                                            <span style={{ color: '#00c6ff' }}><Icons.Cloud /></span>
+                                            <span style={{wordBreak:'break-word', lineHeight:'1.4', color: '#00c6ff', fontWeight: 600, fontSize: '15px'}}>{test.title}</span>
+                                        </div>
+                                    </Button>
+                                    <Button variant="red" style={{width: '58px', height: 'auto', padding: 0, flexShrink: 0, borderRadius: '12px'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
+                                        <Icons.Trash />
+                                    </Button>
+                                </div>
+                            ))}
 
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
-                            <AnimatePresence initial={false}>
-                                {teacherTests?.map((test, i) => (
-                                    <motion.div key={test.id} layout
-                                        initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16, scale: 0.9 }}
-                                        transition={{ duration: 0.25, delay: i * 0.03 }}
-                                        style={{display:'flex', gap:10, marginBottom:10}}>
-                                        <motion.div style={{flex:1}} whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}>
-                                            <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
-                                                <IconCloud size={17} style={{marginRight:10, color:'#00c6ff', flexShrink:0}} />
-                                                <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
-                                            </Button>
-                                        </motion.div>
-                                        <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}>
-                                            <Button variant="red" aria-label="Удалить" style={{width:52, height:'100%', minHeight:54, padding:0, display:'flex', alignItems:'center', justifyContent:'center'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
-                                                <IconTrash size={17} />
-                                            </Button>
-                                        </motion.div>
-                                    </motion.div>
-                                ))}
-
-                                {sets?.map((name, i) => (
-                                    <motion.div key={name} layout
-                                        initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16, scale: 0.9 }}
-                                        transition={{ duration: 0.25, delay: i * 0.03 }}
-                                        style={{display:'flex', gap:10, marginBottom:10}}>
-                                        <motion.div style={{flex:1}} whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}>
-                                            <Button variant="muted" onClick={() => openSet(name)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
-                                                <IconFolder size={17} style={{marginRight:10, flexShrink:0, opacity:0.85}} />
-                                                <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
-                                            </Button>
-                                        </motion.div>
-                                        <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}>
-                                            <Button variant="red" aria-label="Удалить" style={{width:52, height:'100%', minHeight:54, padding:0, display:'flex', alignItems:'center', justifyContent:'center'}} onClick={() => deleteSet(name)}>
-                                                <IconTrash size={17} />
-                                            </Button>
-                                        </motion.div>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
+                            {/* Карточки локальных тестов */}
+                            {sets?.map(name => (
+                                <div key={name} style={{display:'flex', gap: 12, marginBottom: 12}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'12px 20px', minWidth: 0, height: 'auto', minHeight: '58px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                                        <div style={btnIconStyle}>
+                                            <span style={{ color: 'var(--text-sec)' }}><Icons.Folder /></span>
+                                            <span style={{wordBreak:'break-word', lineHeight:'1.4', fontWeight: 500, fontSize: '15px'}}>{name}</span>
+                                        </div>
+                                    </Button>
+                                    <Button variant="red" style={{width: '58px', height: 'auto', padding: 0, flexShrink: 0, borderRadius: '12px', opacity: 0.8}} onClick={() => deleteSet(name)}>
+                                        <Icons.Trash />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
-                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
-                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} onKeyDown={handleAddSetKeyDown} />
-                            <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}>
-                                <Button style={{width:52, height:'100%', padding:0, margin:0, display:'flex', alignItems:'center', justifyContent:'center'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
-                                    <IconPlus size={19} />
-                                </Button>
-                            </motion.div>
+                        
+                        <div style={{display:'flex', gap: 12, alignItems: 'center', background: 'var(--bg-card)', padding: '8px', borderRadius: '16px', border: '1px solid var(--glass-border)'}}>
+                            <Input id="newSetName" placeholder="Название нового теста..." style={{margin:0, flex:1, border: 'none', background: 'transparent', boxShadow: 'none'}} />
+                            <Button style={{width: '46px', height: '46px', padding:0, margin:0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
+                                <Icons.Plus />
+                            </Button>
                         </div>
-                        <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+                        <div style={{marginTop: 35, textAlign: 'center', fontSize: 13, color: 'var(--text-sec)', opacity: 0.6, fontWeight: 500, letterSpacing: '0.5px'}}>© 2026 Ultimate LMS Platform.</div>
                     </motion.div>
                 )}
 
                 {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
-                        <motion.div whileHover={{ x: -3 }} style={{display:'inline-block'}}>
-                            <Button variant="muted" style={{width:'auto', padding:'0 20px', height:40, minHeight:40, fontSize:13, display:'flex', alignItems:'center', gap:6}} onClick={() => setView('menu')}>
-                                <IconArrowLeft size={15} /> Назад
+                    <motion.div key="set" initial={{opacity:0, scale: 0.98}} animate={{opacity:1, scale: 1}} exit={{opacity:0, scale: 0.98}} className="glass-panel" style={{width:'100%', maxWidth:'600px', padding: '40px'}}>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px'}}>
+                            <Button variant="muted" style={{width:'auto', padding:'0 20px', height: 44, borderRadius: '12px', fontSize: 14, ...btnIconStyle}} onClick={() => setView('menu')}>
+                                <Icons.ArrowLeft /> Назад
                             </Button>
-                        </motion.div>
-                        <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
-                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                <Button variant="primary" style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8}} onClick={handlePrint}>
-                                    <IconPrinter size={17} /> Печать
-                                </Button>
-                            </motion.div>
-                            <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="import-label"
-                                style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', gap:8, cursor:'pointer'}}>
-                                <IconUpload size={17} /> Импорт
-                                <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
-                            </motion.label>
+                            <span style={{padding: '6px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600}}>
+                                {tests.length} вопросов
+                            </span>
                         </div>
-                        <motion.div whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}>
-                            <Button onClick={startTest} style={{fontSize:18, height:60, width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
-                                <IconPlay size={22} /> НАЧАТЬ ТЕСТ
+                        
+                        <h2 style={{textAlign:'center', margin:'0 0 35px 0', fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px'}}>{currentSet}</h2>
+                        
+                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 16, marginBottom: 35, alignItems:'stretch'}}>
+                            <Button variant="muted" onClick={handlePrint} style={{borderRadius: '14px', height: '54px', border: '1px solid var(--glass-border)', ...btnIconStyle}}>
+                                <Icons.Print /> Печать
                             </Button>
-                        </motion.div>
-                        <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+                            <label className="import-label" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white', borderRadius: '14px', cursor: 'pointer', height: '54px', fontWeight: 600, transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 15px rgba(0, 242, 254, 0.3)'}}>
+                                <Icons.Import /> Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                            </label>
+                        </div>
+                        
+                        <Button onClick={startTest} style={{fontSize: 16, fontWeight: 700, height: 65, borderRadius: '16px', width: '100%', ...btnIconStyle}}>
+                            <Icons.Play /> НАЧАТЬ ТЕСТ
+                        </Button>
                     </motion.div>
                 )}
 
                 {view === 'timer_setup' && (
-                    <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.95}} transition={{ type:'spring', stiffness:220, damping:20 }} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
-                        <h2 style={{marginTop:0, display:'flex', alignItems:'center', justifyContent:'center', gap:8}}>
-                            <IconSliders size={20} /> Параметры теста
-                        </h2>
-                        <div style={{marginBottom:15, textAlign:'left'}}>
-                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'flex', alignItems:'center', gap:6}}>
-                                <IconClock size={15} /> Время (минуты):
-                            </label>
-                            <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+                    <motion.div key="timer" initial={{scale:0.9, opacity: 0}} animate={{scale:1, opacity: 1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth: 450, padding: '40px'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px', justifyContent: 'center'}}>
+                            <span style={{color: 'var(--primary)', display: 'flex'}}><Icons.Settings /></span>
+                            <h2 style={{margin: 0, fontSize: 22, fontWeight: 700}}>Параметры теста</h2>
                         </div>
-                        <div style={{marginBottom:15, textAlign:'left'}}>
-                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'flex', alignItems:'center', gap:6}}>
-                                <IconHash size={15} /> Количество вопросов (Макс: {tests.length}):
+                        
+                        <div style={{marginBottom: 25}}>
+                            <label style={{fontSize: 14, fontWeight: 600, color: 'var(--text-sec)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <Icons.Clock /> Время на прохождение (мин):
                             </label>
-                            <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+                            <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize: 20, fontWeight: 700, height: '56px', borderRadius: '12px'}} />
                         </div>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20, width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8}}>
-                                <IconPlay size={18} /> Начать
+                        
+                        <div style={{marginBottom: 35}}>
+                            <label style={{fontSize: 14, fontWeight: 600, color: 'var(--text-sec)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <Icons.List /> Количество вопросов (Макс: {tests.length}):
+                            </label>
+                            <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize: 20, fontWeight: 700, height: '56px', borderRadius: '12px'}} />
+                        </div>
+                        
+                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px'}}>
+                            <Button variant="muted" onClick={() => setView('set_menu')} style={{borderRadius: '12px', height: '50px'}}>Отмена</Button>
+                            <Button variant="green" onClick={launchTestWithTimer} style={{borderRadius: '12px', height: '50px', ...btnIconStyle}}>
+                                Запуск <Icons.Play />
                             </Button>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button variant="muted" onClick={() => setView('set_menu')} style={{width:'100%'}}>Отмена</Button>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
 
@@ -348,93 +322,84 @@
                             </AnimatePresence>
                         </div>
                         <div className="sidebar-column">
-                            <div className="sidebar-content">
-                                <motion.div className="sidebar-timer"
-                                    animate={timerUrgent ? { scale: [1, 1.07, 1] } : { scale: 1 }}
-                                    transition={timerUrgent ? { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}
-                                    style={{ color: timerColor, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                                    <IconClock size={18} /> {formatTime(timeLeft)}
-                                </motion.div>
-                                <div className="nav-grid-wrapper">
+                            <div className="sidebar-content" style={{borderRadius: '20px', border: '1px solid var(--glass-border)', padding: '25px 20px'}}>
+                                <div className="sidebar-timer" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '24px', fontWeight: 800, marginBottom: '25px', color: timeLeft < 60 ? '#f56565' : 'inherit'}}>
+                                    <Icons.Clock /> {formatTime(timeLeft)}
+                                </div>
+                                <div className="nav-grid-wrapper" style={{marginBottom: '20px'}}>
                                     <div className="nav-grid-compact">
                                         {testSession.questions.map((_, i) => {
                                             let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
-                                            if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
-                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
+                                            if (i === testSession.currentIdx) { c = 'var(--primary)'; txt = 'white'; }
+                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#10b981' : '#ef4444'; txt = 'white'; }
                                             const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            return (
-                                                <motion.div key={i} className={itemClass}
-                                                    animate={{ backgroundColor: c, color: txt, scale: i === testSession.currentIdx ? 1.08 : 1 }}
-                                                    whileHover={!isAnimating ? { scale: 1.15 } : {}}
-                                                    whileTap={!isAnimating ? { scale: 0.92 } : {}}
-                                                    transition={{ duration: 0.22 }}
-                                                    onClick={() => handleNavClick(i)}>
-                                                    {i + 1}
-                                                </motion.div>
-                                            );
+                                            return (<div key={i} className={itemClass} style={{background:c, color:txt, borderRadius: '10px', fontWeight: 600}} onClick={() => handleNavClick(i)}>{i+1}</div>)
                                         })}
                                     </div>
                                 </div>
-                                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                    <Button variant="green" onClick={finishTest} style={{marginTop:10, width:'100%'}}>Завершить</Button>
-                                </motion.div>
+                                <Button variant="green" onClick={finishTest} style={{width: '100%', borderRadius: '14px', height: '54px', fontWeight: 600, ...btnIconStyle}}>
+                                    <Icons.Check /> Завершить
+                                </Button>
                             </div>
                         </div>
                     </motion.div>
                 )}
 
                 {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:5}}>{testSession.score / testSession.questions.length >= 0.5 ? 'Отлично!' : 'Результат'}</h2>
-                        <motion.h1 initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
-                            style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
-                            {Math.round(testSession.score / testSession.questions.length * 100)}%
-                        </motion.h1>
-                        <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
-                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                    <motion.div key="res" initial={{scale:0.95, opacity: 0}} animate={{scale:1, opacity: 1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500, padding: '45px 35px'}}>
+                        
+                        <div style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '60px', height: '60px', borderRadius: '50%', background: testSession.score / testSession.questions.length >= 0.5 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: testSession.score / testSession.questions.length >= 0.5 ? '#10b981' : '#ef4444', marginBottom: '20px'}}>
+                             {testSession.score / testSession.questions.length >= 0.5 ? <Icons.CheckCircle /> : <Icons.Settings />}
                         </div>
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
+
+                        <h2 style={{margin: '0 0 10px 0', fontSize: 24, fontWeight: 700}}>
+                            {testSession.score / testSession.questions.length >= 0.5 ? 'Отличный результат!' : 'Тест завершен'}
+                        </h2>
+                        
+                        <h1 style={{fontSize: 72, fontWeight: 800, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
+                            {Math.round(testSession.score / testSession.questions.length * 100)}%
+                        </h1>
+                        
+                        <div style={{padding:'16px', background:'var(--bg-card)', borderRadius:'16px', marginBottom:'30px', border: '1px solid var(--glass-border)'}}>
+                            <p style={{fontSize: 16, color:'var(--text-main)', margin:0, fontWeight:600}}>
+                                Правильно: <span style={{color: '#10b981', fontSize: 18}}>{testSession.score}</span> из {testSession.questions.length}
+                            </p>
+                        </div>
+                        
+                        <div style={{background:'rgba(255, 255, 255, 0.03)', padding: '25px', borderRadius: '20px', margin:'0 0 30px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
-                                    <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} onKeyDown={handleSaveNameKeyDown} />
-                                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                        <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)} style={{width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8}}>
-                                            <IconSave size={17} /> Сохранить
-                                        </Button>
-                                    </motion.div>
+                                    <Input id="sName" placeholder="Введите ваше имя для сохранения..." style={{textAlign:'center', marginTop:0, marginBottom:16, height: '50px', borderRadius: '12px'}} />
+                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)} style={{width: '100%', height: '50px', borderRadius: '12px', ...btnIconStyle}}>
+                                        <Icons.Save /> Сохранить результат
+                                    </Button>
                                 </>
                             ) : (
-                                <motion.div initial={{scale:0.8, opacity:0}} animate={{scale:1, opacity:1}} transition={{ type:'spring', stiffness:260, damping:16 }}
-                                    style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0', display:'flex', alignItems:'center', justifyContent:'center', gap:8}}>
-                                    <IconCheckCircle size={22} /> Результат успешно сохранен!
+                                <motion.div initial={{scale:0.9, opacity: 0}} animate={{scale:1, opacity: 1}} style={{color:'#10b981', fontWeight: 600, fontSize: 16, padding:'10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+                                    <Icons.CheckCircle /> Результат успешно сохранен!
                                 </motion.div>
                             )}
                         </div>
-                        <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                                <Button variant="orange" onClick={() => setView('review')} style={{display:'flex', alignItems:'center', gap:6}}>
-                                    <IconAlertTriangle size={16} /> Ошибки
-                                </Button>
-                            </motion.div>
+                        
+                        <div style={{display:'grid', gap: 12, gridTemplateColumns: testSession.score < testSession.questions.length ? '1fr 1fr' : '1fr', marginBottom: '12px'}}>
+                            <Button variant="orange" onClick={() => setView('review')} style={{borderRadius: '14px', height: '50px', ...btnIconStyle}}>
+                                <Icons.Eye /> Ошибки
+                            </Button>
                             {testSession.score < testSession.questions.length && (
-                                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                                    <Button variant="red" onClick={restartMistakes} style={{display:'flex', alignItems:'center', gap:6}}>
-                                        <IconRotateCcw size={16} /> Повторить ошибки
-                                    </Button>
-                                </motion.div>
-                            )}
-                            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                                <Button onClick={() => setView('menu')} style={{display:'flex', alignItems:'center', gap:6}}>
-                                    <IconHome size={16} /> Меню
+                                <Button variant="red" onClick={restartMistakes} style={{borderRadius: '14px', height: '50px', ...btnIconStyle}}>
+                                    <Icons.Repeat /> Повторить
                                 </Button>
-                            </motion.div>
+                            )}
                         </div>
+                        <Button variant="muted" onClick={() => setView('menu')} style={{width: '100%', borderRadius: '14px', height: '50px', border: '1px solid var(--glass-border)', ...btnIconStyle}}>
+                            <Icons.Home /> На главную
+                        </Button>
                     </motion.div>
                 )}
 
                 {view === 'review' && (
-                    <motion.div key="review" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-                        <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={() => setView('menu')} />
+                    <motion.div key="review" initial={{opacity:0, y: 15}} animate={{opacity:1, y: 0}} exit={{opacity:0, y: -15}}>
+                        <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={() => setView('result')} />
                     </motion.div>
                 )}
             </AnimatePresence>
