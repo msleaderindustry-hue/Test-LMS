@@ -1,6 +1,6 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
+    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
     // ============================================================
     // ИКОНКИ (инлайн SVG, без внешних зависимостей — иконки вместо эмодзи)
@@ -35,7 +35,6 @@
         const [customTime, setCustomTime] = useState('20');
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
-        const fileInputRef = useRef(null);
 
         // --- АНТИЧИТ ---
         useEffect(() => {
@@ -83,7 +82,7 @@
                     alert('Ошибка JSON');
                 } finally {
                     // сбрасываем value, чтобы повторный импорт того же файла тоже сработал
-                    if (fileInputRef.current) fileInputRef.current.value = '';
+                    if (e.target) e.target.value = '';
                 }
             };
             reader.readAsText(file);
@@ -287,7 +286,7 @@
                                 </Button>
                                 <label className="import-label" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
                                     <IconUpload size={17} /> Импорт
-                                    <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".json" onChange={importJSON} />
+                                    <input type="file" style={{ display: 'none' }} accept=".json" onChange={importJSON} />
                                 </label>
                             </div>
                         </motion.div>
