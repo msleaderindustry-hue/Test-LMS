@@ -507,7 +507,9 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {/* ==================== ГЛОБАЛЬНЫЙ РЕЙТИНГ ==================== */}
                     {activeTab === 'leaderboard' && (
                         <motion.div key="t-leaderboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px', justifyContent: 'center' }}>
+                            
+                            {/* ИСПРАВЛЕНО: Кнопки фильтра теперь выстраиваются в горизонтальную линию со скроллом, а не в пирамиду */}
+                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px' }}>
                                 {[
                                     {id: 'excel', label: 'Excel XP', icon: 'excel'}, 
                                     {id: 'typing', label: 'Печать WPM', icon: 'typing'}, 
@@ -522,7 +524,8 @@ const StatsView = ({ history, setHistory, userData }) => {
                                         color: lbCategory === cat.id ? '#fff' : 'var(--text-sec)', 
                                         fontWeight: 800, fontSize: '12.5px', cursor: 'pointer',
                                         boxShadow: lbCategory === cat.id ? '0 4px 12px rgba(245, 158, 11, 0.4)' : 'none', 
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        flexShrink: 0
                                     }}>
                                         <StatIcon name={cat.icon} size={14} color={lbCategory === cat.id ? '#fff' : 'var(--text-sec)'} />
                                         {cat.label}
@@ -565,6 +568,8 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                         {u.nickname || u.email || 'Аноним'}
                                                         {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px', flexShrink: 0 }}>ВЫ</span>}
                                                     </div>
+                                                    
+                                                    {/* ИСПРАВЛЕНО: Добавлено скрытие переполнения длинных ролей */}
                                                     <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {u.role === 'admin' ? 'Преподаватель' : 'Ученик'}
                                                     </div>
