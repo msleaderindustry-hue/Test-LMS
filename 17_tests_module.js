@@ -185,6 +185,12 @@
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
+        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
+        const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
+        const circleRadius = 80;
+        const circleCircumference = 2 * Math.PI * circleRadius;
+        const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
+
         return (
             <AnimatePresence mode="wait">
                 {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
@@ -279,15 +285,43 @@
                     </motion.div>
                 )}
 
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:5}}>{testSession.score / testSession.questions.length >= 0.5 ? 'Отлично!' : 'Результат'}</h2>
-                        <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
-                            {Math.round(testSession.score / testSession.questions.length * 100)}%
-                        </h1>
-                        <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
+                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
+                        
+                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
+                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                                {/* Серый/полупрозрачный фоновый круг */}
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="14" />
+                                
+                                {/* Анимированный яркий круг (прогресс) */}
+                                <motion.circle
+                                    cx="100"
+                                    cy="100"
+                                    r={circleRadius}
+                                    fill="none"
+                                    stroke="#00f2fe" /* Яркий цвет, похожий на скриншот */
+                                    strokeWidth="14"
+                                    strokeLinecap="round"
+                                    strokeDasharray={circleCircumference}
+                                    initial={{ strokeDashoffset: circleCircumference }}
+                                    animate={{ strokeDashoffset: circleStrokeDashoffset }}
+                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                                />
+                            </svg>
+                            
+                            {/* Текст внутри кольца */}
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'white' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
+                            </div>
+                        </div>
+
+                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
+                        
                         <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
