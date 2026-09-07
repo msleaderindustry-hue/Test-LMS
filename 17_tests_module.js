@@ -185,21 +185,15 @@
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
-        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА (РЕЗУЛЬТАТ) ---
+        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
         const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
         const circleRadius = 80;
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
 
-        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ТАЙМЕРА ---
-        const totalTimeForTimer = (parseInt(customTime) || 20) * 60;
-        const timerPercent = totalTimeForTimer > 0 ? (timeLeft / totalTimeForTimer) * 100 : 0;
-        const timerRadius = 60;
-        const timerCircumference = 2 * Math.PI * timerRadius;
-        const timerStrokeDashoffset = timerCircumference - (timerPercent / 100) * timerCircumference;
-
         return (
             <AnimatePresence mode="wait">
+                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
@@ -273,86 +267,15 @@
                         </div>
                         <div className="sidebar-column">
                             <div className="sidebar-content">
-                                
-                                {/* КРУГОВОЙ ТАЙМЕР СО СТЕКЛЯННЫМ ЭФФЕКТОМ */}
-                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px' }}>
-                                    <div style={{ position: 'relative', width: '150px', height: '150px' }}>
-                                        <svg width="150" height="150" viewBox="0 0 150 150" style={{ transform: 'rotate(-90deg)' }}>
-                                            {/* Фоновое кольцо с размытием */}
-                                            <circle 
-                                                cx="75" 
-                                                cy="75" 
-                                                r={timerRadius} 
-                                                fill="rgba(255,255,255,0.02)" 
-                                                stroke="rgba(255, 255, 255, 0.1)" 
-                                                strokeWidth="6" 
-                                                style={{ filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.05))' }} 
-                                            />
-                                            {/* Анимированное светящееся кольцо */}
-                                            <motion.circle
-                                                cx="75"
-                                                cy="75"
-                                                r={timerRadius}
-                                                fill="none"
-                                                stroke="#ffffff" 
-                                                strokeWidth="6"
-                                                strokeLinecap="round"
-                                                strokeDasharray={timerCircumference}
-                                                animate={{ strokeDashoffset: timerStrokeDashoffset }}
-                                                transition={{ duration: 1, ease: "linear" }}
-                                                style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))' }}
-                                            />
-                                        </svg>
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '26px', marginBottom: '4px', filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))' }}>⏳</span>
-                                            <span style={{ fontSize: '24px', fontWeight: 800, color: 'white', letterSpacing: '1px' }}>{formatTime(timeLeft)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
+                                <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
                                 <div className="nav-grid-wrapper">
-                                    <div className="nav-grid-compact" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(42px, 1fr))', gap: '10px' }}>
+                                    <div className="nav-grid-compact">
                                         {testSession.questions.map((_, i) => {
                                             let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
-                                            let scaleVal = 1;
-                                            let shadowVal = 'none';
-
-                                            if (i === testSession.currentIdx) { 
-                                                c = '#764ba2'; 
-                                                txt = 'white'; 
-                                                scaleVal = 1.15;
-                                                shadowVal = '0 0 12px rgba(118, 75, 162, 0.8)';
-                                            }
-                                            else if (testSession.answers[i] !== null) { 
-                                                c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; 
-                                                txt = 'white'; 
-                                            }
+                                            if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
+                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
                                             const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            return (
-                                                <motion.div 
-                                                    key={i} 
-                                                    className={itemClass} 
-                                                    onClick={() => handleNavClick(i)}
-                                                    style={{
-                                                        background: c, 
-                                                        color: txt,
-                                                        borderRadius: '50%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        aspectRatio: '1',
-                                                        fontWeight: 'bold',
-                                                        cursor: isAnimating ? 'default' : 'pointer',
-                                                        boxShadow: shadowVal
-                                                    }}
-                                                    whileHover={!isAnimating ? { scale: 1.1 } : {}}
-                                                    whileTap={!isAnimating ? { scale: 0.95 } : {}}
-                                                    animate={{ scale: scaleVal, boxShadow: shadowVal }}
-                                                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                                >
-                                                    {i+1}
-                                                </motion.div>
-                                            )
+                                            return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
                                         })}
                                     </div>
                                 </div>
@@ -362,19 +285,23 @@
                     </motion.div>
                 )}
 
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
                         
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                                {/* Серый/полупрозрачный фоновый круг */}
                                 <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="14" />
+                                
+                                {/* Анимированный яркий круг (прогресс) */}
                                 <motion.circle
                                     cx="100"
                                     cy="100"
                                     r={circleRadius}
                                     fill="none"
-                                    stroke="#00f2fe" 
+                                    stroke="#00f2fe" /* Яркий цвет, похожий на скриншот */
                                     strokeWidth="14"
                                     strokeLinecap="round"
                                     strokeDasharray={circleCircumference}
@@ -383,6 +310,8 @@
                                     transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
                                 />
                             </svg>
+                            
+                            {/* Текст внутри кольца */}
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                                 <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'white' }}>{resultPercent}%</span>
                                 <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
