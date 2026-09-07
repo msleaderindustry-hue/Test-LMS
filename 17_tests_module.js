@@ -185,13 +185,9 @@
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
-        const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
-        const circleRadius = 80;
-        const circleCircumference = 2 * Math.PI * circleRadius;
-        const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
-
         return (
             <AnimatePresence mode="wait">
+                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
@@ -256,7 +252,6 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН ТЕСТА С КРУГЛЫМИ КНОПКАМИ И АНИМАЦИЕЙ --- */}
                 {view === 'test' && (
                     <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
                         <div className="question-column">
@@ -268,10 +263,9 @@
                             <div className="sidebar-content">
                                 <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
                                 <div className="nav-grid-wrapper">
-                                    <div className="nav-grid-compact" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))', gap: '10px' }}>
+                                    <div className="nav-grid-compact" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(42px, 1fr))', gap: '10px' }}>
                                         {testSession.questions.map((_, i) => {
-                                            let c = 'var(--nav-item-bg, rgba(255, 255, 255, 0.05))'; 
-                                            let txt = 'var(--nav-item-text, white)';
+                                            let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
                                             let scaleVal = 1;
                                             let shadowVal = 'none';
 
@@ -279,15 +273,13 @@
                                                 c = '#764ba2'; 
                                                 txt = 'white'; 
                                                 scaleVal = 1.15;
-                                                shadowVal = '0 0 15px rgba(118, 75, 162, 0.6)';
+                                                shadowVal = '0 0 12px rgba(118, 75, 162, 0.8)';
                                             }
                                             else if (testSession.answers[i] !== null) { 
                                                 c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; 
                                                 txt = 'white'; 
                                             }
-
                                             const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            
                                             return (
                                                 <motion.div 
                                                     key={i} 
@@ -296,19 +288,19 @@
                                                     style={{
                                                         background: c, 
                                                         color: txt,
-                                                        borderRadius: '50%', // Делаем элемент круглым
+                                                        borderRadius: '50%',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        aspectRatio: '1', // Сохраняем пропорции идеального круга
+                                                        aspectRatio: '1',
                                                         fontWeight: 'bold',
                                                         cursor: isAnimating ? 'default' : 'pointer',
                                                         boxShadow: shadowVal
                                                     }}
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    animate={{ scale: scaleVal }}
-                                                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                                    whileHover={!isAnimating ? { scale: 1.1 } : {}}
+                                                    whileTap={!isAnimating ? { scale: 0.95 } : {}}
+                                                    animate={{ scale: scaleVal, boxShadow: shadowVal }}
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                                 >
                                                     {i+1}
                                                 </motion.div>
@@ -324,35 +316,13 @@
 
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
-                        
-                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="14" />
-                                <motion.circle
-                                    cx="100"
-                                    cy="100"
-                                    r={circleRadius}
-                                    fill="none"
-                                    stroke="#00f2fe" 
-                                    strokeWidth="14"
-                                    strokeLinecap="round"
-                                    strokeDasharray={circleCircumference}
-                                    initial={{ strokeDashoffset: circleCircumference }}
-                                    animate={{ strokeDashoffset: circleStrokeDashoffset }}
-                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                                />
-                            </svg>
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'white' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
-                            </div>
-                        </div>
-
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
+                        <h2 style={{marginBottom:5}}>{testSession.score / testSession.questions.length >= 0.5 ? 'Отлично!' : 'Результат'}</h2>
+                        <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
+                            {Math.round(testSession.score / testSession.questions.length * 100)}%
+                        </h1>
+                        <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        
                         <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
