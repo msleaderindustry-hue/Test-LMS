@@ -359,13 +359,11 @@ const StatsView = ({ history, setHistory, userData }) => {
                 </h2>
             </div>
 
-            {/* ИСПРАВЛЕНО: Убраны анимации layout, чтобы предотвратить прыжки интерфейса */}
             <div className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                 {TABS.map(t => {
                     const isActive = activeTab === t.id;
                     return (
                         <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0, transition: 'all 0.2s ease' }}>
-                            {/* Статичный плавно появляющийся фон вместо прыгающего layoutId */}
                             <div style={{ 
                                 position: 'absolute', inset: 0, background: t.color, 
                                 borderRadius: '14px', zIndex: -1, 
@@ -388,7 +386,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                 })}
             </div>
 
-            {/* ИСПРАВЛЕНО: Добавлен minHeight, чтобы окно не схлопывалось во время исчезновения контента */}
             <div style={{ flex: 1, minHeight: '450px' }}>
                 <AnimatePresence mode="wait">
 
@@ -508,8 +505,8 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {activeTab === 'leaderboard' && (
                         <motion.div key="t-leaderboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
                             
-                            {/* ИСПРАВЛЕНО: Кнопки фильтра теперь выстраиваются в горизонтальную линию со скроллом, а не в пирамиду */}
-                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px' }}>
+                            {/* Выравнивание по центру добавлено (justifyContent: 'center') */}
+                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px', justifyContent: 'center' }}>
                                 {[
                                     {id: 'excel', label: 'Excel XP', icon: 'excel'}, 
                                     {id: 'typing', label: 'Печать WPM', icon: 'typing'}, 
@@ -568,8 +565,6 @@ const StatsView = ({ history, setHistory, userData }) => {
                                                         {u.nickname || u.email || 'Аноним'}
                                                         {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px', flexShrink: 0 }}>ВЫ</span>}
                                                     </div>
-                                                    
-                                                    {/* ИСПРАВЛЕНО: Добавлено скрытие переполнения длинных ролей */}
                                                     <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {u.role === 'admin' ? 'Преподаватель' : 'Ученик'}
                                                     </div>
