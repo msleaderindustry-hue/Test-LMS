@@ -292,8 +292,8 @@
                         
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                {/* Серый/полупрозрачный фоновый круг */}
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="14" />
+                                {/* Серый/полупрозрачный фоновый круг (ИСПРАВЛЕНО НА АДАПТИВНЫЙ) */}
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
                                 
                                 {/* Анимированный яркий круг (прогресс) */}
                                 <motion.circle
@@ -301,7 +301,7 @@
                                     cy="100"
                                     r={circleRadius}
                                     fill="none"
-                                    stroke="#00f2fe" /* Яркий цвет, похожий на скриншот */
+                                    stroke="#00f2fe"
                                     strokeWidth="14"
                                     strokeLinecap="round"
                                     strokeDasharray={circleCircumference}
@@ -311,9 +311,9 @@
                                 />
                             </svg>
                             
-                            {/* Текст внутри кольца */}
+                            {/* Текст внутри кольца (ИСПРАВЛЕНО НА АДАПТИВНЫЙ) */}
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'white' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
                                 <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
