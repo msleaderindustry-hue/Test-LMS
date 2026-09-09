@@ -191,6 +191,13 @@
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
 
+        // --- ВЫЧИСЛЕНИЯ ДЛЯ ДИНАМИЧНОГО ТАЙМЕРА ---
+        const totalTimeSec = (parseInt(customTime) || 20) * 60;
+        const timerPercent = totalTimeSec > 0 ? timeLeft / totalTimeSec : 0;
+        const timerRadius = 55;
+        const timerCircumference = 2 * Math.PI * timerRadius;
+        const timerStrokeDashoffset = timerCircumference - (timerPercent * timerCircumference);
+
         return (
             <AnimatePresence mode="wait">
                 {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
@@ -267,7 +274,51 @@
                         </div>
                         <div className="sidebar-column">
                             <div className="sidebar-content">
-                                <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
+                                
+                                {/* ДИНАМИЧНЫЙ ТАЙМЕР ПО ДИЗАЙНУ С ФОТО */}
+                                <div className="sidebar-timer" style={{ display: 'flex', justifyContent: 'center', padding: '15px 0 25px 0', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+                                    <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                                        <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)' }}>
+                                            <defs>
+                                                <linearGradient id="timerGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#f6d365" />
+                                                    <stop offset="100%" stopColor="#ff5858" />
+                                                </linearGradient>
+                                                <filter id="timerGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                                    <feMerge>
+                                                        <feMergeNode in="blur" />
+                                                        <feMergeNode in="SourceGraphic" />
+                                                    </feMerge>
+                                                </filter>
+                                            </defs>
+                                            {/* Фоновый трек таймера */}
+                                            <circle cx="70" cy="70" r={timerRadius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                                            
+                                            {/* Анимированный прогресс-бар с градиентом */}
+                                            <motion.circle
+                                                cx="70"
+                                                cy="70"
+                                                r={timerRadius}
+                                                fill="none"
+                                                stroke="url(#timerGrad)"
+                                                strokeWidth="6"
+                                                strokeLinecap="round"
+                                                strokeDasharray={timerCircumference}
+                                                animate={{ strokeDashoffset: timerStrokeDashoffset }}
+                                                transition={{ duration: 1, ease: "linear" }}
+                                                filter="url(#timerGlow)"
+                                            />
+                                        </svg>
+                                        
+                                        {/* Содержимое внутри круга: Иконка и Время */}
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '24px', marginBottom: '4px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>⏳</span>
+                                            <span style={{ fontSize: '20px', fontWeight: 800, color: 'white', letterSpacing: '1px' }}>{formatTime(timeLeft)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="nav-grid-wrapper">
                                     <div className="nav-grid-compact">
                                         {testSession.questions.map((_, i) => {
