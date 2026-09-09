@@ -505,8 +505,7 @@ const StatsView = ({ history, setHistory, userData }) => {
                     {activeTab === 'leaderboard' && (
                         <motion.div key="t-leaderboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
                             
-                            {/* Выравнивание по центру добавлено (justifyContent: 'center') */}
-                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px', justifyContent: 'center' }}>
+                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px', width: 'fit-content', maxWidth: '100%', margin: '0 auto 24px auto' }}>
                                 {[
                                     {id: 'excel', label: 'Excel XP', icon: 'excel'}, 
                                     {id: 'typing', label: 'Печать WPM', icon: 'typing'}, 
