@@ -11,6 +11,11 @@
         const [customTime, setCustomTime] = useState('20');
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
+        
+        // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
+        const [shakeTime, setShakeTime] = useState(false);
+        const [shakeQ, setShakeQ] = useState(false);
+        const [isStarting, setIsStarting] = useState(false);
 
         // --- АНТИЧИТ ---
         useEffect(() => {
@@ -60,23 +65,66 @@
             reader.readAsText(file);
         };
 
-        const startTest = () => { if (tests.length === 0) return alert('Нет вопросов!'); setCustomQCount(tests.length); setView('timer_setup'); };
+        const startTest = () => { 
+            if (tests.length === 0) return alert('Нет вопросов!'); 
+            setCustomQCount(Math.min(25, tests.length).toString()); 
+            setCustomTime('20');
+            setView('timer_setup'); 
+        };
+
+        const updateTime = (delta) => {
+            let val = parseInt(customTime) || 20;
+            val += delta;
+            if (val < 5 || val > 180) {
+                setShakeTime(true); setTimeout(() => setShakeTime(false), 400);
+                return;
+            }
+            setCustomTime(val.toString());
+        };
+
+        const updateQCount = (delta) => {
+            let val = parseInt(customQCount) || tests.length;
+            val += delta;
+            const maxQ = Math.min(25, tests.length);
+            if (val < 1 || val > maxQ) {
+                setShakeQ(true); setTimeout(() => setShakeQ(false), 400);
+                return;
+            }
+            setCustomQCount(val.toString());
+        };
+
+        const handleCancelSetup = () => {
+            setCustomTime('20');
+            setCustomQCount(Math.min(25, tests.length).toString());
+            setView('set_menu');
+        };
 
         const launchTestWithTimer = async () => {
+            setIsStarting(true);
             const mins = parseInt(customTime) || 20;
             let qCount = parseInt(customQCount);
-            if (!qCount || qCount <= 0) qCount = tests.length;
-            if (qCount > tests.length) qCount = tests.length;
-            let fullList = shuffleArray(tests);
-            let selectedQuestions = fullList.slice(0, qCount);
-            let finalQuestions = selectedQuestions.map(t => {
-                let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
-                varsWithFlag = shuffleArray(varsWithFlag);
-                return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
-            });
-            setIsResultSaved(false); setTimeLeft(mins * 60); 
-            setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
-            setView('test');
+            const maxQ = Math.min(25, tests.length);
+            if (!qCount || qCount < 1) qCount = 1;
+            if (qCount > maxQ) qCount = maxQ;
+
+            setTimeout(() => {
+                let fullList = shuffleArray(tests);
+                let selectedQuestions = fullList.slice(0, qCount);
+                let finalQuestions = selectedQuestions.map(t => {
+                    let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
+                    varsWithFlag = shuffleArray(varsWithFlag);
+                    return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
+                });
+                setIsResultSaved(false); setTimeLeft(mins * 60); 
+                setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
+                
+                // Выводим тост
+                if (window.showToast) window.showToast(`⏱ ${mins} мин. • 📝 ${qCount} вопр.`);
+                else alert(`Тест запущен: ${mins} минут, ${qCount} вопросов`);
+                
+                setIsStarting(false);
+                setView('test');
+            }, 1000);
         };
 
         const handleAnswer = (variantIdx) => {
@@ -243,7 +291,6 @@
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
                         
-                        {/* ИСПРАВЛЕНО: Круглая кнопка Назад */}
                         <button onClick={() => setView('menu')} style={{
                             position: 'absolute', top: '24px', left: '24px', 
                             width: '44px', height: '44px', borderRadius: '50%', 
@@ -254,13 +301,11 @@
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
 
-                        {/* ИСПРАВЛЕНО: Название с линией */}
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
                             <h2 style={{ margin: '0 0 12px 0', fontSize: '28px', fontWeight: 800 }}>{currentSet}</h2>
                             <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', margin: '0 auto', borderRadius: '2px' }}></div>
                         </div>
 
-                        {/* ИСПРАВЛЕНО: Кнопки с иконками */}
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                             <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -288,19 +333,55 @@
                     </motion.div>
                 )}
 
+                {/* --- ОБНОВЛЕННАЯ СЕКЦИЯ ПАРАМЕТРОВ ТЕСТА (С СОХРАНЕНИЕМ ЛОГИКИ) --- */}
                 {view === 'timer_setup' && (
-                    <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
-                        <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
-                        <div style={{marginBottom:15, textAlign:'left'}}>
-                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
-                            <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+                    <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.9}} className="glass-panel" style={{width:'100%', maxWidth:420, padding: '30px 25px'}}>
+                        
+                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', marginBottom:'30px'}}>
+                            <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </div>
+                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
                         </div>
-                        <div style={{marginBottom:15, textAlign:'left'}}>
-                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
-                            <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
+
+                        <div style={{marginBottom:'24px', textAlign:'left'}}>
+                            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
+                                <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                </div>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
+                            </div>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeTime ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            </motion.div>
                         </div>
-                        <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
-                        <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
+
+                        <div style={{marginBottom:'30px', textAlign:'left'}}>
+                            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
+                                <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                </div>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
+                            </div>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeQ ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            </motion.div>
+                        </div>
+
+                        <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
+                            {isStarting ? (
+                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} style={{display:'flex', gap:'6px', justifyContent:'center'}}>
+                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
+                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
+                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
+                                </motion.div>
+                            ) : "Начать"}
+                        </Button>
+                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--glass-border)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
                     </motion.div>
                 )}
 
@@ -331,7 +412,6 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
