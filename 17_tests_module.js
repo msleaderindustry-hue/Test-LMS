@@ -11,9 +11,6 @@
         const [customTime, setCustomTime] = useState('20');
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
-        const [newSetValue, setNewSetValue] = useState('');
-        // тик, чтобы принудительно перечитать метаданные сетов после импорта/добавления
-        const [metaTick, setMetaTick] = useState(0);
 
         // --- АНТИЧИТ ---
         useEffect(() => {
@@ -55,7 +52,6 @@
                     const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex })); 
                     setTests(normalized); 
                     localStorage.setItem('tests_' + currentSet, JSON.stringify(normalized)); 
-                    setMetaTick(t => t + 1);
                     alert(`✅ Импортировано: ${normalized.length}`); 
                 } catch { 
                     alert('Ошибка JSON'); 
@@ -78,13 +74,6 @@
                 varsWithFlag = shuffleArray(varsWithFlag);
                 return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
             });
-            // запоминаем выбранное время для этого сета, чтобы показывать его в карточке меню
-            try {
-                const metaRaw = localStorage.getItem('set_meta_v1');
-                const meta = metaRaw ? JSON.parse(metaRaw) : {};
-                meta[currentSet] = { ...(meta[currentSet] || {}), minutes: mins };
-                localStorage.setItem('set_meta_v1', JSON.stringify(meta));
-            } catch {}
             setIsResultSaved(false); setTimeLeft(mins * 60); 
             setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
             setView('test');
@@ -202,150 +191,39 @@
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
 
-        // --- ПОМОЩНИКИ ДЛЯ РЕДИЗАЙНА ГЛАВНОГО МЕНЮ ---
-        const pluralizeTests = (n) => {
-            const mod10 = n % 10, mod100 = n % 100;
-            if (mod10 === 1 && mod100 !== 11) return `${n} тест`;
-            if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return `${n} теста`;
-            return `${n} тестов`;
-        };
-
-        const getSetQuestionCount = (name) => {
-            try {
-                const raw = localStorage.getItem('tests_' + name);
-                if (!raw) return 0;
-                const arr = JSON.parse(raw);
-                return Array.isArray(arr) ? arr.length : 0;
-            } catch { return 0; }
-        };
-
-        // Небольшой локальный слой метаданных (время/дата создания) для собственных сетов,
-        // т.к. в текущей модели `sets` хранит только названия.
-        const getSetMeta = (name) => {
-            try {
-                const metaRaw = localStorage.getItem('set_meta_v1');
-                const meta = metaRaw ? JSON.parse(metaRaw) : {};
-                if (!meta[name]) {
-                    meta[name] = { minutes: 20, createdDate: new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' }) };
-                    localStorage.setItem('set_meta_v1', JSON.stringify(meta));
-                }
-                return meta[name];
-            } catch { return { minutes: 20, createdDate: '—' }; }
-        };
-
-        // Для тестов от преподавателя поля могут называться иначе в вашей модели данных —
-        // здесь стоят безопасные фоллбэки, поправьте под реальную схему при необходимости.
-        const getTeacherTestMeta = (t) => ({
-            questions: t.questions?.length ?? t.questionCount ?? t.count ?? 0,
-            minutes: t.timeMinutes ?? t.time ?? 20,
-            date: t.createdDate ?? t.date ?? (t.createdAt ? new Date(t.createdAt).toLocaleDateString('ru-RU') : '—'),
-        });
-
-        const totalTestsCount = (teacherTests?.length || 0) + (sets?.length || 0);
-
-        const handleAddSet = () => {
-            const v = newSetValue.trim();
-            if (!v) return;
-            addSet(v);
-            setNewSetValue('');
-            setMetaTick(t => t + 1);
-        };
-
         return (
             <AnimatePresence mode="wait">
-                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню — редизайн под макет */}
+                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
-                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', position:'relative', padding:'35px 40px 30px'}}>
+                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+                        <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+                        
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                            {teacherTests?.map(test => (
+                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                                        <span style={{marginRight:8}}>☁️</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                                </div>
+                            ))}
 
-                        {/* Верхняя панель: декоративная сетка точек слева, бейдж количества тестов справа */}
-                        <div style={{position:'absolute', top:24, left:28, display:'grid', gridTemplateColumns:'repeat(3, 5px)', gap:5, opacity:0.35}}>
-                            {Array.from({length:9}).map((_,i) => (<div key={i} style={{width:5, height:5, borderRadius:'50%', background:'var(--text-sec)'}} />))}
+                            {sets?.map(name => (
+                                <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                                        <span style={{marginRight:8}}>📂</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                                </div>
+                            ))}
                         </div>
-
-                        <div style={{position:'absolute', top:22, right:28, display:'flex', alignItems:'center', gap:8, background:'rgba(16, 185, 129, 0.12)', border:'1px solid rgba(16,185,129,0.35)', borderRadius:999, padding:'6px 14px'}}>
-                            <motion.div animate={{opacity:[1,0.4,1]}} transition={{duration:1.8, repeat:Infinity}} style={{width:8, height:8, borderRadius:'50%', background:'#10b981'}} />
-                            <span style={{fontSize:13, fontWeight:600, color:'#10b981'}}>{pluralizeTests(totalTestsCount)}</span>
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                            <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
                         </div>
-
-                        {/* Иконка-шапка + заголовок + подзаголовок */}
-                        <div style={{textAlign:'center', marginBottom:25}}>
-                            <div style={{
-                                width:64, height:64, margin:'0 auto 18px', borderRadius:18,
-                                background:'linear-gradient(135deg, #5b6cf9 0%, #7c3aed 100%)',
-                                display:'flex', alignItems:'center', justifyContent:'center',
-                                fontSize:30, boxShadow:'0 10px 30px rgba(124,58,237,0.45)'
-                            }}>🎓</div>
-                            <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:0, fontSize:36, fontWeight:800}} morphTime={1} cooldownTime={1.5} />
-                            <p style={{margin:'12px 0 0', fontSize:15, color:'var(--text-sec)'}}>Создавайте тесты. Обучайте. Развивайтесь.</p>
-                        </div>
-
-                        {/* Список тестов */}
-                        <div style={{maxHeight:320, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5, display:'flex', flexDirection:'column', gap:12}}>
-                            {teacherTests?.map(test => {
-                                const meta = getTeacherTestMeta(test);
-                                return (
-                                    <motion.div key={test.id} whileHover={{scale:1.01}} transition={{type:'spring', stiffness:300, damping:22}}
-                                        style={{display:'flex', gap:12, alignItems:'stretch', background:'rgba(0,198,255,0.06)', border:'1px solid rgba(0,198,255,0.35)', borderRadius:16, padding:12}}>
-                                        <div onClick={() => openTeacherAssignedTest(test)} style={{display:'flex', alignItems:'center', gap:14, flex:1, cursor:'pointer', minWidth:0}}>
-                                            <div style={{width:48, height:48, flexShrink:0, borderRadius:12, background:'linear-gradient(135deg, #1e88e5 0%, #42a5f5 100%)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20}}>☁️</div>
-                                            <div style={{minWidth:0}}>
-                                                <div style={{fontWeight:800, fontSize:14, letterSpacing:0.3, color:'#00c6ff', textTransform:'uppercase', wordBreak:'break-word', lineHeight:1.3}}>{test.title}</div>
-                                                <div style={{display:'flex', flexWrap:'wrap', gap:14, marginTop:6, fontSize:12.5, color:'var(--text-sec)'}}>
-                                                    <span>📄 {meta.questions} вопросов</span>
-                                                    <span>🕐 {meta.minutes} минут</span>
-                                                    <span>📅 Создан: {meta.date}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <motion.button whileHover={{scale:1.08}} whileTap={{scale:0.92}} onClick={() => removeTeacherTestStudent(test.id, test.title)}
-                                            style={{width:48, flexShrink:0, border:'none', borderRadius:12, background:'linear-gradient(135deg,#f87171,#ef4444)', color:'white', fontSize:17, cursor:'pointer'}}>🗑</motion.button>
-                                    </motion.div>
-                                );
-                            })}
-
-                            {sets?.map(name => {
-                                const meta = getSetMeta(name);
-                                const qCount = getSetQuestionCount(name);
-                                return (
-                                    <motion.div key={name} whileHover={{scale:1.01}} transition={{type:'spring', stiffness:300, damping:22}}
-                                        style={{display:'flex', gap:12, alignItems:'stretch', background:'rgba(255,255,255,0.03)', border:'1px solid var(--glass-border)', borderRadius:16, padding:12}}>
-                                        <div onClick={() => openSet(name)} style={{display:'flex', alignItems:'center', gap:14, flex:1, cursor:'pointer', minWidth:0}}>
-                                            <div style={{width:48, height:48, flexShrink:0, borderRadius:12, background:'#1a1a24', border:'1px solid var(--glass-border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20}}>📂</div>
-                                            <div style={{minWidth:0}}>
-                                                <div style={{fontWeight:800, fontSize:14, letterSpacing:0.3, color:'var(--text-main)', textTransform:'uppercase', wordBreak:'break-word', lineHeight:1.3}}>{name}</div>
-                                                <div style={{display:'flex', flexWrap:'wrap', gap:14, marginTop:6, fontSize:12.5, color:'var(--text-sec)'}}>
-                                                    <span>📄 {qCount} вопросов</span>
-                                                    <span>🕐 {meta.minutes} минут</span>
-                                                    <span>📅 Создан: {meta.createdDate}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <motion.button whileHover={{scale:1.08}} whileTap={{scale:0.92}} onClick={() => deleteSet(name)}
-                                            style={{width:48, flexShrink:0, border:'none', borderRadius:12, background:'linear-gradient(135deg,#f87171,#ef4444)', color:'white', fontSize:17, cursor:'pointer'}}>🗑</motion.button>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Новый тест — карточка с пунктирной рамкой */}
-                        <motion.div whileHover={{scale:1.005}} style={{display:'flex', alignItems:'center', gap:14, border:'2px dashed var(--glass-border)', borderRadius:16, padding:'10px 14px'}}>
-                            <motion.button whileHover={{scale:1.1, rotate:90}} whileTap={{scale:0.9}} onClick={handleAddSet}
-                                style={{width:44, height:44, flexShrink:0, border:'none', borderRadius:12, background:'linear-gradient(135deg,#6366f1,#8b5cf6)', color:'white', fontSize:19, cursor:'pointer'}}>➕</motion.button>
-                            <input
-                                value={newSetValue}
-                                onChange={e => setNewSetValue(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAddSet(); }}
-                                placeholder="Новый тест"
-                                style={{flex:1, background:'transparent', border:'none', outline:'none', fontSize:15, color:'var(--text-main)', padding:'10px 4px'}}
-                            />
-                        </motion.div>
-
-                        {/* Футер */}
-                        <div style={{marginTop:28, display:'flex', alignItems:'center', justifyContent:'center', gap:14}}>
-                            <div style={{width:36, height:1, background:'var(--glass-border)'}} />
-                            <span style={{fontSize:12, color:'var(--text-sec)', opacity:0.7, whiteSpace:'nowrap'}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</span>
-                            <div style={{width:36, height:1, background:'var(--glass-border)'}} />
-                        </div>
+                        <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
 
