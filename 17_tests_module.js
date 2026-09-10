@@ -241,12 +241,6 @@
             <AnimatePresence mode="wait">
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-                        
-                        <style>{`
-                            .menu-row-hover:hover { background: var(--bg-elevated) !important; border-color: rgba(139, 92, 246, 0.4) !important; }
-                            .add-test-container:focus-within { border-color: #8b5cf6 !important; background: rgba(139, 92, 246, 0.05) !important; }
-                        `}</style>
-                        
                         <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
                             <svg viewBox="0 0 64 64" fill="none" style={{width:'100%', height:'100%'}}>
                                 <defs>
@@ -263,52 +257,31 @@
                         </div>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
                         
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}} className="custom-scroll">
-                            
-                            {/* --- СПИСОК ТЕСТОВ ПРЕПОДАВАТЕЛЯ --- */}
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
-                                    <div onClick={() => openTeacherAssignedTest(test)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
-                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #38bdf8, #06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
-                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                                        </div>
-                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
-                                            <span style={{fontSize:'11px', fontWeight:900, color:'#38bdf8', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'2px'}}>Опубликован</span>
-                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{test.title}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => removeTeacherTestStudent(test.id, test.title)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
+                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                                        <span style={{marginRight:8}}>☁️</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
                                 </div>
                             ))}
 
-                            {/* --- СПИСОК ПАПОК ПОЛЬЗОВАТЕЛЯ --- */}
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
-                                    <div onClick={() => openSet(name)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
-                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #fbbf24, #f59e0b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                                        </div>
-                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
-                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{name}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => deleteSet(name)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
+                                <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                                        <span style={{marginRight:8}}>📂</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
                                 </div>
                             ))}
                         </div>
-                        
-                        {/* --- ИНПУТ ДОБАВЛЕНИЯ НОВОГО ТЕСТА --- */}
-                        <div className="add-test-container" style={{display:'flex', gap:'12px', alignItems: 'center', padding:'8px', borderRadius:'18px', border:'2px dashed rgba(128, 128, 128, 0.35)', background: 'rgba(128, 128, 128, 0.02)', transition:'all 0.2s', marginTop:'16px'}}>
-                            <input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1, background:'transparent', border:'none', padding:'10px 15px', fontSize:'16px', color:'var(--text-main)', outline:'none', fontWeight: 600}} />
-                            <button onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #6366f1, #3b82f6)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'transform 0.1s'}}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                            <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
                         </div>
-                        
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
