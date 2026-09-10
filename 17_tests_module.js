@@ -118,9 +118,7 @@
                 setIsResultSaved(false); setTimeLeft(mins * 60); 
                 setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
                 
-                // Выводим тост
                 if (window.showToast) window.showToast(`⏱ ${mins} мин. • 📝 ${qCount} вопр.`);
-                else alert(`Тест запущен: ${mins} минут, ${qCount} вопросов`);
                 
                 setIsStarting(false);
                 setView('test');
@@ -333,7 +331,6 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННАЯ СЕКЦИЯ ПАРАМЕТРОВ ТЕСТА (С СОХРАНЕНИЕМ ЛОГИКИ) --- */}
                 {view === 'timer_setup' && (
                     <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.9}} className="glass-panel" style={{width:'100%', maxWidth:420, padding: '30px 25px'}}>
                         
@@ -412,6 +409,7 @@
                     </motion.div>
                 )}
 
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
