@@ -193,7 +193,6 @@
 
         return (
             <AnimatePresence mode="wait">
-                {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
                         <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
@@ -242,16 +241,49 @@
                 )}
 
                 {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
-                        <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
-                        <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
+                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
+                        
+                        {/* ИСПРАВЛЕНО: Круглая кнопка Назад */}
+                        <button onClick={() => setView('menu')} style={{
+                            position: 'absolute', top: '24px', left: '24px', 
+                            width: '44px', height: '44px', borderRadius: '50%', 
+                            border: '1px solid var(--glass-border)', background: 'var(--bg-panel)',
+                            color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', zIndex: 10, padding: 0
+                        }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+
+                        {/* ИСПРАВЛЕНО: Название с линией */}
+                        <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
+                            <h2 style={{ margin: '0 0 12px 0', fontSize: '28px', fontWeight: 800 }}>{currentSet}</h2>
+                            <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', margin: '0 auto', borderRadius: '2px' }}></div>
+                        </div>
+
+                        {/* ИСПРАВЛЕНО: Кнопки с иконками */}
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                            <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
-                            <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
-                                📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                            <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                Печать
+                            </Button>
+                            
+                            <label style={{
+                                background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, 
+                                fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s',
+                                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)'
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                Импорт
+                                <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                             </label>
                         </div>
-                        <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
+                        
+                        <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            Начать тест
+                        </Button>
                         <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
@@ -306,10 +338,8 @@
                         
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                {/* Серый/полупрозрачный фоновый круг (ИСПРАВЛЕНО НА АДАПТИВНЫЙ) */}
                                 <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
                                 
-                                {/* Анимированный яркий круг (прогресс) */}
                                 <motion.circle
                                     cx="100"
                                     cy="100"
@@ -325,7 +355,6 @@
                                 />
                             </svg>
                             
-                            {/* Текст внутри кольца (ИСПРАВЛЕНО НА АДАПТИВНЫЙ) */}
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                                 <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
                                 <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
