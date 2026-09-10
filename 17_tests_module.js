@@ -243,7 +243,7 @@
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
                         
                         <style>{`
-                            .menu-row-hover:hover { background: var(--bg-elevated) !important; border-color: rgba(139, 92, 246, 0.3) !important; }
+                            .menu-row-hover:hover { background: var(--bg-elevated) !important; border-color: rgba(139, 92, 246, 0.4) !important; }
                             .add-test-container:focus-within { border-color: #8b5cf6 !important; background: rgba(139, 92, 246, 0.05) !important; }
                         `}</style>
                         
@@ -267,7 +267,7 @@
                             
                             {/* --- СПИСОК ТЕСТОВ ПРЕПОДАВАТЕЛЯ --- */}
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'var(--bg-panel)', border:'1px solid var(--glass-border)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.02)'}} className="menu-row-hover">
+                                <div key={test.id} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
                                     <div onClick={() => openTeacherAssignedTest(test)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
                                         <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #38bdf8, #06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
                                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
@@ -285,7 +285,7 @@
 
                             {/* --- СПИСОК ПАПОК ПОЛЬЗОВАТЕЛЯ --- */}
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'var(--bg-panel)', border:'1px solid var(--glass-border)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.02)'}} className="menu-row-hover">
+                                <div key={name} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
                                     <div onClick={() => openSet(name)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
                                         <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #fbbf24, #f59e0b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -302,7 +302,7 @@
                         </div>
                         
                         {/* --- ИНПУТ ДОБАВЛЕНИЯ НОВОГО ТЕСТА --- */}
-                        <div className="add-test-container" style={{display:'flex', gap:'12px', alignItems: 'center', padding:'8px', borderRadius:'18px', border:'2px dashed var(--glass-border)', transition:'all 0.2s', marginTop:'16px'}}>
+                        <div className="add-test-container" style={{display:'flex', gap:'12px', alignItems: 'center', padding:'8px', borderRadius:'18px', border:'2px dashed rgba(128, 128, 128, 0.35)', background: 'rgba(128, 128, 128, 0.02)', transition:'all 0.2s', marginTop:'16px'}}>
                             <input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1, background:'transparent', border:'none', padding:'10px 15px', fontSize:'16px', color:'var(--text-main)', outline:'none', fontWeight: 600}} />
                             <button onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #6366f1, #3b82f6)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'transform 0.1s'}}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
