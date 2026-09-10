@@ -196,6 +196,20 @@
                 {/* ИСПРАВЛЕНО: Интегрирован блок главного меню */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+                        <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
+                            <svg viewBox="0 0 64 64" fill="none" style={{width:'100%', height:'100%'}}>
+                                <defs>
+                                    <linearGradient id="capGrad" x1="0" y1="0" x2="64" y2="64">
+                                        <stop offset="0%" stopColor="#7ab8ff"/>
+                                        <stop offset="100%" stopColor="#8a5bff"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M32 10L58 22L32 34L6 22L32 10Z" fill="url(#capGrad)"/>
+                                <path d="M18 27V40C18 40 24 46 32 46C40 46 46 40 46 40V27L32 34L18 27Z" fill="#3a4bcf"/>
+                                <path d="M56 24V38" stroke="#1c2a99" strokeWidth="2.5" strokeLinecap="round"/>
+                                <circle cx="56" cy="40" r="2.6" fill="#1c2a99"/>
+                            </svg>
+                        </div>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
                         
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
