@@ -259,28 +259,41 @@
                         
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
-                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
-                                        <span style={{marginRight:8}}>☁️</span>
-                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent' }}>
+                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                        </div>
+                                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                                            <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
+                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{test.title}</span>
+                                        </div>
                                     </Button>
-                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
+                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: '#ef4444', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                    </Button>
                                 </div>
                             ))}
 
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
-                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
-                                        <span style={{marginRight:8}}>📂</span>
-                                        <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                                <div key={name} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid transparent' }}>
+                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                        </div>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{name}</span>
                                     </Button>
-                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
+                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: '#ef4444', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => deleteSet(name)}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                    </Button>
                                 </div>
                             ))}
                         </div>
                         <div style={{display:'flex', gap:10, alignItems: 'center'}}>
                             <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                            <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
+                            <Button style={{width: '44px', height: '44px', padding: 0, margin: 0, flexShrink: 0, background: '#a855f7', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </Button>
                         </div>
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
@@ -382,86 +395,28 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННАЯ СТРУКТУРА ЭКРАНА ТЕСТИРОВАНИЯ --- */}
                 {view === 'test' && (
                     <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
                         <div className="question-column">
                             <AnimatePresence mode="wait">
-                                {/* Исходный компонент TestQuestionCard без изменений */}
                                 <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
                             </AnimatePresence>
                         </div>
-                        
                         <div className="sidebar-column">
-                            {/* ПОЛНОСТЬЮ ОБНОВЛЕННЫЙ САЙДБАР (по фото) */}
-                            <div className="sidebar-content" style={{ background: 'var(--bg-panel)', borderRadius: '24px', padding: '24px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                
-                                {/* 1. Кастомный Таймер */}
-                                {(() => {
-                                    const isUrgent = timeLeft < 120;
-                                    const timerBg = isUrgent ? '#f43f5e' : '#3b82f6';
-                                    const timerWrapperBg = isUrgent ? 'rgba(244, 63, 94, 0.08)' : 'rgba(128,128,128,0.05)';
-                                    const timerTextColor = isUrgent ? '#e11d48' : 'var(--text-main)';
-                                    
-                                    return (
-                                        <div style={{ background: timerWrapperBg, padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', transition: 'all 0.3s' }}>
-                                            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: timerBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 00-.586-1.414L12 12l-4.414 4.414A2 2 0 007 17.828V22M7 2v4.172a2 2 0 00.586 1.414L12 12l4.414-4.414A2 2 0 0017 6.172V2" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <div style={{ fontSize: '24px', fontWeight: 800, color: timerTextColor, lineHeight: '1.2' }}>{formatTime(timeLeft)}</div>
-                                                <div style={{ fontSize: '12px', color: 'var(--text-sec)', fontWeight: 500 }}>осталось времени</div>
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {/* 2. Текст Отвечено */}
-                                <div style={{ marginBottom: '20px', fontSize: '14px', color: 'var(--text-sec)', fontWeight: 500 }}>
-                                    Отвечено: <b style={{ color: 'var(--text-main)' }}>{testSession.answers.filter(a => a !== null).length}</b> из {testSession.questions.length}
-                                </div>
-
-                                {/* 3. Новая сетка кнопок-вопросов */}
-                                <div className="nav-grid-wrapper" style={{ flex: 1, overflowY: 'auto', marginBottom: '20px', paddingRight: '4px' }}>
-                                    <div className="nav-grid-compact" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                            <div className="sidebar-content">
+                                <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
+                                <div className="nav-grid-wrapper">
+                                    <div className="nav-grid-compact">
                                         {testSession.questions.map((_, i) => {
-                                            const isCurrent = i === testSession.currentIdx;
-                                            const isAnswered = testSession.answers[i] !== null;
-                                            
-                                            let bg = 'transparent';
-                                            let txt = 'var(--text-sec)';
-                                            let border = '1px solid var(--glass-border)';
-
-                                            if (isCurrent) {
-                                                bg = '#9333ea';
-                                                txt = '#ffffff';
-                                                border = '1px solid #9333ea';
-                                            } else if (isAnswered) {
-                                                bg = 'rgba(147, 51, 234, 0.1)';
-                                                txt = '#9333ea';
-                                                border = '1px solid transparent';
-                                            }
-
+                                            let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
+                                            if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
+                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
                                             const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            return (
-                                                <div key={i} className={itemClass} style={{
-                                                    background: bg, color: txt, border: border,
-                                                    aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s'
-                                                }} onClick={() => handleNavClick(i)}>
-                                                    {i + 1}
-                                                </div>
-                                            )
+                                            return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
                                         })}
                                     </div>
                                 </div>
-                                
-                                {/* 4. Фирменная градиентная кнопка */}
-                                <Button onClick={finishTest} style={{ width: '100%', background: 'linear-gradient(135deg, #6366f1, #3b82f6)', color: '#fff', border: 'none', height: '50px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, marginTop: 'auto' }}>
-                                    Завершить
-                                </Button>
+                                <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                             </div>
                         </div>
                     </motion.div>
