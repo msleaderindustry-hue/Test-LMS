@@ -424,52 +424,106 @@
 
                 {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
+                    <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:400, position: 'relative', overflow: 'hidden', padding: '40px 20px'}}>
                         
-                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
-                                
-                                <motion.circle
-                                    cx="100"
-                                    cy="100"
-                                    r={circleRadius}
-                                    fill="none"
-                                    stroke="#00f2fe"
-                                    strokeWidth="14"
-                                    strokeLinecap="round"
-                                    strokeDasharray={circleCircumference}
-                                    initial={{ strokeDashoffset: circleCircumference }}
-                                    animate={{ strokeDashoffset: circleStrokeDashoffset }}
-                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                                />
-                            </svg>
-                            
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
-                            </div>
-                        </div>
+                        {/* Soft Glow Background */}
+                        <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(138,91,255,0.12) 0%, rgba(122,184,255,0.12) 40%, rgba(255,255,255,0) 70%)', zIndex: 0, pointerEvents: 'none' }}></div>
 
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
-                        </div>
-                        
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
-                            {!isResultSaved ? (
-                                <>
-                                    <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
-                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
-                                </>
-                            ) : (
-                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
-                            )}
-                        </div>
-                        <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                            <Button variant="orange" onClick={() => setView('review')}>🧐 Ошибки</Button>
-                            {testSession.score < testSession.questions.length && (<Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>)}
-                            <Button onClick={() => setView('menu')}>🏠 Меню</Button>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <h2 style={{
+                                marginBottom: 30,
+                                fontSize: 28,
+                                fontWeight: 700,
+                                background: 'linear-gradient(90deg, #4f46e5, #3b82f6)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                display: 'inline-block'
+                            }}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
+
+                            <div style={{ position: 'relative', width: '160px', height: '160px', margin: '0 auto 25px auto' }}>
+                                <svg width="160" height="160" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                                    <defs>
+                                        <linearGradient id="resRingGrad" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stopColor="#8a5bff"/>
+                                            <stop offset="100%" stopColor="#7ab8ff"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(138,91,255,0.06)" strokeWidth="12" />
+                                    
+                                    <motion.circle
+                                        cx="100"
+                                        cy="100"
+                                        r={circleRadius}
+                                        fill="none"
+                                        stroke="url(#resRingGrad)"
+                                        strokeWidth="12"
+                                        strokeLinecap="round"
+                                        strokeDasharray={circleCircumference}
+                                        initial={{ strokeDashoffset: circleCircumference }}
+                                        animate={{ strokeDashoffset: circleStrokeDashoffset }}
+                                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                                    />
+                                </svg>
+                                
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '40px', fontWeight: 800, margin: 0, lineHeight: '1', color: '#1e293b' }}>{resultPercent}%</span>
+                                    <span style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>правильных ответов</span>
+                                </div>
+                            </div>
+
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '10px 24px',
+                                    background: 'linear-gradient(to right, #f0f5ff, #f5f3ff)',
+                                    borderRadius: '30px',
+                                    marginBottom: '30px',
+                                    border: '1px solid rgba(138,91,255,0.12)'
+                                }}>
+                                    <p style={{fontSize: 15, color: '#4f46e5', margin: 0, fontWeight: 700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                                </div>
+                            </div>
+                            
+                            <div style={{background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(245,247,255,0.9))', padding: '20px', borderRadius: '20px', marginBottom: '20px', border: '1px solid rgba(122,184,255,0.25)', boxShadow: '0 10px 30px rgba(59,130,246,0.05)'}}>
+                                {!isResultSaved ? (
+                                    <>
+                                        <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15, background: '#f8fafc', border: '1px solid rgba(138,91,255,0.1)', borderRadius: '12px', height: '48px'}} />
+                                        <Button onClick={() => saveResult(document.getElementById('sName').value)} style={{width: '100%', background: 'linear-gradient(135deg, #4f46e5, #3b82f6)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '48px', borderRadius: '14px', fontSize: '15px', fontWeight: '600', boxShadow: '0 4px 15px rgba(59,130,246,0.3)'}}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                            Сохранить
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:16, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
+                                )}
+                            </div>
+                            
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                                <div style={{display: 'flex', gap: '12px', width: '100%'}}>
+                                    <Button onClick={() => setView('review')} style={{flex: 1, background: '#fffbeb', color: '#92400e', border: '1px solid #fef3c7', borderRadius: '14px', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', fontSize: '14px', padding: '0 10px'}}>
+                                        <div style={{background: '#f59e0b', color: '#fff', borderRadius: '6px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                        </div>
+                                        Ошибки
+                                    </Button>
+                                    
+                                    {testSession.score < testSession.questions.length && (
+                                        <Button onClick={restartMistakes} style={{flex: 1, background: '#ecfeff', color: '#0369a1', border: '1px solid #cffafe', borderRadius: '14px', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', fontSize: '14px', padding: '0 10px'}}>
+                                            <div style={{background: '#06b6d4', color: '#fff', borderRadius: '6px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                                            </div>
+                                            Повторить
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <Button onClick={() => setView('menu')} style={{width: '100%', background: 'transparent', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '14px', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', fontSize: '15px'}}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                    В меню
+                                </Button>
+                            </div>
                         </div>
                     </motion.div>
                 )}
