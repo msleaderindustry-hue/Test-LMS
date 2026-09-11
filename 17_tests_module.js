@@ -233,7 +233,7 @@
 
         // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
         const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
-        const circleRadius = 65;
+        const circleRadius = 80;
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
 
@@ -422,205 +422,55 @@
                     </motion.div>
                 )}
 
-                {/* --- АДАПТИВНЫЙ ЭКРАН РЕЗУЛЬТАТА (АВТОМАТИЧЕСКИ ПОДСТРАИВАЕТСЯ ПОД ТЕМУ) --- */}
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0}} className="glass-panel" style={{
-                        position: 'relative',
-                        width: '100%',
-                        maxWidth: '400px',
-                        borderRadius: '26px',
-                        padding: '38px 30px 28px',
-                        textAlign: 'center',
-                        margin: '0 auto',
-                        overflow: 'hidden'
-                    }}>
-                        {/* Декоративная линия сверху */}
-                        <div style={{ position: 'absolute', top: 0, left: '16%', right: '16%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(124,111,242,0.6), rgba(63,208,240,0.6), transparent)' }}></div>
-            
-                        <h2 style={{
-                            fontFamily: "'Newsreader', serif",
-                            fontWeight: 600,
-                            fontSize: '24px',
-                            letterSpacing: '.01em',
-                            margin: '0 0 30px',
-                            color: 'var(--text-main)' // Адаптивный цвет заголовка
-                        }}>Результат</h2>
-            
-                        <div style={{ width: '150px', height: '150px', margin: '0 auto 8px', position: 'relative' }}>
-                            <svg viewBox="0 0 150 150" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                                <defs>
-                                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#7c6ff2"/>
-                                        <stop offset="100%" stopColor="#3fd0f0"/>
-                                    </linearGradient>
-                                </defs>
-                                <circle cx="75" cy="75" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="9" />
+                    <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
+                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
+                        
+                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
+                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
+                                
                                 <motion.circle
-                                    cx="75"
-                                    cy="75"
+                                    cx="100"
+                                    cy="100"
                                     r={circleRadius}
                                     fill="none"
-                                    stroke="url(#ringGradient)"
-                                    strokeWidth="9"
+                                    stroke="#00f2fe"
+                                    strokeWidth="14"
                                     strokeLinecap="round"
                                     strokeDasharray={circleCircumference}
                                     initial={{ strokeDashoffset: circleCircumference }}
                                     animate={{ strokeDashoffset: circleStrokeDashoffset }}
-                                    transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1], delay: 0.2 }}
-                                    style={{ filter: 'drop-shadow(0 0 10px rgba(124,111,242,0.45))' }}
+                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
                                 />
                             </svg>
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ fontFamily: "'Newsreader', serif", fontSize: '36px', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1 }}>{resultPercent}%</div>
-                                <div style={{ fontSize: '11.5px', color: 'var(--text-sec)', marginTop: '5px', letterSpacing: '.02em' }}>правильных ответов</div>
+                            
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-            
-                        <div style={{
-                            display: 'inline-block',
-                            margin: '22px 0 28px',
-                            padding: '9px 18px',
-                            borderRadius: '999px',
-                            background: 'var(--bg-panel)',
-                            border: '1px solid var(--glass-border)',
-                            fontSize: '13.5px',
-                            fontWeight: 600,
-                            color: 'var(--text-sec)'
-                        }}>
-                            Правильно: <b style={{ color: 'var(--text-main)', fontWeight: 700 }}>{testSession.score} из {testSession.questions.length}</b>
+
+                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
+                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-            
-                        <div style={{
-                            background: 'rgba(128, 128, 128, 0.05)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '20px',
-                            padding: '16px',
-                            marginBottom: '20px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-                        }}>
+                        
+                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
-                                    <input
-                                        id="sName"
-                                        placeholder="Введите ваше имя"
-                                        style={{
-                                            width: '100%',
-                                            border: '1px solid var(--glass-border)',
-                                            borderRadius: '12px',
-                                            padding: '0 16px',
-                                            height: '48px',
-                                            fontFamily: "'Inter', sans-serif",
-                                            fontSize: '14px',
-                                            color: 'var(--text-main)',
-                                            background: 'rgba(128, 128, 128, 0.05)',
-                                            marginBottom: '12px',
-                                            outline: 'none',
-                                            boxSizing: 'border-box',
-                                            transition: 'border-color 0.2s'
-                                        }}
-                                        onFocus={(e) => e.target.style.borderColor = 'rgba(124,111,242,0.5)'}
-                                        onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
-                                    />
-                                    <button
-                                        onClick={() => saveResult(document.getElementById('sName').value)}
-                                        style={{
-                                            width: '100%',
-                                            height: '48px',
-                                            fontFamily: "'Inter', sans-serif",
-                                            fontWeight: 600,
-                                            fontSize: '14.5px',
-                                            border: 'none',
-                                            borderRadius: '12px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '9px',
-                                            background: 'linear-gradient(120deg, #7c6ff2, #3fd0f0)',
-                                            color: '#fff',
-                                            boxShadow: '0 10px 20px -8px rgba(124,111,242,0.5)'
-                                        }}
-                                    >
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-                                        Сохранить
-                                    </button>
+                                    <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
+                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
                                 </>
                             ) : (
-                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#34d399', fontWeight:'bold', fontSize:'14.5px', padding:'15px 0', textAlign: 'center'}}>✅ Результат успешно сохранен!</motion.div>
+                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
                             )}
                         </div>
-            
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                            <button
-                                onClick={() => setView('review')}
-                                style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 600,
-                                    border: '1px solid var(--glass-border)',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '9px',
-                                    background: 'rgba(245, 158, 11, 0.08)',
-                                    color: '#d97706',
-                                    fontSize: '13.5px',
-                                    padding: '13px 8px'
-                                }}
-                            >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
-                                Ошибки
-                            </button>
-            
-                            {testSession.score < testSession.questions.length && (
-                                <button
-                                    onClick={restartMistakes}
-                                    style={{
-                                        fontFamily: "'Inter', sans-serif",
-                                        fontWeight: 600,
-                                        border: '1px solid var(--glass-border)',
-                                        borderRadius: '12px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '9px',
-                                        background: 'rgba(59, 130, 246, 0.08)',
-                                        color: '#2563eb',
-                                        fontSize: '13.5px',
-                                        padding: '13px 8px'
-                                    }}
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0114.85-3.36L23 10M1 14l4.65 4.36A9 9 0 0020.5 15"/></svg>
-                                    Повторить
-                                </button>
-                            )}
+                        <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
+                            <Button variant="orange" onClick={() => setView('review')}>🧐 Ошибки</Button>
+                            {testSession.score < testSession.questions.length && (<Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>)}
+                            <Button onClick={() => setView('menu')}>🏠 Меню</Button>
                         </div>
-            
-                        <button
-                            onClick={() => setView('menu')}
-                            style={{
-                                width: '100%',
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 600,
-                                fontSize: '14.5px',
-                                border: '1px solid var(--glass-border)',
-                                borderRadius: '12px',
-                                cursor: 'pointer',
-                                padding: '14px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '9px',
-                                background: 'transparent',
-                                color: 'var(--text-sec)',
-                                marginTop: '2px'
-                            }}
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-                            В меню
-                        </button>
                     </motion.div>
                 )}
 
