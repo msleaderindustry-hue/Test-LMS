@@ -422,18 +422,15 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА --- */}
+                {/* --- АДАПТИВНЫЙ ЭКРАН РЕЗУЛЬТАТА (АВТОМАТИЧЕСКИ ПОДСТРАИВАЕТСЯ ПОД ТЕМУ) --- */}
                 {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0}} style={{
+                    <motion.div key="res" initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0}} className="glass-panel" style={{
                         position: 'relative',
                         width: '100%',
                         maxWidth: '400px',
-                        background: '#181725',
                         borderRadius: '26px',
-                        boxShadow: '0 40px 70px -24px rgba(0,0,0,0.7)',
                         padding: '38px 30px 28px',
                         textAlign: 'center',
-                        border: '1px solid rgba(255,255,255,0.06)',
                         margin: '0 auto',
                         overflow: 'hidden'
                     }}>
@@ -446,7 +443,7 @@
                             fontSize: '24px',
                             letterSpacing: '.01em',
                             margin: '0 0 30px',
-                            color: '#f3f2fa'
+                            color: 'var(--text-main)' // Адаптивный цвет заголовка
                         }}>Результат</h2>
             
                         <div style={{ width: '150px', height: '150px', margin: '0 auto 8px', position: 'relative' }}>
@@ -457,7 +454,7 @@
                                         <stop offset="100%" stopColor="#3fd0f0"/>
                                     </linearGradient>
                                 </defs>
-                                <circle cx="75" cy="75" r={circleRadius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
+                                <circle cx="75" cy="75" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="9" />
                                 <motion.circle
                                     cx="75"
                                     cy="75"
@@ -474,8 +471,8 @@
                                 />
                             </svg>
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ fontFamily: "'Newsreader', serif", fontSize: '36px', fontWeight: 600, color: '#fff', lineHeight: 1 }}>{resultPercent}%</div>
-                                <div style={{ fontSize: '11.5px', color: '#726e93', marginTop: '5px', letterSpacing: '.02em' }}>правильных ответов</div>
+                                <div style={{ fontFamily: "'Newsreader', serif", fontSize: '36px', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1 }}>{resultPercent}%</div>
+                                <div style={{ fontSize: '11.5px', color: 'var(--text-sec)', marginTop: '5px', letterSpacing: '.02em' }}>правильных ответов</div>
                             </div>
                         </div>
             
@@ -484,23 +481,22 @@
                             margin: '22px 0 28px',
                             padding: '9px 18px',
                             borderRadius: '999px',
-                            background: '#1f1d30',
-                            border: '1px solid rgba(255,255,255,0.07)',
+                            background: 'var(--bg-panel)',
+                            border: '1px solid var(--glass-border)',
                             fontSize: '13.5px',
                             fontWeight: 600,
-                            color: '#b6b2d1'
+                            color: 'var(--text-sec)'
                         }}>
-                            Правильно: <b style={{ color: '#fff', fontWeight: 700 }}>{testSession.score} из {testSession.questions.length}</b>
+                            Правильно: <b style={{ color: 'var(--text-main)', fontWeight: 700 }}>{testSession.score} из {testSession.questions.length}</b>
                         </div>
             
-                        {/* АДАПТИРОВАННЫЙ БЛОК СОХРАНЕНИЯ В ТЁМНОЙ ТЕМЕ */}
                         <div style={{
-                            background: 'rgba(255, 255, 255, 0.02)',
-                            border: '1px solid rgba(124, 111, 242, 0.15)',
+                            background: 'rgba(128, 128, 128, 0.05)',
+                            border: '1px solid var(--glass-border)',
                             borderRadius: '20px',
                             padding: '16px',
                             marginBottom: '20px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
                         }}>
                             {!isResultSaved ? (
                                 <>
@@ -509,21 +505,21 @@
                                         placeholder="Введите ваше имя"
                                         style={{
                                             width: '100%',
-                                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                                            border: '1px solid var(--glass-border)',
                                             borderRadius: '12px',
                                             padding: '0 16px',
                                             height: '48px',
                                             fontFamily: "'Inter', sans-serif",
                                             fontSize: '14px',
-                                            color: '#f3f2fa',
-                                            background: 'rgba(255, 255, 255, 0.04)',
+                                            color: 'var(--text-main)',
+                                            background: 'rgba(128, 128, 128, 0.05)',
                                             marginBottom: '12px',
                                             outline: 'none',
                                             boxSizing: 'border-box',
                                             transition: 'border-color 0.2s'
                                         }}
                                         onFocus={(e) => e.target.style.borderColor = 'rgba(124,111,242,0.5)'}
-                                        onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'}
+                                        onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
                                     />
                                     <button
                                         onClick={() => saveResult(document.getElementById('sName').value)}
@@ -541,7 +537,7 @@
                                             justifyContent: 'center',
                                             gap: '9px',
                                             background: 'linear-gradient(120deg, #7c6ff2, #3fd0f0)',
-                                            color: '#0e0d18',
+                                            color: '#fff',
                                             boxShadow: '0 10px 20px -8px rgba(124,111,242,0.5)'
                                         }}
                                     >
@@ -560,15 +556,15 @@
                                 style={{
                                     fontFamily: "'Inter', sans-serif",
                                     fontWeight: 600,
-                                    border: '1px solid rgba(255,255,255,0.07)',
+                                    border: '1px solid var(--glass-border)',
                                     borderRadius: '12px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '9px',
-                                    background: 'transparent',
-                                    color: '#f0ab5a',
+                                    background: 'rgba(245, 158, 11, 0.08)',
+                                    color: '#d97706',
                                     fontSize: '13.5px',
                                     padding: '13px 8px'
                                 }}
@@ -583,15 +579,15 @@
                                     style={{
                                         fontFamily: "'Inter', sans-serif",
                                         fontWeight: 600,
-                                        border: '1px solid rgba(255,255,255,0.07)',
+                                        border: '1px solid var(--glass-border)',
                                         borderRadius: '12px',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         gap: '9px',
-                                        background: 'transparent',
-                                        color: '#4bb8ff',
+                                        background: 'rgba(59, 130, 246, 0.08)',
+                                        color: '#2563eb',
                                         fontSize: '13.5px',
                                         padding: '13px 8px'
                                     }}
@@ -609,7 +605,7 @@
                                 fontFamily: "'Inter', sans-serif",
                                 fontWeight: 600,
                                 fontSize: '14.5px',
-                                border: '1px solid rgba(255,255,255,0.07)',
+                                border: '1px solid var(--glass-border)',
                                 borderRadius: '12px',
                                 cursor: 'pointer',
                                 padding: '14px',
@@ -618,7 +614,7 @@
                                 justifyContent: 'center',
                                 gap: '9px',
                                 background: 'transparent',
-                                color: '#726e93',
+                                color: 'var(--text-sec)',
                                 marginTop: '2px'
                             }}
                         >
