@@ -233,7 +233,7 @@
 
         // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
         const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
-        const circleRadius = 65; // Адаптировано под прототип
+        const circleRadius = 65;
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
 
@@ -493,7 +493,15 @@
                             Правильно: <b style={{ color: '#fff', fontWeight: 700 }}>{testSession.score} из {testSession.questions.length}</b>
                         </div>
             
-                        <div style={{ marginBottom: '18px', textAlign: 'left' }}>
+                        {/* АДАПТИРОВАННЫЙ БЛОК СОХРАНЕНИЯ В ТЁМНОЙ ТЕМЕ */}
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: '1px solid rgba(124, 111, 242, 0.15)',
+                            borderRadius: '20px',
+                            padding: '16px',
+                            marginBottom: '20px',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                        }}>
                             {!isResultSaved ? (
                                 <>
                                     <input
@@ -501,36 +509,40 @@
                                         placeholder="Введите ваше имя"
                                         style={{
                                             width: '100%',
-                                            border: 'none',
-                                            borderBottom: '1.5px solid rgba(255,255,255,0.07)',
-                                            borderRadius: 0,
-                                            padding: '11px 2px',
+                                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '12px',
+                                            padding: '0 16px',
+                                            height: '48px',
                                             fontFamily: "'Inter', sans-serif",
                                             fontSize: '14px',
                                             color: '#f3f2fa',
-                                            background: 'transparent',
-                                            marginBottom: '14px',
-                                            outline: 'none'
+                                            background: 'rgba(255, 255, 255, 0.04)',
+                                            marginBottom: '12px',
+                                            outline: 'none',
+                                            boxSizing: 'border-box',
+                                            transition: 'border-color 0.2s'
                                         }}
+                                        onFocus={(e) => e.target.style.borderColor = 'rgba(124,111,242,0.5)'}
+                                        onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'}
                                     />
                                     <button
                                         onClick={() => saveResult(document.getElementById('sName').value)}
                                         style={{
                                             width: '100%',
+                                            height: '48px',
                                             fontFamily: "'Inter', sans-serif",
                                             fontWeight: 600,
                                             fontSize: '14.5px',
                                             border: 'none',
                                             borderRadius: '12px',
                                             cursor: 'pointer',
-                                            padding: '14px',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '9px',
                                             background: 'linear-gradient(120deg, #7c6ff2, #3fd0f0)',
                                             color: '#0e0d18',
-                                            boxShadow: '0 14px 26px -10px rgba(124,111,242,0.5)'
+                                            boxShadow: '0 10px 20px -8px rgba(124,111,242,0.5)'
                                         }}
                                     >
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
