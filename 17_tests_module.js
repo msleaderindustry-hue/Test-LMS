@@ -1,6 +1,6 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
+    const { useState, useEffect, motion, AnimatePresence, Button, Input, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
 
     // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
@@ -239,8 +239,15 @@
 
         return (
             <AnimatePresence mode="wait">
+                {/* --- ОБНОВЛЕННОЕ ГЛАВНОЕ МЕНЮ СО СПИСКОМ --- */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
+                        
+                        <style>{`
+                            .menu-row-hover:hover { background: var(--bg-elevated) !important; border-color: rgba(139, 92, 246, 0.4) !important; }
+                            .add-test-container:focus-within { border-color: #8b5cf6 !important; background: rgba(139, 92, 246, 0.05) !important; }
+                        `}</style>
+
                         <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
                             <svg viewBox="0 0 64 64" fill="none" style={{width:'100%', height:'100%'}}>
                                 <defs>
@@ -257,44 +264,52 @@
                         </div>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
                         
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}} className="custom-scroll">
+                            
+                            {/* --- СПИСОК ТЕСТОВ ПРЕПОДАВАТЕЛЯ --- */}
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
-                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent' }}>
-                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                <div key={test.id} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
+                                    <div onClick={() => openTeacherAssignedTest(test)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
+                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #38bdf8, #06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                         </div>
-                                        <div style={{display: 'flex', flexDirection: 'column'}}>
-                                            <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
-                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{test.title}</span>
+                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
+                                            <span style={{fontSize:'11px', fontWeight:900, color:'#38bdf8', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'2px'}}>Опубликован</span>
+                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{test.title}</span>
                                         </div>
-                                    </Button>
-                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: 'linear-gradient(135deg, #fb7185, #f43f5e)', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </Button>
+                                    </div>
+                                    <button onClick={() => removeTeacherTestStudent(test.id, test.title)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
                                 </div>
                             ))}
 
+                            {/* --- СПИСОК ПАПОК ПОЛЬЗОВАТЕЛЯ --- */}
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
-                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid transparent' }}>
-                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                <div key={name} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
+                                    <div onClick={() => openSet(name)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
+                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #fbbf24, #f59e0b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                                         </div>
-                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{name}</span>
-                                    </Button>
-                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: 'linear-gradient(135deg, #fb7185, #f43f5e)', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => deleteSet(name)}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </Button>
+                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
+                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{name}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => deleteSet(name)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
                                 </div>
                             ))}
                         </div>
-                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
-                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                            <Button style={{width: '44px', height: '44px', padding: 0, margin: 0, flexShrink: 0, background: 'linear-gradient(135deg, #60a5fa, #3b82f6)', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </Button>
+                        
+                        {/* --- ИНПУТ ДОБАВЛЕНИЯ НОВОГО ТЕСТА --- */}
+                        <div className="add-test-container" style={{display:'flex', gap:'12px', alignItems: 'center', padding:'8px', borderRadius:'18px', border:'2px dashed rgba(128, 128, 128, 0.35)', background: 'rgba(128, 128, 128, 0.02)', transition:'all 0.2s', marginTop:'16px'}}>
+                            <input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1, background:'transparent', border:'none', padding:'10px 15px', fontSize:'16px', color:'var(--text-main)', outline:'none', fontWeight: 600}} />
+                            <button onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #6366f1, #3b82f6)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'transform 0.1s'}}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
                         </div>
+                        
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
@@ -395,32 +410,151 @@
                     </motion.div>
                 )}
 
-                {view === 'test' && (
-                    <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
-                        <div className="question-column">
-                            <AnimatePresence mode="wait">
-                                <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
-                            </AnimatePresence>
-                        </div>
-                        <div className="sidebar-column">
-                            <div className="sidebar-content">
-                                <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
-                                <div className="nav-grid-wrapper">
-                                    <div className="nav-grid-compact">
-                                        {testSession.questions.map((_, i) => {
-                                            let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
-                                            if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
-                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
-                                            const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
-                                        })}
-                                    </div>
-                                </div>
-                                <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН САМОГО ТЕСТА С НОВЫМ ДИЗАЙНОМ --- */}
+                {view === 'test' && (() => {
+                    const index = testSession.currentIdx;
+                    const question = testSession.questions[index];
+                    const answers = testSession.answers;
+                    const total = testSession.questions.length;
+                    const pct = total > 0 ? Math.round(((index + 1) / total) * 100) : 0;
+                    const isWarning = timeLeft < 120;
+
+                    return (
+                        <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
+                            
+                            <div className="question-column">
+                                <AnimatePresence mode="wait">
+                                    {question && (
+                                        <motion.div key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="glass-panel" style={{width: '100%', display:'block', padding: '35px 30px'}}>
+                                            
+                                            {/* Градиентный бейдж вопроса и прогресс-бар */}
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px'}}>
+                                                <div style={{background: 'linear-gradient(135deg, #a855f7, #8b5cf6)', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0}}>
+                                                    Вопрос {index + 1}
+                                                </div>
+                                                <div style={{flex: 1, height: '4px', background: 'rgba(128,128,128,0.1)', borderRadius: '2px', overflow: 'hidden'}}>
+                                                    <div style={{width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #a855f7, #8b5cf6)', transition: 'width 0.3s ease'}}></div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{fontSize: '22px', marginBottom: '30px', fontWeight: 500, color: 'var(--text-main)', lineHeight: 1.5}} dangerouslySetInnerHTML={{__html: question.question}} />
+                                            
+                                            {question.questionImg && <img src={question.questionImg} className="question-image" style={{maxWidth: '100%', borderRadius: '12px', marginBottom: '24px'}} />}
+                                            
+                                            {/* Новые карточки-варианты ответов */}
+                                            <div style={{display:'flex', flexDirection:'column', gap: '12px'}}>
+                                               {question.variants.map((v, i) => {
+                                                  const isAnswered = answers[index] !== null; 
+                                                  const isSelected = answers[index] === i; 
+                                                  
+                                                  let bg = 'rgba(128, 128, 128, 0.03)';
+                                                  let border = '1px solid rgba(128, 128, 128, 0.15)';
+                                                  let radioBorder = 'rgba(128, 128, 128, 0.4)';
+                                                  let radioInner = 'transparent';
+                                                  let textColor = 'var(--text-main)';
+
+                                                  // Синее выделение выбранного варианта
+                                                  if (isSelected) {
+                                                      bg = 'rgba(59, 130, 246, 0.05)';
+                                                      border = '1px solid #3b82f6';
+                                                      textColor = 'var(--text-main)';
+                                                      radioBorder = '#3b82f6';
+                                                      radioInner = '#3b82f6';
+                                                  }
+
+                                                  return (
+                                                    <motion.div key={i} onClick={() => !isAnswered && handleAnswer(i)} 
+                                                        style={{ 
+                                                            pointerEvents: isAnswered ? 'none' : 'auto', 
+                                                            display: 'flex', alignItems: 'center', padding: '16px 20px', borderRadius: '14px',
+                                                            cursor: 'pointer', transition: 'all 0.2s', background: bg, border: border, color: textColor
+                                                        }} 
+                                                        whileHover={!isAnswered ? { scale: 1.01, background: 'rgba(139, 92, 246, 0.05)', borderColor: 'rgba(139, 92, 246, 0.3)' } : {}}>
+                                                       <div style={{width: '22px', height: '22px', borderRadius: '50%', marginRight: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `2px solid ${radioBorder}`, background: 'transparent', transition: 'all 0.2s'}}>
+                                                           {radioInner !== 'transparent' && <div style={{width: '12px', height: '12px', borderRadius: '50%', background: radioInner}}></div>}
+                                                       </div>
+                                                       <div>
+                                                           {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
+                                                           <span style={{fontSize: '16px', fontWeight: isSelected ? 600 : 400}}>{v.text}</span>
+                                                       </div>
+                                                    </motion.div>
+                                                  )
+                                               })}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
-                        </div>
-                    </motion.div>
-                )}
+
+                            <div className="sidebar-column">
+                                <div className="sidebar-content" style={{background: 'var(--bg-panel)', padding: '24px', borderRadius: '20px', border: '1px solid var(--glass-border)'}}>
+                                    
+                                    {/* Кастомный градиентный таймер */}
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: '16px', border: '1px solid var(--glass-border)', marginBottom: '24px', transition: 'all 0.3s'
+                                    }}>
+                                        <div style={{
+                                            width: '42px', height: '42px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                                            background: isWarning ? 'linear-gradient(135deg, #fb7185, #f43f5e)' : 'linear-gradient(135deg, #6366f1, #3b82f6)',
+                                            transition: 'background 0.3s'
+                                        }}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polygon points="6 2 18 2 18 7 12 13 6 7"></polygon>
+                                                <polygon points="6 22 18 22 18 17 12 11 6 17"></polygon>
+                                            </svg>
+                                        </div>
+                                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                                            <span style={{fontSize: '24px', fontWeight: 800, color: isWarning ? '#f43f5e' : 'var(--text-main)', lineHeight: '1', fontVariantNumeric: 'tabular-nums', transition: 'color 0.3s'}}>{formatTime(timeLeft)}</span>
+                                            <span style={{fontSize: '12px', color: 'var(--text-sec)', fontWeight: 600, marginTop: '4px'}}>осталось времени</span>
+                                        </div>
+                                    </div>
+
+                                    <div style={{fontSize: '13px', color: 'var(--text-sec)', fontWeight: 600, marginBottom: '16px'}}>
+                                        Отвечено: <b style={{color: 'var(--text-main)'}}>{answers.filter(a => a !== null).length}</b> из {total}
+                                    </div>
+
+                                    {/* Новая сетка вопросов */}
+                                    <div className="nav-grid-wrapper" style={{marginBottom: '24px'}}>
+                                        <div className="nav-grid-compact" style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px'}}>
+                                            {testSession.questions.map((_, i) => {
+                                                const isCurrent = i === testSession.currentIdx;
+                                                const isAnswered = testSession.answers[i] !== null;
+                                                
+                                                let bg = 'var(--bg-elevated)';
+                                                let color = 'var(--text-main)';
+                                                let border = '1px solid var(--glass-border)';
+                                                
+                                                if (isCurrent) {
+                                                    bg = 'linear-gradient(135deg, #a855f7, #8b5cf6)';
+                                                    color = '#fff';
+                                                    border = '1px solid transparent';
+                                                } else if (isAnswered) {
+                                                    bg = 'rgba(168, 85, 247, 0.08)';
+                                                    color = '#a855f7';
+                                                    border = '1px solid rgba(168, 85, 247, 0.25)';
+                                                }
+                                                
+                                                const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
+                                                return (
+                                                    <div key={i} className={itemClass} onClick={() => handleNavClick(i)} 
+                                                         style={{
+                                                             background: bg, color: color, border: border, borderRadius: '8px', height: '40px', 
+                                                             display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, 
+                                                             cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px'
+                                                         }}>
+                                                        {i+1}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <Button onClick={finishTest} style={{width: '100%', background: 'linear-gradient(135deg, #6366f1, #3b82f6)', color: '#fff', border: 'none', height: '54px', borderRadius: '14px', fontSize: '16px', fontWeight: 700}}>Завершить</Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })()}
 
                 {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
