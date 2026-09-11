@@ -1,6 +1,6 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, motion, AnimatePresence, Button, Input, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
+    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
 
     // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
@@ -239,15 +239,8 @@
 
         return (
             <AnimatePresence mode="wait">
-                {/* --- ОБНОВЛЕННОЕ ГЛАВНОЕ МЕНЮ СО СПИСКОМ --- */}
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-                        
-                        <style>{`
-                            .menu-row-hover:hover { background: var(--bg-elevated) !important; border-color: rgba(139, 92, 246, 0.4) !important; }
-                            .add-test-container:focus-within { border-color: #8b5cf6 !important; background: rgba(139, 92, 246, 0.05) !important; }
-                        `}</style>
-
                         <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
                             <svg viewBox="0 0 64 64" fill="none" style={{width:'100%', height:'100%'}}>
                                 <defs>
@@ -264,153 +257,67 @@
                         </div>
                         <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
                         
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}} className="custom-scroll">
-                            
-                            {/* --- СПИСОК ТЕСТОВ ПРЕПОДАВАТЕЛЯ --- */}
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
-                                    <div onClick={() => openTeacherAssignedTest(test)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
-                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #38bdf8, #06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
-                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                                        </div>
-                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
-                                            <span style={{fontSize:'11px', fontWeight:900, color:'#38bdf8', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'2px'}}>Опубликован</span>
-                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{test.title}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => removeTeacherTestStudent(test.id, test.title)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
+                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid #00c6ff' }}>
+                                        <span style={{marginRight:8}}>☁️</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#00c6ff', fontWeight: 700}}>{test.title}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>🗑</Button>
                                 </div>
                             ))}
 
-                            {/* --- СПИСОК ПАПОК ПОЛЬЗОВАТЕЛЯ --- */}
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:'12px', marginBottom:'12px', background:'rgba(128, 128, 128, 0.06)', border:'1px solid rgba(128, 128, 128, 0.2)', padding:'8px', borderRadius:'18px', alignItems:'center', transition:'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'}} className="menu-row-hover">
-                                    <div onClick={() => openSet(name)} style={{display:'flex', gap:'12px', flex:1, alignItems:'center', cursor:'pointer', minWidth:0}}>
-                                        <div style={{width:'54px', height:'54px', borderRadius:'14px', background:'linear-gradient(135deg, #fbbf24, #f59e0b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                                        </div>
-                                        <div style={{display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0}}>
-                                            <span style={{fontSize:'16px', fontWeight:700, color:'var(--text-main)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{name}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => deleteSet(name)} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #fb7185, #f43f5e)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, marginRight:'4px', transition:'transform 0.1s'}}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
+                                <div key={name} style={{display:'flex', gap:10, marginBottom:10}}>
+                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, justifyContent:'flex-start', textAlign:'left', padding:'10px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word' }}>
+                                        <span style={{marginRight:8}}>📂</span>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3'}}>{name}</span>
+                                    </Button>
+                                    <Button variant="red" style={{width:60, padding:0, flexShrink:0}} onClick={() => deleteSet(name)}>🗑</Button>
                                 </div>
                             ))}
                         </div>
-                        
-                        {/* --- ИНПУТ ДОБАВЛЕНИЯ НОВОГО ТЕСТА --- */}
-                        <div className="add-test-container" style={{display:'flex', gap:'12px', alignItems: 'center', padding:'8px', borderRadius:'18px', border:'2px dashed rgba(128, 128, 128, 0.35)', background: 'rgba(128, 128, 128, 0.02)', transition:'all 0.2s', marginTop:'16px'}}>
-                            <input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1, background:'transparent', border:'none', padding:'10px 15px', fontSize:'16px', color:'var(--text-main)', outline:'none', fontWeight: 600}} />
-                            <button onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }} style={{width:'46px', height:'46px', borderRadius:'12px', background:'linear-gradient(135deg, #6366f1, #3b82f6)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'transform 0.1s'}}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                            <Button style={{width:60, padding:0, margin:0}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>➕</Button>
                         </div>
-                        
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
 
                 {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        
-                        <button onClick={() => setView('menu')} style={{
-                            position: 'absolute', top: '24px', left: '24px', 
-                            width: '44px', height: '44px', borderRadius: '50%', 
-                            border: '1px solid var(--glass-border)', background: 'var(--bg-panel)',
-                            color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer', zIndex: 10, padding: 0
-                        }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        </button>
-
-                        <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
-                            <h2 style={{ margin: '0 0 12px 0', fontSize: '28px', fontWeight: 800 }}>{currentSet}</h2>
-                            <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', margin: '0 auto', borderRadius: '2px' }}></div>
-                        </div>
-
+                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px'}}>
+                        <Button variant="muted" style={{width:'auto', padding:'0 25px', height:40, minHeight:40, fontSize:13}} onClick={() => setView('menu')}>⬅ Назад</Button>
+                        <h2 style={{textAlign:'center', margin:'20px 0', fontSize:24}}>{currentSet}</h2>
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                            <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                                Печать
-                            </Button>
-                            
-                            <label style={{
-                                background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', 
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, 
-                                fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s',
-                                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)'
-                            }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                Импорт
-                                <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                            <Button variant="primary" onClick={handlePrint}>🖨️ Печать</Button>
+                            <label className="import-label" style={{background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color:'white'}}>
+                                📥 Импорт <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                             </label>
                         </div>
-                        
-                        <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            Начать тест
-                        </Button>
+                        <Button onClick={startTest} style={{fontSize:18, height:60}}>▶ НАЧАТЬ ТЕСТ</Button>
                         <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
 
                 {view === 'timer_setup' && (
-                    <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.9}} className="glass-panel" style={{width:'100%', maxWidth:420, padding: '30px 25px'}}>
-                        
-                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', marginBottom:'30px'}}>
-                            <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                            </div>
-                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
+                    <motion.div key="timer" initial={{scale:0.9}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:400, textAlign:'center'}}>
+                        <h2 style={{marginTop:0}}>⚙️ Параметры теста</h2>
+                        <div style={{marginBottom:15, textAlign:'left'}}>
+                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>⏱️ Время (минуты):</label>
+                            <Input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                         </div>
-
-                        <div style={{marginBottom:'24px', textAlign:'left'}}>
-                            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
-                                <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
-                            </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeTime ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
-                            </motion.div>
+                        <div style={{marginBottom:15, textAlign:'left'}}>
+                            <label style={{fontSize:14, fontWeight:600, color:'var(--text-sec)', marginBottom:5, display:'block'}}>🔢 Количество вопросов (Макс: {tests.length}):</label>
+                            <Input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} style={{textAlign:'center', fontSize:20, fontWeight:800}} />
                         </div>
-
-                        <div style={{marginBottom:'30px', textAlign:'left'}}>
-                            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
-                                <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                                </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
-                            </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeQ ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
-                            </motion.div>
-                        </div>
-
-                        <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
-                            {isStarting ? (
-                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} style={{display:'flex', gap:'6px', justifyContent:'center'}}>
-                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                                    <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                                </motion.div>
-                            ) : "Начать"}
-                        </Button>
-                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--glass-border)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
+                        <Button variant="green" onClick={launchTestWithTimer} style={{marginTop:20}}>Начать</Button>
+                        <Button variant="muted" onClick={() => setView('set_menu')}>Отмена</Button>
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН САМОГО ТЕСТА С НОВЫМ ДИЗАЙНОМ --- */}
+                {/* --- НОВЫЙ ДИЗАЙН ЭКРАНА ТЕСТИРОВАНИЯ --- */}
                 {view === 'test' && (() => {
                     const index = testSession.currentIdx;
                     const question = testSession.questions[index];
@@ -421,13 +328,11 @@
 
                     return (
                         <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
-                            
                             <div className="question-column">
                                 <AnimatePresence mode="wait">
                                     {question && (
                                         <motion.div key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="glass-panel" style={{width: '100%', display:'block', padding: '35px 30px'}}>
                                             
-                                            {/* Градиентный бейдж вопроса и прогресс-бар */}
                                             <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px'}}>
                                                 <div style={{background: 'linear-gradient(135deg, #a855f7, #8b5cf6)', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0}}>
                                                     Вопрос {index + 1}
@@ -441,7 +346,6 @@
                                             
                                             {question.questionImg && <img src={question.questionImg} className="question-image" style={{maxWidth: '100%', borderRadius: '12px', marginBottom: '24px'}} />}
                                             
-                                            {/* Новые карточки-варианты ответов */}
                                             <div style={{display:'flex', flexDirection:'column', gap: '12px'}}>
                                                {question.variants.map((v, i) => {
                                                   const isAnswered = answers[index] !== null; 
@@ -453,7 +357,6 @@
                                                   let radioInner = 'transparent';
                                                   let textColor = 'var(--text-main)';
 
-                                                  // Синее выделение выбранного варианта
                                                   if (isSelected) {
                                                       bg = 'rgba(59, 130, 246, 0.05)';
                                                       border = '1px solid #3b82f6';
@@ -489,7 +392,6 @@
                             <div className="sidebar-column">
                                 <div className="sidebar-content" style={{background: 'var(--bg-panel)', padding: '24px', borderRadius: '20px', border: '1px solid var(--glass-border)'}}>
                                     
-                                    {/* Кастомный градиентный таймер */}
                                     <div style={{
                                         display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: '16px', border: '1px solid var(--glass-border)', marginBottom: '24px', transition: 'all 0.3s'
                                     }}>
@@ -513,7 +415,6 @@
                                         Отвечено: <b style={{color: 'var(--text-main)'}}>{answers.filter(a => a !== null).length}</b> из {total}
                                     </div>
 
-                                    {/* Новая сетка вопросов */}
                                     <div className="nav-grid-wrapper" style={{marginBottom: '24px'}}>
                                         <div className="nav-grid-compact" style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px'}}>
                                             {testSession.questions.map((_, i) => {
@@ -556,40 +457,15 @@
                     );
                 })()}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
-                        
-                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
-                                
-                                <motion.circle
-                                    cx="100"
-                                    cy="100"
-                                    r={circleRadius}
-                                    fill="none"
-                                    stroke="#00f2fe"
-                                    strokeWidth="14"
-                                    strokeLinecap="round"
-                                    strokeDasharray={circleCircumference}
-                                    initial={{ strokeDashoffset: circleCircumference }}
-                                    animate={{ strokeDashoffset: circleStrokeDashoffset }}
-                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                                />
-                            </svg>
-                            
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
-                            </div>
-                        </div>
-
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
+                        <h2 style={{marginBottom:5}}>{testSession.score / testSession.questions.length >= 0.5 ? 'Отлично!' : 'Результат'}</h2>
+                        <h1 style={{fontSize:64, margin:'10px 0', background:'var(--primary-grad)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}>
+                            {Math.round(testSession.score / testSession.questions.length * 100)}%
+                        </h1>
+                        <div style={{padding:'10px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'20px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        
                         <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
