@@ -1,9 +1,8 @@
 // --- 11_tests_module.js ---
 (function () {
-    // ВНИМАНИЕ: Добавлен useRef в деструктуризацию из window
     const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
-    // --- НОВЫЙ КОМПОНЕНТ ЗАСТАВКИ СО ЗВЕЗДОЧКОЙ ---
+    // --- КОМПОНЕНТ ЗАСТАВКИ СО ЗВЕЗДОЧКОЙ ---
     const AnimatedHeader = () => {
         const stageRef = useRef(null);
         const tagOldRef = useRef(null);
@@ -188,6 +187,28 @@
                     .wand-anim svg { width:100%; height:100%; display:block; }
                     .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
+                    
+                    /* --- СТИЛИ ДЛЯ СВАЙПА И АНИМАЦИИ КНОПКИ (СТРОГО ОГИБАЮТ ТВОЙ ДИЗАЙН) --- */
+                    .row-swipe { position:relative; border-radius:12px; display:grid; grid-template-rows:1fr; transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1); }
+                    .row-swipe.removing { grid-template-rows:0fr; }
+                    .row-swipe.removing .row-inner-swipe { opacity:0; }
+                    .row-inner-swipe { overflow:hidden; border-radius:12px; transition:opacity .2s ease; }
+                    .swipe-track { position:relative; border-radius:12px; overflow:hidden; }
+                    .swipe-hint { position:absolute; inset:0; border-radius:12px; background: linear-gradient(135deg,#ef4444,#b91c1c); display:flex; align-items:center; justify-content:flex-end; padding-right:20px; gap:8px; opacity:0; cursor:pointer; }
+                    .swipe-hint svg { width:18px; height:18px; }
+                    .swipe-hint span { color:#fff; font-size:13px; font-weight:700; white-space:nowrap; }
+                    .swipe-hint.ready { cursor:pointer; }
+                    .item-swipe { position:relative; transform: translateX(0); transition: transform .34s cubic-bezier(.32,.72,0,1), opacity .34s ease; touch-action: pan-y; width:100%; cursor: pointer; }
+                    .item-swipe.dragging-swipe { transition:none; }
+
+                    .add-btn-anim { opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1); position: relative; }
+                    .add-btn-anim.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; }
+                    .add-btn-anim:active { transform: scale(.88); }
+                    .add-btn-anim svg { position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+                    .add-btn-anim .ic-plus { opacity:1; transform: rotate(0) scale(1); }
+                    .add-btn-anim .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); }
+                    .add-btn-anim.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
+                    .add-btn-anim.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
                 `}} />
                 
                 <div className="icon-wrap-anim">
@@ -225,11 +246,13 @@
         );
     };
 
-    // --- НОВЫЙ КОМПОНЕНТ ДЛЯ СВАЙПА (УДАЛЕНИЯ) ---
-    const SwipeableRow = ({ children, onDelete }) => {
+    // --- КОМПОНЕНТ СВАЙПА (ОБЕРТКА ДЛЯ ТВОИХ КНОПОК) ---
+    const SwipeableRow = ({ children, onDelete, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
         const [isRemoving, setIsRemoving] = useState(false);
+        const hasMoved = useRef(false);
+        const isDragging = useRef(false);
 
         useEffect(() => {
             const item = itemRef.current;
@@ -251,11 +274,13 @@
                 isOpen = false;
                 hint.classList.remove('ready');
             }
-            item.__close = close;
 
             function onDown(e){
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
-                dragging = true; axis = null;
+                dragging = true; 
+                hasMoved.current = false;
+                isDragging.current = true;
+                axis = null;
                 startX = e.clientX; startY = e.clientY;
                 baseX = parseFloat(item.dataset.x) || 0;
                 item.classList.add('dragging-swipe');
@@ -264,6 +289,7 @@
             function onMove(e){
                 if (!dragging) return;
                 const dx = e.clientX - startX, dy = e.clientY - startY;
+                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved.current = true;
                 if (axis === null){
                     if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                     axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
@@ -274,11 +300,25 @@
                 if (x > 0) x *= 0.25;
                 setX(x);
             }
-            function onUp(){
-                if (!dragging) return;
+            function onUp(e){
+                if (!dragging) {
+                    isDragging.current = false;
+                    return;
+                }
                 dragging = false;
                 item.classList.remove('dragging-swipe');
-                if (axis === null) return;
+                
+                if (axis === null || !hasMoved.current) {
+                    // Это был обычный клик, вызываем твою функцию открытия
+                    if (onClick && !isOpen) {
+                        onClick(e);
+                    } else if (isOpen) {
+                        close();
+                    }
+                    setTimeout(() => isDragging.current = false, 50);
+                    return;
+                }
+                
                 if (axis === 'x'){
                     const x = parseFloat(item.dataset.x) || 0;
                     if (x < -DISMISS_DIST){
@@ -294,6 +334,7 @@
                     }
                 }
                 axis = null;
+                setTimeout(() => isDragging.current = false, 50);
             }
 
             function removeRow() {
@@ -325,10 +366,10 @@
                 item.removeEventListener('pointercancel', onUp);
                 hint.removeEventListener('click', handleHintClick);
             };
-        }, [onDelete]);
+        }, [onDelete, onClick]);
 
         return (
-            <div className={`row-swipe ${isRemoving ? 'removing' : ''}`} style={{marginBottom: 12}}>
+            <div className={`row-swipe ${isRemoving ? 'removing' : ''}`} style={{marginBottom: 10}}>
                 <div className="row-inner-swipe">
                     <div className="swipe-track">
                         <div ref={hintRef} className="swipe-hint">
@@ -344,9 +385,7 @@
         );
     };
 
-    // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
-        // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
         const [isResultSaved, setIsResultSaved] = useState(false);
         const [timeLeft, setTimeLeft] = useState(1200);
@@ -354,24 +393,17 @@
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
         
-        // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
         const [shakeTime, setShakeTime] = useState(false);
         const [shakeQ, setShakeQ] = useState(false);
         const [isStarting, setIsStarting] = useState(false);
 
-        // --- СОСТОЯНИЯ ДЛЯ НОВОГО ВВОДА ДОБАВЛЕНИЯ ТЕСТА ---
+        // --- СОСТОЯНИЯ ДЛЯ АНИМИРОВАННОГО ИНПУТА ДОБАВЛЕНИЯ ---
         const [addVal, setAddVal] = useState('');
-        const [addFocused, setAddFocused] = useState(false);
         const [addDone, setAddDone] = useState(false);
-        const [addShake, setAddShake] = useState(false);
 
         const handleAddSet = () => {
             const val = addVal.trim();
-            if (!val) {
-                setAddShake(false);
-                setTimeout(() => setAddShake(true), 10);
-                return;
-            }
+            if (!val) return;
             setAddDone(true);
             setTimeout(() => {
                 setAddDone(false);
@@ -380,7 +412,6 @@
             }, 550);
         };
 
-        // --- АНТИЧИТ ---
         useEffect(() => {
             if (view !== 'test') return;
             const handleVisibility = () => { if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp); };
@@ -398,7 +429,6 @@
             };
         }, [view, fp]);
 
-        // --- ТАЙМЕР ---
         useEffect(() => {
             if (view !== 'test') return;
             const timer = setInterval(() => {
@@ -411,7 +441,6 @@
 
         const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0' + sec : sec}`; };
 
-        // --- ЛОГИКА ТЕСТА ---
         const importJSON = (e) => {
             const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
             reader.onload = ev => { 
@@ -513,7 +542,6 @@
             setView('result');
         };
 
-        // НАВИГАЦИЯ С КЛАВИАТУРЫ
         useEffect(() => {
             if (view !== 'test') return;
             const handleKeyDown = (e) => {
@@ -594,7 +622,6 @@
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
-        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
         const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
         const circleRadius = 80;
         const circleCircumference = 2 * Math.PI * circleRadius;
@@ -605,83 +632,60 @@
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', paddingTop: '40px'}}>
                         
-                        <style dangerouslySetInnerHTML={{__html: `
-                            .row-swipe { position:relative; border-radius:18px; display:grid; grid-template-rows:1fr; transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1); }
-                            .row-swipe.removing { grid-template-rows:0fr; }
-                            .row-swipe.removing .row-inner-swipe { opacity:0; }
-                            .row-inner-swipe { overflow:hidden; border-radius:18px; transition:opacity .2s ease; }
-                            .swipe-track { position:relative; border-radius:18px; overflow:hidden; }
-                            .swipe-hint { position:absolute; inset:0; border-radius:18px; background: linear-gradient(135deg,#f36767,#dc2626); display:flex; align-items:center; justify-content:flex-end; padding-right:22px; gap:9px; opacity:0; cursor:pointer; }
-                            .swipe-hint svg { width:19px; height:19px; }
-                            .swipe-hint span { color:#fff; font-size:14px; font-weight:700; white-space:nowrap; }
-                            .swipe-hint.ready { cursor:pointer; }
-                            .item-swipe { position:relative; background: #1c1f2c; border:1px solid rgba(255,255,255,.06); border-radius:18px; transform: translateX(0); transition: transform .34s cubic-bezier(.32,.72,0,1), opacity .34s ease; touch-action: pan-y; display:flex; flex-direction:column; width:100%; }
-                            .item-swipe.dragging-swipe { transition:none; }
-                            .add-row-lms { display:flex; align-items:center; gap:10px; background: #1c1f2c; border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:6px 6px 6px 18px; transition: box-shadow .2s ease, border-color .2s ease; margin-top: 15px;}
-                            .add-row-lms.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
-                            .add-row-lms.shake { animation: shakeX .38s ease; }
-                            @keyframes shakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
-                            .add-input-lms { flex:1; min-width:0; background:none; border:none; outline:none; color:#f3f4f8; font-size:15.5px; font-family:inherit; }
-                            .add-input-lms::placeholder { color: #8b90a6; }
-                            .add-btn-lms { width:44px; height:44px; min-width:44px; border:none; border-radius:13px; background: linear-gradient(150deg,#8b5cf6,#7c3aed); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none; transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease; }
-                            .add-btn-lms.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 16px rgba(124,58,237,.35); }
-                            .add-btn-lms.visible:active { transform: scale(.88); }
-                            .add-btn-lms svg { width:19px; height:19px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
-                            .add-btn-lms .ic-plus { opacity:1; transform: rotate(0) scale(1); stroke: #fff; stroke-width: 2.4; stroke-linecap: round; fill: none;}
-                            .add-btn-lms .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; fill: none;}
-                            .add-btn-lms.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
-                            .add-btn-lms.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
-                        `}} />
-
                         <AnimatedHeader />
                         
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
+                            {/* --- ЗДЕСЬ СТРОГО ТВОЯ КНОПКА С ТВОИМИ ГРАДИЕНТАМИ ДЛЯ УЧИТЕЛЬСКИХ ТЕСТОВ --- */}
                             {teacherTests?.map(test => (
-                                <SwipeableRow key={test.id} onDelete={() => removeTeacherTestStudent(test.id, test.title)}>
-                                    <div onClick={() => openTeacherAssignedTest(test)} style={{ display: 'flex', alignItems: 'center', padding:'15px 15px 15px 16px', width: '100%', cursor: 'pointer', boxSizing: 'border-box' }}>
-                                        <div style={{width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3)'}}>
+                                <SwipeableRow key={test.id} onDelete={() => removeTeacherTestStudent(test.id, test.title)} onClick={() => openTeacherAssignedTest(test)}>
+                                    <Button variant="muted" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent', pointerEvents: 'none' }}>
+                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                         </div>
                                         <div style={{display: 'flex', flexDirection: 'column'}}>
                                             <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
-                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#f3f4f8', fontWeight: 700, fontSize: '16px'}}>{test.title}</span>
+                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{test.title}</span>
                                         </div>
-                                    </div>
+                                    </Button>
                                 </SwipeableRow>
                             ))}
 
+                            {/* --- ЗДЕСЬ СТРОГО ТВОЯ КНОПКА С ТВОИМИ ГРАДИЕНТАМИ ДЛЯ ОБЫЧНЫХ ТЕСТОВ --- */}
                             {sets?.map(name => (
-                                <SwipeableRow key={name} onDelete={() => deleteSet(name)}>
-                                    <div onClick={() => openSet(name)} style={{ display: 'flex', alignItems: 'center', padding:'15px 15px 15px 16px', width: '100%', cursor: 'pointer', boxSizing: 'border-box' }}>
-                                        <div style={{width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(150deg, #ffc65f, #f5a524)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3)'}}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" fill="#3a2405"/></svg>
+                                <SwipeableRow key={name} onDelete={() => deleteSet(name)} onClick={() => openSet(name)}>
+                                    <Button variant="muted" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid transparent', pointerEvents: 'none' }}>
+                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
                                         </div>
-                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#f3f4f8', fontWeight: 700, fontSize: '16px'}}>{name}</span>
-                                    </div>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{name}</span>
+                                    </Button>
                                 </SwipeableRow>
                             ))}
                         </div>
                         
-                        <div className={`add-row-lms ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
-                            <input
-                                className="add-input-lms"
-                                placeholder="Новый тест"
-                                maxLength="48"
-                                autoComplete="off"
+                        {/* --- ТВОЕ ПОЛЕ ВВОДА СО СТИЛЬНОЙ АНИМАЦИЕЙ --- */}
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input 
+                                id="newSetName" 
+                                placeholder="Новый тест" 
+                                style={{margin:0, flex:1}} 
                                 value={addVal}
                                 onChange={(e) => setAddVal(e.target.value)}
-                                onFocus={() => setAddFocused(true)}
-                                onBlur={() => setAddFocused(false)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleAddSet(); }}
                             />
-                            <button
-                                className={`add-btn-lms ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`}
+                            <Button 
+                                className={`add-btn-anim ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`}
+                                style={{
+                                    width: '44px', height: '44px', padding: 0, margin: 0, flexShrink: 0, 
+                                    background: '#a855f7', border: 'none', borderRadius: '12px', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    color: '#fff', cursor: 'pointer'
+                                }} 
                                 onClick={handleAddSet}
-                                aria-label="Добавить"
                             >
-                                <svg className="ic-plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/></svg>
-                                <svg className="ic-check" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </button>
+                                <svg className="ic-plus" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <svg className="ic-check" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </Button>
                         </div>
 
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
@@ -811,7 +815,6 @@
                     </motion.div>
                 )}
 
-                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
