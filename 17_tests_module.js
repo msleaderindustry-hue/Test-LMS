@@ -1,6 +1,229 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray, GooeyText } = window;
+    // ВНИМАНИЕ: Добавлен useRef в деструктуризацию из window
+    const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
+
+    // --- НОВЫЙ КОМПОНЕНТ ЗАСТАВКИ СО ЗВЕЗДОЧКОЙ ---
+    const AnimatedHeader = () => {
+        const stageRef = useRef(null);
+        const tagOldRef = useRef(null);
+        const tagNewRef = useRef(null);
+        const wandRef = useRef(null);
+
+        useEffect(() => {
+            const phrases = [
+                "Learn without limits",
+                "Small steps lead to big changes",
+                "Believe. Learn. Achieve."
+            ];
+            let index = 0;
+            let ambientTimer = null;
+            let transitionTimeout = null;
+            let animationFrameId = null;
+
+            const stage = stageRef.current;
+            const tagOld = tagOldRef.current;
+            const tagNew = tagNewRef.current;
+            const wand = wandRef.current;
+
+            if (!stage || !tagOld || !tagNew || !wand) return;
+
+            function spawnSparkle(x, y, size) {
+                const s = document.createElement('div');
+                s.className = 'sparkle-anim';
+                s.style.left = x + 'px';
+                s.style.top = y + 'px';
+                const scale = size || (0.7 + Math.random() * 0.7);
+                s.style.width = (6 * scale) + 'px';
+                s.style.height = (6 * scale) + 'px';
+                stage.appendChild(s);
+                s.addEventListener('animationend', () => s.remove());
+            }
+
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function runWandTransition() {
+                if (!tagOld || !tagNew || !stage || !wand) return;
+                const oldWidth = tagOld.getBoundingClientRect().width;
+                const nextIndex = (index + 1) % phrases.length;
+                tagNew.textContent = phrases[nextIndex];
+                const newWidth = tagNew.getBoundingClientRect().width;
+
+                const stageWidth = Math.max(oldWidth, newWidth);
+                stage.style.width = stageWidth + 'px';
+
+                const oldLeft = (stageWidth - oldWidth) / 2;
+                const newLeft = (stageWidth - newWidth) / 2;
+
+                const pad = 8;
+                const startX = newLeft - pad;
+                const endX = newLeft + newWidth + pad;
+                const pathLength = endX - startX;
+                const midY = stage.getBoundingClientRect().height / 2;
+
+                const duration = 500 + pathLength * 1.0;
+                const start = performance.now();
+                let lastSparkleTime = 0;
+
+                function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+                function frame(now) {
+                    const elapsed = now - start;
+                    const t = Math.min(1, elapsed / duration);
+
+                    if (t < 0.1) {
+                        wand.style.opacity = String(t * 10);
+                    } else {
+                        wand.style.opacity = '1';
+                    }
+
+                    const eased = easeInOutCubic(t);
+                    const x = startX + pathLength * eased;
+                    const y = midY + Math.sin(t * Math.PI * 2.4) * 5;
+
+                    wand.style.transform = `translate(${x - 7}px, ${y - 7}px) rotate(${t * 220}deg)`;
+
+                    const newLocalX = clamp(x - newLeft, 0, newWidth);
+                    const newClipFromRight = newWidth - newLocalX;
+                    tagNew.style.clipPath = `inset(0 ${newClipFromRight}px 0 0)`;
+
+                    const oldLocalX = (oldWidth + pad * 2) * eased - pad;
+                    const clampedOldX = clamp(oldLocalX, 0, oldWidth);
+                    tagOld.style.clipPath = `inset(0 0 0 ${clampedOldX}px)`;
+
+                    if (now - lastSparkleTime > 28) {
+                        spawnSparkle(x + (Math.random() * 6 - 3), y + (Math.random() * 6 - 3));
+                        lastSparkleTime = now;
+                    }
+
+                    if (t < 1) {
+                        animationFrameId = requestAnimationFrame(frame);
+                    } else {
+                        index = nextIndex;
+                        tagOld.textContent = phrases[index];
+                        tagOld.style.clipPath = 'inset(0 0 0 0)';
+                        fadeOutWand(x, y);
+                    }
+                }
+                animationFrameId = requestAnimationFrame(frame);
+            }
+
+            function fadeOutWand(fromX, fromY) {
+                spawnSparkle(fromX, fromY, 0.9);
+                const duration = 500;
+                const start = performance.now();
+
+                function fadeFrame(now) {
+                    const elapsed = now - start;
+                    const t = Math.min(1, elapsed / duration);
+                    const eased = 1 - Math.pow(1 - t, 3);
+
+                    const scale = 1 - eased * 0.3;
+                    wand.style.transform = `translate(${fromX - 7}px, ${fromY - 7}px) rotate(${220 + eased * 40}deg) scale(${scale})`;
+                    wand.style.opacity = String(1 - t);
+
+                    if (t < 1) {
+                        animationFrameId = requestAnimationFrame(fadeFrame);
+                    } else {
+                        wand.style.opacity = '0';
+                        stage.style.width = '';
+                        scheduleNext();
+                    }
+                }
+                animationFrameId = requestAnimationFrame(fadeFrame);
+            }
+
+            function ambientSparkle() {
+                if (!stage) return;
+                const rect = stage.getBoundingClientRect();
+                const x = Math.random() * rect.width;
+                const y = rect.height / 2 + (Math.random() * 10 - 5);
+                spawnSparkle(x, y, 0.55 + Math.random() * 0.4);
+            }
+
+            function startAmbient() {
+                ambientTimer = setInterval(ambientSparkle, 900);
+            }
+            function stopAmbient() {
+                clearInterval(ambientTimer);
+            }
+
+            function scheduleNext() {
+                startAmbient();
+                transitionTimeout = setTimeout(() => {
+                    stopAmbient();
+                    runWandTransition();
+                }, 2800);
+            }
+
+            tagOld.textContent = phrases[0];
+            tagNew.textContent = phrases[0];
+            scheduleNext();
+
+            return () => {
+                stopAmbient();
+                clearTimeout(transitionTimeout);
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            };
+        }, []);
+
+        return (
+            <div style={{ textAlign: 'center', marginBottom: '35px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <style dangerouslySetInnerHTML={{__html: `
+                    .icon-wrap-anim { width:76px; height:76px; margin:0 auto 18px; position:relative; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.7); animation: iconInAnim .5s .05s cubic-bezier(.2,.8,.2,1) forwards; }
+                    @keyframes iconInAnim { to { opacity:1; transform:scale(1); } }
+                    .halo-anim { position:absolute; inset:-16px; border-radius:50%; background: radial-gradient(circle, rgba(122,184,255,0.30), rgba(138,91,255,0.14) 60%, transparent 75%); filter: blur(8px); pointer-events:none; }
+                    .icon-float-anim { width:38px; height:38px; position:relative; z-index:2; filter: drop-shadow(0 6px 16px rgba(90,110,255,0.5)); }
+                    .icon-float-anim svg { width:100%; height:100%; display:block; }
+                    .title-anim { font-size:30px; font-weight:800; letter-spacing:-0.01em; margin:0 0 8px; background: linear-gradient(100deg, #7ab8ff, #8a5bff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; transform:translateY(8px); animation: titleInAnim .5s .18s ease forwards; }
+                    @keyframes titleInAnim { to { opacity:1; transform:translateY(0); } }
+                    .tagline-wrap-anim { opacity:0; animation: taglineInAnim .5s .4s ease forwards; display:flex; justify-content:center; overflow:visible; width: 100%; }
+                    @keyframes taglineInAnim { to { opacity:1; } }
+                    .tag-stage-anim { position:relative; height:24px; display:flex; align-items:center; justify-content:center; overflow:visible; transition: width 0.1s ease; margin: 0 auto; }
+                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--text-sec, #8b87a8); }
+                    #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+                    .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
+                    .wand-anim svg { width:100%; height:100%; display:block; }
+                    .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
+                    @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
+                `}} />
+
+                <div className="icon-wrap-anim">
+                    <div className="halo-anim"></div>
+                    <div className="icon-float-anim">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <defs>
+                                <linearGradient id="capGrad" x1="0" y1="0" x2="64" y2="64">
+                                    <stop offset="0%" stopColor="#7ab8ff"/>
+                                    <stop offset="100%" stopColor="#8a5bff"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M32 10L58 22L32 34L6 22L32 10Z" fill="url(#capGrad)"/>
+                            <path d="M18 27V40C18 40 24 46 32 46C40 46 46 40 46 40V27L32 34L18 27Z" fill="#3a4bcf"/>
+                            <path d="M56 24V38" stroke="#1c2a99" strokeWidth="2.5" strokeLinecap="round"/>
+                            <circle cx="56" cy="40" r="2.6" fill="#1c2a99"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <h1 className="title-anim">Ultimate LMS Platform</h1>
+
+                <div className="tagline-wrap-anim">
+                    <div className="tag-stage-anim" ref={stageRef}>
+                        <span className="tag-text-anim" ref={tagOldRef}>Learn without limits</span>
+                        <span className="tag-text-anim" id="tagNewAnim" ref={tagNewRef} style={{clipPath: 'inset(0 100% 0 0)'}}>Learn without limits</span>
+                        <div className="wand-anim" ref={wandRef}>
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0l1.8 6.2L20 8l-6.2 1.8L12 16l-1.8-6.2L4 8l6.2-1.8L12 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
@@ -240,22 +463,10 @@
         return (
             <AnimatePresence mode="wait">
                 {view === 'menu' && (
-                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px'}}>
-                        <div style={{width:64, height:64, margin:'0 auto 18px', display:'flex', alignItems:'center', justifyContent:'center', filter:'drop-shadow(0 6px 18px rgba(90,110,255,0.55))'}}>
-                            <svg viewBox="0 0 64 64" fill="none" style={{width:'100%', height:'100%'}}>
-                                <defs>
-                                    <linearGradient id="capGrad" x1="0" y1="0" x2="64" y2="64">
-                                        <stop offset="0%" stopColor="#7ab8ff"/>
-                                        <stop offset="100%" stopColor="#8a5bff"/>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M32 10L58 22L32 34L6 22L32 10Z" fill="url(#capGrad)"/>
-                                <path d="M18 27V40C18 40 24 46 32 46C40 46 46 40 46 40V27L32 34L18 27Z" fill="#3a4bcf"/>
-                                <path d="M56 24V38" stroke="#1c2a99" strokeWidth="2.5" strokeLinecap="round"/>
-                                <circle cx="56" cy="40" r="2.6" fill="#1c2a99"/>
-                            </svg>
-                        </div>
-                        <GooeyText texts={["Learn Without Limits", "Build Your Future", "Ultimate LMS Platform"]} style={{margin:'0 0 25px 0', paddingTop: 10}} morphTime={1} cooldownTime={1.5} />
+                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', paddingTop: '40px'}}>
+                        
+                        {/* === ВСТАВЛЕННАЯ НОВАЯ АНИМАЦИЯ === */}
+                        <AnimatedHeader />
                         
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             {teacherTests?.map(test => (
