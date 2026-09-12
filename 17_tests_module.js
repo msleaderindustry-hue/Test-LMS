@@ -171,11 +171,11 @@
 
         return (
             <div style={{ textAlign: 'center', marginBottom: '35px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <style dangerouslySetInnerHTML={{__html: `
-                    .icon-wrap-anim { width:76px; height:76px; margin:0 auto 18px; position:relative; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.7); animation: iconInAnim .5s .05s cubic-bezier(.2,.8,.2,1) forwards; }
+<style dangerouslySetInnerHTML={{__html: `
+                    .icon-wrap-anim { width:96px; height:96px; margin:0 auto 16px; position:relative; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.7); animation: iconInAnim .5s .05s cubic-bezier(.2,.8,.2,1) forwards; }
                     @keyframes iconInAnim { to { opacity:1; transform:scale(1); } }
-                    .halo-anim { position:absolute; inset:-16px; border-radius:50%; background: radial-gradient(circle, rgba(122,184,255,0.30), rgba(138,91,255,0.14) 60%, transparent 75%); filter: blur(8px); pointer-events:none; }
-                    .icon-float-anim { width:38px; height:38px; position:relative; z-index:2; filter: drop-shadow(0 6px 16px rgba(90,110,255,0.5)); }
+                    .halo-anim { position:absolute; inset:-20px; border-radius:50%; background: radial-gradient(circle, rgba(122,184,255,0.30), rgba(138,91,255,0.14) 60%, transparent 75%); filter: blur(10px); pointer-events:none; }
+                    .icon-float-anim { width:56px; height:56px; position:relative; z-index:2; filter: drop-shadow(0 6px 16px rgba(90,110,255,0.5)); }
                     .icon-float-anim svg { width:100%; height:100%; display:block; }
                     .title-anim { font-size:30px; font-weight:800; letter-spacing:-0.01em; margin:0 0 8px; background: linear-gradient(100deg, #7ab8ff, #8a5bff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; transform:translateY(8px); animation: titleInAnim .5s .18s ease forwards; }
                     @keyframes titleInAnim { to { opacity:1; transform:translateY(0); } }
@@ -189,7 +189,7 @@
                     .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
                 `}} />
-
+ 
                 <div className="icon-wrap-anim">
                     <div className="halo-anim"></div>
                     <div className="icon-float-anim">
