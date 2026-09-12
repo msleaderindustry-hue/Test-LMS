@@ -189,7 +189,7 @@
                     .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
                 `}} />
- 
+                
                 <div className="icon-wrap-anim">
                     <div className="halo-anim"></div>
                     <div className="icon-float-anim">
@@ -225,6 +225,125 @@
         );
     };
 
+    // --- НОВЫЙ КОМПОНЕНТ ДЛЯ СВАЙПА (УДАЛЕНИЯ) ---
+    const SwipeableRow = ({ children, onDelete }) => {
+        const itemRef = useRef(null);
+        const hintRef = useRef(null);
+        const [isRemoving, setIsRemoving] = useState(false);
+
+        useEffect(() => {
+            const item = itemRef.current;
+            const hint = hintRef.current;
+            if (!item || !hint) return;
+
+            const OPEN_DIST = 84;
+            const DISMISS_DIST = 190;
+            let dragging = false, axis = null, startX = 0, startY = 0, baseX = 0, isOpen = false;
+
+            function setX(x){
+                item.dataset.x = x;
+                item.style.transform = `translateX(${x}px)`;
+                hint.style.opacity = Math.min(1, Math.abs(x) / OPEN_DIST);
+            }
+
+            function close(){
+                setX(0);
+                isOpen = false;
+                hint.classList.remove('ready');
+            }
+            item.__close = close;
+
+            function onDown(e){
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                dragging = true; axis = null;
+                startX = e.clientX; startY = e.clientY;
+                baseX = parseFloat(item.dataset.x) || 0;
+                item.classList.add('dragging-swipe');
+                item.setPointerCapture(e.pointerId);
+            }
+            function onMove(e){
+                if (!dragging) return;
+                const dx = e.clientX - startX, dy = e.clientY - startY;
+                if (axis === null){
+                    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                    axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+                    if (axis === 'y'){ dragging = false; item.classList.remove('dragging-swipe'); return; }
+                }
+                if (axis !== 'x') return;
+                let x = baseX + dx;
+                if (x > 0) x *= 0.25;
+                setX(x);
+            }
+            function onUp(){
+                if (!dragging) return;
+                dragging = false;
+                item.classList.remove('dragging-swipe');
+                if (axis === null) return;
+                if (axis === 'x'){
+                    const x = parseFloat(item.dataset.x) || 0;
+                    if (x < -DISMISS_DIST){
+                        item.style.transform = `translateX(-520px)`;
+                        item.style.opacity = '0';
+                        removeRow();
+                    } else if (x < -OPEN_DIST * 0.5){
+                        setX(-OPEN_DIST);
+                        isOpen = true;
+                        hint.classList.add('ready');
+                    } else {
+                        close();
+                    }
+                }
+                axis = null;
+            }
+
+            function removeRow() {
+                setIsRemoving(true);
+                setTimeout(() => {
+                    onDelete();
+                }, 420);
+            }
+
+            item.dataset.x = 0;
+            item.addEventListener('pointerdown', onDown);
+            item.addEventListener('pointermove', onMove);
+            item.addEventListener('pointerup', onUp);
+            item.addEventListener('pointercancel', onUp);
+
+            const handleHintClick = (e) => {
+                e.stopPropagation();
+                if (!isOpen) return;
+                item.style.transform = `translateX(-520px)`;
+                item.style.opacity = '0';
+                removeRow();
+            };
+            hint.addEventListener('click', handleHintClick);
+
+            return () => {
+                item.removeEventListener('pointerdown', onDown);
+                item.removeEventListener('pointermove', onMove);
+                item.removeEventListener('pointerup', onUp);
+                item.removeEventListener('pointercancel', onUp);
+                hint.removeEventListener('click', handleHintClick);
+            };
+        }, [onDelete]);
+
+        return (
+            <div className={`row-swipe ${isRemoving ? 'removing' : ''}`} style={{marginBottom: 12}}>
+                <div className="row-inner-swipe">
+                    <div className="swipe-track">
+                        <div ref={hintRef} className="swipe-hint">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <span>Удалить</span>
+                        </div>
+                        <div ref={itemRef} className="item-swipe">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
@@ -239,6 +358,27 @@
         const [shakeTime, setShakeTime] = useState(false);
         const [shakeQ, setShakeQ] = useState(false);
         const [isStarting, setIsStarting] = useState(false);
+
+        // --- СОСТОЯНИЯ ДЛЯ НОВОГО ВВОДА ДОБАВЛЕНИЯ ТЕСТА ---
+        const [addVal, setAddVal] = useState('');
+        const [addFocused, setAddFocused] = useState(false);
+        const [addDone, setAddDone] = useState(false);
+        const [addShake, setAddShake] = useState(false);
+
+        const handleAddSet = () => {
+            const val = addVal.trim();
+            if (!val) {
+                setAddShake(false);
+                setTimeout(() => setAddShake(true), 10);
+                return;
+            }
+            setAddDone(true);
+            setTimeout(() => {
+                setAddDone(false);
+                addSet(val);
+                setAddVal('');
+            }, 550);
+        };
 
         // --- АНТИЧИТ ---
         useEffect(() => {
@@ -465,47 +605,85 @@
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', paddingTop: '40px'}}>
                         
-                        {/* === ВСТАВЛЕННАЯ НОВАЯ АНИМАЦИЯ === */}
+                        <style dangerouslySetInnerHTML={{__html: `
+                            .row-swipe { position:relative; border-radius:18px; display:grid; grid-template-rows:1fr; transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1); }
+                            .row-swipe.removing { grid-template-rows:0fr; }
+                            .row-swipe.removing .row-inner-swipe { opacity:0; }
+                            .row-inner-swipe { overflow:hidden; border-radius:18px; transition:opacity .2s ease; }
+                            .swipe-track { position:relative; border-radius:18px; overflow:hidden; }
+                            .swipe-hint { position:absolute; inset:0; border-radius:18px; background: linear-gradient(135deg,#f36767,#dc2626); display:flex; align-items:center; justify-content:flex-end; padding-right:22px; gap:9px; opacity:0; cursor:pointer; }
+                            .swipe-hint svg { width:19px; height:19px; }
+                            .swipe-hint span { color:#fff; font-size:14px; font-weight:700; white-space:nowrap; }
+                            .swipe-hint.ready { cursor:pointer; }
+                            .item-swipe { position:relative; background: #1c1f2c; border:1px solid rgba(255,255,255,.06); border-radius:18px; transform: translateX(0); transition: transform .34s cubic-bezier(.32,.72,0,1), opacity .34s ease; touch-action: pan-y; display:flex; flex-direction:column; width:100%; }
+                            .item-swipe.dragging-swipe { transition:none; }
+                            .add-row-lms { display:flex; align-items:center; gap:10px; background: #1c1f2c; border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:6px 6px 6px 18px; transition: box-shadow .2s ease, border-color .2s ease; margin-top: 15px;}
+                            .add-row-lms.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
+                            .add-row-lms.shake { animation: shakeX .38s ease; }
+                            @keyframes shakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
+                            .add-input-lms { flex:1; min-width:0; background:none; border:none; outline:none; color:#f3f4f8; font-size:15.5px; font-family:inherit; }
+                            .add-input-lms::placeholder { color: #8b90a6; }
+                            .add-btn-lms { width:44px; height:44px; min-width:44px; border:none; border-radius:13px; background: linear-gradient(150deg,#8b5cf6,#7c3aed); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none; transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease; }
+                            .add-btn-lms.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 16px rgba(124,58,237,.35); }
+                            .add-btn-lms.visible:active { transform: scale(.88); }
+                            .add-btn-lms svg { width:19px; height:19px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+                            .add-btn-lms .ic-plus { opacity:1; transform: rotate(0) scale(1); stroke: #fff; stroke-width: 2.4; stroke-linecap: round; fill: none;}
+                            .add-btn-lms .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; fill: none;}
+                            .add-btn-lms.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
+                            .add-btn-lms.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
+                        `}} />
+
                         <AnimatedHeader />
                         
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             {teacherTests?.map(test => (
-                                <div key={test.id} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
-                                    <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent' }}>
-                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
+                                <SwipeableRow key={test.id} onDelete={() => removeTeacherTestStudent(test.id, test.title)}>
+                                    <div onClick={() => openTeacherAssignedTest(test)} style={{ display: 'flex', alignItems: 'center', padding:'15px 15px 15px 16px', width: '100%', cursor: 'pointer', boxSizing: 'border-box' }}>
+                                        <div style={{width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3)'}}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                         </div>
                                         <div style={{display: 'flex', flexDirection: 'column'}}>
                                             <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
-                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{test.title}</span>
+                                            <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#f3f4f8', fontWeight: 700, fontSize: '16px'}}>{test.title}</span>
                                         </div>
-                                    </Button>
-                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: '#ef4444', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => removeTeacherTestStudent(test.id, test.title)}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </Button>
-                                </div>
+                                    </div>
+                                </SwipeableRow>
                             ))}
 
                             {sets?.map(name => (
-                                <div key={name} style={{display:'flex', gap:10, marginBottom:10, alignItems: 'center'}}>
-                                    <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid transparent' }}>
-                                        <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                <SwipeableRow key={name} onDelete={() => deleteSet(name)}>
+                                    <div onClick={() => openSet(name)} style={{ display: 'flex', alignItems: 'center', padding:'15px 15px 15px 16px', width: '100%', cursor: 'pointer', boxSizing: 'border-box' }}>
+                                        <div style={{width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(150deg, #ffc65f, #f5a524)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3)'}}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" fill="#3a2405"/></svg>
                                         </div>
-                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{name}</span>
-                                    </Button>
-                                    <Button style={{width: '44px', height: '44px', padding: 0, flexShrink: 0, background: '#ef4444', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => deleteSet(name)}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </Button>
-                                </div>
+                                        <span style={{wordBreak:'break-word', lineHeight:'1.3', color: '#f3f4f8', fontWeight: 700, fontSize: '16px'}}>{name}</span>
+                                    </div>
+                                </SwipeableRow>
                             ))}
                         </div>
-                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
-                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
-                            <Button style={{width: '44px', height: '44px', padding: 0, margin: 0, flexShrink: 0, background: '#a855f7', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </Button>
+                        
+                        <div className={`add-row-lms ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
+                            <input
+                                className="add-input-lms"
+                                placeholder="Новый тест"
+                                maxLength="48"
+                                autoComplete="off"
+                                value={addVal}
+                                onChange={(e) => setAddVal(e.target.value)}
+                                onFocus={() => setAddFocused(true)}
+                                onBlur={() => setAddFocused(false)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddSet(); }}
+                            />
+                            <button
+                                className={`add-btn-lms ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`}
+                                onClick={handleAddSet}
+                                aria-label="Добавить"
+                            >
+                                <svg className="ic-plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/></svg>
+                                <svg className="ic-check" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </button>
                         </div>
+
                         <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
