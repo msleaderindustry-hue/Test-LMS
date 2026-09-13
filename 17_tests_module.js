@@ -228,7 +228,7 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE (ОРИГИНАЛЬНАЯ ПЛАВНОСТЬ И БЛОКИРОВКА) ---
+    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
     const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
@@ -242,7 +242,15 @@
             if (!item || !hint) return;
             item.style.transform = `translateX(${x}px)`;
             item.dataset.x = x;
+            
             const absX = Math.abs(x);
+            
+            // Исчезновение цвета карточки при свайпе
+            const innerCard = item.querySelector('.tlms-item');
+            if (innerCard) {
+                innerCard.style.opacity = Math.max(0.3, 1 - (absX / DISMISS));
+            }
+
             hint.style.opacity = Math.min(1, absX / OPEN);
             const openP = Math.min(1, absX / OPEN);
             const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
@@ -257,7 +265,14 @@
             s.overDismiss = nowOver;
         };
 
-        const close = () => setX(0);
+        const close = () => {
+            setX(0);
+            const item = itemRef.current;
+            if (item) {
+                const innerCard = item.querySelector('.tlms-item');
+                if (innerCard) innerCard.style.opacity = '1';
+            }
+        };
 
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
@@ -299,10 +314,10 @@
             if (s.axis === 'x') {
                 const x = parseFloat(itemRef.current.dataset.x) || 0;
                 
-                // Если элемент был сдвинут - блокируем клик
+                // Жесткий блокиратор клика при случайном микро-сдвиге
                 if (Math.abs(x) > 4) {
                     s.suppressNextClick = true;
-                    setTimeout(() => { s.suppressNextClick = false; }, 100);
+                    setTimeout(() => { s.suppressNextClick = false; }, 500); 
                 }
                 
                 if (x < -DISMISS) {
@@ -329,7 +344,11 @@
                 e.stopPropagation();
                 return;
             }
-            if (onClick) onClick(e);
+            // Плавный вход в тест с задержкой 150мс
+            if (onClick) {
+                e.preventDefault();
+                setTimeout(() => onClick(e), 150);
+            }
         };
 
         const handleHintClick = (e) => {
@@ -663,7 +682,6 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ПОЛНОСТЬЮ СИСТЕМНЫЕ ПЕРЕМЕННЫЕ, НИКАКИХ ЖЕСТКИХ ЦВЕТОВ! */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -677,7 +695,7 @@
                             .tlms-swrow-hint.armed-pop{ animation: tlmsArmedPop .32s cubic-bezier(.34,1.56,.64,1); }
                             @keyframes tlmsArmedPop{ 0%{transform:scale(1);} 40%{transform:scale(1.05);} 100%{transform:scale(1);} }
                             
-                            /* ПЛАВНОСТЬ КАК НА АЙФОНАХ - ВОССТАНОВЛЕНО ИЗ ОРИГИНАЛА */
+                            /* ПЛАВНОСТЬ КАК НА АЙФОНАХ */
                             .tlms-swrow-item {
                               position:relative; touch-action:pan-y; transform:translateX(0);
                               transition: transform .32s cubic-bezier(.32,.72,0,1); 
@@ -687,16 +705,19 @@
                                 transition: none; cursor: grabbing; 
                             }
 
-                            /* КАРТОЧКИ: ИСПОЛЬЗУЮТ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ */
+                            /* КАРТОЧКИ: ИСПОЛЬЗУЮТ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ, ВИДНЫ И В СВЕТЛОЙ, И В ТЕМНОЙ */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
-                                background: var(--row-bg-solid); 
-                                border: 1px solid var(--border); 
+                                background: var(--row-bg-solid, rgba(130, 135, 150, 0.1)); 
+                                border: 1px solid var(--border, rgba(130, 135, 150, 0.2)); 
                                 border-radius:16px;
                                 padding: 8px 12px; 
+                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
                             }
                             .tlms-item:active {
-                                opacity: 0.8;
+                                filter: brightness(0.9);
+                                transform: scale(0.97);
                             }
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
@@ -715,8 +736,8 @@
                             /* ПОЛЕ ДОБАВЛЕНИЯ - УЗКИЙ ИНТЕРВАЛ! */
                             .tlms-add-row {
                               display: flex; align-items: center; gap: 10px;
-                              background: var(--row-bg-solid);
-                              border: 1px solid var(--border);
+                              background: var(--row-bg-solid, rgba(130, 135, 150, 0.1));
+                              border: 1px solid var(--border, rgba(130, 135, 150, 0.2));
                               border-radius: 14px;
                               height: 48px; /* УМЕНЬШЕННЫЙ РАЗМЕР */
                               padding: 0 6px 0 16px; /* ВЕРТИКАЛЬНЫЕ ОТСТУПЫ УБРАНЫ */
@@ -733,7 +754,7 @@
                             }
                             .tlms-add-input::placeholder { color: var(--muted); }
                             
-                            /* Кнопка Плюс компактная (внутри 48px контейнера) */
+                            /* Кнопка Плюс компактная */
                             .tlms-add-btn {
                               width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
                               background: linear-gradient(150deg, var(--purple, #8b5cf6), var(--purple-2, #7c3aed));
@@ -768,7 +789,7 @@
                             }
                             .tlms-snackbar-text { 
                                 flex: 1; font-size: 14.5px; font-weight: 600; 
-                                /* ЦВЕТ ТЕКСТА КАК У КАРТОЧЕК */
+                                /* ЦВЕТ ТЕКСТА ТОЖЕ ИЗ ТЕМЫ */
                                 color: var(--text); 
                             }
                             .tlms-snackbar-undo{ 
@@ -846,7 +867,6 @@
                             </AnimatePresence>
                         </div>
 
-                        {/* КНОПКА ДОБАВЛЕНИЯ */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
@@ -870,7 +890,7 @@
                         
                         <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
-                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ - FIXED) */}
+                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ) */}
                         <AnimatePresence>
                           {pendingDelete && (
                             <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
