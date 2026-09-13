@@ -666,7 +666,6 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) И ВСПЛЫВАЮЩИЙ ТОСТ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -683,13 +682,13 @@
                               transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
                             .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
 
-                            /* Адаптивная карточка: берем системные переменные твоей платформы */
+                            /* Карточки - АДАПТИВНЫЕ ЦВЕТА ПОД ТЕМУ */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
                                 background: var(--row-bg-solid, rgba(130, 135, 150, 0.08)); 
                                 border: 1px solid var(--border, rgba(130, 135, 150, 0.15)); 
                                 border-radius:16px;
-                                padding: 10px 14px; 
+                                padding: 8px 12px; 
                                 transition: filter 0.1s ease;
                             }
                             .tlms-item:active {
@@ -705,18 +704,17 @@
                             }
                             .tlms-item-label {
                                 flex:1; font-size:15.5px; font-weight:700; 
-                                color: var(--text, inherit); /* Динамический цвет текста */
+                                color: var(--text, inherit); 
                                 word-break: break-word;
                             }
 
-                            /* Поле добавления нового теста */
+                            /* Поле добавления нового теста - УМЕНЬШЕНА ВЫСОТА, КНОПКА ОТСТУПИЛА ОТ КРАЯ */
                             .tlms-add-row {
                               display:flex; align-items:center; gap:12px;
                               background: var(--row-bg-solid, rgba(130, 135, 150, 0.08));
                               border: 1px solid var(--border, rgba(130, 135, 150, 0.15));
-                              border-radius:18px;
-                              /* ИДЕАЛЬНЫЙ ОТСТУП ДЛЯ КНОПКИ С ПРАВОЙ СТОРОНЫ (20px) */
-                              padding: 8px 12px 8px 20px; 
+                              border-radius:16px;
+                              padding: 4px 6px 4px 16px; /* Отступы меньше, кнопка отступила внутрь (6px справа) */
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
@@ -725,12 +723,13 @@
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color: var(--text, #12141f); font-size:15px; font-family:inherit;
+                              color: var(--text, inherit); font-size:15px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: var(--muted, #8b90a6); }
+                            .tlms-add-input::placeholder { color: var(--muted, #888); }
                             
+                            /* Кнопка Плюс чуть меньше, чтобы поле "Новый тест" было уже */
                             .tlms-add-btn {
-                              width:40px; height:40px; min-width:40px; border:none; border-radius:12px;
+                              width: 38px; height: 38px; min-width: 38px; border-radius: 11px;
                               background: linear-gradient(150deg,#8b5cf6,#7c3aed);
                               color:#fff; display:flex; align-items:center; justify-content:center;
                               cursor:pointer; position:relative;
@@ -745,27 +744,26 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* Уведомление Undo (Тост) - Теперь плавает ВНИЗУ экрана, не перекрывает элементы, МЕНЯЕТ ЦВЕТ под тему */
+                            /* Уведомление Undo (Тост) - АДАПТИВНЫЙ ФОН И ТЕКСТ */
                             .tlms-snackbar-zone { 
                                 position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
                                 display: flex; justify-content: center;
-                                padding: 0 16px calc(40px + env(safe-area-inset-bottom)); /* Отступ снизу */
+                                padding: 0 16px calc(40px + env(safe-area-inset-bottom)); 
                                 pointer-events: none; 
                             }
                             .tlms-snackbar { 
                                 pointer-events: auto; width: 100%; max-width: 420px; 
-                                /* БЕРЕТ ЦВЕТ КАРТОЧКИ ИЗ ТЕМЫ (в светлой будет белый, в темной темный) */
-                                background: var(--card-bg, #ffffff);
+                                /* ТОЧНО ТЕ ЖЕ ЦВЕТА ЧТО И У КАРТОЧЕК */
+                                background: var(--row-bg-solid, #1c1f2c); 
                                 border: 1px solid var(--border, rgba(128,128,128,0.2)); 
-                                border-radius: 18px; padding: 14px 16px 14px 22px;
+                                border-radius: 18px; padding: 12px 16px 12px 20px;
                                 display: flex; align-items: center; gap: 14px; 
-                                box-shadow: 0 15px 35px rgba(0,0,0,0.15); 
+                                box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
                                 position: relative; overflow: hidden; 
                             }
                             .tlms-snackbar-text { 
-                                flex: 1; font-size: 15px; font-weight: 600; 
-                                /* ЦВЕТ ТЕКСТА ТОЖЕ ИЗ ТЕМЫ (черный в светлой, белый в темной) */
-                                color: var(--text, #12141f); 
+                                flex: 1; font-size: 14.5px; font-weight: 600; 
+                                color: var(--text, #f3f4f8); /* Адаптивный цвет текста */
                             }
                             .tlms-snackbar-undo{ 
                                 background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
@@ -864,7 +862,7 @@
                             </button>
                         </div>
                         
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted, var(--text-sec))', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
                         {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ) */}
                         <AnimatePresence>
@@ -884,7 +882,7 @@
                 {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--row-bg-solid)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
