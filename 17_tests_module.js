@@ -2,7 +2,7 @@
 (function () {
     const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
-    // Хак для обхода стандартного window.confirm (чтобы не было верхнего окна при удалении)
+    // Хак для обхода стандартного window.confirm
     const bypassConfirm = (fn) => {
         const origConfirm = window.confirm;
         window.confirm = () => true; 
@@ -188,7 +188,7 @@
                     .tagline-wrap-anim { opacity:0; animation: taglineInAnim .5s .4s ease forwards; display:flex; justify-content:center; overflow:visible; width: 100%; }
                     @keyframes taglineInAnim { to { opacity:1; } }
                     .tag-stage-anim { position:relative; height:24px; display:flex; align-items:center; justify-content:center; overflow:visible; transition: width 0.1s ease; margin: 0 auto; }
-                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--text-sec, #8b87a8); }
+                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--muted); }
                     #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
                     .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
                     .wand-anim svg { width:100%; height:100%; display:block; }
@@ -228,7 +228,7 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
+    // --- КОМПОНЕНТ SWIPE-TO-DELETE (ОРИГИНАЛЬНАЯ ПЛАВНОСТЬ И БЛОКИРОВКА) ---
     const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
@@ -259,29 +259,8 @@
 
         const close = () => setX(0);
 
-        const animateOutAndDismiss = () => {
-            const item = itemRef.current;
-            if (!item) return;
-            item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
-            item.style.transform = 'translateX(-120%) scale(0.95)';
-            item.style.opacity = '0';
-            setTimeout(() => {
-                onDismiss && onDismiss();
-            }, 280);
-        };
-
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
-            const el = itemRef.current;
-            const guard = (e) => {
-                if (stateRef.current.suppressNextClick) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    stateRef.current.suppressNextClick = false;
-                }
-            };
-            el.addEventListener('click', guard, true);
-            return () => el.removeEventListener('click', guard, true);
         }, []);
 
         const onDown = (e) => {
@@ -290,9 +269,10 @@
             s.dragging = true; s.axis = null;
             s.startX = e.clientX; s.startY = e.clientY;
             s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
-            itemRef.current.style.transition = 'none';
+            itemRef.current.classList.add('dragging');
             itemRef.current.setPointerCapture(e.pointerId);
         };
+
         const onMove = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
@@ -300,7 +280,7 @@
             if (s.axis === null) {
                 if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-                if (s.axis === 'y') { s.dragging = false; return; }
+                if (s.axis === 'y') { s.dragging = false; itemRef.current.classList.remove('dragging'); return; }
                 if (onArm) onArm();
             }
             if (s.axis !== 'x') return;
@@ -308,21 +288,28 @@
             if (x > 0) x *= 0.25;
             setX(x);
         };
+
         const onUp = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
             s.dragging = false;
-            const item = itemRef.current;
-            item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
-            if (item.hasPointerCapture(e.pointerId)) item.releasePointerCapture(e.pointerId);
+            itemRef.current.classList.remove('dragging');
+            if (itemRef.current.hasPointerCapture(e.pointerId)) itemRef.current.releasePointerCapture(e.pointerId);
 
             if (s.axis === 'x') {
-                const x = parseFloat(item.dataset.x) || 0;
-                if (Math.abs(x) > 4) s.suppressNextClick = true;
+                const x = parseFloat(itemRef.current.dataset.x) || 0;
+                
+                // Если элемент был сдвинут - блокируем клик
+                if (Math.abs(x) > 4) {
+                    s.suppressNextClick = true;
+                    setTimeout(() => { s.suppressNextClick = false; }, 100);
+                }
                 
                 if (x < -DISMISS) {
                     vibrate(20);
-                    animateOutAndDismiss();
+                    itemRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32,0.72,0,1)';
+                    itemRef.current.style.transform = 'translateX(-120%) scale(0.9)';
+                    setTimeout(() => onDismiss && onDismiss(), 300);
                 } else if (x < -OPEN * 0.5) {
                     setX(-OPEN);
                     if (hintRef.current) {
@@ -331,12 +318,18 @@
                     }
                 } else {
                     close();
-                    if (Math.abs(x) < 5 && onClick) onClick(); 
                 }
-            } else {
-                if (onClick) onClick(); 
             }
             s.axis = null;
+        };
+
+        const handleClick = (e) => {
+            if (stateRef.current.suppressNextClick) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            if (onClick) onClick(e);
         };
 
         const handleHintClick = (e) => {
@@ -344,7 +337,9 @@
             const x = parseFloat(itemRef.current.dataset.x) || 0;
             if (Math.abs(x) < OPEN * 0.6) return;
             vibrate(20);
-            animateOutAndDismiss();
+            itemRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32,0.72,0,1)';
+            itemRef.current.style.transform = 'translateX(-120%) scale(0.9)';
+            setTimeout(() => onDismiss && onDismiss(), 300);
         };
 
         return (
@@ -354,7 +349,9 @@
                     <span>Удалить</span>
                 </div>
                 <div className="tlms-swrow-item" ref={itemRef} data-x="0"
-                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+                    onClick={handleClick}
+                >
                     {children}
                 </div>
             </div>
@@ -666,7 +663,7 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) И ВСТРОЕННЫЙ ТОСТ */}
+                        {/* ПОЛНОСТЬЮ СИСТЕМНЫЕ ПЕРЕМЕННЫЕ, НИКАКИХ ЖЕСТКИХ ЦВЕТОВ! */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -679,21 +676,27 @@
                             .tlms-swrow-hint span{ color:#fff; font-size:13px; font-weight:700; white-space:nowrap; }
                             .tlms-swrow-hint.armed-pop{ animation: tlmsArmedPop .32s cubic-bezier(.34,1.56,.64,1); }
                             @keyframes tlmsArmedPop{ 0%{transform:scale(1);} 40%{transform:scale(1.05);} 100%{transform:scale(1);} }
-                            .tlms-swrow-item{ position:relative; touch-action:pan-y; transform:translateX(0);
-                              transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
-                            .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
+                            
+                            /* ПЛАВНОСТЬ КАК НА АЙФОНАХ - ВОССТАНОВЛЕНО ИЗ ОРИГИНАЛА */
+                            .tlms-swrow-item {
+                              position:relative; touch-action:pan-y; transform:translateX(0);
+                              transition: transform .32s cubic-bezier(.32,.72,0,1); 
+                              will-change: transform; cursor: pointer; 
+                            }
+                            .tlms-swrow-item.dragging { 
+                                transition: none; cursor: grabbing; 
+                            }
 
-                            /* Адаптивная карточка (без жестких HEX цветов) + уменьшенные отступы */
+                            /* КАРТОЧКИ: ИСПОЛЬЗУЮТ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
-                                background: var(--bg-secondary, rgba(130, 135, 150, 0.08)); 
-                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15)); 
+                                background: var(--row-bg-solid); 
+                                border: 1px solid var(--border); 
                                 border-radius:16px;
-                                padding: 10px 14px; 
-                                transition: background 0.1s ease, filter 0.1s ease;
+                                padding: 8px 12px; 
                             }
                             .tlms-item:active {
-                                background: var(--bg-secondary, rgba(130, 135, 150, 0.12));
+                                opacity: 0.8;
                             }
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
@@ -704,37 +707,42 @@
                                 width: 18px; height: 18px;
                             }
                             .tlms-item-label {
-                                flex:1; font-size:15.5px; font-weight:700; color: var(--text-main, inherit); word-break: break-word;
+                                flex:1; font-size:15.5px; font-weight:700; 
+                                color: var(--text); 
+                                word-break: break-word;
                             }
 
-                            /* Поле добавления нового теста (Адаптивное) */
+                            /* ПОЛЕ ДОБАВЛЕНИЯ - УЗКИЙ ИНТЕРВАЛ! */
                             .tlms-add-row {
-                              display:flex; align-items:center; gap:10px;
-                              background: var(--bg-secondary, rgba(130, 135, 150, 0.08));
-                              border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15));
-                              border-radius:16px;
-                              padding:4px 4px 4px 14px;
+                              display: flex; align-items: center; gap: 10px;
+                              background: var(--row-bg-solid);
+                              border: 1px solid var(--border);
+                              border-radius: 14px;
+                              height: 48px; /* УМЕНЬШЕННЫЙ РАЗМЕР */
+                              padding: 0 6px 0 16px; /* ВЕРТИКАЛЬНЫЕ ОТСТУПЫ УБРАНЫ */
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
-                            .tlms-add-row.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
+                            .tlms-add-row.focused { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
                             .tlms-add-row.shake { animation: tlmsShakeX .38s ease; }
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color: var(--text-main, inherit); font-size:15px; font-family:inherit;
+                              color: var(--text); font-size:15px; font-family:inherit;
+                              height: 100%;
                             }
-                            .tlms-add-input::placeholder { color: var(--text-sec, #888); }
+                            .tlms-add-input::placeholder { color: var(--muted); }
                             
+                            /* Кнопка Плюс компактная (внутри 48px контейнера) */
                             .tlms-add-btn {
-                              width:40px; height:40px; min-width:40px; border:none; border-radius:12px;
-                              background: linear-gradient(150deg,#8b5cf6,#7c3aed);
+                              width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
+                              background: linear-gradient(150deg, var(--purple, #8b5cf6), var(--purple-2, #7c3aed));
                               color:#fff; display:flex; align-items:center; justify-content:center;
                               cursor:pointer; position:relative;
                               transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
                               opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none;
                             }
-                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 14px rgba(124,58,237,.3); }
+                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 4px 12px rgba(124,58,237,.3); }
                             .tlms-add-btn.visible:active { transform: scale(.88); }
                             .tlms-add-btn svg { width:18px; height:18px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
                             .tlms-add-btn .ic-plus { opacity:1; transform: rotate(0) scale(1); }
@@ -742,31 +750,35 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* Уведомление Undo (Тост) - ВСТРОЕНО В СТРАНИЦУ (Без position fixed), чтобы ничего не перекрывало! */
+                            /* УВЕДОМЛЕНИЕ UNDO - СТРОГО СНИЗУ И ПОД ТЕМУ! */
                             .tlms-snackbar-zone { 
-                                display:flex; justify-content:center; width: 100%; margin-bottom: 20px;
+                                position: fixed; left: 0; right: 0; bottom: 30px; z-index: 999999;
+                                display: flex; justify-content: center;
+                                pointer-events: none; 
                             }
                             .tlms-snackbar { 
-                                width:100%; max-width:420px; 
-                                background: var(--bg-panel, #1c1f2c); /* Точно такой же фон как у твоей панели в темах */
-                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.2)); 
-                                border-radius:16px; padding:12px 16px;
-                                display:flex; align-items:center; gap:14px; 
-                                box-shadow: 0 8px 24px rgba(0,0,0,0.15); 
-                                position:relative; overflow:hidden; 
+                                pointer-events: auto; width: 100%; max-width: 400px; 
+                                /* ЦВЕТ КАК У КАРТОЧЕК */
+                                background: var(--row-bg-solid); 
+                                border: 1px solid var(--border); 
+                                border-radius: 16px; padding: 12px 16px;
+                                display: flex; align-items: center; gap: 14px; 
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+                                position: relative; overflow: hidden; 
                             }
                             .tlms-snackbar-text { 
-                                flex:1; font-size:14.5px; font-weight:600; 
-                                color: var(--text-main, #f3f4f8); /* Идеальная видимость букв */
+                                flex: 1; font-size: 14.5px; font-weight: 600; 
+                                /* ЦВЕТ ТЕКСТА КАК У КАРТОЧЕК */
+                                color: var(--text); 
                             }
                             .tlms-snackbar-undo{ 
-                                background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
+                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:14px;
                                 padding:9px 14px; border-radius:10px; cursor:pointer; 
                                 transition:background .15s ease, transform .15s ease; 
                             }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
                             .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:3px;
-                              background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
+                              background:linear-gradient(90deg, var(--purple, #8b5cf6), var(--blue, #6ea8fe)); width:100%; transform-origin:left;
                               animation: tlmsShrinkBar 4s linear forwards; }
                             @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
                         `}} />
@@ -834,6 +846,7 @@
                             </AnimatePresence>
                         </div>
 
+                        {/* КНОПКА ДОБАВЛЕНИЯ */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
@@ -855,27 +868,27 @@
                             </button>
                         </div>
                         
-                        {/* Анимация Уведомления Undo - ВСТРОЕНА ПРЯМО В СПИСОК, БОЛЬШЕ НИЧЕГО НЕ ПЕРЕКРЫВАЕТ */}
+                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+                        
+                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ - FIXED) */}
                         <AnimatePresence>
                           {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0, height: 0, marginTop: 0 }} animate={{ opacity:1, height: 'auto', marginTop: 10 }} exit={{ opacity:0, height: 0, marginTop: 0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
-                              <div className="tlms-snackbar">
+                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
+                              <motion.div className="tlms-snackbar" initial={{ y:60, scale: 0.95, opacity:0 }} animate={{ y:0, scale: 1, opacity:1 }} exit={{ y:40, scale: 0.95, opacity:0 }} transition={{ duration:0.3, ease:[0.32,0.72,0,1] }}>
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </div>
+                              </motion.div>
                             </motion.div>
                           )}
                         </AnimatePresence>
-
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7, marginTop: 10}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
 
                 {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
@@ -897,7 +910,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             Начать тест
                         </Button>
-                        <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+                        <p style={{textAlign:'center', color:'var(--muted)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
 
@@ -907,19 +920,19 @@
                             <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </div>
-                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
+                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text)'}}>Параметры теста</h2>
                         </div>
                         <div style={{marginBottom:'24px', textAlign:'left'}}>
                             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Время (минуты)</span>
                             </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--row-bg-solid)', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <div style={{marginBottom:'30px', textAlign:'left'}}>
@@ -927,12 +940,12 @@
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
                             </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--row-bg-solid)', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
@@ -944,7 +957,7 @@
                                 </motion.div>
                             ) : "Начать"}
                         </Button>
-                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--glass-border)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
+                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--border)', color:'var(--muted)', height:'54px', fontSize:'16px'}}>Отмена</Button>
                     </motion.div>
                 )}
 
@@ -980,18 +993,18 @@
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--border)" strokeWidth="14" />
                                 <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
                             </svg>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text)' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'var(--bg-secondary, rgba(128,128,128,0.1))', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                        <div style={{padding:'15px', background:'var(--row-bg-solid)', borderRadius:'14px', marginBottom:'25px'}}>
+                            <p style={{fontSize:18, color:'var(--text)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'var(--bg-secondary, rgba(128,128,128,0.05))', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
+                        <div style={{background:'var(--row-bg-solid)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--border)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
