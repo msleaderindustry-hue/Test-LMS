@@ -315,7 +315,7 @@
                 
                 if (x < -DISMISS) {
                     vibrate(20);
-                    animateOutAndDismiss(); // Плавное удаление
+                    animateOutAndDismiss();
                 } else if (x < -OPEN * 0.5) {
                     setX(-OPEN);
                     if (hintRef.current) {
@@ -324,10 +324,10 @@
                     }
                 } else {
                     close();
-                    if (Math.abs(x) < 5 && onClick) onClick(); // Если просто дернул и отпустил
+                    if (Math.abs(x) < 5 && onClick) onClick(); 
                 }
             } else {
-                if (onClick) onClick(); // Это был просто клик
+                if (onClick) onClick(); 
             }
             s.axis = null;
         };
@@ -396,9 +396,19 @@
         }, []);
 
         const requestDelete = (key, label, commitFn) => {
-            if (pendingDelete) { clearTimeout(pendingDelete.timer); pendingDelete.commitFn(); }
+            if (pendingDelete) { 
+                clearTimeout(pendingDelete.timer); 
+                pendingDelete.commitFn(); 
+                // Очищаем предыдущий удаленный из hidden ключей
+                setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
+            }
             setHiddenSetKeys(prev => { const n = new Set(prev); n.add(key); return n; });
-            const timer = setTimeout(() => { commitFn(); setPendingDelete(null); }, 4000);
+            const timer = setTimeout(() => { 
+                commitFn(); 
+                setPendingDelete(null); 
+                // ИСПРАВЛЕНИЕ: Очищаем скрытый ключ после реального удаления
+                setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
+            }, 4000);
             setPendingDelete({ key, label, commitFn, timer });
         };
 
@@ -416,6 +426,10 @@
                 setTimeout(() => setAddShake(false), 380);
                 return;
             }
+            
+            // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
+            setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(val); return n; });
+
             setAddDone(true);
             setTimeout(() => setAddDone(false), 550);
             addSet(val);
@@ -734,7 +748,6 @@
                         `}} />
 
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 10px 0', paddingRight:5}}>
-                            {/* --- TEACHER TESTS (ДИЗАЙН КАРТОЧКИ ИЗ СКРИНШОТА) --- */}
                             <AnimatePresence initial={false}>
                                 {teacherTests?.filter(test => !hiddenSetKeys.has(test.id)).map(test => (
                                     <motion.div
@@ -767,7 +780,6 @@
                                 ))}
                             </AnimatePresence>
 
-                            {/* --- USER SETS (ДИЗАЙН КАРТОЧКИ ИЗ СКРИНШОТА) --- */}
                             <AnimatePresence initial={false}>
                                 {sets?.filter(name => !hiddenSetKeys.has(name)).map(name => (
                                     <motion.div
@@ -798,7 +810,6 @@
                             </AnimatePresence>
                         </div>
 
-                        {/* --- ВЕРНУЛ ДИЗАЙН ИНПУТА КАК БЫЛ В HTML --- */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
@@ -836,7 +847,6 @@
                     </motion.div>
                 )}
 
-                {/* ОСТАЛЬНЫЕ ЭКРАНЫ ('set_menu', 'timer_setup', 'test', 'result', 'review') ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ ИЗ ПРЕДЫДУЩЕГО РЕШЕНИЯ */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
                         <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
