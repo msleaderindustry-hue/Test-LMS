@@ -228,11 +228,11 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
+    // --- КОМПОНЕНТ SWIPE-TO-DELETE С ПЛАВНЫМ ИСЧЕЗНОВЕНИЕМ ГРАНИЦ И ЖЕСТКИМ БЛОКИРАТОРОМ ---
     const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
-        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
+        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false, hasDragged:false });
         const OPEN = 84, DISMISS = 190;
 
         const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
@@ -245,10 +245,11 @@
             
             const absX = Math.abs(x);
             
-            // Исчезновение цвета карточки при свайпе
+            // ТЗ 2: Плавное исчезновение всей карточки (фона, рамок, текста) при сдвиге влево
             const innerCard = item.querySelector('.tlms-item');
             if (innerCard) {
-                innerCard.style.opacity = Math.max(0.3, 1 - (absX / DISMISS));
+                // Как только карточка едет влево, её opacity плавно падает до 0 к моменту DISMISS
+                innerCard.style.opacity = Math.max(0, 1 - (absX / DISMISS));
             }
 
             hint.style.opacity = Math.min(1, absX / OPEN);
@@ -276,6 +277,17 @@
 
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
+            
+            // Жесткий перехватчик событий клика на фазе погружения
+            const el = itemRef.current;
+            const guard = (e) => {
+                if (stateRef.current.suppressNextClick || stateRef.current.hasDragged) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            };
+            el.addEventListener('click', guard, true);
+            return () => el.removeEventListener('click', guard, true);
         }, []);
 
         const onDown = (e) => {
@@ -284,6 +296,7 @@
             s.dragging = true; s.axis = null;
             s.startX = e.clientX; s.startY = e.clientY;
             s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
+            s.hasDragged = false; // Сбрасываем флаг перетаскивания
             itemRef.current.classList.add('dragging');
             itemRef.current.setPointerCapture(e.pointerId);
         };
@@ -292,6 +305,12 @@
             const s = stateRef.current;
             if (!s.dragging) return;
             const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
+            
+            // Если сдвинули палец/мышь больше чем на 5px — это свайп, блокируем клик
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                s.hasDragged = true;
+            }
+
             if (s.axis === null) {
                 if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
@@ -314,10 +333,10 @@
             if (s.axis === 'x') {
                 const x = parseFloat(itemRef.current.dataset.x) || 0;
                 
-                // Жесткий блокиратор клика при случайном микро-сдвиге
-                if (Math.abs(x) > 4) {
+                // Если был свайп - ставим блокировку клика на полсекунды (с запасом)
+                if (s.hasDragged || Math.abs(x) > 4) {
                     s.suppressNextClick = true;
-                    setTimeout(() => { s.suppressNextClick = false; }, 500); 
+                    setTimeout(() => { s.suppressNextClick = false; s.hasDragged = false; }, 500); 
                 }
                 
                 if (x < -DISMISS) {
@@ -334,20 +353,23 @@
                 } else {
                     close();
                 }
+            } else {
+                s.hasDragged = false;
             }
             s.axis = null;
         };
 
         const handleClick = (e) => {
-            if (stateRef.current.suppressNextClick) {
+            if (stateRef.current.suppressNextClick || stateRef.current.hasDragged) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;
             }
-            // Плавный вход в тест с задержкой 150мс
+            
+            // Если клик успешный (не было свайпа) — плавно входим с задержкой, чтобы отыграла анимация :active
             if (onClick) {
                 e.preventDefault();
-                setTimeout(() => onClick(e), 150);
+                setTimeout(() => onClick(e), 150); 
             }
         };
 
@@ -682,6 +704,7 @@
                         
                         <AnimatedHeader />
                         
+                        {/* СТИЛИ: ИСПОЛЬЗУЮТСЯ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -705,19 +728,19 @@
                                 transition: none; cursor: grabbing; 
                             }
 
-                            /* КАРТОЧКИ: ИСПОЛЬЗУЮТ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ, ВИДНЫ И В СВЕТЛОЙ, И В ТЕМНОЙ */
+                            /* КАРТОЧКИ: ТОЛЬКО СИСТЕМНЫЕ ЦВЕТА */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
-                                background: var(--row-bg-solid, rgba(130, 135, 150, 0.1)); 
-                                border: 1px solid var(--border, rgba(130, 135, 150, 0.2)); 
+                                background: var(--card-bg, var(--row-bg-solid)); 
+                                border: 1px solid var(--border); 
                                 border-radius:16px;
                                 padding: 8px 12px; 
-                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease;
+                                transition: transform 0.15s ease, opacity 0.2s ease;
                                 box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
                             }
                             .tlms-item:active {
-                                filter: brightness(0.9);
-                                transform: scale(0.97);
+                                opacity: 0.8;
+                                transform: scale(0.98);
                             }
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
@@ -733,18 +756,18 @@
                                 word-break: break-word;
                             }
 
-                            /* ПОЛЕ ДОБАВЛЕНИЯ - УЗКИЙ ИНТЕРВАЛ! */
+                            /* ПОЛЕ ДОБАВЛЕНИЯ - УЗКИЙ ИНТЕРВАЛ (ТЗ ВЫПОЛНЕНО) */
                             .tlms-add-row {
                               display: flex; align-items: center; gap: 10px;
-                              background: var(--row-bg-solid, rgba(130, 135, 150, 0.1));
-                              border: 1px solid var(--border, rgba(130, 135, 150, 0.2));
+                              background: var(--card-bg, var(--row-bg-solid));
+                              border: 1px solid var(--border);
                               border-radius: 14px;
-                              height: 48px; /* УМЕНЬШЕННЫЙ РАЗМЕР */
-                              padding: 0 6px 0 16px; /* ВЕРТИКАЛЬНЫЕ ОТСТУПЫ УБРАНЫ */
+                              height: 48px; /* Узкий размер */
+                              padding: 0 6px 0 16px; 
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
-                            .tlms-add-row.focused { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
+                            .tlms-add-row.focused { border-color: var(--purple, #8b5cf6); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
                             .tlms-add-row.shake { animation: tlmsShakeX .38s ease; }
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
@@ -771,30 +794,30 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* УВЕДОМЛЕНИЕ UNDO - СТРОГО СНИЗУ И ПОД ТЕМУ! */
+                            /* УВЕДОМЛЕНИЕ UNDO (ТОСТ) - СПРАВА СВЕРХУ (ТЗ ВЫПОЛНЕНО) */
                             .tlms-snackbar-zone { 
-                                position: fixed; left: 0; right: 0; bottom: 30px; z-index: 999999;
-                                display: flex; justify-content: center;
+                                position: fixed; top: 24px; right: 24px; left: auto; bottom: auto; z-index: 999999;
+                                display: flex; justify-content: flex-end;
                                 pointer-events: none; 
                             }
                             .tlms-snackbar { 
-                                pointer-events: auto; width: 100%; max-width: 400px; 
-                                /* ЦВЕТ КАК У КАРТОЧЕК */
-                                background: var(--row-bg-solid); 
+                                pointer-events: auto; width: max-content; min-width: 240px; max-width: 320px; 
+                                /* ПОЛУПРОЗРАЧНЫЙ ФОН + ЦВЕТА СИСТЕМЫ */
+                                background: var(--card-bg, rgba(28, 31, 44, 0.85)); 
+                                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                                 border: 1px solid var(--border); 
-                                border-radius: 16px; padding: 12px 16px;
-                                display: flex; align-items: center; gap: 14px; 
-                                box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+                                border-radius: 14px; padding: 10px 14px;
+                                display: flex; align-items: center; gap: 12px; 
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
                                 position: relative; overflow: hidden; 
                             }
                             .tlms-snackbar-text { 
-                                flex: 1; font-size: 14.5px; font-weight: 600; 
-                                /* ЦВЕТ ТЕКСТА ТОЖЕ ИЗ ТЕМЫ */
+                                flex: 1; font-size: 13.5px; font-weight: 600; 
                                 color: var(--text); 
                             }
                             .tlms-snackbar-undo{ 
-                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:14px;
-                                padding:9px 14px; border-radius:10px; cursor:pointer; 
+                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:13px;
+                                padding:6px 10px; border-radius:8px; cursor:pointer; 
                                 transition:background .15s ease, transform .15s ease; 
                             }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
@@ -867,6 +890,7 @@
                             </AnimatePresence>
                         </div>
 
+                        {/* КНОПКА ДОБАВЛЕНИЯ */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
@@ -890,15 +914,15 @@
                         
                         <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
-                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ) */}
+                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СВЕРХУ СПРАВА) */}
                         <AnimatePresence>
                           {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:60, scale: 0.95, opacity:0 }} animate={{ y:0, scale: 1, opacity:1 }} exit={{ y:40, scale: 0.95, opacity:0 }} transition={{ duration:0.3, ease:[0.32,0.72,0,1] }}>
+                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0, x: 40 }} animate={{ opacity:1, x: 0 }} exit={{ opacity:0, x: 20, scale: 0.95 }} transition={{ duration:0.3, ease:[0.32,0.72,0,1] }}>
+                              <div className="tlms-snackbar">
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </motion.div>
+                              </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -949,7 +973,7 @@
                                 </div>
                                 <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Время (минуты)</span>
                             </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--row-bg-solid)', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
                                 <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
                                 <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
                                 <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
@@ -962,7 +986,7 @@
                                 </div>
                                 <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
                             </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--row-bg-solid)', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
                                 <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
                                 <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
                                 <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
@@ -1021,10 +1045,10 @@
                                 <span style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'var(--row-bg-solid)', borderRadius:'14px', marginBottom:'25px'}}>
+                        <div style={{padding:'15px', background:'var(--card-bg)', borderRadius:'14px', marginBottom:'25px'}}>
                             <p style={{fontSize:18, color:'var(--text)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'var(--row-bg-solid)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--border)'}}>
+                        <div style={{background:'var(--card-bg)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--border)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
