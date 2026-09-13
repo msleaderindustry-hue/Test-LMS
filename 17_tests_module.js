@@ -2,6 +2,13 @@
 (function () {
     const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
+    // Хак для обхода стандартного window.confirm (чтобы не было верхнего окна при удалении)
+    const bypassConfirm = (fn) => {
+        const origConfirm = window.confirm;
+        window.confirm = () => true; // Автоматически "нажимаем" Да
+        try { fn(); } finally { window.confirm = origConfirm; }
+    };
+
     // --- КОМПОНЕНТ ЗАСТАВКИ ---
     const AnimatedHeader = () => {
         const stageRef = useRef(null);
@@ -399,14 +406,12 @@
             if (pendingDelete) { 
                 clearTimeout(pendingDelete.timer); 
                 pendingDelete.commitFn(); 
-                // Очищаем предыдущий удаленный из hidden ключей
                 setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
             }
             setHiddenSetKeys(prev => { const n = new Set(prev); n.add(key); return n; });
             const timer = setTimeout(() => { 
                 commitFn(); 
                 setPendingDelete(null); 
-                // ИСПРАВЛЕНИЕ: Очищаем скрытый ключ после реального удаления
                 setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
             }, 4000);
             setPendingDelete({ key, label, commitFn, timer });
@@ -427,7 +432,6 @@
                 return;
             }
             
-            // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
             setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(val); return n; });
 
             setAddDone(true);
@@ -662,6 +666,7 @@
                         
                         <AnimatedHeader />
                         
+                        {/* ИСПОЛЬЗУЕМ СИСТЕМНЫЕ CSS ПЕРЕМЕННЫЕ ДЛЯ АДАПТАЦИИ ПОД ТЕМУ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -678,33 +683,37 @@
                               transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
                             .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
 
-                            /* Точно как в HTML прототипе для поля карточек и добавления */
+                            /* Уменьшенные отступы и поддержка светлой темы */
                             .tlms-item {
-                                display:flex; align-items:center; gap:16px;
-                                background: #1c1f2c; /* var(--row-bg-solid) */
-                                border:1px solid rgba(255,255,255,.06); /* var(--border) */
-                                border-radius:18px;
-                                padding:15px 15px 15px 16px;
-                                transition: background 0.1s ease;
+                                display:flex; align-items:center; gap:14px;
+                                background: var(--bg-panel, #1c1f2c); 
+                                border:1px solid var(--glass-border, rgba(255,255,255,.06)); 
+                                border-radius:16px;
+                                padding: 10px 14px; /* УМЕНЬШЕНА ВЫСОТА И ОТСТУПЫ */
+                                transition: filter 0.1s ease;
                             }
                             .tlms-item:active {
-                                background: rgba(28, 31, 44, 0.7);
+                                filter: brightness(0.85);
                             }
+                            /* Иконки чуть-чуть меньше */
                             .tlms-icon-box {
-                                width:44px; height:44px; min-width:44px; border-radius:13px;
+                                width:36px; height:36px; min-width:36px; border-radius:10px;
                                 display:flex; align-items:center; justify-content:center;
-                                box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3);
+                                box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.15);
+                            }
+                            .tlms-icon-box svg {
+                                width: 18px; height: 18px;
                             }
                             .tlms-item-label {
-                                flex:1; font-size:16px; font-weight:700; color:#f3f4f8; word-break: break-word;
+                                flex:1; font-size:15.5px; font-weight:700; color: var(--text-main, #f3f4f8); word-break: break-word;
                             }
 
                             .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
-                              background: #1c1f2c;
-                              border:1px solid rgba(255,255,255,.06);
-                              border-radius:18px;
-                              padding:6px 6px 6px 18px;
+                              background: var(--bg-panel, #1c1f2c);
+                              border:1px solid var(--glass-border, rgba(255,255,255,.06));
+                              border-radius:16px;
+                              padding:4px 4px 4px 14px;
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
@@ -713,35 +722,50 @@
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color:#f3f4f8; font-size:15.5px; font-family:inherit;
+                              color: var(--text-main, #f3f4f8); font-size:15px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: #8b90a6; }
+                            .tlms-add-input::placeholder { color: var(--text-sec, #8b90a6); }
+                            
                             .tlms-add-btn {
-                              width:44px; height:44px; min-width:44px; border:none; border-radius:13px;
+                              width:40px; height:40px; min-width:40px; border:none; border-radius:12px;
                               background: linear-gradient(150deg,#8b5cf6,#7c3aed);
                               color:#fff; display:flex; align-items:center; justify-content:center;
                               cursor:pointer; position:relative;
                               transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
                               opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none;
                             }
-                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 16px rgba(124,58,237,.35); }
+                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 14px rgba(124,58,237,.3); }
                             .tlms-add-btn.visible:active { transform: scale(.88); }
-                            .tlms-add-btn svg { width:19px; height:19px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+                            .tlms-add-btn svg { width:18px; height:18px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
                             .tlms-add-btn .ic-plus { opacity:1; transform: rotate(0) scale(1); }
                             .tlms-add-btn .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); }
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
-                              padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
-                            .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:#1c1f2c;
-                              border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:13px 8px 13px 18px;
-                              display:flex; align-items:center; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); position:relative; overflow:hidden; }
-                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:#f3f4f8; }
-                            .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
-                              padding:9px 14px; border-radius:10px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
+                            /* Тост (Уведомление Undo) - поднял повыше и включил темы */
+                            .tlms-snackbar-zone{ 
+                                position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
+                                /* ПОДНЯЛ СНИЗУ ВЫШЕ, чтобы не перекрывал меню (85px) */
+                                padding:0 16px calc(85px + env(safe-area-inset-bottom)); 
+                                pointer-events:none; 
+                            }
+                            .tlms-snackbar{ 
+                                pointer-events:auto; width:100%; max-width:420px; 
+                                background: var(--bg-panel, #1c1f2c);
+                                border:1px solid var(--glass-border, rgba(255,255,255,.08)); 
+                                border-radius:16px; padding:12px 8px 12px 18px;
+                                display:flex; align-items:center; gap:14px; 
+                                box-shadow:0 12px 30px rgba(0,0,0,.2); 
+                                position:relative; overflow:hidden; 
+                            }
+                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color: var(--text-main, #f3f4f8); }
+                            .tlms-snackbar-undo{ 
+                                background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
+                                padding:9px 14px; border-radius:10px; cursor:pointer; 
+                                transition:background .15s ease, transform .15s ease; 
+                            }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
-                            .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:2.5px;
+                            .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:3px;
                               background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
                               animation: tlmsShrinkBar 4s linear forwards; }
                             @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
@@ -763,15 +787,15 @@
                                             rowKey={test.id} 
                                             registerClose={registerClose} 
                                             onArm={() => closeOthers(test.id)} 
-                                            onDismiss={() => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title))}
+                                            onDismiss={() => requestDelete(test.id, test.title, () => bypassConfirm(() => removeTeacherTestStudent(test.id, test.title)))}
                                             onClick={() => openTeacherAssignedTest(test)}
                                         >
                                             <div className="tlms-item">
                                                 <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #38bdf8, #0ea5e9)' }}>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                                 </div>
                                                 <div style={{display: 'flex', flexDirection: 'column', flex:1}}>
-                                                    <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
+                                                    <span style={{fontSize: '10px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1px'}}>Опубликован</span>
                                                     <div className="tlms-item-label">{test.title}</div>
                                                 </div>
                                             </div>
@@ -795,12 +819,12 @@
                                             rowKey={name} 
                                             registerClose={registerClose} 
                                             onArm={() => closeOthers(name)} 
-                                            onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
+                                            onDismiss={() => requestDelete(name, name, () => bypassConfirm(() => deleteSet(name)))}
                                             onClick={() => openSet(name)}
                                         >
                                             <div className="tlms-item">
                                                 <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #a78bfa, #7c3aed)' }}>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
                                                 </div>
                                                 <div className="tlms-item-label">{name}</div>
                                             </div>
@@ -847,6 +871,7 @@
                     </motion.div>
                 )}
 
+                {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
                         <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
