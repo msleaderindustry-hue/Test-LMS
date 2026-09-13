@@ -188,7 +188,7 @@
                     .tagline-wrap-anim { opacity:0; animation: taglineInAnim .5s .4s ease forwards; display:flex; justify-content:center; overflow:visible; width: 100%; }
                     @keyframes taglineInAnim { to { opacity:1; } }
                     .tag-stage-anim { position:relative; height:24px; display:flex; align-items:center; justify-content:center; overflow:visible; transition: width 0.1s ease; margin: 0 auto; }
-                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--muted); }
+                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--text-sec, #8b87a8); }
                     #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
                     .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
                     .wand-anim svg { width:100%; height:100%; display:block; }
@@ -228,11 +228,11 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE С ПРАВИЛЬНЫМИ КЛИКАМИ ---
+    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
     const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
-        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false, dragDist: 0 });
+        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
         const OPEN = 84, DISMISS = 190;
 
         const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
@@ -265,47 +265,38 @@
             item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
             item.style.transform = 'translateX(-120%) scale(0.95)';
             item.style.opacity = '0';
-            setTimeout(() => { onDismiss && onDismiss(); }, 280);
-        };
-
-        // Блокиратор фантомных кликов + Плавный вход
-        const guard = (e) => {
-            const s = stateRef.current;
-            if (s.suppressNextClick) {
-                e.preventDefault();
-                e.stopPropagation();
-                s.suppressNextClick = false; // сбрасываем блокировку
-            } else if (onClick) {
-                e.preventDefault();
-                // Делаем плавный вход (микро-задержка 150мс для проигрывания CSS-анимации :active)
-                setTimeout(() => { onClick(); }, 150);
-            }
+            setTimeout(() => {
+                onDismiss && onDismiss();
+            }, 280);
         };
 
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
             const el = itemRef.current;
+            const guard = (e) => {
+                if (stateRef.current.suppressNextClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    stateRef.current.suppressNextClick = false;
+                }
+            };
             el.addEventListener('click', guard, true);
             return () => el.removeEventListener('click', guard, true);
-        }, [onClick]);
+        }, []);
 
         const onDown = (e) => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             const s = stateRef.current;
             s.dragging = true; s.axis = null;
             s.startX = e.clientX; s.startY = e.clientY;
-            s.dragDist = 0; // Сбрасываем дистанцию
             s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
             itemRef.current.style.transition = 'none';
             itemRef.current.setPointerCapture(e.pointerId);
         };
-
         const onMove = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
             const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
-            s.dragDist += Math.abs(dx) + Math.abs(dy); // Накапливаем дистанцию движения
-            
             if (s.axis === null) {
                 if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
@@ -317,7 +308,6 @@
             if (x > 0) x *= 0.25;
             setX(x);
         };
-
         const onUp = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
@@ -326,14 +316,10 @@
             item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
             if (item.hasPointerCapture(e.pointerId)) item.releasePointerCapture(e.pointerId);
 
-            const x = parseFloat(item.dataset.x) || 0;
-
-            // ЖЕСТКАЯ БЛОКИРОВКА КЛИКА: если был сдвиг больше 8px ИЛИ элемент сейчас смещен
-            if (s.dragDist > 8 || Math.abs(x) > 5) {
-                s.suppressNextClick = true; 
-            }
-
             if (s.axis === 'x') {
+                const x = parseFloat(item.dataset.x) || 0;
+                if (Math.abs(x) > 4) s.suppressNextClick = true;
+                
                 if (x < -DISMISS) {
                     vibrate(20);
                     animateOutAndDismiss();
@@ -344,8 +330,11 @@
                         setTimeout(() => hintRef.current && hintRef.current.classList.remove('armed-pop'), 320);
                     }
                 } else {
-                    close(); // Просто закрываем (клик уже заблокирован через suppressNextClick)
+                    close();
+                    if (Math.abs(x) < 5 && onClick) onClick(); 
                 }
+            } else {
+                if (onClick) onClick(); 
             }
             s.axis = null;
         };
@@ -386,7 +375,7 @@
         const [shakeQ, setShakeQ] = useState(false);
         const [isStarting, setIsStarting] = useState(false);
 
-        // --- СОСТОЯНИЯ ДЛЯ СВАЙПА И ОТМЕНЫ (UNDO) ---
+        // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
         const [hiddenSetKeys, setHiddenSetKeys] = useState(() => new Set());
         const [pendingDelete, setPendingDelete] = useState(null);
         
@@ -677,7 +666,7 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ПОЛНОСТЬЮ СИСТЕМНЫЕ ПЕРЕМЕННЫЕ, НИКАКИХ ЖЕСТКИХ ЦВЕТОВ! */}
+                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) И ВСТРОЕННЫЙ ТОСТ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -694,20 +683,17 @@
                               transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
                             .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
 
-                            /* КАРТОЧКИ: Видимый фон, системные цвета, плавная анимация при нажатии */
+                            /* Адаптивная карточка (без жестких HEX цветов) + уменьшенные отступы */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
-                                /* Используем фон и бордер из твоей темы! */
-                                background: var(--card-bg, var(--row-bg-solid, rgba(128,128,128,0.08))); 
-                                border: 1px solid var(--border, var(--glass-border, rgba(128,128,128,0.2))); 
+                                background: var(--bg-secondary, rgba(130, 135, 150, 0.08)); 
+                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15)); 
                                 border-radius:16px;
-                                padding: 8px 12px; 
-                                transition: transform 0.15s ease, filter 0.15s ease;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* Легкая тень для светлой темы */
+                                padding: 10px 14px; 
+                                transition: background 0.1s ease, filter 0.1s ease;
                             }
                             .tlms-item:active {
-                                filter: brightness(0.9);
-                                transform: scale(0.97); /* Эффект продавливания */
+                                background: var(--bg-secondary, rgba(130, 135, 150, 0.12));
                             }
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
@@ -718,41 +704,37 @@
                                 width: 18px; height: 18px;
                             }
                             .tlms-item-label {
-                                flex:1; font-size:15.5px; font-weight:700; 
-                                color: var(--text, inherit); 
-                                word-break: break-word;
+                                flex:1; font-size:15.5px; font-weight:700; color: var(--text-main, inherit); word-break: break-word;
                             }
 
-                            /* ПОЛЕ ДОБАВЛЕНИЯ - Уменьшенный интервал! */
+                            /* Поле добавления нового теста (Адаптивное) */
                             .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
-                              background: var(--card-bg, var(--row-bg-solid, rgba(128,128,128,0.08)));
-                              border: 1px solid var(--border, var(--glass-border, rgba(128,128,128,0.2)));
-                              border-radius: 14px;
-                              padding: 6px 6px 6px 16px; /* Супер-узкие отступы */
+                              background: var(--bg-secondary, rgba(130, 135, 150, 0.08));
+                              border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15));
+                              border-radius:16px;
+                              padding:4px 4px 4px 14px;
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
-                            .tlms-add-row.focused { border-color: var(--purple, #8b5cf6); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
+                            .tlms-add-row.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
                             .tlms-add-row.shake { animation: tlmsShakeX .38s ease; }
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color: var(--text, inherit); font-size:15px; font-family:inherit;
-                              padding: 0; margin: 0;
+                              color: var(--text-main, inherit); font-size:15px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: var(--muted, #8b90a6); }
+                            .tlms-add-input::placeholder { color: var(--text-sec, #888); }
                             
-                            /* Кнопка Плюс компактная */
                             .tlms-add-btn {
-                              width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
-                              background: linear-gradient(150deg, var(--purple, #8b5cf6), var(--purple-2, #7c3aed));
+                              width:40px; height:40px; min-width:40px; border:none; border-radius:12px;
+                              background: linear-gradient(150deg,#8b5cf6,#7c3aed);
                               color:#fff; display:flex; align-items:center; justify-content:center;
                               cursor:pointer; position:relative;
                               transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
                               opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none;
                             }
-                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 4px 12px rgba(124,58,237,.3); }
+                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 14px rgba(124,58,237,.3); }
                             .tlms-add-btn.visible:active { transform: scale(.88); }
                             .tlms-add-btn svg { width:18px; height:18px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
                             .tlms-add-btn .ic-plus { opacity:1; transform: rotate(0) scale(1); }
@@ -760,35 +742,31 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* УВЕДОМЛЕНИЕ UNDO - СТРОГО СНИЗУ И ПОД ТЕМУ! */
+                            /* Уведомление Undo (Тост) - ВСТРОЕНО В СТРАНИЦУ (Без position fixed), чтобы ничего не перекрывало! */
                             .tlms-snackbar-zone { 
-                                position: fixed; left: 0; right: 0; bottom: 30px; z-index: 999999;
-                                display: flex; justify-content: center;
-                                pointer-events: none; 
+                                display:flex; justify-content:center; width: 100%; margin-bottom: 20px;
                             }
                             .tlms-snackbar { 
-                                pointer-events: auto; width: 100%; max-width: 400px; 
-                                /* ТЕПЕРЬ ФОН БЕРЕТ ИЗ ПЕРЕМЕННОЙ - БЕЗ СЛУЧАЙНЫХ БЕЛЫХ ИЛИ ЧЕРНЫХ ПЯТЕН! */
-                                background: var(--card-bg, var(--row-bg-solid, #1c1f2c)); 
-                                border: 1px solid var(--border, var(--glass-border, rgba(128,128,128,0.2))); 
-                                border-radius: 16px; padding: 12px 16px;
-                                display: flex; align-items: center; gap: 14px; 
-                                box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
-                                position: relative; overflow: hidden; 
+                                width:100%; max-width:420px; 
+                                background: var(--bg-panel, #1c1f2c); /* Точно такой же фон как у твоей панели в темах */
+                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.2)); 
+                                border-radius:16px; padding:12px 16px;
+                                display:flex; align-items:center; gap:14px; 
+                                box-shadow: 0 8px 24px rgba(0,0,0,0.15); 
+                                position:relative; overflow:hidden; 
                             }
                             .tlms-snackbar-text { 
-                                flex: 1; font-size: 14.5px; font-weight: 600; 
-                                /* ЦВЕТ ТЕКСТА ТОЖЕ ИЗ ТЕМЫ */
-                                color: var(--text, #f3f4f8); 
+                                flex:1; font-size:14.5px; font-weight:600; 
+                                color: var(--text-main, #f3f4f8); /* Идеальная видимость букв */
                             }
                             .tlms-snackbar-undo{ 
-                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:14px;
+                                background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
                                 padding:9px 14px; border-radius:10px; cursor:pointer; 
                                 transition:background .15s ease, transform .15s ease; 
                             }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
                             .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:3px;
-                              background:linear-gradient(90deg, var(--purple, #8b5cf6), var(--blue, #6ea8fe)); width:100%; transform-origin:left;
+                              background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
                               animation: tlmsShrinkBar 4s linear forwards; }
                             @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
                         `}} />
@@ -856,7 +834,6 @@
                             </AnimatePresence>
                         </div>
 
-                        {/* КНОПКА ДОБАВЛЕНИЯ */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
@@ -878,27 +855,27 @@
                             </button>
                         </div>
                         
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
-                        
-                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СНИЗУ) */}
+                        {/* Анимация Уведомления Undo - ВСТРОЕНА ПРЯМО В СПИСОК, БОЛЬШЕ НИЧЕГО НЕ ПЕРЕКРЫВАЕТ */}
                         <AnimatePresence>
                           {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:60, scale: 0.95, opacity:0 }} animate={{ y:0, scale: 1, opacity:1 }} exit={{ y:40, scale: 0.95, opacity:0 }} transition={{ duration:0.3, ease:[0.32,0.72,0,1] }}>
+                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0, height: 0, marginTop: 0 }} animate={{ opacity:1, height: 'auto', marginTop: 10 }} exit={{ opacity:0, height: 0, marginTop: 0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
+                              <div className="tlms-snackbar">
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </motion.div>
+                              </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
+
+                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7, marginTop: 10}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
 
                 {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
@@ -920,7 +897,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             Начать тест
                         </Button>
-                        <p style={{textAlign:'center', color:'var(--muted)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+                        <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
 
@@ -930,19 +907,19 @@
                             <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </div>
-                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text)'}}>Параметры теста</h2>
+                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
                         </div>
                         <div style={{marginBottom:'24px', textAlign:'left'}}>
                             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Время (минуты)</span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
                             </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <div style={{marginBottom:'30px', textAlign:'left'}}>
@@ -950,12 +927,12 @@
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
                             </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
@@ -967,7 +944,7 @@
                                 </motion.div>
                             ) : "Начать"}
                         </Button>
-                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--border)', color:'var(--muted)', height:'54px', fontSize:'16px'}}>Отмена</Button>
+                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--glass-border)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
                     </motion.div>
                 )}
 
@@ -1003,18 +980,18 @@
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--border)" strokeWidth="14" />
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
                                 <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
                             </svg>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'var(--card-bg)', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                        <div style={{padding:'15px', background:'var(--bg-secondary, rgba(128,128,128,0.1))', borderRadius:'14px', marginBottom:'25px'}}>
+                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'var(--card-bg)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--border)'}}>
+                        <div style={{background:'var(--bg-secondary, rgba(128,128,128,0.05))', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
