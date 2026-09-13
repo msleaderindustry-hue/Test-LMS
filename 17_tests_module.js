@@ -666,7 +666,7 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) */}
+                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) И ВСТРОЕННЫЙ ТОСТ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -742,23 +742,23 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* Уведомление Undo (Тост) - ПЕРЕНЕСЕНО НАВЕРХ И СДЕЛАНО АДАПТИВНЫМ */
+                            /* Уведомление Undo (Тост) - ВСТРОЕНО В СТРАНИЦУ (Без position fixed), чтобы ничего не перекрывало! */
                             .tlms-snackbar-zone { 
-                                position:fixed; left:0; right:0; top:0; bottom:auto; z-index:9999; display:flex; justify-content:center;
-                                padding: calc(24px + env(safe-area-inset-top)) 16px 0; 
-                                pointer-events:none; 
+                                display:flex; justify-content:center; width: 100%; margin-bottom: 20px;
                             }
                             .tlms-snackbar { 
-                                pointer-events:auto; width:100%; max-width:420px; 
-                                background: var(--bg-panel, rgba(255, 255, 255, 0.8));
-                                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                                width:100%; max-width:420px; 
+                                background: var(--bg-panel, #1c1f2c); /* Точно такой же фон как у твоей панели в темах */
                                 border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.2)); 
-                                border-radius:16px; padding:12px 8px 12px 18px;
+                                border-radius:16px; padding:12px 16px;
                                 display:flex; align-items:center; gap:14px; 
-                                box-shadow: 0 12px 30px rgba(0,0,0,0.15); 
+                                box-shadow: 0 8px 24px rgba(0,0,0,0.15); 
                                 position:relative; overflow:hidden; 
                             }
-                            .tlms-snackbar-text { flex:1; font-size:14px; font-weight:600; color: var(--text-main, inherit); }
+                            .tlms-snackbar-text { 
+                                flex:1; font-size:14.5px; font-weight:600; 
+                                color: var(--text-main, #f3f4f8); /* Идеальная видимость букв */
+                            }
                             .tlms-snackbar-undo{ 
                                 background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
                                 padding:9px 14px; border-radius:10px; cursor:pointer; 
@@ -855,23 +855,24 @@
                             </button>
                         </div>
                         
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
-                        
-                        {/* Анимация Уведомления Undo (СВЕРХУ) */}
+                        {/* Анимация Уведомления Undo - ВСТРОЕНА ПРЯМО В СПИСОК, БОЛЬШЕ НИЧЕГО НЕ ПЕРЕКРЫВАЕТ */}
                         <AnimatePresence>
                           {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:-60, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:-60, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
+                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0, height: 0, marginTop: 0 }} animate={{ opacity:1, height: 'auto', marginTop: 10 }} exit={{ opacity:0, height: 0, marginTop: 0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
+                              <div className="tlms-snackbar">
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </motion.div>
+                              </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
+
+                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7, marginTop: 10}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                     </motion.div>
                 )}
 
+                {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
                         <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
