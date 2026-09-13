@@ -228,11 +228,11 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE С ПЛАВНЫМ ИСЧЕЗНОВЕНИЕМ ГРАНИЦ И ЖЕСТКИМ БЛОКИРАТОРОМ ---
+    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
     const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
         const itemRef = useRef(null);
         const hintRef = useRef(null);
-        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false, hasDragged:false });
+        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
         const OPEN = 84, DISMISS = 190;
 
         const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
@@ -245,10 +245,9 @@
             
             const absX = Math.abs(x);
             
-            // ТЗ 2: Плавное исчезновение всей карточки (фона, рамок, текста) при сдвиге влево
+            // ТЗ: Исчезновение карточки при свайпе до полного нуля у границы
             const innerCard = item.querySelector('.tlms-item');
             if (innerCard) {
-                // Как только карточка едет влево, её opacity плавно падает до 0 к моменту DISMISS
                 innerCard.style.opacity = Math.max(0, 1 - (absX / DISMISS));
             }
 
@@ -277,17 +276,6 @@
 
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
-            
-            // Жесткий перехватчик событий клика на фазе погружения
-            const el = itemRef.current;
-            const guard = (e) => {
-                if (stateRef.current.suppressNextClick || stateRef.current.hasDragged) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            };
-            el.addEventListener('click', guard, true);
-            return () => el.removeEventListener('click', guard, true);
         }, []);
 
         const onDown = (e) => {
@@ -296,7 +284,6 @@
             s.dragging = true; s.axis = null;
             s.startX = e.clientX; s.startY = e.clientY;
             s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
-            s.hasDragged = false; // Сбрасываем флаг перетаскивания
             itemRef.current.classList.add('dragging');
             itemRef.current.setPointerCapture(e.pointerId);
         };
@@ -305,12 +292,6 @@
             const s = stateRef.current;
             if (!s.dragging) return;
             const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
-            
-            // Если сдвинули палец/мышь больше чем на 5px — это свайп, блокируем клик
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                s.hasDragged = true;
-            }
-
             if (s.axis === null) {
                 if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
@@ -333,10 +314,10 @@
             if (s.axis === 'x') {
                 const x = parseFloat(itemRef.current.dataset.x) || 0;
                 
-                // Если был свайп - ставим блокировку клика на полсекунды (с запасом)
-                if (s.hasDragged || Math.abs(x) > 4) {
+                // Жесткий блокиратор клика при случайном микро-сдвиге
+                if (Math.abs(x) > 4) {
                     s.suppressNextClick = true;
-                    setTimeout(() => { s.suppressNextClick = false; s.hasDragged = false; }, 500); 
+                    setTimeout(() => { s.suppressNextClick = false; }, 500); 
                 }
                 
                 if (x < -DISMISS) {
@@ -353,23 +334,20 @@
                 } else {
                     close();
                 }
-            } else {
-                s.hasDragged = false;
             }
             s.axis = null;
         };
 
         const handleClick = (e) => {
-            if (stateRef.current.suppressNextClick || stateRef.current.hasDragged) {
+            if (stateRef.current.suppressNextClick) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;
             }
-            
-            // Если клик успешный (не было свайпа) — плавно входим с задержкой, чтобы отыграла анимация :active
+            // Плавный вход в тест с задержкой 150мс
             if (onClick) {
                 e.preventDefault();
-                setTimeout(() => onClick(e), 150); 
+                setTimeout(() => onClick(e), 150);
             }
         };
 
@@ -704,7 +682,6 @@
                         
                         <AnimatedHeader />
                         
-                        {/* СТИЛИ: ИСПОЛЬЗУЮТСЯ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -728,19 +705,18 @@
                                 transition: none; cursor: grabbing; 
                             }
 
-                            /* КАРТОЧКИ: ТОЛЬКО СИСТЕМНЫЕ ЦВЕТА */
+                            /* КАРТОЧКИ: ИСПОЛЬЗУЮТ ТОЛЬКО ТВОИ CSS-ПЕРЕМЕННЫЕ */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
                                 background: var(--card-bg, var(--row-bg-solid)); 
                                 border: 1px solid var(--border); 
                                 border-radius:16px;
                                 padding: 8px 12px; 
-                                transition: transform 0.15s ease, opacity 0.2s ease;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease;
                             }
                             .tlms-item:active {
                                 opacity: 0.8;
-                                transform: scale(0.98);
+                                transform: scale(0.97);
                             }
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
@@ -796,27 +772,28 @@
 
                             /* УВЕДОМЛЕНИЕ UNDO (ТОСТ) - СПРАВА СВЕРХУ (ТЗ ВЫПОЛНЕНО) */
                             .tlms-snackbar-zone { 
-                                position: fixed; top: 24px; right: 24px; left: auto; bottom: auto; z-index: 999999;
+                                position: fixed; top: 20px; right: 20px; left: auto; bottom: auto; z-index: 999999;
                                 display: flex; justify-content: flex-end;
                                 pointer-events: none; 
                             }
                             .tlms-snackbar { 
-                                pointer-events: auto; width: max-content; min-width: 240px; max-width: 320px; 
+                                pointer-events: auto; width: max-content; min-width: 200px; max-width: 280px; 
                                 /* ПОЛУПРОЗРАЧНЫЙ ФОН + ЦВЕТА СИСТЕМЫ */
-                                background: var(--card-bg, rgba(28, 31, 44, 0.85)); 
-                                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                                background: var(--card-bg); 
+                                opacity: 0.95;
+                                backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
                                 border: 1px solid var(--border); 
-                                border-radius: 14px; padding: 10px 14px;
+                                border-radius: 12px; padding: 10px 14px;
                                 display: flex; align-items: center; gap: 12px; 
                                 box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
                                 position: relative; overflow: hidden; 
                             }
                             .tlms-snackbar-text { 
-                                flex: 1; font-size: 13.5px; font-weight: 600; 
+                                flex: 1; font-size: 13px; font-weight: 600; 
                                 color: var(--text); 
                             }
                             .tlms-snackbar-undo{ 
-                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:13px;
+                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:12px;
                                 padding:6px 10px; border-radius:8px; cursor:pointer; 
                                 transition:background .15s ease, transform .15s ease; 
                             }
@@ -890,7 +867,6 @@
                             </AnimatePresence>
                         </div>
 
-                        {/* КНОПКА ДОБАВЛЕНИЯ */}
                         <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
                             <input 
                                 className="tlms-add-input" 
