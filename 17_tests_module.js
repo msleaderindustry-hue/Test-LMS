@@ -5,7 +5,7 @@
     // Хак для обхода стандартного window.confirm (чтобы не было верхнего окна при удалении)
     const bypassConfirm = (fn) => {
         const origConfirm = window.confirm;
-        window.confirm = () => true; // Автоматически "нажимаем" Да
+        window.confirm = () => true; 
         try { fn(); } finally { window.confirm = origConfirm; }
     };
 
@@ -666,7 +666,7 @@
                         
                         <AnimatedHeader />
                         
-                        {/* ИСПОЛЬЗУЕМ СИСТЕМНЫЕ CSS ПЕРЕМЕННЫЕ ДЛЯ АДАПТАЦИИ ПОД ТЕМУ */}
+                        {/* ПОЛНОСТЬЮ АДАПТИВНЫЕ СТИЛИ (СВЕТЛАЯ/ТЕМНАЯ ТЕМА) */}
                         <style dangerouslySetInnerHTML={{__html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
@@ -683,19 +683,18 @@
                               transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
                             .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
 
-                            /* Уменьшенные отступы и поддержка светлой темы */
+                            /* Адаптивная карточка (без жестких HEX цветов) + уменьшенные отступы */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
-                                background: var(--bg-panel, #1c1f2c); 
-                                border:1px solid var(--glass-border, rgba(255,255,255,.06)); 
+                                background: var(--bg-secondary, rgba(130, 135, 150, 0.08)); 
+                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15)); 
                                 border-radius:16px;
-                                padding: 10px 14px; /* УМЕНЬШЕНА ВЫСОТА И ОТСТУПЫ */
-                                transition: filter 0.1s ease;
+                                padding: 10px 14px; 
+                                transition: background 0.1s ease, filter 0.1s ease;
                             }
                             .tlms-item:active {
-                                filter: brightness(0.85);
+                                background: var(--bg-secondary, rgba(130, 135, 150, 0.12));
                             }
-                            /* Иконки чуть-чуть меньше */
                             .tlms-icon-box {
                                 width:36px; height:36px; min-width:36px; border-radius:10px;
                                 display:flex; align-items:center; justify-content:center;
@@ -705,13 +704,14 @@
                                 width: 18px; height: 18px;
                             }
                             .tlms-item-label {
-                                flex:1; font-size:15.5px; font-weight:700; color: var(--text-main, #f3f4f8); word-break: break-word;
+                                flex:1; font-size:15.5px; font-weight:700; color: var(--text-main, inherit); word-break: break-word;
                             }
 
+                            /* Поле добавления нового теста (Адаптивное) */
                             .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
-                              background: var(--bg-panel, #1c1f2c);
-                              border:1px solid var(--glass-border, rgba(255,255,255,.06));
+                              background: var(--bg-secondary, rgba(130, 135, 150, 0.08));
+                              border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.15));
                               border-radius:16px;
                               padding:4px 4px 4px 14px;
                               transition: box-shadow .2s ease, border-color .2s ease;
@@ -722,9 +722,9 @@
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color: var(--text-main, #f3f4f8); font-size:15px; font-family:inherit;
+                              color: var(--text-main, inherit); font-size:15px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: var(--text-sec, #8b90a6); }
+                            .tlms-add-input::placeholder { color: var(--text-sec, #888); }
                             
                             .tlms-add-btn {
                               width:40px; height:40px; min-width:40px; border:none; border-radius:12px;
@@ -742,23 +742,23 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* Тост (Уведомление Undo) - поднял повыше и включил темы */
-                            .tlms-snackbar-zone{ 
-                                position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
-                                /* ПОДНЯЛ СНИЗУ ВЫШЕ, чтобы не перекрывал меню (85px) */
-                                padding:0 16px calc(85px + env(safe-area-inset-bottom)); 
+                            /* Уведомление Undo (Тост) - ПЕРЕНЕСЕНО НАВЕРХ И СДЕЛАНО АДАПТИВНЫМ */
+                            .tlms-snackbar-zone { 
+                                position:fixed; left:0; right:0; top:0; bottom:auto; z-index:9999; display:flex; justify-content:center;
+                                padding: calc(24px + env(safe-area-inset-top)) 16px 0; 
                                 pointer-events:none; 
                             }
-                            .tlms-snackbar{ 
+                            .tlms-snackbar { 
                                 pointer-events:auto; width:100%; max-width:420px; 
-                                background: var(--bg-panel, #1c1f2c);
-                                border:1px solid var(--glass-border, rgba(255,255,255,.08)); 
+                                background: var(--bg-panel, rgba(255, 255, 255, 0.8));
+                                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                                border: 1px solid var(--glass-border, rgba(130, 135, 150, 0.2)); 
                                 border-radius:16px; padding:12px 8px 12px 18px;
                                 display:flex; align-items:center; gap:14px; 
-                                box-shadow:0 12px 30px rgba(0,0,0,.2); 
+                                box-shadow: 0 12px 30px rgba(0,0,0,0.15); 
                                 position:relative; overflow:hidden; 
                             }
-                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color: var(--text-main, #f3f4f8); }
+                            .tlms-snackbar-text { flex:1; font-size:14px; font-weight:600; color: var(--text-main, inherit); }
                             .tlms-snackbar-undo{ 
                                 background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
                                 padding:9px 14px; border-radius:10px; cursor:pointer; 
@@ -857,10 +857,11 @@
                         
                         <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
+                        {/* Анимация Уведомления Undo (СВЕРХУ) */}
                         <AnimatePresence>
                           {pendingDelete && (
                             <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:60, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:60, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
+                              <motion.div className="tlms-snackbar" initial={{ y:-60, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:-60, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
@@ -871,7 +872,6 @@
                     </motion.div>
                 )}
 
-                {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
                         <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
@@ -915,7 +915,7 @@
                                 </div>
                                 <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
                             </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeTime ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
                                 <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
                                 <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
                                 <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
@@ -928,7 +928,7 @@
                                 </div>
                                 <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
                             </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeQ ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-secondary, rgba(168, 85, 247, 0.05))', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--glass-border, rgba(168, 85, 247, 0.2))', borderRadius:'14px', padding:'6px 14px'}}>
                                 <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
                                 <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
                                 <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
@@ -987,10 +987,10 @@
                                 <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
+                        <div style={{padding:'15px', background:'var(--bg-secondary, rgba(128,128,128,0.1))', borderRadius:'14px', marginBottom:'25px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
+                        <div style={{background:'var(--bg-secondary, rgba(128,128,128,0.05))', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
