@@ -1,8 +1,124 @@
 // --- 11_tests_module.js ---
 (function () {
+    // ВНИМАНИЕ: Добавлен useRef в деструктуризацию из window
     const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
-    // --- КОМПОНЕНТ ЗАСТАВКИ ---
+    // --- SWIPE-TO-DELETE ROW ---
+    const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss }) => {
+        const itemRef = useRef(null);
+        const hintRef = useRef(null);
+        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
+        const OPEN = 84, DISMISS = 190;
+
+        const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
+
+        const setX = (x) => {
+            const item = itemRef.current, hint = hintRef.current;
+            if (!item || !hint) return;
+            item.style.transform = `translateX(${x}px)`;
+            item.dataset.x = x;
+            const absX = Math.abs(x);
+            hint.style.opacity = Math.min(1, absX / OPEN);
+            const openP = Math.min(1, absX / OPEN);
+            const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
+            hint.style.setProperty('--icon-scale', (0.8 + openP * 0.2 + dismissP * 0.25).toFixed(3));
+            hint.style.filter = `brightness(${1 + dismissP * 0.18})`;
+            const s = stateRef.current;
+            const nowArmed = absX >= OPEN * 0.5;
+            if (nowArmed && !s.armed) vibrate(9);
+            s.armed = nowArmed;
+            const nowOver = absX >= DISMISS;
+            if (nowOver && !s.overDismiss) vibrate(16);
+            s.overDismiss = nowOver;
+        };
+
+        const close = () => setX(0);
+
+        useEffect(() => {
+            if (registerClose) registerClose(rowKey, close);
+            const el = itemRef.current;
+            // "призрачный клик" после свайпа — не даём открыть Set, если это было перетаскивание
+            const guard = (e) => {
+                if (stateRef.current.suppressNextClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    stateRef.current.suppressNextClick = false;
+                }
+            };
+            el.addEventListener('click', guard, true);
+            return () => el.removeEventListener('click', guard, true);
+        }, []);
+
+        const onDown = (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            const s = stateRef.current;
+            s.dragging = true; s.axis = null;
+            s.startX = e.clientX; s.startY = e.clientY;
+            s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
+            itemRef.current.classList.add('dragging');
+            itemRef.current.setPointerCapture(e.pointerId);
+        };
+        const onMove = (e) => {
+            const s = stateRef.current;
+            if (!s.dragging) return;
+            const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
+            if (s.axis === null) {
+                if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+                if (s.axis === 'y') { s.dragging = false; itemRef.current.classList.remove('dragging'); return; }
+                if (onArm) onArm();
+            }
+            if (s.axis !== 'x') return;
+            let x = s.baseX + dx;
+            if (x > 0) x *= 0.25;
+            setX(x);
+        };
+        const onUp = () => {
+            const s = stateRef.current;
+            if (!s.dragging) return;
+            s.dragging = false;
+            itemRef.current.classList.remove('dragging');
+            if (s.axis === 'x') {
+                const x = parseFloat(itemRef.current.dataset.x) || 0;
+                if (Math.abs(x) > 4) s.suppressNextClick = true;
+                if (x < -DISMISS) {
+                    vibrate(20);
+                    onDismiss && onDismiss();
+                } else if (x < -OPEN * 0.5) {
+                    setX(-OPEN);
+                    if (hintRef.current) {
+                        hintRef.current.classList.add('armed-pop');
+                        setTimeout(() => hintRef.current && hintRef.current.classList.remove('armed-pop'), 320);
+                    }
+                } else {
+                    close();
+                }
+            }
+            s.axis = null;
+        };
+
+        const handleHintClick = () => {
+            const x = parseFloat(itemRef.current.dataset.x) || 0;
+            if (Math.abs(x) < OPEN * 0.6) return;
+            vibrate(20);
+            onDismiss && onDismiss();
+        };
+
+        return (
+            <div className="tlms-swrow-track">
+                <div className="tlms-swrow-hint" ref={hintRef} onClick={handleHintClick}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    <span>Удалить</span>
+                </div>
+                <div className="tlms-swrow-item" ref={itemRef} data-x="0"
+                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+                    {children}
+                </div>
+            </div>
+        );
+    };
+
+    // --- НОВЫЙ КОМПОНЕНТ ЗАСТАВКИ СО ЗВЕЗДОЧКОЙ ---
     const AnimatedHeader = () => {
         const stageRef = useRef(null);
         const tagOldRef = useRef(null);
@@ -188,6 +304,7 @@
                     .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
                 `}} />
+ 
                 <div className="icon-wrap-anim">
                     <div className="halo-anim"></div>
                     <div className="icon-float-anim">
@@ -205,7 +322,9 @@
                         </svg>
                     </div>
                 </div>
+
                 <h1 className="title-anim">Ultimate LMS Platform</h1>
+
                 <div className="tagline-wrap-anim">
                     <div className="tag-stage-anim" ref={stageRef}>
                         <span className="tag-text-anim" ref={tagOldRef}>Learn without limits</span>
@@ -221,135 +340,7 @@
         );
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
-    const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss }) => {
-        const itemRef = useRef(null);
-        const hintRef = useRef(null);
-        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
-        const OPEN = 84, DISMISS = 190;
-
-        const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
-
-        const setX = (x) => {
-            const item = itemRef.current, hint = hintRef.current;
-            if (!item || !hint) return;
-            item.style.transform = `translateX(${x}px)`;
-            item.dataset.x = x;
-            const absX = Math.abs(x);
-            hint.style.opacity = Math.min(1, absX / OPEN);
-            const openP = Math.min(1, absX / OPEN);
-            const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
-            hint.style.setProperty('--icon-scale', (0.8 + openP * 0.2 + dismissP * 0.25).toFixed(3));
-            hint.style.filter = `brightness(${1 + dismissP * 0.18})`;
-            const s = stateRef.current;
-            const nowArmed = absX >= OPEN * 0.5;
-            if (nowArmed && !s.armed) vibrate(9);
-            s.armed = nowArmed;
-            const nowOver = absX >= DISMISS;
-            if (nowOver && !s.overDismiss) vibrate(16);
-            s.overDismiss = nowOver;
-        };
-
-        const close = () => setX(0);
-
-        // Функция плавной анимации скрытия элемента перед удалением
-        const animateOutAndDismiss = () => {
-            const item = itemRef.current;
-            if (!item) return;
-            item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
-            item.style.transform = 'translateX(-120%) scale(0.95)';
-            item.style.opacity = '0';
-            setTimeout(() => {
-                onDismiss && onDismiss();
-            }, 250);
-        };
-
-        useEffect(() => {
-            if (registerClose) registerClose(rowKey, close);
-            const el = itemRef.current;
-            const guard = (e) => {
-                if (stateRef.current.suppressNextClick) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    stateRef.current.suppressNextClick = false;
-                }
-            };
-            el.addEventListener('click', guard, true);
-            return () => el.removeEventListener('click', guard, true);
-        }, []);
-
-        const onDown = (e) => {
-            if (e.pointerType === 'mouse' && e.button !== 0) return;
-            const s = stateRef.current;
-            s.dragging = true; s.axis = null;
-            s.startX = e.clientX; s.startY = e.clientY;
-            s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
-            itemRef.current.style.transition = 'none'; // Убираем транзишн во время перетаскивания
-            itemRef.current.setPointerCapture(e.pointerId);
-        };
-        const onMove = (e) => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
-            if (s.axis === null) {
-                if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-                s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-                if (s.axis === 'y') { s.dragging = false; return; }
-                if (onArm) onArm();
-            }
-            if (s.axis !== 'x') return;
-            let x = s.baseX + dx;
-            if (x > 0) x *= 0.25; // сопротивление при свайпе вправо
-            setX(x);
-        };
-        const onUp = () => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            s.dragging = false;
-            const item = itemRef.current;
-            item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)'; // Возвращаем анимацию
-
-            if (s.axis === 'x') {
-                const x = parseFloat(item.dataset.x) || 0;
-                if (Math.abs(x) > 4) s.suppressNextClick = true;
-                if (x < -DISMISS) {
-                    vibrate(20);
-                    animateOutAndDismiss(); // Не сразу удаляем, а плавно уводим за экран!
-                } else if (x < -OPEN * 0.5) {
-                    setX(-OPEN);
-                    if (hintRef.current) {
-                        hintRef.current.classList.add('armed-pop');
-                        setTimeout(() => hintRef.current && hintRef.current.classList.remove('armed-pop'), 320);
-                    }
-                } else {
-                    close();
-                }
-            }
-            s.axis = null;
-        };
-
-        const handleHintClick = (e) => {
-            e.stopPropagation();
-            const x = parseFloat(itemRef.current.dataset.x) || 0;
-            if (Math.abs(x) < OPEN * 0.6) return;
-            vibrate(20);
-            animateOutAndDismiss(); // Также плавно уводим за экран
-        };
-
-        return (
-            <div className="tlms-swrow-track">
-                <div className="tlms-swrow-hint" ref={hintRef} onClick={handleHintClick}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    <span>Удалить</span>
-                </div>
-                <div className="tlms-swrow-item" ref={itemRef} data-x="0"
-                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-                    {children}
-                </div>
-            </div>
-        );
-    };
-
+    // ИСПРАВЛЕНО: Добавлены пропсы для работы главного меню
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
@@ -359,26 +350,19 @@
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
         
-        // --- СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
+        // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
         const [shakeTime, setShakeTime] = useState(false);
         const [shakeQ, setShakeQ] = useState(false);
         const [isStarting, setIsStarting] = useState(false);
 
-        // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
-        const [hiddenSetKeys, setHiddenSetKeys] = useState(() => new Set());
-        const [pendingDelete, setPendingDelete] = useState(null);
-        
-        // Состояния для поля добавления как в HTML
-        const [addFocused, setAddFocused] = useState(false);
-        const [addVal, setAddVal] = useState('');
-        const [addShake, setAddShake] = useState(false);
-        const [addDone, setAddDone] = useState(false);
-
+        // --- SWIPE-TO-DELETE / UNDO ---
+        const [hiddenRowKeys, setHiddenRowKeys] = useState(() => new Set());
+        const [pendingDelete, setPendingDelete] = useState(null); // { key, label, commitFn, timer }
         const closeRegistryRef = useRef({});
 
         const registerClose = (key, fn) => { closeRegistryRef.current[key] = fn; };
         const closeOthers = (exceptKey) => {
-            Object.entries(closeRegistryRef.current).forEach(([k, fn]) => { if (k !== String(exceptKey) && fn) fn(); });
+            Object.entries(closeRegistryRef.current).forEach(([k, fn]) => { if (k !== exceptKey && fn) fn(); });
         };
 
         useEffect(() => {
@@ -392,30 +376,26 @@
         }, []);
 
         const requestDelete = (key, label, commitFn) => {
-            if (pendingDelete) { clearTimeout(pendingDelete.timer); pendingDelete.commitFn(); }
-            setHiddenSetKeys(prev => { const n = new Set(prev); n.add(key); return n; });
-            const timer = setTimeout(() => { commitFn(); setPendingDelete(null); }, 4000);
+            // если уже был отложенный запрос — коммитим его немедленно, без анимации отмены
+            setPendingDelete(prev => {
+                if (prev) { clearTimeout(prev.timer); prev.commitFn(); }
+                return null;
+            });
+            setHiddenRowKeys(prev => { const n = new Set(prev); n.add(key); return n; });
+            const timer = setTimeout(() => {
+                commitFn();
+                setPendingDelete(null);
+            }, 4000);
             setPendingDelete({ key, label, commitFn, timer });
         };
 
         const undoDelete = () => {
-            if (!pendingDelete) return;
-            clearTimeout(pendingDelete.timer);
-            setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
-            setPendingDelete(null);
-        };
-
-        const handleAddNewSet = () => {
-            const val = addVal.trim();
-            if (!val) {
-                setAddShake(true);
-                setTimeout(() => setAddShake(false), 380);
-                return;
-            }
-            setAddDone(true);
-            setTimeout(() => setAddDone(false), 550);
-            addSet(val);
-            setAddVal('');
+            setPendingDelete(prev => {
+                if (!prev) return null;
+                clearTimeout(prev.timer);
+                setHiddenRowKeys(p => { const n = new Set(p); n.delete(prev.key); return n; });
+                return null;
+            });
         };
 
         // --- АНТИЧИТ ---
@@ -632,6 +612,7 @@
             if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
         };
 
+        // --- ВЫЧИСЛЕНИЯ ДЛЯ КРУГОВОГО ПРОГРЕСС-БАРА ---
         const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
         const circleRadius = 80;
         const circleCircumference = 2 * Math.PI * circleRadius;
@@ -641,13 +622,11 @@
             <AnimatePresence mode="wait">
                 {view === 'menu' && (
                     <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', paddingTop: '40px'}}>
-                        
-                        <AnimatedHeader />
-                        
+
                         <style dangerouslySetInnerHTML={{__html: `
-                            .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
+                            .tlms-swrow-track{ position:relative; border-radius:16px; overflow:hidden; }
                             .tlms-swrow-hint{
-                              position:absolute; inset:0; border-radius:18px;
+                              position:absolute; inset:0; border-radius:16px;
                               background: linear-gradient(135deg,#f36767,#dc2626);
                               display:flex; align-items:center; justify-content:flex-end;
                               padding-right:20px; gap:8px; opacity:0; cursor:pointer;
@@ -658,40 +637,7 @@
                             @keyframes tlmsArmedPop{ 0%{transform:scale(1);} 40%{transform:scale(1.05);} 100%{transform:scale(1);} }
                             .tlms-swrow-item{ position:relative; touch-action:pan-y; transform:translateX(0);
                               transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; }
-
-                            /* Точно как в HTML прототипе для поля добавления */
-                            .tlms-add-row {
-                              display:flex; align-items:center; gap:10px;
-                              background: #1c1f2c;
-                              border:1px solid rgba(255,255,255,.06);
-                              border-radius:18px;
-                              padding:6px 6px 6px 18px;
-                              transition: box-shadow .2s ease, border-color .2s ease;
-                              margin-bottom: 20px;
-                            }
-                            .tlms-add-row.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
-                            .tlms-add-row.shake { animation: tlmsShakeX .38s ease; }
-                            @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
-                            .tlms-add-input {
-                              flex:1; min-width:0; background:none; border:none; outline:none;
-                              color:#f3f4f8; font-size:15.5px; font-family:inherit;
-                            }
-                            .tlms-add-input::placeholder { color: #8b90a6; }
-                            .tlms-add-btn {
-                              width:44px; height:44px; min-width:44px; border:none; border-radius:13px;
-                              background: linear-gradient(150deg,#8b5cf6,#7c3aed);
-                              color:#fff; display:flex; align-items:center; justify-content:center;
-                              cursor:pointer; position:relative;
-                              transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
-                              opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none;
-                            }
-                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 16px rgba(124,58,237,.35); }
-                            .tlms-add-btn.visible:active { transform: scale(.88); }
-                            .tlms-add-btn svg { width:19px; height:19px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
-                            .tlms-add-btn .ic-plus { opacity:1; transform: rotate(0) scale(1); }
-                            .tlms-add-btn .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); }
-                            .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
-                            .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
+                            .tlms-swrow-item.dragging{ transition:none; }
 
                             .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
                               padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
@@ -708,10 +654,12 @@
                             @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
                         `}} />
 
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 10px 0', paddingRight:5}}>
-                            {/* --- TEACHER TESTS (УЖЕ БЕЗ КРАСНЫХ КНОПОК) --- */}
+                        {/* === ВСТАВЛЕННАЯ НОВАЯ АНИМАЦИЯ === */}
+                        <AnimatedHeader />
+                        
+                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 20px 0', paddingRight:5}}>
                             <AnimatePresence initial={false}>
-                                {teacherTests?.filter(test => !hiddenSetKeys.has(test.id)).map(test => (
+                                {teacherTests?.filter(test => !hiddenRowKeys.has(test.id)).map(test => (
                                     <motion.div
                                         key={test.id}
                                         layout
@@ -721,8 +669,13 @@
                                         transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
                                         style={{ overflow: 'hidden', marginBottom: 10 }}
                                     >
-                                        <SwipeableRow rowKey={test.id} registerClose={registerClose} onArm={() => closeOthers(test.id)} onDismiss={() => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title))}>
-                                            <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent', width: '100%', borderRadius: '18px' }}>
+                                        <SwipeableRow
+                                            rowKey={test.id}
+                                            registerClose={registerClose}
+                                            onArm={() => closeOthers(test.id)}
+                                            onDismiss={() => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title))}
+                                        >
+                                            <Button variant="muted" onClick={() => openTeacherAssignedTest(test)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '64px', wordBreak: 'break-word', border: '1px solid transparent', width: '100%' }}>
                                                 <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                                 </div>
@@ -736,9 +689,8 @@
                                 ))}
                             </AnimatePresence>
 
-                            {/* --- USER SETS (УЖЕ БЕЗ КРАСНЫХ КНОПОК) --- */}
                             <AnimatePresence initial={false}>
-                                {sets?.filter(name => !hiddenSetKeys.has(name)).map(name => (
+                                {sets?.filter(name => !hiddenRowKeys.has(name)).map(name => (
                                     <motion.div
                                         key={name}
                                         layout
@@ -748,43 +700,31 @@
                                         transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
                                         style={{ overflow: 'hidden', marginBottom: 10 }}
                                     >
-                                        <SwipeableRow rowKey={name} registerClose={registerClose} onArm={() => closeOthers(name)} onDismiss={() => requestDelete(name, name, () => deleteSet(name))}>
-                                            <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth:0, height:'auto', minHeight:'54px', wordBreak:'break-word', border:'1px solid transparent', width:'100%', borderRadius: '18px' }}>
-                                                <div style={{ width:'40px', height:'40px', borderRadius:'10px', background:'linear-gradient(135deg, #60a5fa, #8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:'15px' }}>
+                                        <SwipeableRow
+                                            rowKey={name}
+                                            registerClose={registerClose}
+                                            onArm={() => closeOthers(name)}
+                                            onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
+                                        >
+                                            <Button variant="muted" onClick={() => openSet(name)} style={{ flex:1, display: 'flex', alignItems: 'center', justifyContent:'flex-start', textAlign:'left', padding:'8px 15px', minWidth: 0, height: 'auto', minHeight: '54px', wordBreak: 'break-word', border: '1px solid transparent', width: '100%' }}>
+                                                <div style={{width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: '15px'}}>
                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
                                                 </div>
-                                                <span style={{ wordBreak:'break-word', lineHeight:'1.3', color:'var(--text-main)', fontWeight:600 }}>{name}</span>
+                                                <span style={{wordBreak:'break-word', lineHeight:'1.3', color: 'var(--text-main)', fontWeight: 600}}>{name}</span>
                                             </Button>
                                         </SwipeableRow>
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
                         </div>
-
-                        {/* --- ВЕРНУЛ ДИЗАЙН ИНПУТА КАК БЫЛ В HTML --- */}
-                        <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
-                            <input 
-                                className="tlms-add-input" 
-                                placeholder="Новый тест" 
-                                value={addVal}
-                                onChange={e => setAddVal(e.target.value)}
-                                onFocus={() => setAddFocused(true)}
-                                onBlur={() => setAddFocused(false)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAddNewSet(); }}
-                                maxLength={48}
-                                autoComplete="off"
-                            />
-                            <button 
-                                className={`tlms-add-btn ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`}
-                                onClick={handleAddNewSet}
-                            >
-                                <svg className="ic-plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/></svg>
-                                <svg className="ic-check" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </button>
+                        <div style={{display:'flex', gap:10, alignItems: 'center'}}>
+                            <Input id="newSetName" placeholder="Новый тест" style={{margin:0, flex:1}} />
+                            <Button style={{width: '44px', height: '44px', padding: 0, margin: 0, flexShrink: 0, background: '#a855f7', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer'}} onClick={() => { const el=document.getElementById('newSetName'); addSet(el.value); el.value=''; }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </Button>
                         </div>
-                        
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
-                        
+                        <div style={{marginTop: 30, textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+
                         <AnimatePresence>
                           {pendingDelete && (
                             <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
@@ -799,27 +739,43 @@
                     </motion.div>
                 )}
 
-                {/* ОСТАЛЬНЫЕ ЭКРАНЫ ('set_menu', 'timer_setup', 'test', 'result', 'review') ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ ИЗ ПРЕДЫДУЩЕГО РЕШЕНИЯ */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        
+                        <button onClick={() => setView('menu')} style={{
+                            position: 'absolute', top: '24px', left: '24px', 
+                            width: '44px', height: '44px', borderRadius: '50%', 
+                            border: '1px solid var(--glass-border)', background: 'var(--bg-panel)',
+                            color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', zIndex: 10, padding: 0
+                        }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
+
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
                             <h2 style={{ margin: '0 0 12px 0', fontSize: '28px', fontWeight: 800 }}>{currentSet}</h2>
                             <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', margin: '0 auto', borderRadius: '2px' }}></div>
                         </div>
+
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                             <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                 Печать
                             </Button>
-                            <label style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)' }}>
+                            
+                            <label style={{
+                                background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, 
+                                fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s',
+                                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)'
+                            }}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                 Импорт
                                 <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
                             </label>
                         </div>
+                        
                         <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             Начать тест
@@ -830,12 +786,14 @@
 
                 {view === 'timer_setup' && (
                     <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.9}} className="glass-panel" style={{width:'100%', maxWidth:420, padding: '30px 25px'}}>
+                        
                         <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', marginBottom:'30px'}}>
                             <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </div>
                             <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
                         </div>
+
                         <div style={{marginBottom:'24px', textAlign:'left'}}>
                             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
@@ -849,6 +807,7 @@
                                 <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
+
                         <div style={{marginBottom:'30px', textAlign:'left'}}>
                             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
@@ -862,6 +821,7 @@
                                 <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
+
                         <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
                             {isStarting ? (
                                 <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} style={{display:'flex', gap:'6px', justifyContent:'center'}}>
@@ -902,22 +862,40 @@
                     </motion.div>
                 )}
 
+                {/* --- ОБНОВЛЕННЫЙ ЭКРАН РЕЗУЛЬТАТА С КРУГОВЫМ ПРОГРЕССОМ --- */}
                 {view === 'result' && (
                     <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
+                        
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
                                 <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
-                                <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
+                                
+                                <motion.circle
+                                    cx="100"
+                                    cy="100"
+                                    r={circleRadius}
+                                    fill="none"
+                                    stroke="#00f2fe"
+                                    strokeWidth="14"
+                                    strokeLinecap="round"
+                                    strokeDasharray={circleCircumference}
+                                    initial={{ strokeDashoffset: circleCircumference }}
+                                    animate={{ strokeDashoffset: circleStrokeDashoffset }}
+                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                                />
                             </svg>
+                            
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                                 <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
                                 <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
+
                         <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
+                        
                         <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
