@@ -255,7 +255,7 @@ function App() {
   };
 
   const addSet = (name) => { if(!name) return; if(sets.includes(name)) return alert('Уже есть!'); const newSets = [...sets, name]; setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.setItem('tests_' + name, JSON.stringify([])); };
-  const deleteSet = (name) => { if(!confirm(`Удалить "${name}"?`)) return; const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
+  const deleteSet = (name) => { const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
   
   const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
 
@@ -268,13 +268,12 @@ function App() {
       }, 300);
   };
 
-  const removeTeacherTestStudent = async (testId, testTitle) => {
-      if(!confirm(`Удалить назначенный тест "${testTitle}"?`)) return;
-      try {
-          const updatedTests = teacherTests.filter(t => t.id !== testId);
-          await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
-      } catch(e) { alert("Ошибка при удалении теста"); }
-  };
+const removeTeacherTestStudent = async (testId, testTitle) => {
+    try {
+        const updatedTests = teacherTests.filter(t => t.id !== testId);
+        await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
+    } catch(e) { alert("Ошибка при удалении теста"); }
+};
 
   const changeNickname = async () => {
       const newNick = prompt("Введите ваш новый никнейм (будет виден в чате):", userNickname || "");
