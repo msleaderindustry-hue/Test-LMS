@@ -682,7 +682,7 @@
                             .tlms-item {
                                 display:flex; align-items:center; gap:16px;
                                 background: var(--bg-panel);
-                                border: 1px solid rgba(128, 128, 128, 0.25);
+                                border: 1px solid rgba(135, 135, 145, 0.5);
                                 border-radius:18px;
                                 padding:15px 15px 15px 16px;
                                 transition: background 0.1s ease;
@@ -702,7 +702,7 @@
                             .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
                               background: var(--bg-panel);
-                              border: 1px solid rgba(128, 128, 128, 0.25);
+                              border: 1px solid rgba(135, 135, 145, 0.5);
                               border-radius:18px;
                               padding:6px 6px 6px 18px;
                               transition: box-shadow .2s ease, border-color .2s ease;
@@ -735,7 +735,7 @@
                             .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
                               padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
                             .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:var(--bg-panel);
-                              border: 1px solid rgba(128, 128, 128, 0.25); border-radius:16px; padding:13px 8px 13px 18px;
+                              border: 1px solid rgba(135, 135, 145, 0.5); border-radius:16px; padding:13px 8px 13px 18px;
                               display:flex; align-items:center; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); position:relative; overflow:hidden; }
                             .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:var(--text-main); }
                             .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
@@ -849,7 +849,7 @@
 
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid rgba(128, 128, 128, 0.25)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid rgba(135, 135, 145, 0.5)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
@@ -918,7 +918,7 @@
                                 </motion.div>
                             ) : "Начать"}
                         </Button>
-                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid rgba(128, 128, 128, 0.25)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
+                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid rgba(135, 135, 145, 0.5)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
                     </motion.div>
                 )}
 
@@ -954,7 +954,7 @@
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(128, 128, 128, 0.25)" strokeWidth="14" />
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(135, 135, 145, 0.5)" strokeWidth="14" />
                                 <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
                             </svg>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -965,7 +965,7 @@
                         <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
                             <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid rgba(128, 128, 128, 0.25)'}}>
+                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid rgba(135, 135, 145, 0.5)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
