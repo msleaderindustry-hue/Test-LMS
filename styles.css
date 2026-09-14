@@ -13,6 +13,7 @@
   --nav-item-text: #2d3748;
   --item-border: rgba(45, 55, 72, 0.18);
   --bg-panel: #eef0f5;
+  --sparkle-grad: linear-gradient(45deg, #ffd54f, #f59e0b);
 }
 
 body.dark {
@@ -28,6 +29,7 @@ body.dark {
   --nav-item-text: #f1f5f9;
   --item-border: rgba(255, 255, 255, 0.14);
   --bg-panel: #1c2032;
+  --sparkle-grad: linear-gradient(45deg, #ffffff, #7ab8ff);
 }
 
 body {
