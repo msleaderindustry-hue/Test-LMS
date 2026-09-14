@@ -731,15 +731,14 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
-                              padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
-                            .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:var(--bg-panel);
-                              border: 1px solid rgba(138, 143, 160, 0.4); border-radius:16px; padding:13px 8px 13px 18px;
-                              display:flex; align-items:center; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); position:relative; overflow:hidden; }
-                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:var(--text-main); }
-                            .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
-                              padding:9px 14px; border-radius:10px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
-                            .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
+                            .tlms-snackbar-zone{ position:fixed; top:calc(16px + env(safe-area-inset-top)); right:16px; left:auto; bottom:auto; z-index:9999; display:flex; justify-content:flex-end;
+                              padding:0; pointer-events:none; }
+                            .tlms-snackbar{ pointer-events:auto; width:auto; max-width:280px; background:var(--bg-panel);
+                              border: 1px solid var(--item-border); border-radius:13px; padding:9px 8px 9px 14px;
+                              display:flex; align-items:center; gap:10px; box-shadow:0 12px 30px rgba(0,0,0,.35); position:relative; overflow:hidden; }
+                            .tlms-snackbar-text{ flex:1; font-size:12.5px; font-weight:600; color:var(--text-main); white-space:nowrap; }
+                            .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:12.5px;
+                              padding:6px 10px; border-radius:8px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
                             .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:2.5px;
                               background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
                               animation: tlmsShrinkBar 4s linear forwards; }
@@ -835,7 +834,7 @@
                         <AnimatePresence>
                           {pendingDelete && (
                             <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:60, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:60, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
+                              <motion.div className="tlms-snackbar" initial={{ y:-30, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:-30, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
