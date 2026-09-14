@@ -185,7 +185,7 @@
                     #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
                     .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
                     .wand-anim svg { width:100%; height:100%; display:block; }
-                    .sparkle-anim { position:absolute; top:0; left:0; background: linear-gradient(45deg, #fff, #7ab8ff); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
+                    .sparkle-anim { position:absolute; top:0; left:0; background: var(--sparkle-grad, linear-gradient(45deg, #fff, #7ab8ff)); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
                 `}} />
                 <div className="icon-wrap-anim">
@@ -723,7 +723,7 @@
                               background: var(--bg-panel);
                               border: 1px solid var(--item-border);
                               border-radius:18px;
-                              padding:4px 4px 4px 16px;
+                              padding:6px 10px 6px 16px;
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
