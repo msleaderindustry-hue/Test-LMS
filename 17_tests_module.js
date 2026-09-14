@@ -2,13 +2,6 @@
 (function () {
     const { useState, useEffect, useRef, motion, AnimatePresence, Button, Input, TestQuestionCard, ReviewView, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
 
-    // Хак для обхода стандартного window.confirm
-    const bypassConfirm = (fn) => {
-        const origConfirm = window.confirm;
-        window.confirm = () => true; 
-        try { fn(); } finally { window.confirm = origConfirm; }
-    };
-
     // --- КОМПОНЕНТ ЗАСТАВКИ ---
     const AnimatedHeader = () => {
         const stageRef = useRef(null);
@@ -188,7 +181,7 @@
                     .tagline-wrap-anim { opacity:0; animation: taglineInAnim .5s .4s ease forwards; display:flex; justify-content:center; overflow:visible; width: 100%; }
                     @keyframes taglineInAnim { to { opacity:1; } }
                     .tag-stage-anim { position:relative; height:24px; display:flex; align-items:center; justify-content:center; overflow:visible; transition: width 0.1s ease; margin: 0 auto; }
-                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--muted); }
+                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--text-sec, #8b87a8); }
                     #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
                     .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
                     .wand-anim svg { width:100%; height:100%; display:block; }
@@ -242,15 +235,7 @@
             if (!item || !hint) return;
             item.style.transform = `translateX(${x}px)`;
             item.dataset.x = x;
-            
             const absX = Math.abs(x);
-            
-            // ТЗ: Исчезновение карточки при свайпе до полного нуля у границы
-            const innerCard = item.querySelector('.tlms-item');
-            if (innerCard) {
-                innerCard.style.opacity = Math.max(0, 1 - (absX / DISMISS));
-            }
-
             hint.style.opacity = Math.min(1, absX / OPEN);
             const openP = Math.min(1, absX / OPEN);
             const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
@@ -265,17 +250,31 @@
             s.overDismiss = nowOver;
         };
 
-        const close = () => {
-            setX(0);
+        const close = () => setX(0);
+
+        const animateOutAndDismiss = () => {
             const item = itemRef.current;
-            if (item) {
-                const innerCard = item.querySelector('.tlms-item');
-                if (innerCard) innerCard.style.opacity = '1';
-            }
+            if (!item) return;
+            item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
+            item.style.transform = 'translateX(-120%) scale(0.95)';
+            item.style.opacity = '0';
+            setTimeout(() => {
+                onDismiss && onDismiss();
+            }, 280);
         };
 
         useEffect(() => {
             if (registerClose) registerClose(rowKey, close);
+            const el = itemRef.current;
+            const guard = (e) => {
+                if (stateRef.current.suppressNextClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    stateRef.current.suppressNextClick = false;
+                }
+            };
+            el.addEventListener('click', guard, true);
+            return () => el.removeEventListener('click', guard, true);
         }, []);
 
         const onDown = (e) => {
@@ -284,10 +283,9 @@
             s.dragging = true; s.axis = null;
             s.startX = e.clientX; s.startY = e.clientY;
             s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
-            itemRef.current.classList.add('dragging');
+            itemRef.current.style.transition = 'none';
             itemRef.current.setPointerCapture(e.pointerId);
         };
-
         const onMove = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
@@ -295,7 +293,7 @@
             if (s.axis === null) {
                 if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-                if (s.axis === 'y') { s.dragging = false; itemRef.current.classList.remove('dragging'); return; }
+                if (s.axis === 'y') { s.dragging = false; return; }
                 if (onArm) onArm();
             }
             if (s.axis !== 'x') return;
@@ -303,28 +301,21 @@
             if (x > 0) x *= 0.25;
             setX(x);
         };
-
         const onUp = (e) => {
             const s = stateRef.current;
             if (!s.dragging) return;
             s.dragging = false;
-            itemRef.current.classList.remove('dragging');
-            if (itemRef.current.hasPointerCapture(e.pointerId)) itemRef.current.releasePointerCapture(e.pointerId);
+            const item = itemRef.current;
+            item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+            if (item.hasPointerCapture(e.pointerId)) item.releasePointerCapture(e.pointerId);
 
             if (s.axis === 'x') {
-                const x = parseFloat(itemRef.current.dataset.x) || 0;
-                
-                // Жесткий блокиратор клика при случайном микро-сдвиге
-                if (Math.abs(x) > 4) {
-                    s.suppressNextClick = true;
-                    setTimeout(() => { s.suppressNextClick = false; }, 500); 
-                }
+                const x = parseFloat(item.dataset.x) || 0;
+                if (Math.abs(x) > 4) s.suppressNextClick = true;
                 
                 if (x < -DISMISS) {
                     vibrate(20);
-                    itemRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32,0.72,0,1)';
-                    itemRef.current.style.transform = 'translateX(-120%) scale(0.9)';
-                    setTimeout(() => onDismiss && onDismiss(), 300);
+                    animateOutAndDismiss();
                 } else if (x < -OPEN * 0.5) {
                     setX(-OPEN);
                     if (hintRef.current) {
@@ -333,22 +324,12 @@
                     }
                 } else {
                     close();
+                    if (Math.abs(x) < 5 && onClick) onClick(); 
                 }
+            } else {
+                if (onClick) onClick(); 
             }
             s.axis = null;
-        };
-
-        const handleClick = (e) => {
-            if (stateRef.current.suppressNextClick) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            // Плавный вход в тест с задержкой 150мс
-            if (onClick) {
-                e.preventDefault();
-                setTimeout(() => onClick(e), 150);
-            }
         };
 
         const handleHintClick = (e) => {
@@ -356,9 +337,7 @@
             const x = parseFloat(itemRef.current.dataset.x) || 0;
             if (Math.abs(x) < OPEN * 0.6) return;
             vibrate(20);
-            itemRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32,0.72,0,1)';
-            itemRef.current.style.transform = 'translateX(-120%) scale(0.9)';
-            setTimeout(() => onDismiss && onDismiss(), 300);
+            animateOutAndDismiss();
         };
 
         return (
@@ -368,9 +347,7 @@
                     <span>Удалить</span>
                 </div>
                 <div className="tlms-swrow-item" ref={itemRef} data-x="0"
-                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
-                    onClick={handleClick}
-                >
+                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
                     {children}
                 </div>
             </div>
@@ -422,12 +399,14 @@
             if (pendingDelete) { 
                 clearTimeout(pendingDelete.timer); 
                 pendingDelete.commitFn(); 
+                // Очищаем предыдущий удаленный из hidden ключей
                 setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
             }
             setHiddenSetKeys(prev => { const n = new Set(prev); n.add(key); return n; });
             const timer = setTimeout(() => { 
                 commitFn(); 
                 setPendingDelete(null); 
+                // ИСПРАВЛЕНИЕ: Очищаем скрытый ключ после реального удаления
                 setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
             }, 4000);
             setPendingDelete({ key, label, commitFn, timer });
@@ -448,6 +427,7 @@
                 return;
             }
             
+            // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
             setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(val); return n; });
 
             setAddDone(true);
@@ -694,115 +674,75 @@
                             .tlms-swrow-hint span{ color:#fff; font-size:13px; font-weight:700; white-space:nowrap; }
                             .tlms-swrow-hint.armed-pop{ animation: tlmsArmedPop .32s cubic-bezier(.34,1.56,.64,1); }
                             @keyframes tlmsArmedPop{ 0%{transform:scale(1);} 40%{transform:scale(1.05);} 100%{transform:scale(1);} }
-                            
-                            /* ПЛАВНОСТЬ КАК НА АЙФОНАХ */
-                            .tlms-swrow-item {
-                              position:relative; touch-action:pan-y; transform:translateX(0);
-                              transition: transform .32s cubic-bezier(.32,.72,0,1); 
-                              will-change: transform; cursor: pointer; 
-                            }
-                            .tlms-swrow-item.dragging { 
-                                transition: none; cursor: grabbing; 
-                            }
+                            .tlms-swrow-item{ position:relative; touch-action:pan-y; transform:translateX(0);
+                              transition:transform .32s cubic-bezier(.32,.72,0,1); will-change:transform; cursor: pointer; }
+                            .tlms-swrow-item.dragging{ transition:none; cursor: grabbing; }
 
-                            /* КАРТОЧКИ: ГРАНИЦА ВСЕГДА КОНТРАСТНА ФОНУ В ОБЕИХ ТЕМАХ
-                               (двойная тень вместо color-mix — работает в любом браузере/webview:
-                               тёмный внешний контур виден на светлом фоне, светлый внутренний — на тёмном) */
+                            /* Точно как в HTML прототипе для поля карточек и добавления */
                             .tlms-item {
-                                display:flex; align-items:center; gap:14px;
-                                background: var(--card-bg, var(--row-bg-solid)); 
-                                border: 1px solid var(--border); 
-                                border-radius:16px;
-                                padding: 8px 12px; 
-                                box-shadow: 0 0 0 1px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.10);
-                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+                                display:flex; align-items:center; gap:16px;
+                                background: #1c1f2c; /* var(--row-bg-solid) */
+                                border:1px solid rgba(255,255,255,.06); /* var(--border) */
+                                border-radius:18px;
+                                padding:15px 15px 15px 16px;
+                                transition: background 0.1s ease;
                             }
                             .tlms-item:active {
-                                opacity: 0.8;
-                                transform: scale(0.97);
+                                background: rgba(28, 31, 44, 0.7);
                             }
                             .tlms-icon-box {
-                                width:36px; height:36px; min-width:36px; border-radius:10px;
+                                width:44px; height:44px; min-width:44px; border-radius:13px;
                                 display:flex; align-items:center; justify-content:center;
-                                box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.15);
-                            }
-                            .tlms-icon-box svg {
-                                width: 18px; height: 18px;
+                                box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3);
                             }
                             .tlms-item-label {
-                                flex:1; font-size:15.5px; font-weight:700; 
-                                color: var(--text); 
-                                word-break: break-word;
+                                flex:1; font-size:16px; font-weight:700; color:#f3f4f8; word-break: break-word;
                             }
 
-                            /* ПОЛЕ ДОБАВЛЕНИЯ - УМЕНЬШЕННАЯ ВЫСОТА, КНОПКА "+" ОТОДВИНУТА ОТ КРАЯ */
                             .tlms-add-row {
-                              display: flex; align-items: center; gap: 10px;
-                              background: var(--card-bg, var(--row-bg-solid));
-                              border: 1px solid var(--border);
-                              border-radius: 14px;
-                              height: 40px; /* Ещё уже, чем раньше */
-                              padding: 0 10px 0 16px; 
-                              box-shadow: 0 0 0 1px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.10);
+                              display:flex; align-items:center; gap:10px;
+                              background: #1c1f2c;
+                              border:1px solid rgba(255,255,255,.06);
+                              border-radius:18px;
+                              padding:6px 6px 6px 18px;
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
-                            .tlms-add-row.focused { border-color: var(--purple, #8b5cf6); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
+                            .tlms-add-row.focused { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 3px rgba(139,92,246,.16); }
                             .tlms-add-row.shake { animation: tlmsShakeX .38s ease; }
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color: var(--text); font-size:15px; font-family:inherit;
-                              height: 100%;
+                              color:#f3f4f8; font-size:15.5px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: var(--muted); }
-                            
-                            /* Кнопка Плюс компактная */
+                            .tlms-add-input::placeholder { color: #8b90a6; }
                             .tlms-add-btn {
-                              width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
-                              background: linear-gradient(150deg, var(--purple, #8b5cf6), var(--purple-2, #7c3aed));
+                              width:44px; height:44px; min-width:44px; border:none; border-radius:13px;
+                              background: linear-gradient(150deg,#8b5cf6,#7c3aed);
                               color:#fff; display:flex; align-items:center; justify-content:center;
                               cursor:pointer; position:relative;
                               transition: opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
                               opacity:0; transform: scale(.3) rotate(-25deg); pointer-events:none; box-shadow:none;
                             }
-                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 4px 12px rgba(124,58,237,.3); }
+                            .tlms-add-btn.visible { opacity:1; transform: scale(1) rotate(0); pointer-events:auto; box-shadow: 0 6px 16px rgba(124,58,237,.35); }
                             .tlms-add-btn.visible:active { transform: scale(.88); }
-                            .tlms-add-btn svg { width:18px; height:18px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+                            .tlms-add-btn svg { width:19px; height:19px; position:absolute; transition: opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
                             .tlms-add-btn .ic-plus { opacity:1; transform: rotate(0) scale(1); }
                             .tlms-add-btn .ic-check { opacity:0; transform: rotate(-45deg) scale(.5); }
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            /* УВЕДОМЛЕНИЕ UNDO (ТОСТ) - СПРАВА СВЕРХУ, КОМПАКТНОЕ, ПОЛУПРОЗРАЧНОЕ, ПОД ТЕМУ */
-                            .tlms-snackbar-zone { 
-                                position: fixed; top: 16px; right: 16px; left: auto; bottom: auto; z-index: 999999;
-                                display: flex; justify-content: flex-end;
-                                pointer-events: none; 
-                            }
-                            .tlms-snackbar { 
-                                pointer-events: auto; width: max-content; min-width: 160px; max-width: 220px; 
-                                background: var(--card-bg); 
-                                background: color-mix(in srgb, var(--card-bg) 75%, transparent);
-                                backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-                                border: 1px solid var(--border); 
-                                border-radius: 10px; padding: 8px 10px;
-                                display: flex; align-items: center; gap: 8px; 
-                                box-shadow: 0 8px 20px rgba(0,0,0,0.12); 
-                                position: relative; overflow: hidden; 
-                            }
-                            .tlms-snackbar-text { 
-                                flex: 1; font-size: 12px; font-weight: 600; 
-                                color: var(--text); 
-                            }
-                            .tlms-snackbar-undo{ 
-                                background:none; border:none; color: var(--purple, #8b5cf6); font-weight:700; font-size:12px;
-                                padding:6px 10px; border-radius:8px; cursor:pointer; 
-                                transition:background .15s ease, transform .15s ease; 
-                            }
+                            .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
+                              padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
+                            .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:#1c1f2c;
+                              border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:13px 8px 13px 18px;
+                              display:flex; align-items:center; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); position:relative; overflow:hidden; }
+                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:#f3f4f8; }
+                            .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
+                              padding:9px 14px; border-radius:10px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
-                            .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:3px;
-                              background:linear-gradient(90deg, var(--purple, #8b5cf6), var(--blue, #6ea8fe)); width:100%; transform-origin:left;
+                            .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:2.5px;
+                              background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
                               animation: tlmsShrinkBar 4s linear forwards; }
                             @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
                         `}} />
@@ -823,15 +763,15 @@
                                             rowKey={test.id} 
                                             registerClose={registerClose} 
                                             onArm={() => closeOthers(test.id)} 
-                                            onDismiss={() => requestDelete(test.id, test.title, () => bypassConfirm(() => removeTeacherTestStudent(test.id, test.title)))}
+                                            onDismiss={() => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title))}
                                             onClick={() => openTeacherAssignedTest(test)}
                                         >
                                             <div className="tlms-item">
                                                 <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #38bdf8, #0ea5e9)' }}>
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                                                 </div>
                                                 <div style={{display: 'flex', flexDirection: 'column', flex:1}}>
-                                                    <span style={{fontSize: '10px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1px'}}>Опубликован</span>
+                                                    <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
                                                     <div className="tlms-item-label">{test.title}</div>
                                                 </div>
                                             </div>
@@ -855,12 +795,12 @@
                                             rowKey={name} 
                                             registerClose={registerClose} 
                                             onArm={() => closeOthers(name)} 
-                                            onDismiss={() => requestDelete(name, name, () => bypassConfirm(() => deleteSet(name)))}
+                                            onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
                                             onClick={() => openSet(name)}
                                         >
                                             <div className="tlms-item">
                                                 <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #a78bfa, #7c3aed)' }}>
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
                                                 </div>
                                                 <div className="tlms-item-label">{name}</div>
                                             </div>
@@ -891,27 +831,25 @@
                             </button>
                         </div>
                         
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--muted)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
+                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
-                        {/* ПЛАВАЮЩЕЕ УВЕДОМЛЕНИЕ (СВЕРХУ СПРАВА) */}
                         <AnimatePresence>
                           {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0, x: 40 }} animate={{ opacity:1, x: 0 }} exit={{ opacity:0, x: 20, scale: 0.95 }} transition={{ duration:0.3, ease:[0.32,0.72,0,1] }}>
-                              <div className="tlms-snackbar">
+                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
+                              <motion.div className="tlms-snackbar" initial={{ y:60, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:60, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
                                 <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
                                 <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
                                 <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </div>
+                              </motion.div>
                             </motion.div>
                           )}
                         </AnimatePresence>
                     </motion.div>
                 )}
 
-                {/* --- ОСТАЛЬНЫЕ ЭКРАНЫ --- */}
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
@@ -933,7 +871,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             Начать тест
                         </Button>
-                        <p style={{textAlign:'center', color:'var(--muted)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
+                        <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
 
@@ -943,19 +881,19 @@
                             <div style={{width:'40px', height:'40px', borderRadius:'12px', background:'linear-gradient(135deg, #a855f7, #d946ef)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 15px rgba(168, 85, 247, 0.4)'}}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </div>
-                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text)'}}>Параметры теста</h2>
+                            <h2 style={{margin:0, fontSize:'24px', fontWeight:800, color:'var(--text-main)'}}>Параметры теста</h2>
                         </div>
                         <div style={{marginBottom:'24px', textAlign:'left'}}>
                             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#a855f7', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Время (минуты)</span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Время (минуты)</span>
                             </div>
-                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeTime ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeTime ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateTime(-5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateTime(5)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <div style={{marginBottom:'30px', textAlign:'left'}}>
@@ -963,12 +901,12 @@
                                 <div style={{width:'24px', height:'24px', borderRadius:'6px', background:'#06b6d4', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center'}}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                 </div>
-                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--muted)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
+                                <span style={{fontSize:'14px', fontWeight:700, color:'var(--text-sec)'}}>Количество вопросов <span style={{opacity:0.6, fontWeight:500}}>(макс. {Math.min(25, tests.length)})</span></span>
                             </div>
-                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--card-bg)', border: shakeQ ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius:'14px', padding:'6px 14px'}}>
-                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>−</button>
-                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text)', width:'60px', outline:'none', appearance:'textfield'}} />
-                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text)', cursor:'pointer', padding:'0 10px'}}>+</button>
+                            <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} style={{display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(168, 85, 247, 0.05)', border: shakeQ ? '1px solid #ef4444' : '1px solid rgba(168, 85, 247, 0.2)', borderRadius:'14px', padding:'6px 14px'}}>
+                                <button onClick={() => updateQCount(-1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>−</button>
+                                <input type="number" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} style={{background:'transparent', border:'none', textAlign:'center', fontSize:'22px', fontWeight:800, color:'var(--text-main)', width:'60px', outline:'none', appearance:'textfield'}} />
+                                <button onClick={() => updateQCount(1)} style={{background:'none', border:'none', fontSize:'24px', color:'var(--text-main)', cursor:'pointer', padding:'0 10px'}}>+</button>
                             </motion.div>
                         </div>
                         <Button onClick={launchTestWithTimer} disabled={isStarting} style={{width:'100%', marginBottom:'12px', background:'linear-gradient(135deg, #8b5cf6, #d946ef)', color:'#fff', border:'none', height:'54px', fontSize:'16px'}}>
@@ -980,7 +918,7 @@
                                 </motion.div>
                             ) : "Начать"}
                         </Button>
-                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--border)', color:'var(--muted)', height:'54px', fontSize:'16px'}}>Отмена</Button>
+                        <Button variant="muted" onClick={handleCancelSetup} disabled={isStarting} style={{width:'100%', background:'transparent', border:'1px solid var(--glass-border)', color:'var(--text-sec)', height:'54px', fontSize:'16px'}}>Отмена</Button>
                     </motion.div>
                 )}
 
@@ -1016,18 +954,18 @@
                         <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
                         <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
                             <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--border)" strokeWidth="14" />
+                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="var(--glass-border)" strokeWidth="14" />
                                 <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
                             </svg>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
+                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'var(--card-bg)', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
+                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
                         </div>
-                        <div style={{background:'var(--card-bg)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--border)'}}>
+                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid var(--glass-border)'}}>
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
