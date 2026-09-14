@@ -324,7 +324,6 @@
                     }
                 } else {
                     close();
-                    if (Math.abs(x) < 5 && onClick) onClick(); 
                 }
             } else {
                 if (onClick) onClick(); 
