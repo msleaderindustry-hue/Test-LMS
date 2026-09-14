@@ -682,11 +682,11 @@
                             .tlms-item {
                             display:flex; align-items:center; gap:16px;
                             background: var(--bg-panel);
-                            border: 1px solid var(--item-border);   /* было: rgba(138,143,160,.4) */
+                            border: 1px solid var(--item-border);
                             border-radius:18px;
                             padding:15px 15px 15px 16px;
-                            transition: background 0.1s ease, border-color .3s ease;
-                        }
+                            transition: background 0.1s ease;
+                                }
                             .tlms-item:active {
                                 opacity: 0.75;
                             }
@@ -702,7 +702,7 @@
                            .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
                               background: var(--bg-panel);
-                              border: 1px solid var(--item-border);   /* было: rgba(138,143,160,.4) */
+                                border: 1px solid var(--item-border);
                               border-radius:18px;
                               padding:6px 6px 6px 18px;
                               transition: box-shadow .2s ease, border-color .2s ease;
@@ -849,7 +849,7 @@
 
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid rgba(138, 143, 160, 0.4)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
+                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--item-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
                         <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
