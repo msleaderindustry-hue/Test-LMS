@@ -33,8 +33,8 @@
                 s.style.left = x + 'px';
                 s.style.top = y + 'px';
                 const scale = size || (0.7 + Math.random() * 0.7);
-                s.style.width = (6 * scale) + 'px';
-                s.style.height = (6 * scale) + 'px';
+                s.style.width = (8 * scale) + 'px';
+                s.style.height = (8 * scale) + 'px';
                 stage.appendChild(s);
                 s.addEventListener('animationend', () => s.remove());
             }
@@ -185,7 +185,7 @@
                     #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
                     .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
                     .wand-anim svg { width:100%; height:100%; display:block; }
-                    .sparkle-anim { position:absolute; top:0; left:0; background: var(--sparkle-grad, linear-gradient(45deg, #fff, #7ab8ff)); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5;}
+                    .sparkle-anim { position:absolute; top:0; left:0; background: var(--sparkle-grad, linear-gradient(45deg, #fff, #7ab8ff)); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5; filter: drop-shadow(0 0 3px var(--sparkle-glow));}
                     @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
                 `}} />
                 <div className="icon-wrap-anim">
@@ -693,13 +693,14 @@
                                 background: rgba(243,103,103,.07);
                                 border: 1px solid rgba(243,103,103,.32);
                                 border-radius:18px;
-                                padding:15px 10px 15px 16px;
+                                padding:11px 10px 11px 16px;
                                 position:relative; overflow:hidden;
                             }
                             .tlms-undo-icon {
-                                width:34px; height:34px; min-width:34px; border-radius:11px;
+                                width:30px; height:30px; min-width:30px; border-radius:10px;
                                 background:rgba(243,103,103,.16); color:#f36767;
                                 display:flex; align-items:center; justify-content:center;
+                            }
                             }
                             .tlms-undo-text { flex:1; font-size:14.5px; font-weight:600; color:var(--text-main); }
                             .tlms-undo-text b { font-weight:800; }
