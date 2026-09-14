@@ -368,7 +368,6 @@
         const [isStarting, setIsStarting] = useState(false);
 
         // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
-        const [hiddenSetKeys, setHiddenSetKeys] = useState(() => new Set());
         const [pendingDelete, setPendingDelete] = useState(null);
         
         // --- Состояния для поля добавления ---
@@ -394,27 +393,21 @@
             return () => document.removeEventListener('pointerdown', handler);
         }, []);
 
-        const requestDelete = (key, label, commitFn) => {
+                const requestDelete = (key, label, commitFn) => {
             if (pendingDelete) { 
                 clearTimeout(pendingDelete.timer); 
                 pendingDelete.commitFn(); 
-                // Очищаем предыдущий удаленный из hidden ключей
-                setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
             }
-            setHiddenSetKeys(prev => { const n = new Set(prev); n.add(key); return n; });
             const timer = setTimeout(() => { 
                 commitFn(); 
                 setPendingDelete(null); 
-                // ИСПРАВЛЕНИЕ: Очищаем скрытый ключ после реального удаления
-                setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
-            }, 4000);
+            }, 3500);
             setPendingDelete({ key, label, commitFn, timer });
         };
-
+        
         const undoDelete = () => {
             if (!pendingDelete) return;
             clearTimeout(pendingDelete.timer);
-            setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(pendingDelete.key); return n; });
             setPendingDelete(null);
         };
 
@@ -427,8 +420,6 @@
             }
             
             // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
-            setHiddenSetKeys(prev => { const n = new Set(prev); n.delete(val); return n; });
-
             setAddDone(true);
             setTimeout(() => setAddDone(false), 550);
             addSet(val);
@@ -697,6 +688,35 @@
                             .tlms-item-label {
                                 flex:1; font-size:16px; font-weight:700; color:var(--text-main); word-break: break-word;
                             }
+                            .tlms-undo-row {
+                                display:flex; align-items:center; gap:12px;
+                                background: rgba(243,103,103,.07);
+                                border: 1px solid rgba(243,103,103,.32);
+                                border-radius:18px;
+                                padding:15px 10px 15px 16px;
+                                position:relative; overflow:hidden;
+                            }
+                            .tlms-undo-icon {
+                                width:34px; height:34px; min-width:34px; border-radius:11px;
+                                background:rgba(243,103,103,.16); color:#f36767;
+                                display:flex; align-items:center; justify-content:center;
+                            }
+                            .tlms-undo-text { flex:1; font-size:14.5px; font-weight:600; color:var(--text-main); }
+                            .tlms-undo-text b { font-weight:800; }
+                            .tlms-undo-btn {
+                                background:none; border:none; color:#8b5cf6; font-weight:800; font-size:14px;
+                                padding:9px 12px; border-radius:10px; cursor:pointer; white-space:nowrap;
+                                transition: background .15s ease, transform .15s ease;
+                            }
+                            .tlms-undo-btn:hover { background:rgba(139,92,246,.14); }
+                            .tlms-undo-btn:active { transform:scale(.93); }
+                            .tlms-undo-bar {
+                                position:absolute; left:0; bottom:0; height:2.5px;
+                                background:linear-gradient(90deg,#f36767,#dc2626);
+                                width:100%; transform-origin:left;
+                                animation: tlmsUndoShrink 3.5s linear forwards;
+                            }
+                            @keyframes tlmsUndoShrink { from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
 
                            .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
@@ -731,32 +751,30 @@
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                            .tlms-snackbar-zone{ position:fixed; top:calc(16px + env(safe-area-inset-top)); right:16px; left:auto; bottom:auto; z-index:9999; display:flex; justify-content:flex-end;
-                              padding:0; pointer-events:none; }
-                            .tlms-snackbar{ pointer-events:auto; width:auto; max-width:280px; background:var(--bg-panel);
-                              border: 1px solid var(--item-border); border-radius:13px; padding:9px 8px 9px 14px;
-                              display:flex; align-items:center; gap:10px; box-shadow:0 12px 30px rgba(0,0,0,.35); position:relative; overflow:hidden; }
-                            .tlms-snackbar-text{ flex:1; font-size:12.5px; font-weight:600; color:var(--text-main); white-space:nowrap; }
-                            .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:12.5px;
-                              padding:6px 10px; border-radius:8px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
-                            .tlms-snackbar-bar{ position:absolute; left:0; bottom:0; height:2.5px;
-                              background:linear-gradient(90deg,#8b5cf6,#6ea8fe); width:100%; transform-origin:left;
-                              animation: tlmsShrinkBar 4s linear forwards; }
-                            @keyframes tlmsShrinkBar{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
                         `}} />
 
                         <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 10px 0', paddingRight:5}}>
-                            <AnimatePresence initial={false}>
-                                {teacherTests?.filter(test => !hiddenSetKeys.has(test.id)).map(test => (
-                                    <motion.div
-                                        key={test.id}
-                                        layout
-                                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, x: -60, height: 0, marginBottom: 0, scale: 0.97 }}
-                                        transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
-                                        style={{ overflow: 'hidden', marginBottom: 10 }}
-                                    >
+                        <AnimatePresence initial={false}>
+                            {teacherTests?.map(test => (
+                                <motion.div
+                                    key={test.id}
+                                    layout
+                                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, x: -60, height: 0, marginBottom: 0, scale: 0.97 }}
+                                    transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
+                                    style={{ overflow: 'hidden', marginBottom: 10 }}
+                                >
+                                    {pendingDelete && pendingDelete.key === test.id ? (
+                                        <div className="tlms-undo-row">
+                                            <div className="tlms-undo-icon">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                            </div>
+                                            <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
+                                            <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
+                                            <div className="tlms-undo-bar" key={pendingDelete.key}></div>
+                                        </div>
+                                    ) : (
                                         <SwipeableRow 
                                             rowKey={test.id} 
                                             registerClose={registerClose} 
@@ -774,12 +792,13 @@
                                                 </div>
                                             </div>
                                         </SwipeableRow>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
 
                             <AnimatePresence initial={false}>
-                                {sets?.filter(name => !hiddenSetKeys.has(name)).map(name => (
+                                {sets?.map(name => (
                                     <motion.div
                                         key={name}
                                         layout
@@ -789,20 +808,31 @@
                                         transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
                                         style={{ overflow: 'hidden', marginBottom: 10 }}
                                     >
-                                        <SwipeableRow 
-                                            rowKey={name} 
-                                            registerClose={registerClose} 
-                                            onArm={() => closeOthers(name)} 
-                                            onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
-                                            onClick={() => openSet(name)}
-                                        >
-                                            <div className="tlms-item">
-                                                <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #a78bfa, #7c3aed)' }}>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                        {pendingDelete && pendingDelete.key === name ? (
+                                            <div className="tlms-undo-row">
+                                                <div className="tlms-undo-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                                 </div>
-                                                <div className="tlms-item-label">{name}</div>
+                                                <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
+                                                <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
+                                                <div className="tlms-undo-bar" key={pendingDelete.key}></div>
                                             </div>
-                                        </SwipeableRow>
+                                        ) : (
+                                            <SwipeableRow 
+                                                rowKey={name} 
+                                                registerClose={registerClose} 
+                                                onArm={() => closeOthers(name)} 
+                                                onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
+                                                onClick={() => openSet(name)}
+                                            >
+                                                <div className="tlms-item">
+                                                    <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #a78bfa, #7c3aed)' }}>
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                                    </div>
+                                                    <div className="tlms-item-label">{name}</div>
+                                                </div>
+                                            </SwipeableRow>
+                                        )}
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
@@ -831,17 +861,6 @@
                         
                         <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
                         
-                        <AnimatePresence>
-                          {pendingDelete && (
-                            <motion.div className="tlms-snackbar-zone" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                              <motion.div className="tlms-snackbar" initial={{ y:-30, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:-30, opacity:0 }} transition={{ duration:0.28, ease:[0.32,0.72,0,1] }}>
-                                <div className="tlms-snackbar-text">«{pendingDelete.label}» удалено</div>
-                                <button className="tlms-snackbar-undo" onClick={undoDelete}>Отменить</button>
-                                <div className="tlms-snackbar-bar" key={pendingDelete.key}></div>
-                              </motion.div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                     </motion.div>
                 )}
 
