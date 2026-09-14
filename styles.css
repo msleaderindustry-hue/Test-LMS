@@ -11,6 +11,7 @@
   --variant-hover: #f7fafc;
   --nav-item-bg: rgba(255, 255, 255, 0.5);
   --nav-item-text: #2d3748;
+  --item-border: rgba(45, 55, 72, 0.18);
 }
 
 body.dark {
@@ -24,6 +25,7 @@ body.dark {
   --variant-hover: rgba(255, 255, 255, 0.15);
   --nav-item-bg: rgba(255, 255, 255, 0.1);
   --nav-item-text: #f1f5f9;
+  --item-border: rgba(255, 255, 255, 0.14);
 }
 
 body {
