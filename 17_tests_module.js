@@ -680,13 +680,13 @@
 
                             /* Точно как в HTML прототипе для поля карточек и добавления */
                             .tlms-item {
-                                display:flex; align-items:center; gap:16px;
-                                background: var(--bg-panel);
-                                border: 1px solid rgba(138, 143, 160, 0.4);
-                                border-radius:18px;
-                                padding:15px 15px 15px 16px;
-                                transition: background 0.1s ease;
-                            }
+                            display:flex; align-items:center; gap:16px;
+                            background: var(--bg-panel);
+                            border: 1px solid var(--item-border);   /* было: rgba(138,143,160,.4) */
+                            border-radius:18px;
+                            padding:15px 15px 15px 16px;
+                            transition: background 0.1s ease, border-color .3s ease;
+                        }
                             .tlms-item:active {
                                 opacity: 0.75;
                             }
@@ -699,10 +699,10 @@
                                 flex:1; font-size:16px; font-weight:700; color:var(--text-main); word-break: break-word;
                             }
 
-                            .tlms-add-row {
+                           .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
                               background: var(--bg-panel);
-                              border: 1px solid rgba(138, 143, 160, 0.4);
+                              border: 1px solid var(--item-border);   /* было: rgba(138,143,160,.4) */
                               border-radius:18px;
                               padding:6px 6px 6px 18px;
                               transition: box-shadow .2s ease, border-color .2s ease;
