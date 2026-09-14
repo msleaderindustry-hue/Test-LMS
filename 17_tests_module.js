@@ -674,7 +674,7 @@
                             background: var(--bg-panel);
                             border: 1px solid var(--item-border);
                             border-radius:18px;
-                            padding:15px 15px 15px 16px;
+                            padding:11px 14px 11px 14px;
                             transition: background 0.1s ease;
                                 }
                             .tlms-item:active {
@@ -721,9 +721,9 @@
                            .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
                               background: var(--bg-panel);
-                                border: 1px solid var(--item-border);
+                              border: 1px solid var(--item-border);
                               border-radius:18px;
-                              padding:6px 6px 6px 18px;
+                              padding:4px 4px 4px 16px;
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
