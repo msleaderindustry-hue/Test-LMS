@@ -705,15 +705,17 @@
                                 transition: none; cursor: grabbing; 
                             }
 
-                            /* КАРТОЧКИ: ГРАНИЦА ВСЕГДА КОНТРАСТНА ФОНУ В ОБЕИХ ТЕМАХ */
+                            /* КАРТОЧКИ: ГРАНИЦА ВСЕГДА КОНТРАСТНА ФОНУ В ОБЕИХ ТЕМАХ
+                               (двойная тень вместо color-mix — работает в любом браузере/webview:
+                               тёмный внешний контур виден на светлом фоне, светлый внутренний — на тёмном) */
                             .tlms-item {
                                 display:flex; align-items:center; gap:14px;
                                 background: var(--card-bg, var(--row-bg-solid)); 
                                 border: 1px solid var(--border); 
-                                border: 1.5px solid color-mix(in srgb, var(--text) 16%, transparent); 
                                 border-radius:16px;
                                 padding: 8px 12px; 
-                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
+                                box-shadow: 0 0 0 1px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.10);
+                                transition: transform 0.15s ease, filter 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
                             }
                             .tlms-item:active {
                                 opacity: 0.8;
@@ -738,10 +740,10 @@
                               display: flex; align-items: center; gap: 10px;
                               background: var(--card-bg, var(--row-bg-solid));
                               border: 1px solid var(--border);
-                              border: 1.5px solid color-mix(in srgb, var(--text) 16%, transparent);
                               border-radius: 14px;
                               height: 40px; /* Ещё уже, чем раньше */
                               padding: 0 10px 0 16px; 
+                              box-shadow: 0 0 0 1px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.10);
                               transition: box-shadow .2s ease, border-color .2s ease;
                               margin-bottom: 20px;
                             }
