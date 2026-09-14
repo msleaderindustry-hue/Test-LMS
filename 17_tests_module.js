@@ -689,24 +689,29 @@
                                 flex:1; font-size:16px; font-weight:700; color:var(--text-main); word-break: break-word;
                             }
                             .tlms-undo-row {
-                                display:flex; align-items:center; gap:12px;
+                                display:flex; align-items:center; justify-content:space-between; gap:10px;
                                 background: rgba(243,103,103,.07);
                                 border: 1px solid rgba(243,103,103,.32);
                                 border-radius:18px;
-                                padding:11px 10px 11px 16px;
+                                padding:9px 10px 9px 14px;
                                 position:relative; overflow:hidden;
                             }
+                            .tlms-undo-left {
+                                display:flex; align-items:center; gap:10px; min-width:0;
+                            }
                             .tlms-undo-icon {
-                                width:30px; height:30px; min-width:30px; border-radius:10px;
+                                width:28px; height:28px; min-width:28px; border-radius:9px;
                                 background:rgba(243,103,103,.16); color:#f36767;
                                 display:flex; align-items:center; justify-content:center;
                             }
+                            .tlms-undo-text {
+                                font-size:14px; font-weight:600; color:var(--text-main);
+                                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
                             }
-                            .tlms-undo-text { flex:1; font-size:14.5px; font-weight:600; color:var(--text-main); }
                             .tlms-undo-text b { font-weight:800; }
                             .tlms-undo-btn {
-                                background:none; border:none; color:#8b5cf6; font-weight:800; font-size:14px;
-                                padding:9px 12px; border-radius:10px; cursor:pointer; white-space:nowrap;
+                                background:none; border:none; color:#8b5cf6; font-weight:800; font-size:13.5px;
+                                padding:7px 10px; border-radius:9px; cursor:pointer; white-space:nowrap; flex-shrink:0;
                                 transition: background .15s ease, transform .15s ease;
                             }
                             .tlms-undo-btn:hover { background:rgba(139,92,246,.14); }
@@ -768,10 +773,12 @@
                                 >
                                     {pendingDelete && pendingDelete.key === test.id ? (
                                         <div className="tlms-undo-row">
-                                            <div className="tlms-undo-icon">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                            <div className="tlms-undo-left">
+                                                <div className="tlms-undo-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                </div>
+                                                <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
                                             </div>
-                                            <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
                                             <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
                                             <div className="tlms-undo-bar" key={pendingDelete.key}></div>
                                         </div>
@@ -810,11 +817,13 @@
                                         style={{ overflow: 'hidden', marginBottom: 10 }}
                                     >
                                         {pendingDelete && pendingDelete.key === name ? (
-                                            <div className="tlms-undo-row">
-                                                <div className="tlms-undo-icon">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                           <div className="tlms-undo-row">
+                                                <div className="tlms-undo-left">
+                                                    <div className="tlms-undo-icon">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                    </div>
+                                                    <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
                                                 </div>
-                                                <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
                                                 <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
                                                 <div className="tlms-undo-bar" key={pendingDelete.key}></div>
                                             </div>
