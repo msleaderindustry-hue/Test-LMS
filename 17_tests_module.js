@@ -681,14 +681,14 @@
                             /* Точно как в HTML прототипе для поля карточек и добавления */
                             .tlms-item {
                                 display:flex; align-items:center; gap:16px;
-                                background: #1c1f2c; /* var(--row-bg-solid) */
-                                border:1px solid rgba(255,255,255,.06); /* var(--border) */
+                                background: var(--bg-panel);
+                                border:1px solid var(--glass-border);
                                 border-radius:18px;
                                 padding:15px 15px 15px 16px;
                                 transition: background 0.1s ease;
                             }
                             .tlms-item:active {
-                                background: rgba(28, 31, 44, 0.7);
+                                opacity: 0.75;
                             }
                             .tlms-icon-box {
                                 width:44px; height:44px; min-width:44px; border-radius:13px;
@@ -696,13 +696,13 @@
                                 box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3);
                             }
                             .tlms-item-label {
-                                flex:1; font-size:16px; font-weight:700; color:#f3f4f8; word-break: break-word;
+                                flex:1; font-size:16px; font-weight:700; color:var(--text-main); word-break: break-word;
                             }
 
                             .tlms-add-row {
                               display:flex; align-items:center; gap:10px;
-                              background: #1c1f2c;
-                              border:1px solid rgba(255,255,255,.06);
+                              background: var(--bg-panel);
+                              border:1px solid var(--glass-border);
                               border-radius:18px;
                               padding:6px 6px 6px 18px;
                               transition: box-shadow .2s ease, border-color .2s ease;
@@ -713,9 +713,9 @@
                             @keyframes tlmsShakeX { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
                             .tlms-add-input {
                               flex:1; min-width:0; background:none; border:none; outline:none;
-                              color:#f3f4f8; font-size:15.5px; font-family:inherit;
+                              color:var(--text-main); font-size:15.5px; font-family:inherit;
                             }
-                            .tlms-add-input::placeholder { color: #8b90a6; }
+                            .tlms-add-input::placeholder { color: var(--text-sec); }
                             .tlms-add-btn {
                               width:44px; height:44px; min-width:44px; border:none; border-radius:13px;
                               background: linear-gradient(150deg,#8b5cf6,#7c3aed);
@@ -734,10 +734,10 @@
 
                             .tlms-snackbar-zone{ position:fixed; left:0; right:0; bottom:0; z-index:9999; display:flex; justify-content:center;
                               padding:0 16px calc(18px + env(safe-area-inset-bottom)); pointer-events:none; }
-                            .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:#1c1f2c;
-                              border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:13px 8px 13px 18px;
+                            .tlms-snackbar{ pointer-events:auto; width:100%; max-width:420px; background:var(--bg-panel);
+                              border:1px solid var(--glass-border); border-radius:16px; padding:13px 8px 13px 18px;
                               display:flex; align-items:center; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); position:relative; overflow:hidden; }
-                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:#f3f4f8; }
+                            .tlms-snackbar-text{ flex:1; font-size:14px; font-weight:600; color:var(--text-main); }
                             .tlms-snackbar-undo{ background:none; border:none; color:#8b5cf6; font-weight:700; font-size:14px;
                               padding:9px 14px; border-radius:10px; cursor:pointer; transition:background .15s ease, transform .15s ease; }
                             .tlms-snackbar-undo:active{ transform:scale(.92); background:rgba(139,92,246,.14); }
