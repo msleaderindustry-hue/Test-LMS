@@ -1,5 +1,5 @@
 const { useState, useEffect, useRef, useCallback } = React;
-const { motion, AnimatePresence } = window.Motion;
+const { motion } = window.Motion; // Убрали AnimatePresence за ненадобностью
 const { Button } = window;
 
 // Резервная база 
@@ -14,7 +14,6 @@ const fallbackTextsData = {
     ]
 };
 
-// ОБНОВЛЕНО: Добавлен ряд цифр 1-0 и знаки минуса/равно
 const layouts = {
     en: [
         ["1","2","3","4","5","6","7","8","9","0","-","="],
@@ -32,7 +31,6 @@ const layouts = {
     ]
 };
 
-// ОБНОВЛЕНО: Карты символов при зажатом Shift для анимации и логики
 const shiftMap = {
     en: { '1':'!', '2':'@', '3':'#', '4':'$', '5':'%', '6':'^', '7':'&', '8':'*', '9':'(', '0':')', '-':'_', '=':'+', '[':'{', ']':'}', ';':':', '\'':'"', ',':'<', '.':'>', '/':'?' },
     ru: { '1':'!', '2':'"', '3':'№', '4':';', '5':'%', '6':':', '7':'?', '8':'*', '9':'(', '0':')', '-':'_', '=':'+', '.':',' }
@@ -52,7 +50,6 @@ const TypingTest = ({ onBack }) => {
     const [isErrorKey, setIsErrorKey] = useState(false);
     const [shake, setShake] = useState(false);
 
-    // AI 
     const [topic, setTopic] = useState("Искусственный интеллект");
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -201,11 +198,16 @@ const TypingTest = ({ onBack }) => {
             });
         };
 
+        // Защита от залипания клавиш при потере фокуса окна
+        const handleBlur = () => setPressedKeys({});
+
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
         };
     }, [currentIndex, text, startTime, combo, maxCombo, isGenerating]);
 
@@ -224,11 +226,9 @@ const TypingTest = ({ onBack }) => {
     const progress = (currentIndex / text.length) * 100;
     const isShiftActive = pressedKeys["ShiftLeft"] || pressedKeys["ShiftRight"];
 
-    // --- ОБНОВЛЕННАЯ ЛОГИКА ОПРЕДЕЛЕНИЯ ПРАВИЛЬНОЙ КЛАВИШИ И ЛЕВОГО SHIFT ---
     const expectedChar = text[currentIndex];
     let expectedKeyLower = expectedChar?.toLowerCase();
     
-    // Проверяем, является ли текущий символ спецсимволом из верхнего регистра (например "!")
     let isShiftSymbol = false;
     if (shiftMap[lang]) {
         for (const [base, shifted] of Object.entries(shiftMap[lang])) {
@@ -242,7 +242,6 @@ const TypingTest = ({ onBack }) => {
 
     const isUpperCase = expectedChar && expectedChar !== expectedChar.toLowerCase() && /[a-zа-я]/i.test(expectedChar);
     
-    // Как ты просил: для любых заглавных и символов подсвечиваем строго Левый Shift
     let targetShift = null;
     if (isUpperCase || isShiftSymbol) {
         targetShift = "ShiftLeft";
@@ -413,28 +412,26 @@ const TypingTest = ({ onBack }) => {
                     </>
                 )}
 
-                <AnimatePresence>
-                    {currentIndex === text.length && text.length > 5 && !isGenerating && (
-                        <motion.div 
-                            className="overlay"
-                            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                            animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'var(--bg-panel)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', zIndex: 10 }}
-                        >
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                                <h2 style={{ fontSize: '48px', marginBottom: '10px', color: 'var(--text-main)' }}>Отличный результат!</h2>
-                                <p style={{ fontSize: '20px', color: 'var(--text-sec)', marginBottom: '30px' }}>
-                                    Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
-                                    Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
-                                </p>
-                                <div style={{ display: 'flex', gap: '15px' }}>
-                                    <Button variant="primary" onClick={() => fetchAIText()} style={{ width: '200px' }}>Новый AI-текст</Button>
-                                    <Button variant="muted" onClick={() => resetGame(lang, generateLocalText(lang))} style={{ width: '200px' }}>Обычный текст</Button>
-                                </div>
+                {currentIndex === text.length && text.length > 5 && !isGenerating && (
+                    <motion.div 
+                        className="overlay"
+                        initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                        animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'var(--bg-panel)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', zIndex: 10 }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
+                            <h2 style={{ fontSize: '48px', marginBottom: '10px', color: 'var(--text-main)' }}>Отличный результат!</h2>
+                            <p style={{ fontSize: '20px', color: 'var(--text-sec)', marginBottom: '30px' }}>
+                                Скорость: <strong style={{color: "#0ea5e9"}}>{stats.wpm} WPM</strong> | 
+                                Макс. комбо: <strong style={{color: "#f59e0b"}}>x{maxCombo}</strong>
+                            </p>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <Button variant="primary" onClick={() => fetchAIText()} style={{ width: '200px' }}>Новый AI-текст</Button>
+                                <Button variant="muted" onClick={() => resetGame(lang, generateLocalText(lang))} style={{ width: '200px' }}>Обычный текст</Button>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
             {/* КЛАВИАТУРА */}
@@ -450,26 +447,32 @@ const TypingTest = ({ onBack }) => {
                             const isShiftRight = keyId === "ShiftRight";
                             const isSpecial = isTab || isCaps || isEnter || isShiftLeft || isShiftRight;
 
-                            // ОБНОВЛЕНО: Логика отображения символов при зажатом Shift
+                            // ЛОГИКА СИМВОЛОВ И РЕГИСТРА
                             let displayKey = keyId;
                             if (isSpace) displayKey = "SPACE";
                             else if (isShiftLeft || isShiftRight) displayKey = "Shift";
-                            else if (isShiftActive) {
-                                // Меняем цифры на знаки или строчные буквы на заглавные
-                                if (shiftMap[lang] && shiftMap[lang][keyId]) {
-                                    displayKey = shiftMap[lang][keyId];
-                                } else if (/[a-zа-я]/i.test(keyId)) {
-                                    displayKey = keyId.toUpperCase();
+                            else if (isTab) displayKey = "TAB";
+                            else if (isCaps) displayKey = "CAPS";
+                            else if (isEnter) displayKey = "ENTER";
+                            else {
+                                if (isShiftActive) {
+                                    if (shiftMap[lang] && shiftMap[lang][keyId]) {
+                                        displayKey = shiftMap[lang][keyId];
+                                    } else if (/[a-zа-я]/i.test(keyId)) {
+                                        displayKey = keyId.toUpperCase();
+                                    } else {
+                                        displayKey = keyId;
+                                    }
+                                } else {
+                                    displayKey = keyId.toLowerCase();
                                 }
                             }
 
-                            // Подсветка таргета
                             let isTarget = false;
                             if (!isSpecial && keyId === expectedKeyLower) isTarget = true;
                             if (isShiftLeft && targetShift === "ShiftLeft") isTarget = true;
                             if (isShiftRight && targetShift === "ShiftRight") isTarget = true;
 
-                            // Физическое нажатие
                             let isActive = false;
                             if (isSpecial) {
                                 if (keyId === "ShiftLeft" && pressedKeys["ShiftLeft"]) isActive = true;
@@ -479,7 +482,6 @@ const TypingTest = ({ onBack }) => {
                                 if (keyId === "Caps" && pressedKeys["CapsLock"]) isActive = true;
                             } else {
                                 if (pressedKeys[keyId]) isActive = true;
-                                // Если нажали правильный символ с шифтом (например !), подсвечиваем нужную кнопку (1)
                                 const shiftedChar = shiftMap[lang] && shiftMap[lang][keyId];
                                 if (shiftedChar && pressedKeys[shiftedChar.toLowerCase()]) isActive = true;
                             }
@@ -503,26 +505,22 @@ const TypingTest = ({ onBack }) => {
                                     style={{
                                         minWidth: isSpace ? '400px' : (isSpecial ? '75px' : '45px'),
                                         flexGrow: isSpecial ? 1 : 0,
-                                        textTransform: (isSpace || isSpecial) ? 'none' : 'uppercase',
+                                        textTransform: 'none', // Убрали принудительный uppercase!
                                         padding: isSpecial ? '0 15px' : '0',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        position: 'relative' // нужно для красивой анимации
+                                        justifyContent: 'center'
                                     }}
                                 >
-                                    {/* ОБНОВЛЕНО: Анимация переключения символов */}
-                                    <AnimatePresence mode="wait">
-                                        <motion.span
-                                            key={displayKey}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10, position: 'absolute' }}
-                                            transition={{ duration: 0.15 }}
-                                        >
-                                            {displayKey}
-                                        </motion.span>
-                                    </AnimatePresence>
+                                    {/* БЕЗОПАСНАЯ АНИМАЦИЯ: просто пружинит при изменении символа */}
+                                    <motion.span
+                                        key={displayKey}
+                                        initial={{ opacity: 0.5, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                    >
+                                        {displayKey}
+                                    </motion.span>
                                 </div>
                             );
                         })}
