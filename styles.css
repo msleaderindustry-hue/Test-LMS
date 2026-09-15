@@ -197,9 +197,18 @@ body.dark {
     min-height: 100px;
     scrollbar-width: thin;
     scrollbar-color: rgba(150,150,150,0.3) transparent;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1), opacity .3s ease, margin .4s ease, min-height .4s ease;
 }
 .nav-grid-wrapper::-webkit-scrollbar { width: 5px; }
 .nav-grid-wrapper::-webkit-scrollbar-thumb { background: rgba(150,150,150,0.3); border-radius: 10px; }
+
+.nav-grid-wrapper.collapsed {
+    max-height: 0;
+    min-height: 0;
+    opacity: 0;
+    margin: 0;
+    overflow: hidden;
+}
 
 .nav-grid-compact {
   display: grid;
@@ -227,18 +236,88 @@ body.dark {
 }
 
 .sidebar-timer {
-  font-size: 28px;
-  font-weight: 800;
-  text-align: center;
-  font-family: monospace;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
   background: rgba(0,0,0,0.05);
-  padding: 12px;
+  padding: 10px 14px;
   border-radius: 14px;
   margin-bottom: 5px;
   border: 1px solid var(--glass-border);
+  transition: border-color .3s ease;
 }
+
+.timer-ring-wrap { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+.timer-ring-wrap svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: rgba(150,150,150,0.3); stroke-width: 3.5; }
+.ring-progress {
+  fill: none; stroke: #34d399; stroke-width: 3.5; stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke .4s ease;
+}
+
+.hourglass-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.hourglass-svg { width: 16px; height: 16px; color: #34d399; transition: color .4s ease; }
+.hourglass-frame { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.hourglass-sand { fill: currentColor; opacity: .85; }
+.hourglass-flip { transform-origin: 12px 12px; animation: flip 3s ease-in-out infinite; }
+@keyframes flip {
+  0%, 40% { transform: rotate(0deg); }
+  50%, 90% { transform: rotate(180deg); }
+  100% { transform: rotate(180deg); }
+}
+.hourglass-sand.top { animation: drainTop 3s ease-in-out infinite; transform-origin: 12px 6.5px; }
+.hourglass-sand.bottom { animation: fillBottom 3s ease-in-out infinite; transform-origin: 12px 17.5px; }
+@keyframes drainTop {
+  0% { transform: scaleY(1); opacity: .85; }
+  38% { transform: scaleY(0.15); opacity: .5; }
+  50% { transform: scaleY(1); opacity: .85; }
+  88% { transform: scaleY(0.15); opacity: .5; }
+  100% { transform: scaleY(1); opacity: .85; }
+}
+@keyframes fillBottom {
+  0% { transform: scaleY(0.15); opacity: .5; }
+  38% { transform: scaleY(1); opacity: .85; }
+  50% { transform: scaleY(0.15); opacity: .5; }
+  88% { transform: scaleY(1); opacity: .85; }
+  100% { transform: scaleY(0.15); opacity: .5; }
+}
+.sand-grain { animation: grainFall 1.5s linear infinite; opacity: 0; }
+@keyframes grainFall {
+  0% { opacity: 0; transform: translateY(-2.5px); }
+  8% { opacity: 1; }
+  45% { opacity: 1; transform: translateY(2.5px); }
+  50% { opacity: 0; transform: translateY(2.5px); }
+  100% { opacity: 0; transform: translateY(2.5px); }
+}
+
+.timer-text {
+  font-size: 20px; font-weight: 800; flex: 1;
+  font-family: monospace; font-variant-numeric: tabular-nums;
+  color: var(--text-main); transition: color .4s ease;
+}
+
+.toggle-chevron {
+  width: 24px; height: 24px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-sec); flex-shrink: 0;
+  transition: transform .35s cubic-bezier(.4,0,.2,1), color .2s ease;
+}
+.toggle-chevron.open { transform: rotate(180deg); }
+
+.sidebar-timer.warning .timer-text,
+.sidebar-timer.warning .ring-progress,
+.sidebar-timer.warning .hourglass-svg { color: #f2b84b; stroke: #f2b84b; }
+
+.sidebar-timer.danger .timer-text { color: #f2555c; animation: pulseTime 1s infinite; }
+.sidebar-timer.danger .ring-progress { stroke: #f2555c; }
+.sidebar-timer.danger .hourglass-svg { color: #f2555c; }
+.sidebar-timer.danger .hourglass-flip,
+.sidebar-timer.danger .hourglass-sand.top,
+.sidebar-timer.danger .hourglass-sand.bottom { animation-duration: 1.1s; }
+.sidebar-timer.danger .sand-grain { animation-duration: .6s; }
+@keyframes pulseTime { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
 /* Адаптация для мобильных устройств */
 @media (max-width: 900px) {
