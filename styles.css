@@ -714,15 +714,15 @@ input:focus { outline: none; border-color: #C850C0 !important; }
   pointer-events:none; z-index:1;
 }
 .tlms-back-btn-wrap{
-  position:absolute; top:0; left:0; width:44px; height:44px; z-index:10;
+  width:44px; min-width:44px; height:44px; flex-shrink:0;
 }
 .tlms-back-btn{
-  position:absolute; top:0; left:0; width:44px; height:44px;
+  width:44px; height:44px;
   border-radius:50%;
   border:1px solid var(--item-border); background: var(--bg-panel);
   color:var(--text-main); display:flex; align-items:center; justify-content:center;
   cursor:pointer;
-  opacity:0; transform: translateX(-28px) scale(.7);
+  opacity:0; transform: scale(.6);
   transition: opacity .28s cubic-bezier(.32,.72,0,1), transform .28s cubic-bezier(.32,.72,0,1), background .15s ease;
 }
 .tlms-back-btn.revealed{ opacity:1; transform: translateX(0) scale(1); }
