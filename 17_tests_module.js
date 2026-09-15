@@ -353,25 +353,22 @@
         );
     };
 
-    // --- КОМПОНЕНТ: СКРЫТАЯ КНОПКА "НАЗАД", ОТКРЫВАЕТСЯ СВАЙПОМ ОТ КРАЯ ---
-    const EdgeBackReveal = ({ onBack }) => {
-        const btnRef = useRef(null);
+       // --- КОМПОНЕНТ: СКРЫТАЯ КНОПКА "НАЗАД", ОТКРЫВАЕТСЯ СВАЙПОМ ОТ КРАЯ ---
+    const EdgeCatcherAndHint = ({ btnRef }) => {
         const stateRef = useRef({ dragging: false, startX: 0, currentX: 0 });
-        const [revealed, setRevealed] = useState(false);
         const REVEAL_DIST = 40;
 
         const setDrag = (x) => {
             const btn = btnRef.current; if (!btn) return;
             const clamped = Math.max(0, Math.min(REVEAL_DIST + 10, x));
-            btn.style.transform = `translateX(${clamped - REVEAL_DIST}px) scale(${0.7 + (clamped / REVEAL_DIST) * 0.3})`;
+            btn.style.transform = `scale(${0.6 + (clamped / REVEAL_DIST) * 0.4})`;
             btn.style.opacity = Math.min(1, clamped / REVEAL_DIST);
         };
 
         const onDown = (e) => {
             const s = stateRef.current;
             s.dragging = true; s.startX = e.clientX; s.currentX = 0;
-            const btn = btnRef.current;
-            btn.classList.add('dragging');
+            if (btnRef.current) { btnRef.current.classList.add('dragging'); btnRef.current.style.transition = 'none'; }
             e.target.setPointerCapture(e.pointerId);
         };
         const onMove = (e) => {
@@ -385,10 +382,14 @@
             if (!s.dragging) return;
             s.dragging = false;
             const btn = btnRef.current;
-            btn.classList.remove('dragging');
-            btn.style.transform = '';
-            btn.style.opacity = '';
-            if (s.currentX >= REVEAL_DIST * 0.55) setRevealed(true); else setRevealed(false);
+            if (btn) {
+                btn.classList.remove('dragging');
+                btn.style.transition = '';
+                btn.style.transform = '';
+                btn.style.opacity = '';
+                if (s.currentX >= REVEAL_DIST * 0.55) btn.classList.add('revealed');
+                else btn.classList.remove('revealed');
+            }
             s.currentX = 0;
         };
 
@@ -396,16 +397,12 @@
             <>
                 <div className="tlms-edge-catcher" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}></div>
                 <div className="tlms-edge-hint"></div>
-                <div className="tlms-back-btn-wrap">
-                    <button ref={btnRef} className={`tlms-back-btn ${revealed ? 'revealed' : ''}`} onClick={onBack} aria-label="Назад">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </button>
-                </div>
             </>
         );
     };
 
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
+        const backBtnRef = useRef(null);
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
         const [isResultSaved, setIsResultSaved] = useState(false);
@@ -496,7 +493,7 @@
             };
         }, [view, fp]);
 
-        // --- ТАЙМЕР ---
+       // --- ТАЙМЕР ---
         useEffect(() => {
             if (view !== 'test') return;
             const timer = setInterval(() => {
@@ -504,8 +501,14 @@
             }, 1000);
             return () => clearInterval(timer);
         }, [view]);
-
+        
         useEffect(() => { if (timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
+        
+        useEffect(() => {
+            if (view !== 'set_menu' && backBtnRef.current) {
+                backBtnRef.current.classList.remove('revealed');
+            }
+        }, [view]);
 
         const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0' + sec : sec}`; };
 
@@ -928,9 +931,13 @@
 
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', paddingTop: '32px', position: 'relative'}}>
-                        <EdgeBackReveal onBack={() => setView('menu')} />
+                        <EdgeCatcherAndHint btnRef={backBtnRef} />
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '30px', minHeight: '44px' }}>
-                            <div className="tlms-back-btn-wrap-spacer" style={{ width: '44px', minWidth: '44px', flexShrink: 0 }}></div>
+                            <div className="tlms-back-btn-wrap">
+                                <button ref={backBtnRef} className="tlms-back-btn" onClick={() => setView('menu')} aria-label="Назад">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                </button>
+                            </div>
                             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
                                 <h2 style={{ margin: '0 0 12px 0', fontSize: '26px', fontWeight: 800, wordBreak: 'break-word' }}>{currentSet}</h2>
                                 <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '2px' }}></div>
