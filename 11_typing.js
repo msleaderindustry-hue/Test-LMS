@@ -14,17 +14,18 @@ const fallbackTextsData = {
     ]
 };
 
+// ОБНОВЛЕНО: Добавлены Tab, Caps, Enter и два Shift
 const layouts = {
     en: [
-        ["q","w","e","r","t","y","u","i","o","p", "[", "]"],
-        ["a","s","d","f","g","h","j","k","l", ";", "'"],
-        ["z","x","c","v","b","n","m", ",", ".", "/"],
+        ["Tab", "q","w","e","r","t","y","u","i","o","p", "[", "]"],
+        ["Caps", "a","s","d","f","g","h","j","k","l", ";", "'", "Enter"],
+        ["ShiftLeft", "z","x","c","v","b","n","m", ",", ".", "/", "ShiftRight"],
         [" "]
     ],
     ru: [
-        ["й","ц","у","к","е","н","г","ш","щ","з","х","ъ"],
-        ["ф","ы","в","а","п","р","о","л","д","ж","э"],
-        ["я","ч","с","м","и","т","ь","б","ю", "."],
+        ["Tab", "й","ц","у","к","е","н","г","ш","щ","з","х","ъ"],
+        ["Caps", "ф","ы","в","а","п","р","о","л","д","ж","э", "Enter"],
+        ["ShiftLeft", "я","ч","с","м","и","т","ь","б","ю", ".", "ShiftRight"],
         [" "]
     ]
 };
@@ -38,7 +39,9 @@ const TypingTest = ({ onBack }) => {
     const [maxCombo, setMaxCombo] = useState(0);
     const [startTime, setStartTime] = useState(null);
     const [endTime, setEndTime] = useState(null);
-    const [pressedKey, setPressedKey] = useState(null);
+    
+    // ОБНОВЛЕНО: Теперь отслеживаем массив зажатых клавиш для правильного отклика физической клавиатуры
+    const [pressedKeys, setPressedKeys] = useState({});
     const [isErrorKey, setIsErrorKey] = useState(false);
     const [shake, setShake] = useState(false);
 
@@ -66,7 +69,7 @@ const TypingTest = ({ onBack }) => {
         setMaxCombo(0);
         setStartTime(null);
         setEndTime(null);
-        setPressedKey(null);
+        setPressedKeys({});
     };
 
     // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
@@ -74,10 +77,9 @@ const TypingTest = ({ onBack }) => {
         if (!topic.trim()) return alert("Введите тему!");
 
         setIsGenerating(true);
-        resetGame(lang, " "); // Очищаем текст перед загрузкой
+        resetGame(lang, " "); 
 
         const promptLang = lang === 'ru' ? 'русском' : 'английском';
-        // ОБНОВЛЕНО: Промпт просит ставить базовую пунктуацию, но запрещает сложные знаки
         const prompt = `Сгенерируй один интересный абзац для тренажера слепой печати на тему: "${topic}". 
         Язык: ${promptLang}. 
         Объем текста: около 70-80 слов. 
@@ -109,7 +111,6 @@ const TypingTest = ({ onBack }) => {
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
 
-            // ОБНОВЛЕНО: Жестко вырезаем все неудобные для набора символы
             aiText = aiText.replace(/[*#_«»\[\]—0-9]/g, ''); 
             aiText = aiText.replace(/\s+/g, ' '); 
 
@@ -124,7 +125,6 @@ const TypingTest = ({ onBack }) => {
         }
     };
 
-    // ИСПРАВЛЕННЫЙ СКРОЛЛ: без 'smooth' и 'center', чтобы не трясло
     useEffect(() => {
         if (textContainerRef.current) {
             const currentElement = textContainerRef.current.querySelector('.current');
@@ -136,21 +136,23 @@ const TypingTest = ({ onBack }) => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // Игнорируем нажатия клавиш, если мы печатаем в инпуте
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+            // ОБНОВЛЕНО: Фиксируем нажатие для визуального отображения (включая Shift, Tab и тд)
+            const keyCode = e.code; // Отслеживает физическое расположение (напр. ShiftLeft)
+            const visualKey = e.key.toLowerCase();
+            setPressedKeys(prev => ({ ...prev, [keyCode]: true, [visualKey]: true }));
+
             if (isGenerating) return; 
-            if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta" || e.key === "Backspace" || e.key === "CapsLock") return;
+            
+            // Игнорируем для игровой логики, но не для визуального нажатия
+            if (["Shift", "Control", "Alt", "Meta", "Backspace", "CapsLock", "Tab", "Enter"].includes(e.key)) return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
 
-            const actualKey = e.key; 
-            const visualKey = e.key.toLowerCase(); 
-
-            setPressedKey(visualKey);
-
             if (!startTime) setStartTime(Date.now());
 
+            const actualKey = e.key; 
             const expectedChar = text[currentIndex];
 
             if (actualKey === expectedChar) {
@@ -159,9 +161,9 @@ const TypingTest = ({ onBack }) => {
                 setCombo(newCombo);
                 if (newCombo > maxCombo) setMaxCombo(newCombo);
 
-const nextIndex = currentIndex + 1;
+                const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
-if (nextIndex === text.length) {
+                if (nextIndex === text.length) {
                     setEndTime(Date.now());
                     
                     // --- ОТПРАВЛЯЕМ СТАТИСТИКУ ПЕЧАТИ В FIREBASE ---
@@ -194,11 +196,28 @@ if (nextIndex === text.length) {
                 setTimeout(() => setShake(false), 300);
             }
 
-            setTimeout(() => { setPressedKey(null); setIsErrorKey(false); }, 150);
+            // Убираем флаг ошибки спустя мгновение
+            setTimeout(() => { setIsErrorKey(false); }, 150);
+        };
+
+        // ОБНОВЛЕНО: Отпускаем клавишу визуально, когда юзер физически её отпустил
+        const handleKeyUp = (e) => {
+            const keyCode = e.code;
+            const visualKey = e.key.toLowerCase();
+            setPressedKeys(prev => {
+                const next = { ...prev };
+                delete next[keyCode];
+                delete next[visualKey];
+                return next;
+            });
         };
 
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
     }, [currentIndex, text, startTime, combo, maxCombo, isGenerating]);
 
     const calculateStats = () => {
@@ -212,9 +231,22 @@ if (nextIndex === text.length) {
     };
 
     const stats = calculateStats();
-    const expectedKey = text[currentIndex]?.toLowerCase(); 
     const currentLayout = layouts[lang];
     const progress = (currentIndex / text.length) * 100;
+
+    // --- ОБНОВЛЕНО: ЛОГИКА ОПРЕДЕЛЕНИЯ ПРАВИЛЬНОГО SHIFT ---
+    const expectedChar = text[currentIndex];
+    const isUpperCase = expectedChar && expectedChar !== expectedChar.toLowerCase() && /[a-zа-я]/i.test(expectedChar);
+    const expectedKeyLower = expectedChar?.toLowerCase();
+
+    // Клавиши под левую руку (по классике слепой печати)
+    const leftHandKeys = new Set(["q","w","e","r","t","a","s","d","f","g","z","x","c","v","b","й","ц","у","к","е","ф","ы","в","а","п","я","ч","с","м","и"]);
+    
+    let targetShift = null;
+    if (isUpperCase) {
+        // Если буква под левой рукой - жмем правый Shift, иначе левый
+        targetShift = leftHandKeys.has(expectedKeyLower) ? "ShiftRight" : "ShiftLeft";
+    }
 
     return (
         <motion.div 
@@ -286,7 +318,26 @@ if (nextIndex === text.length) {
                 padding: '12px 16px', 
                 borderRadius: '16px' 
             }}>
-                <span style={{ fontSize: '24px' }}>✨</span>
+                {/* ОБНОВЛЕНО: Анимированный SVG-значок магии ИИ */}
+                <motion.svg 
+                    width="28" 
+                    height="28" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ flexShrink: 0 }}
+                >
+                    <defs>
+                        <linearGradient id="magic-gradient" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#a855f7" />
+                            <stop offset="1" stopColor="#6366f1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M10.828 2.068c.28-.758 1.353-.758 1.633 0l1.921 5.204c.15.405.474.729.88.88l5.204 1.921c.758.28.758 1.353 0 1.633l-5.204 1.921a1.99 1.99 0 00-.88.88l-1.921 5.204c-.28.758-1.353.758-1.633 0l-1.921-5.204a1.99 1.99 0 00-.88-.88l-5.204-1.921c-.758-.28-.758-1.353 0-1.633l5.204-1.921a1.99 1.99 0 00.88-.88l1.921-5.204z" fill="url(#magic-gradient)"/>
+                    <path d="M20 20l-1.5-1.5m1.5 0l-1.5 1.5m1.5-1.5h-2.5m2.5 0v2.5" stroke="url(#magic-gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+                </motion.svg>
 
                 <input
                     type="text"
@@ -345,7 +396,6 @@ if (nextIndex === text.length) {
                     </motion.div>
                 ) : (
                     <>
-                        {/* ИСПРАВЛЕННЫЙ КОНТЕЙНЕР С ВНУТРЕННИМ СКРОЛЛОМ */}
                         <div className="text-display" ref={textContainerRef} style={{ 
                             whiteSpace: 'pre-wrap', 
                             wordBreak: 'break-word', 
@@ -397,19 +447,65 @@ if (nextIndex === text.length) {
             <div className="keyboard" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', flexShrink: 0, opacity: isGenerating ? 0.5 : 1, pointerEvents: isGenerating ? 'none' : 'auto' }}>
                 {currentLayout.map((row, rIndex) => (
                     <div key={`${lang}-${rIndex}`} className="key-row">
-                        {row.map((key, kIndex) => {
-                            const isSpace = key === " ";
-                            const isTarget = key === expectedKey;
-                            const isActive = key === pressedKey;
+                        {row.map((keyId, kIndex) => {
+                            const isSpace = keyId === " ";
+                            const isTab = keyId === "Tab";
+                            const isCaps = keyId === "Caps";
+                            const isEnter = keyId === "Enter";
+                            const isShiftLeft = keyId === "ShiftLeft";
+                            const isShiftRight = keyId === "ShiftRight";
+                            const isSpecial = isTab || isCaps || isEnter || isShiftLeft || isShiftRight;
 
+                            // Отображаемое название
+                            let displayKey = keyId;
+                            if (isSpace) displayKey = "SPACE";
+                            if (isShiftLeft || isShiftRight) displayKey = "Shift";
+
+                            // ОБНОВЛЕНО: Подсветка таргета, включая правильный Shift
+                            let isTarget = false;
+                            if (!isSpecial && keyId === expectedKeyLower) isTarget = true;
+                            if (isShiftLeft && targetShift === "ShiftLeft") isTarget = true;
+                            if (isShiftRight && targetShift === "ShiftRight") isTarget = true;
+
+                            // ОБНОВЛЕНО: Синхронизация физического нажатия
+                            let isActive = false;
+                            if (isSpecial) {
+                                if (keyId === "ShiftLeft" && pressedKeys["ShiftLeft"]) isActive = true;
+                                if (keyId === "ShiftRight" && pressedKeys["ShiftRight"]) isActive = true;
+                                if (keyId === "Tab" && pressedKeys["Tab"]) isActive = true;
+                                if (keyId === "Enter" && pressedKeys["Enter"]) isActive = true;
+                                if (keyId === "Caps" && pressedKeys["CapsLock"]) isActive = true;
+                            } else {
+                                if (pressedKeys[keyId]) isActive = true;
+                            }
+
+                            // Классы
                             let classNames = "key";
                             if (isSpace) classNames += " space";
+                            if (isSpecial) classNames += " special";
                             if (isTarget) classNames += " target";
-                            if (isActive) classNames += isErrorKey ? " error-active" : " active";
+                            if (isActive) {
+                                // Если нажали мимо (но не спецклавишу) — светим красным, иначе обычное нажатие
+                                if (!isSpecial && !isTarget && pressedKeys[keyId] && isErrorKey) {
+                                    classNames += " error-active";
+                                } else {
+                                    classNames += " active";
+                                }
+                            }
 
                             return (
-                                <div key={`${lang}-${key}-${kIndex}`} className={classNames}>
-                                    {isSpace ? "SPACE" : key}
+                                <div 
+                                    key={`${lang}-${keyId}-${kIndex}`} 
+                                    className={classNames}
+                                    style={{
+                                        // Задаем ширину для спец-клавиш, чтобы выглядело как на референсах
+                                        minWidth: isSpace ? '400px' : (isSpecial ? '75px' : '45px'),
+                                        flexGrow: isSpecial ? 1 : 0,
+                                        textTransform: (isSpace || isSpecial) ? 'none' : 'uppercase',
+                                        padding: isSpecial ? '0 15px' : '0'
+                                    }}
+                                >
+                                    {displayKey}
                                 </div>
                             );
                         })}
