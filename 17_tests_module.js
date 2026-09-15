@@ -932,7 +932,7 @@
                 {view === 'set_menu' && (
                     <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', paddingTop: '32px', position: 'relative'}}>
                         <EdgeCatcherAndHint btnRef={backBtnRef} />
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '30px', marginBottom: '30px', minHeight: '44px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '38px', marginBottom: '30px', minHeight: '44px' }}>
                             <div className="tlms-back-btn-wrap">
                                 <button ref={backBtnRef} className="tlms-back-btn" onClick={() => setView('menu')} aria-label="Назад">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
