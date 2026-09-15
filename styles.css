@@ -701,3 +701,30 @@ input:focus { outline: none; border-color: #C850C0 !important; }
     .landing-wrapper .about-media,
     .landing-wrapper .about-text { transition: none; opacity: 1; transform: none; }
 }
+
+/* --- Свайп-раскрытие кнопки "назад" на экране настроек теста --- */
+.tlms-edge-catcher{
+  position:absolute; left:0; top:0; bottom:0; width:26px; z-index:6;
+  touch-action: pan-y;
+}
+.tlms-edge-hint{
+  position:absolute; left:6px; top:50%; transform:translateY(-50%);
+  width:4px; height:44px; border-radius:3px;
+  background: rgba(139,92,246,.3);
+  pointer-events:none; z-index:1;
+}
+.tlms-back-btn-wrap{
+  width:44px; min-width:44px; height:44px; position:relative; flex-shrink:0;
+}
+.tlms-back-btn{
+  position:absolute; inset:0; border-radius:50%;
+  border:1px solid var(--item-border); background: var(--bg-panel);
+  color:var(--text-main); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:10;
+  opacity:0; transform: translateX(-28px) scale(.7);
+  transition: opacity .28s cubic-bezier(.32,.72,0,1), transform .28s cubic-bezier(.32,.72,0,1), background .15s ease;
+}
+.tlms-back-btn.revealed{ opacity:1; transform: translateX(0) scale(1); }
+.tlms-back-btn.dragging{ transition:none; }
+.tlms-back-btn:hover{ background: rgba(255,255,255,.08); }
+.tlms-back-btn svg{ width:20px; height:20px; }
