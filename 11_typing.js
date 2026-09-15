@@ -14,20 +14,28 @@ const fallbackTextsData = {
     ]
 };
 
-// ОБНОВЛЕНО: Добавлены Tab, Caps, Enter и два Shift
+// ОБНОВЛЕНО: Добавлен ряд цифр 1-0 и знаки минуса/равно
 const layouts = {
     en: [
+        ["1","2","3","4","5","6","7","8","9","0","-","="],
         ["Tab", "q","w","e","r","t","y","u","i","o","p", "[", "]"],
         ["Caps", "a","s","d","f","g","h","j","k","l", ";", "'", "Enter"],
         ["ShiftLeft", "z","x","c","v","b","n","m", ",", ".", "/", "ShiftRight"],
         [" "]
     ],
     ru: [
+        ["1","2","3","4","5","6","7","8","9","0","-","="],
         ["Tab", "й","ц","у","к","е","н","г","ш","щ","з","х","ъ"],
         ["Caps", "ф","ы","в","а","п","р","о","л","д","ж","э", "Enter"],
         ["ShiftLeft", "я","ч","с","м","и","т","ь","б","ю", ".", "ShiftRight"],
         [" "]
     ]
+};
+
+// ОБНОВЛЕНО: Карты символов при зажатом Shift для анимации и логики
+const shiftMap = {
+    en: { '1':'!', '2':'@', '3':'#', '4':'$', '5':'%', '6':'^', '7':'&', '8':'*', '9':'(', '0':')', '-':'_', '=':'+', '[':'{', ']':'}', ';':':', '\'':'"', ',':'<', '.':'>', '/':'?' },
+    ru: { '1':'!', '2':'"', '3':'№', '4':';', '5':'%', '6':':', '7':'?', '8':'*', '9':'(', '0':')', '-':'_', '=':'+', '.':',' }
 };
 
 const TypingTest = ({ onBack }) => {
@@ -40,7 +48,6 @@ const TypingTest = ({ onBack }) => {
     const [startTime, setStartTime] = useState(null);
     const [endTime, setEndTime] = useState(null);
     
-    // ОБНОВЛЕНО: Теперь отслеживаем массив зажатых клавиш для правильного отклика физической клавиатуры
     const [pressedKeys, setPressedKeys] = useState({});
     const [isErrorKey, setIsErrorKey] = useState(false);
     const [shake, setShake] = useState(false);
@@ -56,7 +63,6 @@ const TypingTest = ({ onBack }) => {
         return list[Math.floor(Math.random() * list.length)] + " ";
     }, []);
 
-    // При первой загрузке или смене языка грузим локальный текст
     useEffect(() => {
         resetGame(lang, generateLocalText(lang));
     }, [lang, generateLocalText]);
@@ -72,7 +78,6 @@ const TypingTest = ({ onBack }) => {
         setPressedKeys({});
     };
 
-    // ФУНКЦИЯ ОБРАЩЕНИЯ К PROXY-СЕРВЕРУ
     const fetchAIText = async () => {
         if (!topic.trim()) return alert("Введите тему!");
 
@@ -98,24 +103,14 @@ const TypingTest = ({ onBack }) => {
             });
 
             const data = await response.json();
-
-            console.log("📦 СЫРОЙ ОТВЕТ ОТ СЕРВЕРА:", data); 
-
-            if (data.error) {
-                throw new Error(data.error.message || "Неизвестная ошибка API");
-            }
-
-            if (!data.candidates || data.candidates.length === 0) {
-                throw new Error("Google не вернул текст (ответ пуст).");
-            }
+            if (data.error) throw new Error(data.error.message || "Неизвестная ошибка API");
+            if (!data.candidates || data.candidates.length === 0) throw new Error("Google не вернул текст (ответ пуст).");
 
             let aiText = data.candidates[0].content.parts[0].text.trim();
-
             aiText = aiText.replace(/[*#_«»\[\]—0-9]/g, ''); 
             aiText = aiText.replace(/\s+/g, ' '); 
 
             resetGame(lang, aiText + " ");
-
         } catch (error) {
             console.error("❌ ПРИЧИНА ОШИБКИ:", error.message);
             alert("Ошибка генерации: " + error.message);
@@ -138,14 +133,11 @@ const TypingTest = ({ onBack }) => {
         const handleKeyDown = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            // ОБНОВЛЕНО: Фиксируем нажатие для визуального отображения (включая Shift, Tab и тд)
-            const keyCode = e.code; // Отслеживает физическое расположение (напр. ShiftLeft)
+            const keyCode = e.code;
             const visualKey = e.key.toLowerCase();
             setPressedKeys(prev => ({ ...prev, [keyCode]: true, [visualKey]: true }));
 
             if (isGenerating) return; 
-            
-            // Игнорируем для игровой логики, но не для визуального нажатия
             if (["Shift", "Control", "Alt", "Meta", "Backspace", "CapsLock", "Tab", "Enter"].includes(e.key)) return;
             if (e.key === " ") e.preventDefault();
             if (currentIndex >= text.length) return;
@@ -166,7 +158,6 @@ const TypingTest = ({ onBack }) => {
                 if (nextIndex === text.length) {
                     setEndTime(Date.now());
                     
-                    // --- ОТПРАВЛЯЕМ СТАТИСТИКУ ПЕЧАТИ В FIREBASE ---
                     const timeElapsed = (Date.now() - startTime) / 1000 / 60;
                     const wordsTyped = text.length / 5;
                     const wpm = timeElapsed > 0 ? Math.round(wordsTyped / timeElapsed) : 0;
@@ -196,11 +187,9 @@ const TypingTest = ({ onBack }) => {
                 setTimeout(() => setShake(false), 300);
             }
 
-            // Убираем флаг ошибки спустя мгновение
             setTimeout(() => { setIsErrorKey(false); }, 150);
         };
 
-        // ОБНОВЛЕНО: Отпускаем клавишу визуально, когда юзер физически её отпустил
         const handleKeyUp = (e) => {
             const keyCode = e.code;
             const visualKey = e.key.toLowerCase();
@@ -233,19 +222,30 @@ const TypingTest = ({ onBack }) => {
     const stats = calculateStats();
     const currentLayout = layouts[lang];
     const progress = (currentIndex / text.length) * 100;
+    const isShiftActive = pressedKeys["ShiftLeft"] || pressedKeys["ShiftRight"];
 
-    // --- ОБНОВЛЕНО: ЛОГИКА ОПРЕДЕЛЕНИЯ ПРАВИЛЬНОГО SHIFT ---
+    // --- ОБНОВЛЕННАЯ ЛОГИКА ОПРЕДЕЛЕНИЯ ПРАВИЛЬНОЙ КЛАВИШИ И ЛЕВОГО SHIFT ---
     const expectedChar = text[currentIndex];
-    const isUpperCase = expectedChar && expectedChar !== expectedChar.toLowerCase() && /[a-zа-я]/i.test(expectedChar);
-    const expectedKeyLower = expectedChar?.toLowerCase();
-
-    // Клавиши под левую руку (по классике слепой печати)
-    const leftHandKeys = new Set(["q","w","e","r","t","a","s","d","f","g","z","x","c","v","b","й","ц","у","к","е","ф","ы","в","а","п","я","ч","с","м","и"]);
+    let expectedKeyLower = expectedChar?.toLowerCase();
     
+    // Проверяем, является ли текущий символ спецсимволом из верхнего регистра (например "!")
+    let isShiftSymbol = false;
+    if (shiftMap[lang]) {
+        for (const [base, shifted] of Object.entries(shiftMap[lang])) {
+            if (shifted === expectedChar) {
+                expectedKeyLower = base;
+                isShiftSymbol = true;
+                break;
+            }
+        }
+    }
+
+    const isUpperCase = expectedChar && expectedChar !== expectedChar.toLowerCase() && /[a-zа-я]/i.test(expectedChar);
+    
+    // Как ты просил: для любых заглавных и символов подсвечиваем строго Левый Shift
     let targetShift = null;
-    if (isUpperCase) {
-        // Если буква под левой рукой - жмем правый Shift, иначе левый
-        targetShift = leftHandKeys.has(expectedKeyLower) ? "ShiftRight" : "ShiftLeft";
+    if (isUpperCase || isShiftSymbol) {
+        targetShift = "ShiftLeft";
     }
 
     return (
@@ -263,7 +263,6 @@ const TypingTest = ({ onBack }) => {
                         <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
                             Pro<span style={{ color: '#3b82f6' }}>Type</span>
                         </h2>
-                        {/* ЗНАЧОК AI POWERED */}
                         <span style={{
                             fontSize: '11px', 
                             fontWeight: '900', 
@@ -318,13 +317,8 @@ const TypingTest = ({ onBack }) => {
                 padding: '12px 16px', 
                 borderRadius: '16px' 
             }}>
-                {/* ОБНОВЛЕНО: Анимированный SVG-значок магии ИИ */}
                 <motion.svg 
-                    width="28" 
-                    height="28" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
+                    width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     style={{ flexShrink: 0 }}
@@ -456,18 +450,26 @@ const TypingTest = ({ onBack }) => {
                             const isShiftRight = keyId === "ShiftRight";
                             const isSpecial = isTab || isCaps || isEnter || isShiftLeft || isShiftRight;
 
-                            // Отображаемое название
+                            // ОБНОВЛЕНО: Логика отображения символов при зажатом Shift
                             let displayKey = keyId;
                             if (isSpace) displayKey = "SPACE";
-                            if (isShiftLeft || isShiftRight) displayKey = "Shift";
+                            else if (isShiftLeft || isShiftRight) displayKey = "Shift";
+                            else if (isShiftActive) {
+                                // Меняем цифры на знаки или строчные буквы на заглавные
+                                if (shiftMap[lang] && shiftMap[lang][keyId]) {
+                                    displayKey = shiftMap[lang][keyId];
+                                } else if (/[a-zа-я]/i.test(keyId)) {
+                                    displayKey = keyId.toUpperCase();
+                                }
+                            }
 
-                            // ОБНОВЛЕНО: Подсветка таргета, включая правильный Shift
+                            // Подсветка таргета
                             let isTarget = false;
                             if (!isSpecial && keyId === expectedKeyLower) isTarget = true;
                             if (isShiftLeft && targetShift === "ShiftLeft") isTarget = true;
                             if (isShiftRight && targetShift === "ShiftRight") isTarget = true;
 
-                            // ОБНОВЛЕНО: Синхронизация физического нажатия
+                            // Физическое нажатие
                             let isActive = false;
                             if (isSpecial) {
                                 if (keyId === "ShiftLeft" && pressedKeys["ShiftLeft"]) isActive = true;
@@ -477,15 +479,16 @@ const TypingTest = ({ onBack }) => {
                                 if (keyId === "Caps" && pressedKeys["CapsLock"]) isActive = true;
                             } else {
                                 if (pressedKeys[keyId]) isActive = true;
+                                // Если нажали правильный символ с шифтом (например !), подсвечиваем нужную кнопку (1)
+                                const shiftedChar = shiftMap[lang] && shiftMap[lang][keyId];
+                                if (shiftedChar && pressedKeys[shiftedChar.toLowerCase()]) isActive = true;
                             }
 
-                            // Классы
                             let classNames = "key";
                             if (isSpace) classNames += " space";
                             if (isSpecial) classNames += " special";
                             if (isTarget) classNames += " target";
                             if (isActive) {
-                                // Если нажали мимо (но не спецклавишу) — светим красным, иначе обычное нажатие
                                 if (!isSpecial && !isTarget && pressedKeys[keyId] && isErrorKey) {
                                     classNames += " error-active";
                                 } else {
@@ -498,14 +501,28 @@ const TypingTest = ({ onBack }) => {
                                     key={`${lang}-${keyId}-${kIndex}`} 
                                     className={classNames}
                                     style={{
-                                        // Задаем ширину для спец-клавиш, чтобы выглядело как на референсах
                                         minWidth: isSpace ? '400px' : (isSpecial ? '75px' : '45px'),
                                         flexGrow: isSpecial ? 1 : 0,
                                         textTransform: (isSpace || isSpecial) ? 'none' : 'uppercase',
-                                        padding: isSpecial ? '0 15px' : '0'
+                                        padding: isSpecial ? '0 15px' : '0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'relative' // нужно для красивой анимации
                                     }}
                                 >
-                                    {displayKey}
+                                    {/* ОБНОВЛЕНО: Анимация переключения символов */}
+                                    <AnimatePresence mode="wait">
+                                        <motion.span
+                                            key={displayKey}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10, position: 'absolute' }}
+                                            transition={{ duration: 0.15 }}
+                                        >
+                                            {displayKey}
+                                        </motion.span>
+                                    </AnimatePresence>
                                 </div>
                             );
                         })}
