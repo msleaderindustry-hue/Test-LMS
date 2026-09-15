@@ -939,7 +939,7 @@
                                 </button>
                             </div>
                             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
-                                <h2 style={{ margin: '0 0 12px 0', fontSize: '26px', fontWeight: 800, wordBreak: 'break-word' }}>{currentSet}</h2>
+                                <h2 style={{ margin: '0 0 12px 0', fontSize: currentSet && currentSet.length > 18 ? '20px' : '26px', fontWeight: 800, wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentSet}</h2>
                                 <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '2px' }}></div>
                             </div>
                             <div style={{ width: '44px', minWidth: '44px', flexShrink: 0 }}></div>
