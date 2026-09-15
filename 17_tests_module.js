@@ -353,6 +353,58 @@
         );
     };
 
+    // --- КОМПОНЕНТ: СКРЫТАЯ КНОПКА "НАЗАД", ОТКРЫВАЕТСЯ СВАЙПОМ ОТ КРАЯ ---
+    const EdgeBackReveal = ({ onBack }) => {
+        const btnRef = useRef(null);
+        const stateRef = useRef({ dragging: false, startX: 0, currentX: 0 });
+        const [revealed, setRevealed] = useState(false);
+        const REVEAL_DIST = 40;
+
+        const setDrag = (x) => {
+            const btn = btnRef.current; if (!btn) return;
+            const clamped = Math.max(0, Math.min(REVEAL_DIST + 10, x));
+            btn.style.transform = `translateX(${clamped - REVEAL_DIST}px) scale(${0.7 + (clamped / REVEAL_DIST) * 0.3})`;
+            btn.style.opacity = Math.min(1, clamped / REVEAL_DIST);
+        };
+
+        const onDown = (e) => {
+            const s = stateRef.current;
+            s.dragging = true; s.startX = e.clientX; s.currentX = 0;
+            const btn = btnRef.current;
+            btn.classList.add('dragging');
+            e.target.setPointerCapture(e.pointerId);
+        };
+        const onMove = (e) => {
+            const s = stateRef.current;
+            if (!s.dragging) return;
+            s.currentX = e.clientX - s.startX;
+            setDrag(s.currentX);
+        };
+        const onUp = () => {
+            const s = stateRef.current;
+            if (!s.dragging) return;
+            s.dragging = false;
+            const btn = btnRef.current;
+            btn.classList.remove('dragging');
+            btn.style.transform = '';
+            btn.style.opacity = '';
+            if (s.currentX >= REVEAL_DIST * 0.55) setRevealed(true); else setRevealed(false);
+            s.currentX = 0;
+        };
+
+        return (
+            <>
+                <div className="tlms-edge-catcher" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}></div>
+                <div className="tlms-edge-hint"></div>
+                <div className="tlms-back-btn-wrap">
+                    <button ref={btnRef} className={`tlms-back-btn ${revealed ? 'revealed' : ''}`} onClick={onBack} aria-label="Назад">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                </div>
+            </>
+        );
+    };
+
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
@@ -875,13 +927,15 @@
                 )}
 
                 {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', position: 'relative', paddingTop: '40px'}}>
-                        <button onClick={() => setView('menu')} style={{ position: 'absolute', top: '24px', left: '24px', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--item-border)', background: 'var(--bg-panel)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, padding: 0 }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        </button>
-                        <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
-                            <h2 style={{ margin: '0 0 12px 0', fontSize: '28px', fontWeight: 800 }}>{currentSet}</h2>
-                            <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', margin: '0 auto', borderRadius: '2px' }}></div>
+                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', paddingTop: '32px', position: 'relative'}}>
+                        <EdgeBackReveal onBack={() => setView('menu')} />
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '30px', minHeight: '44px' }}>
+                            <div className="tlms-back-btn-wrap-spacer" style={{ width: '44px', minWidth: '44px', flexShrink: 0 }}></div>
+                            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
+                                <h2 style={{ margin: '0 0 12px 0', fontSize: '26px', fontWeight: 800, wordBreak: 'break-word' }}>{currentSet}</h2>
+                                <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '2px' }}></div>
+                            </div>
+                            <div style={{ width: '44px', minWidth: '44px', flexShrink: 0 }}></div>
                         </div>
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
                             <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
