@@ -410,6 +410,7 @@
         const [customTime, setCustomTime] = useState('20');
         const [customQCount, setCustomQCount] = useState('');
         const [isAnimating, setIsAnimating] = useState(false);
+        const [isNavOpen, setIsNavOpen] = useState(true);
         
         // --- СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
         const [shakeTime, setShakeTime] = useState(false);
@@ -699,6 +700,12 @@
         const circleRadius = 80;
         const circleCircumference = 2 * Math.PI * circleRadius;
         const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
+        const totalTestTime = (parseInt(customTime) || 20) * 60;
+        const timePercent = totalTestTime > 0 ? Math.max(0, Math.min(1, timeLeft / totalTestTime)) : 1;
+        const timerRadius = 18;
+        const timerCircumference = 2 * Math.PI * timerRadius;
+        const timerDashoffset = timerCircumference * (1 - timePercent);
+        const timerStateClass = timePercent <= 0.1 ? 'danger' : (timePercent <= 0.3 ? 'warning' : '');
 
         return (
             <AnimatePresence mode="wait">
@@ -1019,8 +1026,42 @@
                         </div>
                         <div className="sidebar-column">
                             <div className="sidebar-content">
-                                <div className="sidebar-timer">⏳ {formatTime(timeLeft)}</div>
-                                <div className="nav-grid-wrapper">
+                               <div
+                                    className={`sidebar-timer ${timerStateClass}`}
+                                    onClick={() => setIsNavOpen(o => !o)}
+                                >
+                                    <div className="timer-ring-wrap">
+                                        <svg width="36" height="36" viewBox="0 0 44 44">
+                                            <circle className="ring-bg" cx="22" cy="22" r={timerRadius}></circle>
+                                            <circle
+                                                className="ring-progress"
+                                                cx="22" cy="22" r={timerRadius}
+                                                strokeDasharray={timerCircumference}
+                                                strokeDashoffset={timerDashoffset}
+                                            ></circle>
+                                        </svg>
+                                        <div className="hourglass-icon">
+                                            <svg className="hourglass-svg" viewBox="0 0 24 24">
+                                                <g className="hourglass-flip">
+                                                    <path className="hourglass-frame" d="M6 3h12 M6 21h12
+                                                        M6.5 3c0 4.2 4 6.3 5.5 8c-1.5 1.7-5.5 3.8-5.5 8
+                                                        M17.5 3c0 4.2-4 6.3-5.5 8c1.5 1.7 5.5 3.8 5.5 8"/>
+                                                    <polygon className="hourglass-sand top" points="9,4.6 15,4.6 12,9.2"/>
+                                                    <polygon className="hourglass-sand bottom" points="9.4,19.4 14.6,19.4 12,15"/>
+                                                    <circle className="sand-grain" cx="12" cy="11.5" r="0.55"/>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span className="timer-text">{formatTime(timeLeft)}</span>
+                                    <div className={`toggle-chevron ${isNavOpen ? 'open' : ''}`}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div className={`nav-grid-wrapper ${isNavOpen ? '' : 'collapsed'}`}>
                                     <div className="nav-grid-compact">
                                         {testSession.questions.map((_, i) => {
                                             let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
