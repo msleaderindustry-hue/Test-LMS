@@ -763,30 +763,98 @@ input:focus { outline: none; border-color: #C850C0 !important; }
     .landing-wrapper .about-text { transition: none; opacity: 1; transform: none; }
 }
 
-/* --- Свайп-раскрытие кнопки "назад" на экране настроек теста --- */
-.tlms-edge-catcher{
-  position:absolute; left:0; top:0; bottom:0; width:26px; z-index:6;
-  touch-action: pan-y;
+/* --- Слоистая карточка экрана set_menu --- */
+.tlms-layered-wrap{
+  position: relative;
+  padding-top: 14px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
 }
-.tlms-edge-hint{
-  position:absolute; left:6px; top:32px;
-  width:4px; height:44px; border-radius:3px;
-  background: rgba(139,92,246,.3);
-  pointer-events:none; z-index:1;
+.tlms-layered-wrap::before,
+.tlms-layered-wrap::after{
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  border-radius: 24px;
 }
-.tlms-back-btn-wrap{
-  width:44px; min-width:44px; height:44px; flex-shrink:0;
+.tlms-layered-wrap::before{
+  top: 0;
+  height: 100%;
+  background: #a996f2;
+  transform: rotate(-2.5deg);
 }
+.tlms-layered-wrap::after{
+  top: 5px;
+  height: 100%;
+  background: #8f7ae8;
+  transform: rotate(1.4deg);
+}
+body.dark .tlms-layered-wrap::before{ background: #4a3d8c; }
+body.dark .tlms-layered-wrap::after{ background: #3a2e70; }
+
+.tlms-layered-card{
+  position: relative;
+  z-index: 2;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(90,60,200,0.18);
+  padding: 56px 30px 30px;
+}
+body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
+
+.tlms-layered-title{
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.tlms-layered-divider{
+  height: 4px;
+  width: 48px;
+  background: linear-gradient(90deg, #8b5cf6, #d946ef);
+  border-radius: 2px;
+  margin: 0 auto 25px;
+}
+
+/* --- Кнопка "назад" (всегда видна, без свайпа) --- */
 .tlms-back-btn{
-  width:44px; height:44px;
-  border-radius:50%;
-  border:none; background:transparent; box-shadow:none;
-  color:var(--text-main); display:flex; align-items:center; justify-content:flex-start;
-  cursor:pointer;
-  opacity:0; transform: scale(.6);
-  transition: opacity .28s cubic-bezier(.32,.72,0,1), transform .28s cubic-bezier(.32,.72,0,1), color .15s ease;
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5c3fe0, #8a6ef2);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(92,63,224,0.4), 0 0 0 4px var(--glass-bg);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
 }
-.tlms-back-btn:hover{ color: var(--purple, #8b5cf6); }
-.tlms-back-btn.revealed{ opacity:1; transform: translateX(0) scale(1); }
-.tlms-back-btn.dragging{ transition:none; }
-.tlms-back-btn svg{ width:20px; height:20px; }
+.tlms-back-btn:hover{ transform: scale(1.08); }
+.tlms-back-btn:active{ transform: scale(.94); }
+.tlms-back-btn svg{ width: 17px; height: 17px; }
+
+/* анимация "рисующейся" стрелки — всегда видна, "дорисовывается" при hover */
+.tlms-back-btn polyline{
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.tlms-back-btn:hover polyline{
+  animation: tlmsDrawArrow .45s ease;
+}
+@keyframes tlmsDrawArrow{
+  0%{ stroke-dashoffset: 0; }
+  45%{ stroke-dashoffset: 1; }
+  100%{ stroke-dashoffset: 0; }
+}
