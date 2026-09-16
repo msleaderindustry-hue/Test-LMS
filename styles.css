@@ -797,7 +797,7 @@ body.dark .tlms-layered-wrap::after{ background: #3a2e70; }
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 14px 30px rgba(90,60,200,0.18);
-  padding: 52px 24px 26px;
+  padding: 78px 24px 26px;
   overflow: visible;
 }
 body.dark .tlms-layered-card{
