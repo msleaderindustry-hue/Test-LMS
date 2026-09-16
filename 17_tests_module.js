@@ -353,56 +353,10 @@
         );
     };
 
-       // --- КОМПОНЕНТ: СКРЫТАЯ КНОПКА "НАЗАД", ОТКРЫВАЕТСЯ СВАЙПОМ ОТ КРАЯ ---
-    const EdgeCatcherAndHint = ({ btnRef }) => {
-        const stateRef = useRef({ dragging: false, startX: 0, currentX: 0 });
-        const REVEAL_DIST = 40;
-
-        const setDrag = (x) => {
-            const btn = btnRef.current; if (!btn) return;
-            const clamped = Math.max(0, Math.min(REVEAL_DIST + 10, x));
-            btn.style.transform = `scale(${0.6 + (clamped / REVEAL_DIST) * 0.4})`;
-            btn.style.opacity = Math.min(1, clamped / REVEAL_DIST);
-        };
-
-        const onDown = (e) => {
-            const s = stateRef.current;
-            s.dragging = true; s.startX = e.clientX; s.currentX = 0;
-            if (btnRef.current) { btnRef.current.classList.add('dragging'); btnRef.current.style.transition = 'none'; }
-            e.target.setPointerCapture(e.pointerId);
-        };
-        const onMove = (e) => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            s.currentX = e.clientX - s.startX;
-            setDrag(s.currentX);
-        };
-        const onUp = () => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            s.dragging = false;
-            const btn = btnRef.current;
-            if (btn) {
-                btn.classList.remove('dragging');
-                btn.style.transition = '';
-                btn.style.transform = '';
-                btn.style.opacity = '';
-                if (s.currentX >= REVEAL_DIST * 0.55) btn.classList.add('revealed');
-                else btn.classList.remove('revealed');
-            }
-            s.currentX = 0;
-        };
-
-        return (
-            <>
-                <div className="tlms-edge-catcher" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}></div>
-                <div className="tlms-edge-hint"></div>
-            </>
-        );
-    };
+    
 
     const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
-        const backBtnRef = useRef(null);
+
         // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
         const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
         const [isResultSaved, setIsResultSaved] = useState(false);
@@ -505,11 +459,6 @@
         
         useEffect(() => { if (timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
         
-        useEffect(() => {
-            if (view !== 'set_menu' && backBtnRef.current) {
-                backBtnRef.current.classList.remove('revealed');
-            }
-        }, [view]);
 
         const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0' + sec : sec}`; };
 
@@ -937,36 +886,37 @@
                 )}
 
                 {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'600px', paddingTop: '32px', position: 'relative'}}>
-                        <EdgeCatcherAndHint btnRef={backBtnRef} />
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '38px', marginBottom: '30px', minHeight: '44px' }}>
-                            <div className="tlms-back-btn-wrap">
-                                <button ref={backBtnRef} className="tlms-back-btn" onClick={() => setView('menu')} aria-label="Назад">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    <motion.div key="set" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0}} transition={{duration:0.3, ease:[0.32,0.72,0,1]}} style={{width:'100%', maxWidth:'600px'}}>
+                        <div className="tlms-layered-wrap">
+                            <div className="tlms-layered-card">
+                                <button className="tlms-back-btn" onClick={() => setView('menu')} aria-label="Назад">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="15 18 9 12 15 6" pathLength="1"></polyline>
+                                    </svg>
                                 </button>
+
+                                <h2 className="tlms-layered-title" style={{ fontSize: currentSet && currentSet.length > 18 ? '20px' : '26px', wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentSet}</h2>
+                                <div className="tlms-layered-divider"></div>
+
+                                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
+                                    <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                        Печать
+                                    </Button>
+                                    <label style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                        Импорт
+                                        <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
+                                    </label>
+                                </div>
+
+                                <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    Начать тест
+                                </Button>
+                                <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов:&nbsp;<b>{tests.length}</b></p>
                             </div>
-                            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
-                                <h2 style={{ margin: '0 0 12px 0', fontSize: currentSet && currentSet.length > 18 ? '20px' : '26px', fontWeight: 800, wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentSet}</h2>
-                                <div style={{ height: '4px', width: '48px', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '2px' }}></div>
-                            </div>
-                            <div style={{ width: '44px', minWidth: '44px', flexShrink: 0 }}></div>
                         </div>
-                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                            <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                                Печать
-                            </Button>
-                            <label style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)' }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                Импорт
-                                <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
-                            </label>
-                        </div>
-                        <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            Начать тест
-                        </Button>
-                        <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов: <b>{tests.length}</b></p>
                     </motion.div>
                 )}
 
