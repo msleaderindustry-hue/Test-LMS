@@ -1055,25 +1055,6 @@
                                     })}
                                 </div>
                             </div>
-                                    <span className="timer-text">{formatTime(timeLeft)}</span>
-                                    <div className={`toggle-chevron ${isNavOpen ? 'open' : ''}`}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
-                                    </div>
-                                </div>
-                                
-                                <div className={`nav-grid-wrapper ${isNavOpen ? '' : 'collapsed'}`}>
-                                    <div className="nav-grid-compact">
-                                        {testSession.questions.map((_, i) => {
-                                            let c = 'var(--nav-item-bg)'; let txt='var(--nav-item-text)';
-                                            if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
-                                            else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
-                                            const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                            return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
-                                        })}
-                                    </div>
-                                </div>
                                 <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
                             </div>
                         </div>
