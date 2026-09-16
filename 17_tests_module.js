@@ -898,12 +898,12 @@
                                 <h2 className="tlms-layered-title" style={{ fontSize: currentSet && currentSet.length > 18 ? '20px' : '26px', wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentSet}</h2>
                                 <div className="tlms-layered-divider"></div>
 
-                                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                                    <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', border: 'none', padding: '16px'}}>
+                               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
+                                    <Button onClick={handlePrint} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1eeff', color: '#5c48b0', border: 'none', padding: '16px', boxShadow: 'none'}}>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                         Печать
                                     </Button>
-                                    <label style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)', color:'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.3)' }}>
+                                    <label style={{ background: '#f1eeff', color:'#5c48b0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: 'none' }}>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                         Импорт
                                         <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
