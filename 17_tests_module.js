@@ -1026,33 +1026,35 @@
                         </div>
                         <div className="sidebar-column">
                             <div className="sidebar-content">
-                               <div
-                                    className={`sidebar-timer ${timerStateClass}`}
-                                    onClick={() => setIsNavOpen(o => !o)}
-                                >
-                                    <div className="timer-ring-wrap">
-                                        <svg width="36" height="36" viewBox="0 0 44 44">
-                                            <circle className="ring-bg" cx="22" cy="22" r={timerRadius}></circle>
-                                            <circle
-                                                className="ring-progress"
-                                                cx="22" cy="22" r={timerRadius}
-                                                strokeDasharray={timerCircumference}
-                                                strokeDashoffset={timerDashoffset}
-                                            ></circle>
-                                        </svg>
-                                        <div className="hourglass-icon">
-                                            <svg className="hourglass-svg" viewBox="0 0 24 24">
-                                                <g className="hourglass-flip">
-                                                    <path className="hourglass-frame" d="M6 3h12 M6 21h12
-                                                        M6.5 3c0 4.2 4 6.3 5.5 8c-1.5 1.7-5.5 3.8-5.5 8
-                                                        M17.5 3c0 4.2-4 6.3-5.5 8c1.5 1.7 5.5 3.8 5.5 8"/>
-                                                    <polygon className="hourglass-sand top" points="9,4.6 15,4.6 12,9.2"/>
-                                                    <polygon className="hourglass-sand bottom" points="9.4,19.4 14.6,19.4 12,15"/>
-                                                    <circle className="sand-grain" cx="12" cy="11.5" r="0.55"/>
-                                                </g>
-                                            </svg>
-                                        </div>
-                                    </div>
+                              <div
+                                className={`sidebar-timer ${timerStateClass}`}
+                                onClick={() => setIsNavOpen(o => !o)}
+                                style={{ '--fill': `${Math.round(timePercent * 100)}%` }}
+                            >
+                                <div className="timer-fill"></div>
+                                <svg className="timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <polyline points="12 7 12 12 15.5 14"/>
+                                </svg>
+                                <div className="timer-text">{formatTime(timeLeft)}</div>
+                                <div className={`toggle-chevron ${isNavOpen ? 'open' : ''}`}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <div className={`nav-grid-wrapper ${isNavOpen ? '' : 'collapsed'}`}>
+                                <div className="nav-grid-compact">
+                                    {testSession.questions.map((_, i) => {
+                                        let c = 'var(--nav-item-bg)'; let txt = 'var(--nav-item-text)';
+                                        if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
+                                        else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
+                                        const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
+                                        return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
+                                    })}
+                                </div>
+                            </div>
                                     <span className="timer-text">{formatTime(timeLeft)}</span>
                                     <div className={`toggle-chevron ${isNavOpen ? 'open' : ''}`}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
