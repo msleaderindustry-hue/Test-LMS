@@ -234,7 +234,71 @@ body.dark {
     opacity: 0.5;
     pointer-events: none;
 }
+.sidebar-timer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0,0,0,0.05);
+  padding: 12px 16px;
+  border-radius: 14px;
+  margin-bottom: 5px;
+  border: 1px solid var(--glass-border);
+}
 
+.timer-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--fill, 100%);
+  background: linear-gradient(90deg, rgba(52,224,161,0.35), rgba(52,224,161,0.12));
+  transition: width 1s linear, background .3s ease;
+  z-index: 0;
+}
+
+.timer-icon,
+.timer-text,
+.toggle-chevron {
+  position: relative;
+  z-index: 1;
+}
+
+.timer-icon { width: 20px; height: 20px; flex-shrink: 0; color: var(--text-main); transition: color .3s ease; }
+
+.timer-text {
+  font-size: 20px;
+  font-weight: 800;
+  flex: 1;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  transition: color .3s ease;
+}
+
+.toggle-chevron {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-sec);
+  flex-shrink: 0;
+  transition: transform .35s cubic-bezier(.4,0,.2,1), color .2s ease;
+}
+.toggle-chevron.open { transform: rotate(180deg); }
+
+.sidebar-timer.warning .timer-fill {
+  background: linear-gradient(90deg, rgba(242,184,75,0.4), rgba(242,184,75,0.12));
+}
+.sidebar-timer.warning .timer-text,
+.sidebar-timer.warning .timer-icon { color: #f2b84b; }
+
+.sidebar-timer.danger .timer-fill {
+  background: linear-gradient(90deg, rgba(242,85,92,0.4), rgba(242,85,92,0.12));
+}
+.sidebar-timer.danger .timer-text,
+.sidebar-timer.danger .timer-icon { color: #f2555c; animation: pulseTime 1s infinite; }
+
+@keyframes pulseTime { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
 
 /* Адаптация для мобильных устройств */
