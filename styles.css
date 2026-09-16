@@ -822,14 +822,18 @@ body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
   margin: 0 auto 25px;
 }
 
-/* --- Кнопка "назад" (всегда видна, без свайпа) --- */
+/* --- Кнопка "назад": невидима, появляется при наведении на карточку --- */
+.tlms-layered-card{ overflow: visible; }
+
 .tlms-back-btn{
   position: absolute;
-  top: 18px;
-  left: 18px;
-  z-index: 3;
+  top: 16px;
+  left: 16px;
+  z-index: 4;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  padding: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #5c3fe0, #8a6ef2);
   border: none;
@@ -838,23 +842,39 @@ body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 6px 16px rgba(92,63,224,0.4), 0 0 0 4px var(--glass-bg);
-  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 6px 16px rgba(92,63,224,0.40);
+  opacity: 0;
+  transform: scale(.72);
+  pointer-events: none;
+  transition: opacity .26s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
 }
-.tlms-back-btn:hover{ transform: scale(1.08); }
-.tlms-back-btn:active{ transform: scale(.94); }
-.tlms-back-btn svg{ width: 17px; height: 17px; }
 
-/* анимация "рисующейся" стрелки — всегда видна, "дорисовывается" при hover */
+/* появляется при наведении на карточку (или на саму кнопку) */
+.tlms-layered-card:hover .tlms-back-btn,
+.tlms-back-btn:focus-visible{
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.tlms-back-btn:active{ transform: scale(.92); }
+.tlms-back-btn svg{ width: 17px; height: 17px; overflow: visible; }
+
+/* стрелка "рисуется" каждый раз при появлении */
 .tlms-back-btn polyline{
   stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+  stroke-dashoffset: 1;
 }
-.tlms-back-btn:hover polyline{
-  animation: tlmsDrawArrow .45s ease;
+.tlms-layered-card:hover .tlms-back-btn polyline,
+.tlms-back-btn:focus-visible polyline{
+  animation: tlmsDrawArrow .5s .1s ease forwards;
 }
 @keyframes tlmsDrawArrow{
-  0%{ stroke-dashoffset: 0; }
-  45%{ stroke-dashoffset: 1; }
-  100%{ stroke-dashoffset: 0; }
+  from{ stroke-dashoffset: 1; }
+  to{ stroke-dashoffset: 0; }
+}
+
+/* на тач-устройствах наведения нет — кнопка видна всегда */
+@media (hover: none){
+  .tlms-back-btn{ opacity: 1; transform: scale(1); pointer-events: auto; }
+  .tlms-back-btn polyline{ stroke-dashoffset: 0; }
 }
