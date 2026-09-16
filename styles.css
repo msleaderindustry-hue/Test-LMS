@@ -763,32 +763,29 @@ input:focus { outline: none; border-color: #C850C0 !important; }
     .landing-wrapper .about-text { transition: none; opacity: 1; transform: none; }
 }
 
-/* --- Слоистая карточка экрана set_menu --- */
+/* --- Слоистая карточка экрана set_menu (вариант 9 из макета) --- */
 .tlms-layered-wrap{
   position: relative;
-  padding-top: 14px;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
+  padding-top: 14px;
 }
 .tlms-layered-wrap::before,
 .tlms-layered-wrap::after{
   content: '';
   position: absolute;
-  left: 10px;
-  right: 10px;
-  border-radius: 24px;
+  left: 10px; right: 10px;
+  border-radius: 18px;
 }
 .tlms-layered-wrap::before{
-  top: 0;
-  height: 100%;
-  background: #a996f2;
+  top: 0; height: 100%;
+  background: #c9bdfa;
   transform: rotate(-2.5deg);
 }
 .tlms-layered-wrap::after{
-  top: 5px;
-  height: 100%;
-  background: #8f7ae8;
+  top: 5px; height: 100%;
+  background: #a996f2;
   transform: rotate(1.4deg);
 }
 body.dark .tlms-layered-wrap::before{ background: #4a3d8c; }
@@ -797,42 +794,42 @@ body.dark .tlms-layered-wrap::after{ background: #3a2e70; }
 .tlms-layered-card{
   position: relative;
   z-index: 2;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
+  background: #fff;
+  border-radius: 18px;
   box-shadow: 0 14px 30px rgba(90,60,200,0.18);
-  padding: 56px 30px 30px;
+  padding: 52px 24px 26px;
+  overflow: visible;
 }
-body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
+body.dark .tlms-layered-card{
+  background: #1b1830;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.4);
+}
 
 .tlms-layered-title{
   text-align: center;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   font-weight: 800;
-  color: var(--text-main);
+  color: #3d2e8c;
 }
+body.dark .tlms-layered-title{ color: #e5defc; }
 
 .tlms-layered-divider{
   height: 4px;
-  width: 48px;
-  background: linear-gradient(90deg, #8b5cf6, #d946ef);
+  width: 44px;
+  background: #8a6ef2;
   border-radius: 2px;
-  margin: 0 auto 25px;
+  margin: 0 auto 22px;
 }
 
 /* --- Кнопка "назад": невидима, появляется при наведении на карточку --- */
-.tlms-layered-card{ overflow: visible; }
-
 .tlms-back-btn{
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 4;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   padding: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #5c3fe0, #8a6ef2);
@@ -842,14 +839,12 @@ body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 6px 16px rgba(92,63,224,0.40);
+  box-shadow: 0 6px 16px rgba(92,63,224,0.45);
   opacity: 0;
   transform: scale(.72);
   pointer-events: none;
   transition: opacity .26s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
 }
-
-/* появляется при наведении на карточку (или на саму кнопку) */
 .tlms-layered-card:hover .tlms-back-btn,
 .tlms-back-btn:focus-visible{
   opacity: 1;
@@ -857,9 +852,8 @@ body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
   pointer-events: auto;
 }
 .tlms-back-btn:active{ transform: scale(.92); }
-.tlms-back-btn svg{ width: 17px; height: 17px; overflow: visible; }
+.tlms-back-btn svg{ width: 16px; height: 16px; overflow: visible; }
 
-/* стрелка "рисуется" каждый раз при появлении */
 .tlms-back-btn polyline{
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
@@ -872,8 +866,6 @@ body.dark .tlms-layered-card{ box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
   from{ stroke-dashoffset: 1; }
   to{ stroke-dashoffset: 0; }
 }
-
-/* на тач-устройствах наведения нет — кнопка видна всегда */
 @media (hover: none){
   .tlms-back-btn{ opacity: 1; transform: scale(1); pointer-events: auto; }
   .tlms-back-btn polyline{ stroke-dashoffset: 0; }
