@@ -1031,16 +1031,44 @@
                             {!isResultSaved ? (
                                 <>
                                     <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
-                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
+                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>
+    <svg className="tlms-btn-icon tlms-icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+        <polyline className="corner" points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>
+    Сохранить
+</Button>
                                 </>
                             ) : (
                                 <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
                             )}
                         </div>
                         <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                            <Button variant="orange" onClick={() => setView('review')}>🧐 Ошибки</Button>
-                            {testSession.score < testSession.questions.length && (<Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>)}
-                            <Button onClick={() => setView('menu')}>🏠 Меню</Button>
+                            <Button variant="orange" onClick={() => setView('review')}>
+    <svg className="tlms-btn-icon tlms-icon-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line className="dot" x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    Ошибки
+</Button>
+                            {testSession.score < testSession.questions.length && (
+    <Button variant="red" onClick={restartMistakes}>
+        <svg className="tlms-btn-icon tlms-icon-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Повторить ошибки
+    </Button>
+)}
+                            <Button onClick={() => setView('menu')}>
+    <svg className="tlms-btn-icon tlms-icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    Меню
+</Button>
                         </div>
                     </motion.div>
                 )}
