@@ -926,3 +926,46 @@ body.dark{
 .tlms-result-action-btn.retry{ color:#e05fae; }
 .tlms-result-action-btn.menu{ color:var(--text-main); }
 .tlms-result-action-btn svg{ width:18px; height:18px; }
+
+/* --- Y2K Chrome — глянцевый эффект под фиолетовую палитру --- */
+.tlms-chrome-btn{
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 16px;
+  box-shadow:
+    0 8px 20px rgba(124, 58, 237, 0.35),
+    inset 0 1px 1px rgba(255,255,255,0.5),
+    inset 0 -3px 6px rgba(0,0,0,0.15);
+}
+
+.tlms-chrome-btn::before{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 55%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 100%);
+  border-radius: 16px 16px 50% 50% / 16px 16px 100% 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tlms-chrome-btn::after{
+  content: '';
+  position: absolute;
+  bottom: -40%; left: 10%; right: 10%;
+  height: 60%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.25), transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tlms-chrome-btn > *{ position: relative; z-index: 2; }
+
+.tlms-chrome-btn:active{
+  transform: scale(.98);
+  box-shadow:
+    0 4px 10px rgba(124, 58, 237, 0.3),
+    inset 0 1px 1px rgba(255,255,255,0.3),
+    inset 0 -2px 4px rgba(0,0,0,0.2);
+}
