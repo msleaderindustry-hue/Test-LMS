@@ -883,7 +883,19 @@ body.dark{
   --ring-color: #a5b4fc;
 }
 
-.tlms-result-wrap{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:420px; margin:0 auto; }
+.tlms-result-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--glass-border);
+  border-radius: 32px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
 
 .tlms-result-card{
   background: var(--result-card-bg);
