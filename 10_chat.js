@@ -3,7 +3,7 @@
     const { useState, useEffect, useRef } = React;
     const { motion, AnimatePresence } = window.Motion;
 
-    // --- ВЕКТОРНЫЕ ИКОНКИ (БЕЗ ЭМОДЗИ) ---
+    // --- ВЕКТОРНЫЕ ИКОНКИ ---
     const Icons = {
         close: <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>,
         back: <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>,
@@ -11,7 +11,10 @@
         trashMe: <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>,
         trashAll: <path d="M17.651 7.65a7.131 7.131 0 00-12.68 3.15M4.05 15.05a7.125 7.125 0 0012.825-3.05m-9.525-4.5A4.5 4.5 0 1111.5 16a4.5 4.5 0 01-4.15-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>,
         chat: <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>,
-        check: <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        // Одинарная галочка (Отправлено)
+        check: <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>,
+        // Двойная галочка (Прочитано)
+        doubleCheck: <path d="M2 12l5 5L16 6M8 12l5 5L22 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     };
 
     const SvgIcon = ({ name, size = 24, color = 'currentColor', style = {} }) => (
@@ -20,7 +23,6 @@
         </svg>
     );
 
-    // --- УТИЛИТЫ ДЛЯ АВАТАРОК ---
     const AVATAR_COLORS = [
         ['#ef4444', '#b91c1c'], ['#f97316', '#c2410c'], ['#f59e0b', '#b45309'],
         ['#10b981', '#047857'], ['#06b6d4', '#0e7490'], ['#3b82f6', '#1d4ed8'],
@@ -44,30 +46,62 @@
         return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
     };
 
-    // --- CSS СТИЛИ ДЛЯ ЧАТА ---
+    // --- CSS СТИЛИ (С ПОДДЕРЖКОЙ ТЕМ) ---
     const CSS = `
     .tg-chat-container {
+        /* ТЕМНАЯ ТЕМА ПО УМОЛЧАНИЮ */
+        --bg-main: #0f172a;
+        --bg-header: rgba(15, 23, 42, 0.85);
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --bg-chat: #0b1120;
+        --bubble-theirs: #1e293b;
+        --bubble-mine: linear-gradient(135deg, #3b82f6, #4f46e5);
+        --border-color: rgba(255,255,255,0.08);
+        --input-bg: rgba(255,255,255,0.05);
+        --hover-bg: rgba(255,255,255,0.04);
+        --icon-hover: rgba(255,255,255,0.1);
+        --shadow: rgba(0,0,0,0.5);
+
         position: fixed; top: 0; right: 0; width: 400px; max-width: 100vw; height: 100vh;
-        background: #0f172a; z-index: 9999; display: flex; flex-direction: column;
-        box-shadow: -10px 0 40px rgba(0,0,0,0.5); overflow: hidden;
+        background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column;
+        box-shadow: -10px 0 40px var(--shadow); overflow: hidden;
+        color: var(--text-main);
     }
+    
+    /* СВЕТЛЯ ТЕМА (активируется классом .light) */
+    .tg-chat-container.light {
+        --bg-main: #ffffff;
+        --bg-header: rgba(255, 255, 255, 0.85);
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --bg-chat: #f0f2f5;
+        --bubble-theirs: #ffffff;
+        --bubble-mine: linear-gradient(135deg, #3b82f6, #4f46e5);
+        --border-color: rgba(0,0,0,0.08);
+        --input-bg: #f1f5f9;
+        --hover-bg: rgba(0,0,0,0.04);
+        --icon-hover: rgba(0,0,0,0.08);
+        --shadow: rgba(0,0,0,0.1);
+    }
+
     .tg-header {
-        height: 64px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px); display: flex; alignItems: center; padding: 0 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.08); z-index: 10; flex-shrink: 0;
+        height: 64px; background: var(--bg-header); backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 16px;
+        border-bottom: 1px solid var(--border-color); z-index: 10; flex-shrink: 0;
     }
     .tg-icon-btn {
         width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; background: transparent; border: none; color: #94a3b8;
+        justify-content: center; background: transparent; border: none; color: var(--text-muted);
         cursor: pointer; transition: all 0.2s;
     }
-    .tg-icon-btn:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+    .tg-icon-btn:hover { background: var(--icon-hover); color: var(--text-main); }
     
     .tg-contact-item {
         display: flex; align-items: center; padding: 12px 16px; cursor: pointer;
-        transition: background 0.2s; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.02);
+        transition: background 0.2s; gap: 14px; border-bottom: 1px solid var(--border-color);
     }
-    .tg-contact-item:hover { background: rgba(255,255,255,0.04); }
+    .tg-contact-item:hover { background: var(--hover-bg); }
     .tg-avatar {
         width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center;
         justify-content: center; color: white; font-weight: 800; font-size: 16px; flex-shrink: 0;
@@ -76,11 +110,11 @@
     
     .tg-chat-bg {
         flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 6px;
-        background-color: #0b1120;
-        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-color: var(--bg-chat);
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239ca3af' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
     .tg-chat-bg::-webkit-scrollbar { width: 4px; }
-    .tg-chat-bg::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    .tg-chat-bg::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
     
     .tg-bubble-wrap { display: flex; flex-direction: column; max-width: 82%; position: relative; }
     .tg-bubble-wrap.mine { align-self: flex-end; }
@@ -91,12 +125,12 @@
         word-break: break-word; display: flex; flex-direction: column;
     }
     .tg-bubble.mine {
-        background: linear-gradient(135deg, #3b82f6, #4f46e5); color: white;
+        background: var(--bubble-mine); color: white;
         border-radius: 18px 18px 4px 18px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
     }
     .tg-bubble.theirs {
-        background: #1e293b; color: #f1f5f9; border-radius: 18px 18px 18px 4px;
-        border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background: var(--bubble-theirs); color: var(--text-main); border-radius: 18px 18px 18px 4px;
+        border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
     
     .tg-meta {
@@ -106,8 +140,8 @@
     
     .tg-actions {
         position: absolute; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;
-        opacity: 0; transition: opacity 0.2s; background: rgba(15, 23, 42, 0.9); padding: 4px;
-        border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+        opacity: 0; transition: opacity 0.2s; background: var(--bg-header); padding: 4px;
+        border-radius: 12px; border: 1px solid var(--border-color); backdrop-filter: blur(4px);
     }
     .tg-bubble-wrap:hover .tg-actions { opacity: 1; }
     .tg-bubble-wrap.mine .tg-actions { right: calc(100% + 8px); }
@@ -115,20 +149,20 @@
     
     .tg-action-btn {
         width: 28px; height: 28px; border-radius: 50%; background: transparent; border: none;
-        display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: 0.2s;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s;
     }
-    .tg-action-btn:hover { background: rgba(255,255,255,0.1); color: #ef4444; }
+    .tg-action-btn:hover { background: var(--icon-hover); color: #ef4444; }
     
     .tg-input-area {
-        padding: 12px 16px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color);
         display: flex; gap: 10px; align-items: flex-end;
     }
     .tg-input {
-        flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px; padding: 12px 16px; color: white; font-size: 14.5px;
+        flex: 1; background: var(--input-bg); border: 1px solid var(--border-color);
+        border-radius: 20px; padding: 12px 16px; color: var(--text-main); font-size: 14.5px;
         outline: none; transition: 0.2s; min-height: 44px; font-family: inherit;
     }
-    .tg-input:focus { border-color: #3b82f6; background: rgba(255,255,255,0.08); }
+    .tg-input:focus { border-color: #3b82f6; background: var(--hover-bg); }
     
     .tg-send-btn {
         width: 44px; height: 44px; border-radius: 50%; background: #3b82f6; border: none;
@@ -137,10 +171,15 @@
     }
     .tg-send-btn:hover { background: #2563eb; transform: scale(1.05); }
     .tg-send-btn:active { transform: scale(0.95); }
-    .tg-send-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
+    .tg-send-btn:disabled { background: var(--text-muted); color: var(--bg-main); cursor: not-allowed; box-shadow: none; transform: none; }
+    
+    .tg-badge {
+        background: #3b82f6; color: white; font-size: 12px; font-weight: bold;
+        padding: 2px 8px; border-radius: 12px; min-width: 20px; text-align: center;
+        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4);
+    }
     `;
 
-    // Внедрение CSS
     const useInjectStyles = () => {
         useEffect(() => {
             if (!document.getElementById("tg-chat-styles")) {
@@ -153,7 +192,8 @@
     };
 
     // --- ОСНОВНОЙ КОМПОНЕНТ ---
-    const ChatPanel = ({ user, onClose }) => {
+    // Добавлен пропс theme (может быть 'dark' или 'light')
+    const ChatPanel = ({ user, onClose, theme = 'dark' }) => {
         useInjectStyles();
         const [chatUsers, setChatUsers] = useState([]);
         const [activeChat, setActiveChat] = useState(null);
@@ -161,19 +201,46 @@
         const [msgText, setMsgText] = useState('');
         const messagesEndRef = useRef(null);
 
-        // Загрузка контактов
+        // Загрузка контактов и подсчет непрочитанных сообщений
         useEffect(() => {
             if(!window.db) return;
-            const unsub = window.db.collection('users').onSnapshot(snap => {
-                setChatUsers(snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid));
+            const unsub = window.db.collection('users').onSnapshot(async snap => {
+                const usersList = snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid);
+                
+                // В реальном проекте лучше использовать Firebase Cloud Functions для инкремента счетчика в документе юзера,
+                // но здесь мы подгружаем статусы "на лету" для реализации бейджей.
+                const usersWithCounts = await Promise.all(usersList.map(async (u) => {
+                    const chatId = [user.uid, u.uid].sort().join('_');
+                    const msgsSnap = await window.db.collection('private_chats').doc(chatId).collection('messages')
+                        .where('senderId', '==', u.uid)
+                        .where('read', '==', false)
+                        .get();
+                    return { ...u, unreadCount: msgsSnap.size };
+                }));
+                
+                setChatUsers(usersWithCounts);
             });
             return () => unsub();
         }, [user]);
 
-        // Загрузка сообщений
+        // Загрузка сообщений и отметка "Прочитано" при открытии
         useEffect(() => {
             if(!activeChat || !window.db) return;
             const chatId = [user.uid, activeChat.uid].sort().join('_');
+            
+            // 1. Помечаем чужие непрочитанные сообщения как прочитанные
+            window.db.collection('private_chats').doc(chatId).collection('messages')
+                .where('senderId', '==', activeChat.uid)
+                .where('read', '==', false)
+                .get().then(snap => {
+                    if (!snap.empty) {
+                        const batch = window.db.batch();
+                        snap.docs.forEach(doc => batch.update(doc.ref, { read: true }));
+                        batch.commit();
+                    }
+                });
+
+            // 2. Слушаем обновления сообщений
             const unsub = window.db.collection('private_chats').doc(chatId).collection('messages')
                 .orderBy('createdAt', 'asc')
                 .onSnapshot(snap => {
@@ -186,14 +253,15 @@
         const sendMessage = async () => {
             if(!msgText.trim()) return;
             const text = msgText.trim();
-            setMsgText(''); // Очищаем сразу для ощущения отзывчивости
+            setMsgText('');
             const chatId = [user.uid, activeChat.uid].sort().join('_');
             await window.db.collection('private_chats').doc(chatId).collection('messages').add({
                 text: text,
                 senderId: user.uid,
                 createdAt: new Date().toISOString(),
                 deletedFor: [],
-                deletedForEveryone: false
+                deletedForEveryone: false,
+                read: false // ДОБАВЛЕНО: статус по умолчанию "не прочитано"
             });
         };
 
@@ -218,7 +286,8 @@
                 animate={{ x: 0, opacity: 1 }} 
                 exit={{ x: '100%', opacity: 0.5 }} 
                 transition={{ type: 'spring', damping: 30, stiffness: 250 }} 
-                className="tg-chat-container"
+                // Присваиваем класс темы ('dark' или 'light')
+                className={`tg-chat-container ${theme}`}
             >
                 {/* ШАПКА */}
                 <div className="tg-header">
@@ -229,7 +298,7 @@
                                     <SvgIcon name="chat" size={18} />
                                 </div>
                                 <div style={{flex: 1}}>
-                                    <h3 style={{margin: 0, fontSize: '16px', fontWeight: 800, color: '#f1f5f9'}}>Контакты</h3>
+                                    <h3 style={{margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)'}}>Контакты</h3>
                                     <div style={{fontSize: '12px', color: '#10b981', fontWeight: 600}}>В сети</div>
                                 </div>
                                 <button className="tg-icon-btn" onClick={onClose} title="Закрыть">
@@ -245,10 +314,10 @@
                                     {getInitials(activeChat.nickname || activeChat.email)}
                                 </div>
                                 <div style={{flex: 1, minWidth: 0}}>
-                                    <h3 style={{margin: 0, fontSize: '15px', fontWeight: 800, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                                    <h3 style={{margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                                         {activeChat.nickname || activeChat.email}
                                     </h3>
-                                    <div style={{fontSize: '12px', color: '#94a3b8', fontWeight: 600}}>
+                                    <div style={{fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600}}>
                                         {activeChat.role === 'admin' ? 'Преподаватель' : 'Студент'}
                                     </div>
                                 </div>
@@ -264,7 +333,7 @@
                             // СПИСОК КОНТАКТОВ
                             <motion.div key="view-contacts" initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} transition={{duration:0.2}} style={{position:'absolute', inset:0, overflowY:'auto'}}>
                                 {chatUsers.length === 0 ? (
-                                    <div style={{textAlign:'center', color:'#64748b', marginTop: 40, fontSize: 14, fontWeight: 600}}>Нет других пользователей</div>
+                                    <div style={{textAlign:'center', color:'var(--text-muted)', marginTop: 40, fontSize: 14, fontWeight: 600}}>Нет других пользователей</div>
                                 ) : (
                                     <div style={{padding: '8px 0'}}>
                                         {chatUsers.map((u, i) => (
@@ -272,9 +341,18 @@
                                                 <div className="tg-avatar" style={{background: getAvatarGrad(u.uid)}}>
                                                     {getInitials(u.nickname || u.email)}
                                                 </div>
-                                                <div style={{flex: 1, minWidth: 0}}>
-                                                    <div style={{fontWeight: 800, color: '#f1f5f9', fontSize: 15, marginBottom: 2}}>{u.nickname || u.email}</div>
-                                                    <div style={{fontSize: 13, color: '#64748b', fontWeight: 600}}>Написать сообщение...</div>
+                                                <div style={{flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <div style={{fontWeight: 800, color: 'var(--text-main)', fontSize: 15, marginBottom: 2}}>{u.nickname || u.email}</div>
+                                                        <div style={{fontSize: 13, color: 'var(--text-muted)', fontWeight: 600}}>Написать сообщение...</div>
+                                                    </div>
+                                                    
+                                                    {/* ДОБАВЛЕНО: Бейдж с количеством непрочитанных (как на фото 4) */}
+                                                    {u.unreadCount > 0 && (
+                                                        <div className="tg-badge">
+                                                            {u.unreadCount}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -293,11 +371,18 @@
                                                     <span>{m.text}</span>
                                                     <div className="tg-meta">
                                                         {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                        {isMine && <SvgIcon name="check" size={12} style={{marginLeft: 2}} />}
+                                                        
+                                                        {/* ДОБАВЛЕНО: Смена иконок (одна галочка / две галочки) как на фото 2 и 3 */}
+                                                        {isMine && (
+                                                            <SvgIcon 
+                                                                name={m.read ? "doubleCheck" : "check"} 
+                                                                size={14} 
+                                                                style={{ marginLeft: 4, color: m.read ? '#60a5fa' : 'currentColor' }} 
+                                                            />
+                                                        )}
                                                     </div>
                                                 </div>
                                                 
-                                                {/* КНОПКИ УДАЛЕНИЯ (ПОЯВЛЯЮТСЯ ПРИ НАВЕДЕНИИ) */}
                                                 <div className="tg-actions">
                                                     <button className="tg-action-btn" onClick={() => delForMe(m.id)} title="Удалить у себя">
                                                         <SvgIcon name="trashMe" size={16} />
