@@ -56,11 +56,18 @@ const EXCEL_DATABASE = {
     ]
 };
 
-const CATEGORY_ICONS = {
-    "Математические": "Σ", "Динамические массивы": "⚡", "Поиск и ссылки": "🔎",
-    "Логические": "◆", "Текстовые": "Aa", "Дата и время": "🕐",
-    "Статистические": "📈", "Финансовые": "💰", "Базы данных": "🗄️",
-    "Информационные": "ℹ️", "Инженерные": "⚙️"
+const CATEGORY_ICONS_SVG = {
+    "Математические": Icon.Bolt,
+    "Динамические массивы": Icon.Bolt,
+    "Поиск и ссылки": Icon.Search,
+    "Логические": Icon.Gear,
+    "Текстовые": null, // оставляем "Aa" текстом — это не эмодзи, а буквы
+    "Дата и время": Icon.Clock,
+    "Статистические": Icon.Chart,
+    "Финансовые": Icon.Coin,
+    "Базы данных": Icon.Database,
+    "Информационные": Icon.Info,
+    "Инженерные": Icon.Gear,
 };
 
 const DIFFICULTY_MAP = {
@@ -1103,6 +1110,22 @@ body.light .et-shell .et-action-warning,
   .et-sidebar{max-width:100%;}
   .et-cat-list{max-height:none;}
 }
+
+/* --- Иконки: анимации --- */
+.et-icon-spin{ animation: et-icon-spin 1.4s linear infinite; }
+@keyframes et-icon-spin{ from{transform:rotate(0);} to{transform:rotate(360deg);} }
+
+.et-icon-pulse{ animation: et-icon-pulse 1.6s ease-in-out infinite; }
+@keyframes et-icon-pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
+
+.et-icon-flame{ color: #f97316; animation: et-icon-flame 1.2s ease-in-out infinite; }
+@keyframes et-icon-flame{ 0%,100%{transform:scale(1) translateY(0);} 50%{transform:scale(1.12) translateY(-1px);} }
+
+.et-icon-bounce{ transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+button:hover .et-icon-bounce{ transform: translateY(-2px) rotate(-8deg); }
+
+.et-icon-rotate-hover{ transition: transform .35s ease; }
+button:hover .et-icon-rotate-hover{ transform: rotate(180deg); }
 `;
 
 function useInjectStyles() {
@@ -1168,6 +1191,126 @@ function getFormulaStart(lesson, defaultName) {
     return "=";
 }
 
+/* =========================================================================
+   ИКОНКИ (заменяют эмодзи)
+   ========================================================================= */
+const Icon = {
+    Sparkle: (p) => (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" {...p}>
+            <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/>
+        </svg>
+    ),
+    Search: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="14" height="14" {...p}>
+            <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+    ),
+    Bolt: (p) => (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" {...p}>
+            <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/>
+        </svg>
+    ),
+    Target: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" {...p}>
+            <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+        </svg>
+    ),
+    Flame: (p) => (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" {...p}>
+            <path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-3 2 1 3 4 3 6a6 6 0 1 1-12 0c0-4 2-7 4-10z"/>
+        </svg>
+    ),
+    Star: (p) => (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" {...p}>
+            <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8l-6.2 3.3 1.2-6.9-5-4.9 6.9-1L12 2z"/>
+        </svg>
+    ),
+    Warning: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" {...p}>
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+    ),
+    Book: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" {...p}>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+    ),
+    Check: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+    ),
+    Copy: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+    ),
+    Lock: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12" {...p}>
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+    ),
+    Bulb: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15" {...p}>
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.5.4.9 1.1 1 1.8v.5h6v-.5c.1-.7.5-1.4 1-1.8A7 7 0 0 0 12 2z"/>
+        </svg>
+    ),
+    Trophy: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" {...p}>
+            <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+            <path d="M17 5h3a3 3 0 0 1-3 5M7 5H4a3 3 0 0 0 3 5"/>
+        </svg>
+    ),
+    Refresh: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" {...p}>
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+    ),
+    Eye: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" {...p}>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+    ),
+    Grid: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" {...p}>
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+    ),
+    Clock: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>
+        </svg>
+    ),
+    Chart: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>
+        </svg>
+    ),
+    Coin: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <circle cx="12" cy="12" r="9"/><path d="M9.5 15a2.5 2.5 0 0 0 5 0M9.5 9a2.5 2.5 0 0 1 5 0"/><line x1="12" y1="6" x2="12" y2="18"/>
+        </svg>
+    ),
+    Database: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>
+        </svg>
+    ),
+    Info: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+    ),
+    Gear: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.77 1.05 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+    ),
+};
+
 function renderHighlightedFormula(lineText) {
     if (!lineText) return null;
     
@@ -1223,7 +1366,7 @@ function GlobalSearch({ t, onPick }) {
 
     return (
         <div className="et-gsearch">
-            <span className="et-gsearch-icon">🔍</span>
+            <span className="et-gsearch-icon"><Icon.Search /></span>
             <input
                 value={q}
                 placeholder={t.globalSearchPlaceholder}
@@ -1269,7 +1412,9 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
                     <div className="et-cat" key={category}>
                         <div className="et-cat-head" onClick={() => toggleCat(category)}>
                             <div className="et-cat-head-left">
-                                <span className="et-cat-icon">{CATEGORY_ICONS[category] || "•"}</span>
+                                <span className="et-cat-icon">
+    {CATEGORY_ICONS_SVG[category] ? React.createElement(CATEGORY_ICONS_SVG[category]) : "Aa"}
+</span>
                                 {category}
                             </div>
                             <span className={`et-cat-chevron ${isOpen ? "open" : ""}`}>▾</span>
@@ -1334,12 +1479,9 @@ function ProgressCard({ t, progress, userInfo }) {
                         {userInfo.displayName || userInfo.email || t.student}
                     </div>
                     <div className="et-user-rank">
-                        <motion.span 
-                            animate={{ rotate: [0, 360] }} 
-                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-                        >
-                            ⭐
-                        </motion.span>
+                        <motion.span animate={{ rotate: [0, 360] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }} style={{display:'flex', color:'#fbbf24'}}>
+    <Icon.Star />
+</motion.span>
                         <span>{t.level} {progress.level} • {rankTitle}</span>
                     </div>
                 </div>
@@ -1348,7 +1490,7 @@ function ProgressCard({ t, progress, userInfo }) {
             {/* Дашборд показателей с интерактивным наведением */}
             <div className="et-stats-grid">
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val">⚡ {progress.xp}</div>
+                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>     <Icon.Bolt style={{color:'var(--accent-purple)'}} /> {progress.xp} </div>
                     <div className="et-stat-lbl">{t.totalXp}</div>
                 </motion.div>
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
@@ -1392,7 +1534,7 @@ function LoadingSkeleton({ t, name }) {
     return (
         <div className="et-skeleton-card">
             <div className="et-skel-title">
-                <motion.span animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}>✨</motion.span>
+                <span style={{display:'flex', color:'var(--accent-cyan)'}}><Icon.Sparkle className="et-icon-spin" /></span>
                 {t.loadingTitle}{name ? ` — ${name}` : ""}
             </div>
             <div className="et-skel-line" style={{ width: "45%", height: 26 }} />
@@ -1407,7 +1549,7 @@ function LoadingSkeleton({ t, name }) {
 function ErrorCard({ t, onRetry }) {
     return (
         <div className="et-error-card">
-            <div className="et-error-icon">⚠️</div>
+            <div className="et-error-icon" style={{color:'#ef4444', display:'flex', justifyContent:'center'}}><Icon.Warning width="34" height="34" /></div>
             <div className="et-error-title">{t.errorTitle}</div>
             <div className="et-error-sub">{t.errorSub}</div>
             <button className="et-retry-btn" onClick={onRetry}>{t.retry}</button>
@@ -1877,7 +2019,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
             {/* ШАПКА */}
             <header className="et-header">
                 <div className="et-header-left">
-                    <div className="et-logo">📊</div>
+                    <div className="et-logo"><Icon.Grid /></div>
                     <div style={{ minWidth: 0 }}>
                         <h2 className="et-title">{t.title}</h2>
                         <div className="et-subtitle">{t.subtitle}</div>
@@ -1893,7 +2035,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                 {/* САЙДБАР */}
                 <div className="et-sidebar">
                     <div className="et-ai-card">
-                        <div className="et-ai-title">✨ {t.magic}</div>
+                        <div className="et-ai-title"><Icon.Sparkle className="et-icon-pulse" style={{color:'var(--accent-purple)'}} /> {t.magic}</div>
                         <input
                             className="et-ai-input"
                             type="text"
