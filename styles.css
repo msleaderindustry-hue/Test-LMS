@@ -870,3 +870,49 @@ body.dark .tlms-layered-title{ color: #e5defc; }
   .tlms-back-btn{ opacity: 1; transform: scale(1); pointer-events: auto; }
   .tlms-back-btn polyline{ stroke-dashoffset: 0; }
 }
+/* --- Иконки на кнопках результата --- */
+.tlms-btn-icon{
+  width: 17px;
+  height: 17px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Сохранить — иконка "подмигивает" уголком при наведении */
+.tlms-icon-save .corner{
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  transform-origin: top right;
+}
+button:hover .tlms-icon-save .corner{
+  transform: scale(0.85) translate(-1px, 1px);
+}
+
+/* Ошибки — восклицательный знак пульсирует */
+.tlms-icon-alert .dot{
+  transition: transform .2s ease;
+  transform-origin: center;
+}
+button:hover .tlms-icon-alert .dot{
+  animation: tlmsAlertPulse .5s ease;
+}
+@keyframes tlmsAlertPulse{
+  0%, 100%{ transform: scale(1); }
+  50%{ transform: scale(1.4); }
+}
+
+/* Повторить ошибки — крутится при наведении */
+.tlms-icon-retry{
+  transition: transform .4s ease;
+}
+button:hover .tlms-icon-retry{
+  transform: rotate(180deg);
+}
+
+/* Меню — домик слегка "подпрыгивает" */
+.tlms-icon-home{
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+button:hover .tlms-icon-home{
+  transform: translateY(-2px);
+}
