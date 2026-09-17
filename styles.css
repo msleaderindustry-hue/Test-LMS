@@ -13,8 +13,8 @@
   --nav-item-text: #2d3748;
   --item-border: rgba(45, 55, 72, 0.18);
   --bg-panel: #eef0f5;
-  --sparkle-grad: linear-gradient(45deg, #ffd54f, #f59e0b);
-  --sparkle-glow: rgba(217, 119, 6, 0.55);
+  --sparkle-grad: linear-gradient(45deg, #7ab8ff, #8a5bff);
+  --sparkle-glow: rgba(122, 184, 255, 0.6);
 }
 
 body.dark {
