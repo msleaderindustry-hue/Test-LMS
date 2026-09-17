@@ -870,3 +870,59 @@ body.dark .tlms-layered-title{ color: #e5defc; }
   .tlms-back-btn{ opacity: 1; transform: scale(1); pointer-events: auto; }
   .tlms-back-btn polyline{ stroke-dashoffset: 0; }
 }
+
+/* --- Экран результата (стиль по макету) --- */
+:root{
+  --result-card-bg: #ffffff;
+  --ring-track: #e4e4ee;
+  --ring-color: #6d7cf7;
+}
+body.dark{
+  --result-card-bg: #23242f;
+  --ring-track: rgba(255,255,255,0.12);
+  --ring-color: #a5b4fc;
+}
+
+.tlms-result-wrap{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:420px; margin:0 auto; }
+
+.tlms-result-card{
+  background: var(--result-card-bg);
+  border-radius: 18px;
+  padding: 24px 22px;
+}
+
+.tlms-result-title{
+  text-align:center; font-size:20px; font-weight:800; color:var(--text-main); margin:0 0 22px;
+}
+
+.tlms-result-percent{ font-size:42px; font-weight:800; color:var(--text-main); line-height:1; }
+.tlms-result-sub{ font-size:12px; color:var(--text-sec); margin-top:6px; }
+
+.tlms-result-score-card{
+  text-align:center; font-size:16px; font-weight:700; color:var(--text-main);
+}
+
+.tlms-result-input{
+  width:100%; background: var(--bg-panel); border:none; border-radius:12px;
+  padding:15px 16px; font-size:15px; color:var(--text-main); margin-bottom:14px;
+  box-sizing:border-box; height:auto;
+}
+.tlms-result-input::placeholder{ color:var(--text-sec); }
+
+.tlms-result-save-btn{
+  width:100%; border:none; border-radius:12px; padding:15px; font-weight:700; font-size:15px;
+  background: linear-gradient(120deg,#6d7cf7,#e879c8);
+  color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+  height:auto;
+}
+.tlms-result-save-btn:active{ opacity:.9; }
+
+.tlms-result-action-btn{
+  width:100%; border:none; background:var(--result-card-bg); border-radius:18px; padding:18px;
+  font-weight:700; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px;
+  height:auto;
+}
+.tlms-result-action-btn.errors{ color:#6d7cf7; }
+.tlms-result-action-btn.retry{ color:#e05fae; }
+.tlms-result-action-btn.menu{ color:var(--text-main); }
+.tlms-result-action-btn svg{ width:18px; height:18px; }
