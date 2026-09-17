@@ -33,7 +33,7 @@
         position: fixed;
         bottom: 24px;
         right: 24px;
-        z-index: 9999;
+        z-index: 1500; /* Изменено: теперь виджет находится ниже бокового меню и его блюра (2001) */
         display: flex;
         flex-direction: column;
         align-items: flex-end;
