@@ -1012,36 +1012,57 @@
                 )}
 
                 {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
-                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(138, 143, 160, 0.4)" strokeWidth="14" />
-                                <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
-                            </svg>
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
+                    <motion.div key="res" initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0}} className="tlms-result-wrap">
+                
+                        <div className="tlms-result-card">
+                            <h2 className="tlms-result-title">Результат</h2>
+                            <div style={{ position: 'relative', width: '170px', height: '170px', margin: '0 auto' }}>
+                                <svg width="170" height="170" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                                    <circle cx="100" cy="100" r={circleRadius} fill="none" style={{ stroke: 'var(--ring-track)' }} strokeWidth="14" />
+                                    <motion.circle cx="100" cy="100" r={circleRadius} fill="none" style={{ stroke: 'var(--ring-color)' }} strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
+                                </svg>
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                    <span className="tlms-result-percent">{resultPercent}%</span>
+                                    <span className="tlms-result-sub">Правильных ответов</span>
+                                </div>
                             </div>
                         </div>
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
+                
+                        <div className="tlms-result-card tlms-result-score-card">
+                            Правильно: {testSession.score} из {testSession.questions.length}
                         </div>
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid rgba(138, 143, 160, 0.4)'}}>
+                
+                        <div className="tlms-result-card">
                             {!isResultSaved ? (
                                 <>
-                                    <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
-                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>💾 Сохранить</Button>
+                                    <input id="sName" className="tlms-result-input" placeholder="Введите ваше имя" />
+                                    <button className="tlms-result-save-btn" onClick={() => saveResult(document.getElementById('sName').value)}>
+                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                        Сохранить
+                                    </button>
                                 </>
                             ) : (
-                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
+                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:16, textAlign:'center'}}>✅ Результат успешно сохранен!</motion.div>
                             )}
                         </div>
-                        <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                            <Button variant="orange" onClick={() => setView('review')}>🧐 Ошибки</Button>
-                            {testSession.score < testSession.questions.length && (<Button variant="red" onClick={restartMistakes}>🔄 Повторить ошибки</Button>)}
-                            <Button onClick={() => setView('menu')}>🏠 Меню</Button>
-                        </div>
+                
+                        <button className="tlms-result-action-btn errors" onClick={() => setView('review')}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Ошибки
+                        </button>
+                
+                        {testSession.score < testSession.questions.length && (
+                            <button className="tlms-result-action-btn retry" onClick={restartMistakes}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                Повторить ошибки
+                            </button>
+                        )}
+                
+                        <button className="tlms-result-action-btn menu" onClick={() => setView('menu')}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            Меню
+                        </button>
+                
                     </motion.div>
                 )}
 
