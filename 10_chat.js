@@ -44,75 +44,84 @@
         return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
     };
 
-    // --- CSS СТИЛИ (С ПОДДЕРЖКОЙ ТЕМ) ---
+    // --- CSS СТИЛИ (АДАПТИРОВАНО ПОД ТВОЙ КОД) ---
     const CSS = `
     .tg-chat-container {
-        --bg-main: #0f172a;
-        --bg-header: rgba(15, 23, 42, 0.85);
-        --text-main: #f1f5f9;
-        --text-muted: #94a3b8;
-        --bg-chat: #0b1120;
-        --bubble-theirs: #1e293b;
-        --bubble-mine: linear-gradient(135deg, #3b82f6, #4f46e5);
-        --border-color: rgba(255,255,255,0.08);
-        --input-bg: rgba(255,255,255,0.05);
-        --hover-bg: rgba(255,255,255,0.04);
-        --icon-hover: rgba(255,255,255,0.1);
-        --shadow: rgba(0,0,0,0.5);
+        /* СВЕТЛАЯ ТЕМА ПО УМОЛЧАНИЮ */
+        --chat-bg-main: #ffffff;
+        --chat-bg-header: rgba(255, 255, 255, 0.85);
+        --chat-text-main: #2d3748;
+        --chat-text-muted: #718096;
+        --chat-bg-inner: #f0f2f5;
+        --chat-bubble-theirs: #ffffff;
+        --chat-bubble-mine: linear-gradient(135deg, #667eea, #764ba2); /* Под твой primary-grad */
+        --chat-border: rgba(0,0,0,0.08);
+        --chat-input-bg: #f1f5f9;
+        --chat-hover-bg: rgba(0,0,0,0.04);
+        --chat-icon-hover: rgba(0,0,0,0.08);
+        --chat-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 
         position: fixed; top: 0; right: 0; width: 400px; max-width: 100vw; height: 100vh;
-        background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column;
-        box-shadow: -10px 0 40px var(--shadow); overflow: hidden;
-        color: var(--text-main);
+        background: var(--chat-bg-main); z-index: 9999; display: flex; flex-direction: column;
+        box-shadow: var(--chat-shadow); overflow: hidden;
+        color: var(--chat-text-main);
+        font-family: 'Montserrat', sans-serif;
     }
     
-    /* СВЕТЛАЯ ТЕМА - автоматически подхватится, если у body или html есть класс light */
-    .tg-chat-container.light, 
-    :global(.light) .tg-chat-container, 
-    :global([data-theme='light']) .tg-chat-container {
-        --bg-main: #ffffff;
-        --bg-header: rgba(255, 255, 255, 0.85);
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --bg-chat: #f0f2f5;
-        --bubble-theirs: #ffffff;
-        --border-color: rgba(0,0,0,0.08);
-        --input-bg: #f1f5f9;
-        --hover-bg: rgba(0,0,0,0.04);
-        --icon-hover: rgba(0,0,0,0.08);
-        --shadow: rgba(0,0,0,0.1);
+    /* ТЕМНАЯ ТЕМА (Включается, когда у компонента есть класс dark) */
+    .tg-chat-container.dark {
+        --chat-bg-main: #0f172a;
+        --chat-bg-header: rgba(15, 23, 42, 0.85);
+        --chat-text-main: #f1f5f9;
+        --chat-text-muted: #94a3b8;
+        --chat-bg-inner: #0b1120;
+        --chat-bubble-theirs: #1e293b;
+        --chat-bubble-mine: linear-gradient(135deg, #3b82f6, #4f46e5);
+        --chat-border: rgba(255,255,255,0.08);
+        --chat-input-bg: rgba(255,255,255,0.05);
+        --chat-hover-bg: rgba(255,255,255,0.04);
+        --chat-icon-hover: rgba(255,255,255,0.1);
+        --chat-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     }
 
-    /* (Остальные стили остались без изменений) */
-    .tg-header { height: 64px; background: var(--bg-header); backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border-color); z-index: 10; flex-shrink: 0; }
-    .tg-icon-btn { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-    .tg-icon-btn:hover { background: var(--icon-hover); color: var(--text-main); }
-    .tg-contact-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.2s; gap: 14px; border-bottom: 1px solid var(--border-color); }
-    .tg-contact-item:hover { background: var(--hover-bg); }
+    .tg-header { height: 64px; background: var(--chat-bg-header); backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--chat-border); z-index: 10; flex-shrink: 0; }
+    .tg-icon-btn { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--chat-text-muted); cursor: pointer; transition: all 0.2s; }
+    .tg-icon-btn:hover { background: var(--chat-icon-hover); color: var(--chat-text-main); }
+    
+    .tg-contact-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.2s; gap: 14px; border-bottom: 1px solid var(--chat-border); }
+    .tg-contact-item:hover { background: var(--chat-hover-bg); }
     .tg-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    .tg-chat-bg { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; background-color: var(--bg-chat); background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239ca3af' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+    
+    .tg-chat-bg { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; background-color: var(--chat-bg-inner); background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239ca3af' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
     .tg-chat-bg::-webkit-scrollbar { width: 4px; }
-    .tg-chat-bg::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    .tg-chat-bg::-webkit-scrollbar-thumb { background: var(--chat-border); border-radius: 4px; }
+    
     .tg-bubble-wrap { display: flex; flex-direction: column; max-width: 82%; position: relative; }
     .tg-bubble-wrap.mine { align-self: flex-end; }
     .tg-bubble-wrap.theirs { align-self: flex-start; }
+    
     .tg-bubble { padding: 10px 14px; font-size: 14.5px; line-height: 1.45; position: relative; word-break: break-word; display: flex; flex-direction: column; }
-    .tg-bubble.mine { background: var(--bubble-mine); color: white; border-radius: 18px 18px 4px 18px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25); }
-    .tg-bubble.theirs { background: var(--bubble-theirs); color: var(--text-main); border-radius: 18px 18px 18px 4px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .tg-bubble.mine { background: var(--chat-bubble-mine); color: white; border-radius: 18px 18px 4px 18px; box-shadow: 0 4px 15px rgba(0,0,0, 0.15); }
+    .tg-bubble.theirs { background: var(--chat-bubble-theirs); color: var(--chat-text-main); border-radius: 18px 18px 18px 4px; border: 1px solid var(--chat-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
     .tg-meta { font-size: 10.5px; opacity: 0.7; align-self: flex-end; margin-top: 4px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
-    .tg-actions { position: absolute; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; background: var(--bg-header); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color); backdrop-filter: blur(4px); }
+    
+    .tg-actions { position: absolute; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; background: var(--chat-bg-header); padding: 4px; border-radius: 12px; border: 1px solid var(--chat-border); backdrop-filter: blur(4px); }
     .tg-bubble-wrap:hover .tg-actions { opacity: 1; }
     .tg-bubble-wrap.mine .tg-actions { right: calc(100% + 8px); }
     .tg-bubble-wrap.theirs .tg-actions { left: calc(100% + 8px); }
-    .tg-action-btn { width: 28px; height: 28px; border-radius: 50%; background: transparent; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-    .tg-action-btn:hover { background: var(--icon-hover); color: #ef4444; }
-    .tg-input-area { padding: 12px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: flex-end; }
-    .tg-input { flex: 1; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 12px 16px; color: var(--text-main); font-size: 14.5px; outline: none; transition: 0.2s; min-height: 44px; font-family: inherit; }
-    .tg-input:focus { border-color: #3b82f6; background: var(--hover-bg); }
-    .tg-send-btn { width: 44px; height: 44px; border-radius: 50%; background: #3b82f6; border: none; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: transform 0.2s, background 0.2s; flex-shrink: 0; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
-    .tg-send-btn:hover { background: #2563eb; transform: scale(1.05); }
+    .tg-action-btn { width: 28px; height: 28px; border-radius: 50%; background: transparent; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--chat-text-muted); transition: 0.2s; }
+    .tg-action-btn:hover { background: var(--chat-icon-hover); color: #ef4444; }
+    
+    .tg-input-area { padding: 12px 16px; background: var(--chat-bg-main); border-top: 1px solid var(--chat-border); display: flex; gap: 10px; align-items: flex-end; }
+    .tg-input { flex: 1; background: var(--chat-input-bg); border: 1px solid var(--chat-border); border-radius: 20px; padding: 12px 16px; color: var(--chat-text-main); font-size: 14.5px; outline: none; transition: 0.2s; min-height: 44px; font-family: inherit; }
+    .tg-input:focus { border-color: #667eea; background: var(--chat-hover-bg); }
+    
+    .tg-send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: none; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: transform 0.2s, background 0.2s; flex-shrink: 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+    .tg-send-btn:hover { transform: scale(1.05); }
     .tg-send-btn:active { transform: scale(0.95); }
-    .tg-send-btn:disabled { background: var(--text-muted); color: var(--bg-main); cursor: not-allowed; box-shadow: none; transform: none; }
+    .tg-send-btn:disabled { background: var(--chat-text-muted); color: var(--chat-bg-main); cursor: not-allowed; box-shadow: none; transform: none; opacity: 0.5; }
+    
     .tg-badge { background: #3b82f6; color: white; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 12px; min-width: 20px; text-align: center; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4); }
     `;
 
@@ -134,52 +143,53 @@
         const [activeChat, setActiveChat] = useState(null);
         const [messages, setMessages] = useState([]);
         const [msgText, setMsgText] = useState('');
-        const [autoTheme, setAutoTheme] = useState('');
+        const [isDarkTheme, setIsDarkTheme] = useState(false);
         const messagesEndRef = useRef(null);
 
-        // 1. АВТОМАТИЧЕСКИЙ ПЕРЕХВАТ ТЕМЫ
+        // 1. АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ТЕМЫ С <body>
         useEffect(() => {
-            const updateTheme = () => {
-                const isLight = document.body.classList.contains('light') || 
-                                document.documentElement.classList.contains('light') ||
-                                document.documentElement.getAttribute('data-theme') === 'light';
-                setAutoTheme(isLight ? 'light' : '');
-            };
-            updateTheme();
-            const observer = new MutationObserver(updateTheme);
+            const checkTheme = () => setIsDarkTheme(document.body.classList.contains('dark'));
+            checkTheme(); // При первой загрузке
+            
+            // Наблюдатель за переключением класса dark на теге body
+            const observer = new MutationObserver(checkTheme);
             observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+            
             return () => observer.disconnect();
         }, []);
 
-        // 2. ЗАГРУЗКА КОНТАКТОВ
+        // 2. ЗАГРУЗКА СПИСКА КОНТАКТОВ
         useEffect(() => {
             if(!window.db) return;
-            const unsub = window.db.collection('users').onSnapshot(async snap => {
+            const unsub = window.db.collection('users').onSnapshot(snap => {
                 const usersList = snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid);
                 
-                const usersWithCounts = await Promise.all(usersList.map(async (u) => {
-                    const chatId = [user.uid, u.uid].sort().join('_');
-                    const msgsSnap = await window.db.collection('private_chats').doc(chatId).collection('messages')
-                        .where('senderId', '==', u.uid)
-                        .where('read', '==', false)
-                        .get();
-                    return { ...u, unreadCount: msgsSnap.size };
-                }));
-                
-                setChatUsers(usersWithCounts);
+                // Инициализируем пользователей с unreadCount = 0
+                setChatUsers(usersList.map(u => ({ ...u, unreadCount: 0 })));
             });
             return () => unsub();
         }, [user]);
 
-        // 3. ОТКРЫТИЕ ЧАТА (СБРОС БЕЙДЖА)
-        const handleOpenChat = (u) => {
-            setActiveChat(u);
-            // Моментально убираем уведомление локально
-            setChatUsers(prev => prev.map(usr => usr.uid === u.uid ? { ...usr, unreadCount: 0 } : usr));
-        };
+        // 3. РЕАЛТАЙМ-ПРОСЛУШКА НЕПРОЧИТАННЫХ СООБЩЕНИЙ ДЛЯ БЕЙДЖЕЙ
+        useEffect(() => {
+            if (!window.db || chatUsers.length === 0) return;
+            
+            // Ставим слушатель на каждого пользователя, чтобы цифра "2" мгновенно исчезала
+            const unsubs = chatUsers.map(u => {
+                const chatId = [user.uid, u.uid].sort().join('_');
+                return window.db.collection('private_chats').doc(chatId).collection('messages')
+                    .where('senderId', '==', u.uid)
+                    .where('read', '==', false)
+                    .onSnapshot(snap => {
+                        setChatUsers(prev => prev.map(p => p.uid === u.uid ? { ...p, unreadCount: snap.size } : p));
+                    });
+            });
+            
+            return () => unsubs.forEach(fn => fn());
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [chatUsers.length, user.uid]);
 
-        // 4. ЗАГРУЗКА СООБЩЕНИЙ И АВТО-ПРОЧТЕНИЕ
+        // 4. ЗАГРУЗКА СООБЩЕНИЙ АКТИВНОГО ЧАТА + АВТО-ПРОЧТЕНИЕ
         useEffect(() => {
             if(!activeChat || !window.db) return;
             const chatId = [user.uid, activeChat.uid].sort().join('_');
@@ -190,7 +200,7 @@
                     setMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
                     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 150);
 
-                    // Если чат открыт и есть непрочитанные сообщения от собеседника - СРАЗУ помечаем их
+                    // СРАЗУ помечаем все новые сообщения от собеседника как прочитанные (read: true)
                     const unreadDocs = snap.docs.filter(doc => doc.data().senderId === activeChat.uid && doc.data().read === false);
                     if (unreadDocs.length > 0) {
                         const batch = window.db.batch();
@@ -212,7 +222,7 @@
                 createdAt: new Date().toISOString(),
                 deletedFor: [],
                 deletedForEveryone: false,
-                read: false
+                read: false // По умолчанию сообщение не прочитано
             });
         };
 
@@ -237,18 +247,19 @@
                 animate={{ x: 0, opacity: 1 }} 
                 exit={{ x: '100%', opacity: 0.5 }} 
                 transition={{ type: 'spring', damping: 30, stiffness: 250 }} 
-                className={`tg-chat-container ${autoTheme}`} // Здесь применяется авто-тема
+                // Класс dark добавляется только если на сайте включена темная тема
+                className={`tg-chat-container ${isDarkTheme ? 'dark' : ''}`}
             >
                 {/* ШАПКА */}
                 <div className="tg-header">
                     <AnimatePresence mode="wait">
                         {!activeChat ? (
                             <motion.div key="header-contacts" initial={{opacity:0, x:-10}} animate={{opacity:1, x:0}} exit={{opacity:0, x:-10}} style={{display: 'flex', alignItems: 'center', width: '100%', gap: '12px'}}>
-                                <div style={{width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'}}>
+                                <div style={{width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'}}>
                                     <SvgIcon name="chat" size={18} />
                                 </div>
                                 <div style={{flex: 1}}>
-                                    <h3 style={{margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)'}}>Контакты</h3>
+                                    <h3 style={{margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--chat-text-main)'}}>Контакты</h3>
                                     <div style={{fontSize: '12px', color: '#10b981', fontWeight: 600}}>В сети</div>
                                 </div>
                                 <button className="tg-icon-btn" onClick={onClose} title="Закрыть">
@@ -264,10 +275,10 @@
                                     {getInitials(activeChat.nickname || activeChat.email)}
                                 </div>
                                 <div style={{flex: 1, minWidth: 0}}>
-                                    <h3 style={{margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                                    <h3 style={{margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--chat-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                                         {activeChat.nickname || activeChat.email}
                                     </h3>
-                                    <div style={{fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600}}>
+                                    <div style={{fontSize: '12px', color: 'var(--chat-text-muted)', fontWeight: 600}}>
                                         {activeChat.role === 'admin' ? 'Преподаватель' : 'Студент'}
                                     </div>
                                 </div>
@@ -282,19 +293,18 @@
                         {!activeChat ? (
                             <motion.div key="view-contacts" initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} transition={{duration:0.2}} style={{position:'absolute', inset:0, overflowY:'auto'}}>
                                 {chatUsers.length === 0 ? (
-                                    <div style={{textAlign:'center', color:'var(--text-muted)', marginTop: 40, fontSize: 14, fontWeight: 600}}>Нет других пользователей</div>
+                                    <div style={{textAlign:'center', color:'var(--chat-text-muted)', marginTop: 40, fontSize: 14, fontWeight: 600}}>Нет других пользователей</div>
                                 ) : (
                                     <div style={{padding: '8px 0'}}>
                                         {chatUsers.map((u, i) => (
-                                            // ВЫЗЫВАЕМ handleOpenChat ВМЕСТО setActiveChat
-                                            <motion.div key={u.uid} initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} transition={{delay: i * 0.04}} className="tg-contact-item" onClick={() => handleOpenChat(u)}>
+                                            <motion.div key={u.uid} initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} transition={{delay: i * 0.04}} className="tg-contact-item" onClick={() => setActiveChat(u)}>
                                                 <div className="tg-avatar" style={{background: getAvatarGrad(u.uid)}}>
                                                     {getInitials(u.nickname || u.email)}
                                                 </div>
                                                 <div style={{flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                                     <div>
-                                                        <div style={{fontWeight: 800, color: 'var(--text-main)', fontSize: 15, marginBottom: 2}}>{u.nickname || u.email}</div>
-                                                        <div style={{fontSize: 13, color: 'var(--text-muted)', fontWeight: 600}}>Написать сообщение...</div>
+                                                        <div style={{fontWeight: 800, color: 'var(--chat-text-main)', fontSize: 15, marginBottom: 2}}>{u.nickname || u.email}</div>
+                                                        <div style={{fontSize: 13, color: 'var(--chat-text-muted)', fontWeight: 600}}>Написать сообщение...</div>
                                                     </div>
                                                     
                                                     {/* ИКОНКА УВЕДОМЛЕНИЙ */}
@@ -326,7 +336,7 @@
                                                             <SvgIcon 
                                                                 name={m.read ? "doubleCheck" : "check"} 
                                                                 size={14} 
-                                                                style={{ marginLeft: 4, color: m.read ? '#60a5fa' : 'currentColor' }} 
+                                                                style={{ marginLeft: 4, color: m.read ? '#a78bfa' : 'currentColor' }} 
                                                             />
                                                         )}
                                                     </div>
