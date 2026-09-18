@@ -1522,29 +1522,24 @@ function ProgressCard({ t, progress, userInfo }) {
 
             {/* Дашборд показателей с интерактивным наведением */}
             <div className="et-stats-grid">
-                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>     <Icon.Bolt style={{color:'var(--accent-purple)'}} /> {progress.xp} </div>
-                    <div className="et-stat-lbl">{t.totalXp}</div>
-                </motion.div>
-                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val">🎯 {progress.completedLessons}</div>
+                  <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Icon.Target style={{color:'#22d3ee'}}/> {progress.completedLessons}</div>
                     <div className="et-stat-lbl">{t.solvedTasks}</div>
                 </motion.div>
                 <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val">
+                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
                         {progress.streak > 0 ? (
                             <motion.span 
-                                style={{ display: 'inline-block' }}
+                                style={{ display: 'flex' }}
                                 animate={{ scale: [1, 1.2, 1] }} 
                                 transition={{ duration: 1.5, repeat: Infinity }}
                             >
-                                🔥
+                                <Icon.Flame style={{color:'#f97316'}}/>
                             </motion.span>
-                        ) : "🔥"} {progress.streak || 0}
+                        ) : <Icon.Flame style={{color:'var(--text-sec)'}}/>} {progress.streak || 0}
                     </div>
                     <div className="et-stat-lbl">{t.streak}</div>
                 </motion.div>
-            </div>
 
             {/* Прогресс-бар с анимацией заполнения */}
             <div className="et-progress-row">
@@ -2168,9 +2163,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                 {/* ПОДСКАЗКИ */}
                                 {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
-                                        {hintLevel >= 1 && <div>💡 {t.hintLevel1}</div>}
-                                        {hintLevel >= 2 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
-                                        {hintLevel >= 3 && <div style={{ marginTop: 6 }}>💡 {t.hintLevel3} <code>{hintStep3}</code></div>}
+                                        {hintLevel >= 1 && <div style={{display:'flex',alignItems:'center',gap:8}}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel1}</div>}
+                                        {hintLevel >= 2 && <div style={{ marginTop: 6, display:'flex',alignItems:'center',gap:8 }}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
+                                        {hintLevel >= 3 && <div style={{ marginTop: 6, display:'flex',alignItems:'center',gap:8 }}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel3} <code>{hintStep3}</code></div>}
                                         <div className="et-hint-actions">
                                             {hintLevel < 3 && <button className="et-hint-link" onClick={handleHintClick}>{t.hintOf} {hintLevel + 1}/3</button>}
                                             {hintLevel === 3 && (
@@ -2212,8 +2207,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                 <div className="et-actions">
                                     {!showSuccess ? (
                                         <>
-                                            <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
-                                                🔄 {t.btnAnother}
+                                          <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
+                                                <Icon.Refresh className="et-icon-rotate-hover"/> {t.btnAnother}
                                             </button>
 
                                             <AnimatePresence>
@@ -2228,7 +2223,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                                         onClick={handleHintClick}
                                                         disabled={hintLevel >= 3}
                                                     >
-                                                        👀 {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
+                                                   <Icon.Eye className="et-icon-bounce"/> {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
                                                     </motion.button>
                                                 )}
                                             </AnimatePresence>
@@ -2240,8 +2235,8 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     ) : (
                                         <>
                                             {/* Кнопка следующей задачи */}
-                                            <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
-                                                🔄 {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
+                                             <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
+                                                <Icon.Refresh className="et-icon-rotate-hover"/> {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
                                             </button>
 
                                             {/* Кнопка "Следующая функция" появляется ТОЛЬКО когда навык освоен (>= 2 решенных задач) */}
