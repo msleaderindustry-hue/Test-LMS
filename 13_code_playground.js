@@ -257,11 +257,12 @@ const CodePlayground = ({ onBack }) => {
     }, [code]);
 
     useEffect(() => {
-        const onMessage = (e) => {
-            if (e.data && e.data.__cqError) {
-                setRuntimeError(e.data.message || 'Что-то пошло не так');
-            }
-        };
+       const onMessage = (e) => {
+    if (e.data && e.data.__cqError) {
+        const msg = e.data.message;
+        setRuntimeError(typeof msg === 'string' ? msg : 'Что-то пошло не так');
+    }
+};
         window.addEventListener('message', onMessage);
         return () => window.removeEventListener('message', onMessage);
     }, []);
@@ -403,8 +404,9 @@ const CodePlayground = ({ onBack }) => {
             if (data.error) throw new Error(data.error.message);
             if (!data.candidates || data.candidates.length === 0) throw new Error("Нет ответа от ИИ");
 
-            const answer = data.candidates[0].content.parts[0].text;
-            setAiResponse(answer);
+           const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+const answer = typeof raw === 'string' ? raw : 'Не получилось разобрать ответ 🤔';
+setAiResponse(answer);
 
         } catch (error) {
             console.error("Ошибка ИИ:", error);
