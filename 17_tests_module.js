@@ -369,6 +369,8 @@
         // --- СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
         const [shakeTime, setShakeTime] = useState(false);
         const [shakeQ, setShakeQ] = useState(false);
+        const [bumpTime, setBumpTime] = useState(false);
+        const [bumpQ, setBumpQ] = useState(false);
         const [isStarting, setIsStarting] = useState(false);
 
         // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
@@ -487,25 +489,27 @@
         };
 
         const updateTime = (delta) => {
-            let val = parseInt(customTime) || 20;
-            val += delta;
-            if (val < 5 || val > 180) {
-                setShakeTime(true); setTimeout(() => setShakeTime(false), 400);
-                return;
-            }
-            setCustomTime(val.toString());
-        };
+    let val = parseInt(customTime) || 20;
+    val += delta;
+    if (val < 5 || val > 180) {
+        setShakeTime(true); setTimeout(() => setShakeTime(false), 400);
+        return;
+    }
+    setCustomTime(val.toString());
+    setBumpTime(true); setTimeout(() => setBumpTime(false), 220);
+};
 
-        const updateQCount = (delta) => {
-            let val = parseInt(customQCount) || tests.length;
-            val += delta;
-            const maxQ = Math.min(25, tests.length);
-            if (val < 1 || val > maxQ) {
-                setShakeQ(true); setTimeout(() => setShakeQ(false), 400);
-                return;
-            }
-            setCustomQCount(val.toString());
-        };
+       const updateQCount = (delta) => {
+    let val = parseInt(customQCount) || tests.length;
+    val += delta;
+    const maxQ = Math.min(25, tests.length);
+    if (val < 1 || val > maxQ) {
+        setShakeQ(true); setTimeout(() => setShakeQ(false), 400);
+        return;
+    }
+    setCustomQCount(val.toString());
+    setBumpQ(true); setTimeout(() => setBumpQ(false), 220);
+};
 
         const handleCancelSetup = () => {
             setCustomTime('20');
@@ -940,7 +944,7 @@
                     </div>
                     <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeTime ? 'shake' : ''}`}>
                         <button onClick={() => updateTime(-5)}>−</button>
-                        <input type="number" className="val" value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} />
+                        <input type="number" className={`val ${bumpTime ? 'bump' : ''}`} value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} />
                         <button onClick={() => updateTime(5)}>+</button>
                     </motion.div>
                 </div>
@@ -954,7 +958,7 @@
                     </div>
                     <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeQ ? 'shake' : ''}`}>
                         <button onClick={() => updateQCount(-1)}>−</button>
-                        <input type="number" className="val" value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} />
+                        <input type="number" className={`val ${bumpQ ? 'bump' : ''}`} value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} />
                         <button onClick={() => updateQCount(1)}>+</button>
                     </motion.div>
                 </div>
