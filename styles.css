@@ -777,7 +777,7 @@ input:focus { outline: none; border-color: #C850C0 !important; }
   position: absolute;
   left: 9px; right: 9px;
   border-radius: 18px;
-  transition: background .4s ease, box-shadow .4s ease;
+  transition: background .4s ease, box-shadow .4s ease, transform .4s cubic-bezier(.34,1.2,.64,1);
 }
 .tlms-layered-wrap::before{
   top: 0; height: 100%;
@@ -799,6 +799,9 @@ body.dark .tlms-layered-wrap::after{
   background: linear-gradient(135deg, #6d5dfb, #ff6ec7);
   box-shadow: 0 8px 18px rgba(150,80,255,.12);
 }
+/* при наведении на карточку слои веером раскрываются — тот самый "живой" эффект */
+.tlms-layered-wrap:hover::before{ transform: rotate(-3.6deg) translateY(-2px); }
+.tlms-layered-wrap:hover::after{ transform: rotate(2.4deg); }
 
 .tlms-layered-card{
   position: relative;
@@ -808,11 +811,13 @@ body.dark .tlms-layered-wrap::after{
   box-shadow: 0 14px 30px rgba(90,60,200,0.14);
   padding: 78px 24px 26px;
   overflow: visible;
+  transition: transform .35s cubic-bezier(.34,1.2,.64,1), box-shadow .35s ease, background .4s ease;
 }
 body.dark .tlms-layered-card{
   background: #1b1830;
   box-shadow: 0 18px 40px rgba(0,0,0,.28), 0 0 26px rgba(150,80,255,.10);
 }
+.tlms-layered-wrap:hover .tlms-layered-card{ transform: translateY(-3px); }
 
 .tlms-layered-title{
   text-align: center;
@@ -825,10 +830,12 @@ body.dark .tlms-layered-title{ color: #e5defc; }
 .tlms-layered-divider{
   height: 4px;
   width: 44px;
-  background: #8a6ef2;
+  background: linear-gradient(90deg, #8a6ef2, #ec4899);
   border-radius: 2px;
   margin: 0 auto 22px;
+  transition: width .3s ease;
 }
+.tlms-layered-wrap:hover .tlms-layered-divider{ width: 64px; }
 
 /* --- Кнопка "назад": невидима, появляется при наведении на карточку --- */
 .tlms-back-btn{
@@ -861,6 +868,7 @@ body.dark .tlms-layered-title{ color: #e5defc; }
   pointer-events: auto;
 }
 .tlms-back-btn:active{ transform: scale(.92); }
+.tlms-back-btn:hover{ transform: scale(1.08); }
 .tlms-back-btn svg{ width: 16px; height: 16px; overflow: visible; }
 
 .tlms-back-btn polyline{
