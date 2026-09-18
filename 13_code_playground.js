@@ -1,6 +1,16 @@
 const { useState, useEffect, useRef } = React;
-const { motion, AnimatePresence } = window.Motion;
-const { Button } = window;
+
+/* =====================================================================
+   ИСПРАВЛЕНИЕ ОШИБКИ #130 (Безопасная инициализация Framer Motion)
+   ===================================================================== */
+const framerLib = window.Motion || window.framerMotion || window.FramerMotion;
+const isValidFramer = framerLib && typeof framerLib.motion !== 'undefined' && typeof framerLib.AnimatePresence !== 'undefined';
+
+const motion = isValidFramer ? framerLib.motion : {
+    div: React.forwardRef(({ initial, animate, exit, transition, ...props }, ref) => <div ref={ref} {...props} />)
+};
+const AnimatePresence = isValidFramer ? framerLib.AnimatePresence : ({ children }) => <>{children}</>;
+const { Button } = window; // Оставил, так как было в оригинале
 
 /* =====================================================================
    ПОДСВЕТКА СИНТАКСИСА
@@ -191,7 +201,7 @@ const EditorPane = ({ lang, value, isActive, onChange, onKeyDown, onScroll, onCu
    ===================================================================== */
 
 const CodePlayground = ({ onBack }) => {
-    const [mode, setMode] = useState('code'); // 'code' | 'preview' — только ОДИН режим виден целиком
+    const [mode, setMode] = useState('code'); // 'code' | 'preview'
     const [activeTab, setActiveTab] = useState('html');
     const [code, setCode] = useState({ ...DEFAULT_CODE });
     const [srcDoc, setSrcDoc] = useState('');
@@ -207,8 +217,6 @@ const CodePlayground = ({ onBack }) => {
     const gutterRefs = useRef({});
     const previewIframeRef = useRef(null);
 
-    // Маленький скрипт-«страховка»: ловит ошибки в коде ребёнка и вежливо
-    // сообщает о них родительскому окну, вместо того чтобы падать молча.
     const ERROR_CATCHER = `
         <script>
             window.addEventListener('error', function (e) {
@@ -242,14 +250,12 @@ const CodePlayground = ({ onBack }) => {
         return () => clearTimeout(timeout);
     }, [code]);
 
-    // Тихий пульс «✓ сохранено», отдельно от компиляции превью
     useEffect(() => {
         setJustSaved(true);
         const t = setTimeout(() => setJustSaved(false), 900);
         return () => clearTimeout(t);
     }, [code]);
 
-    // Слушаем сообщения об ошибках из превью-iframe
     useEffect(() => {
         const onMessage = (e) => {
             if (e.data && e.data.__cqError) {
@@ -461,7 +467,6 @@ const CodePlayground = ({ onBack }) => {
                 .cq-ask-btn{ transition: transform .15s ease, box-shadow .15s ease; }
                 .cq-ask-btn:not(:disabled):hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(139,92,246,0.5) !important; }
                 
-                /* Исправлено переопределение цвета на кнопке "Назад" при наведении в светлой теме */
                 .cq-back-btn:hover{ background: var(--cq-bg-soft) !important; color: var(--cq-text-hi) !important; }
                 
                 .cq-close-btn:hover{ background: rgba(139,92,246,0.2); }
@@ -472,9 +477,6 @@ const CodePlayground = ({ onBack }) => {
                 .cq-dot:nth-child(2){ animation-delay:.15s; }
                 .cq-dot:nth-child(3){ animation-delay:.3s; }
 
-                /* =========================================================
-                   ПЕРЕОПРЕДЕЛЕНИЕ ПЕРЕМЕННЫХ ДЛЯ СВЕТЛОЙ ТЕМЫ (!important) 
-                   ========================================================= */
                 body.light .glass-panel {
                     --cq-bg-deep: #f8fafc !important;
                     --cq-bg-panel: #ffffff !important;
@@ -555,7 +557,7 @@ const CodePlayground = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* ==================== ГЛАВНАЯ СЦЕНА (один режим на весь экран) ==================== */}
+            {/* ==================== ГЛАВНАЯ СЦЕНА ==================== */}
             <div style={{ position: 'relative', height: '64vh', minHeight: '480px' }}>
                 <AnimatePresence mode="wait">
                     {mode === 'code' ? (
@@ -567,7 +569,6 @@ const CodePlayground = ({ onBack }) => {
                             transition={{ duration: 0.2 }}
                             style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--cq-bg-deep)', borderRadius: '22px', overflow: 'hidden', border: '1px solid var(--cq-border)', boxShadow: '0 25px 55px rgba(0,0,0,0.5)' }}
                         >
-                            {/* Полноширинный сегмент-переключатель файлов */}
                             <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--cq-border)' }}>
                                 {LANGS.map((lang) => {
                                     const active = activeTab === lang;
@@ -592,7 +593,6 @@ const CodePlayground = ({ onBack }) => {
                                 })}
                             </div>
 
-                            {/* Тело редактора */}
                             <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                                 {LANGS.map((lang) => (
                                     <EditorPane
@@ -610,14 +610,12 @@ const CodePlayground = ({ onBack }) => {
                                     />
                                 ))}
 
-                                {/* Плавающая колонка действий — сбоку, а не в шапке */}
                                 <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
                                     <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}><IconPlay size={17} strokeWidth={2.4} /></button>
                                     <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}><IconRotateCcw size={17} strokeWidth={2.4} /></button>
                                     <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}><IconDownload size={17} strokeWidth={2.4} /></button>
                                 </div>
 
-                                {/* Индикатор курсора + автосохранение — тихо, снизу слева */}
                                 <div style={{ position: 'absolute', bottom: '10px', left: '58px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div style={{ fontSize: '11px', color: 'var(--cq-text-dim2)', fontWeight: 700, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}>
                                         Стр. {cursor.line}:{cursor.col}
@@ -649,7 +647,7 @@ const CodePlayground = ({ onBack }) => {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--cq-bg-panel)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
-                                    <span style={{ fontSize: '13px', color: 'var(--cq-text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
                                 </div>
                                 <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px' }}><IconRefreshCw size={14} strokeWidth={2.4} /></button>
                             </div>
@@ -666,7 +664,6 @@ const CodePlayground = ({ onBack }) => {
                                     sandbox="allow-scripts allow-modals allow-forms allow-popups"
                                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', background: '#fff' }}
                                 />
-
                                 <AnimatePresence>
                                     {runtimeError && (
                                         <motion.div
