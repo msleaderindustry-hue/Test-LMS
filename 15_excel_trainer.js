@@ -402,7 +402,20 @@ body.light .et-shell .et-langswitch,
 .et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
 .et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
 .et-cat-head-left{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-sec);}
-.et-cat-icon{font-size:13px;color:var(--accent-cyan);}
+.et-cat-icon{
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.et-cat-head:hover .et-cat-icon{
+  transform: scale(1.18) rotate(-6deg);
+}
+.et-cat-letters{
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:-1px;
+}
 .et-cat-chevron{transition:transform .2s;color:var(--text-sec);font-size:11px;}
 .et-cat-chevron.open{transform:rotate(180deg);}
 .et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
