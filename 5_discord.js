@@ -41,16 +41,17 @@ const logVisitor = async () => {
         };
         
         await fetch(DISCORD_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-});
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
     } catch (e) {
         console.error("Ошибка логгера:", e);
     }
 };
 
-
+const captureViolation = async (title, fp, extraFields = []) => {
+    const isPlanned = title.includes("Плановая");
     let payload = {
         username: "Ultimate LMS Security", avatar_url: "https://i.imgur.com/4M34hi2.png",
         embeds: [{
@@ -59,17 +60,15 @@ const logVisitor = async () => {
             footer: { text: "Monitoring Active" }, timestamp: new Date().toISOString()
         }]
     };
-
     try {
-    await fetch(DISCORD_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-} catch(e) {}
+        await fetch(DISCORD_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch(e) {}
 };
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ РЕЗУЛЬТАТОВ ТЕСТА В DISCORD
 const sendTestResultToDiscord = async (scoreData, failedQuestions, userEmail, fp) => {
     try {
         let embedFields = [
@@ -102,17 +101,16 @@ const sendTestResultToDiscord = async (scoreData, failedQuestions, userEmail, fp
             }]
         };
 
-       await fetch(DISCORD_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-});
+        await fetch(DISCORD_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
     } catch (e) {
         console.error("Ошибка при отправке результата в Discord:", e);
     }
 };
 
-// Экспортируем все функции наружу
 Object.assign(window, { 
     DISCORD_WEBHOOK, sendToDiscord, logVisitor, captureViolation, sendTestResultToDiscord 
 });
