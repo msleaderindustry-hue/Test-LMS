@@ -1521,8 +1521,12 @@ function ProgressCard({ t, progress, userInfo }) {
             </div>
 
             {/* Дашборд показателей с интерактивным наведением */}
-            <div className="et-stats-grid">
-                  <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                        <div className="et-stats-grid">
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
+                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Icon.Bolt style={{color:'var(--accent-purple)'}}/> {progress.xp}</div>
+                    <div className="et-stat-lbl">{t.totalXp}</div>
+                </motion.div>
+                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
                     <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Icon.Target style={{color:'#22d3ee'}}/> {progress.completedLessons}</div>
                     <div className="et-stat-lbl">{t.solvedTasks}</div>
                 </motion.div>
@@ -1540,6 +1544,7 @@ function ProgressCard({ t, progress, userInfo }) {
                     </div>
                     <div className="et-stat-lbl">{t.streak}</div>
                 </motion.div>
+            </div>
 
             {/* Прогресс-бар с анимацией заполнения */}
             <div className="et-progress-row">
