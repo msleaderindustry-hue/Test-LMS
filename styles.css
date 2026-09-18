@@ -1009,7 +1009,7 @@ body.light .et-shell .et-toast,
   position: absolute;
   left: 9px; right: 9px;
   border-radius: 22px;
-  transition: background .4s ease, box-shadow .4s ease;
+  transition: background .4s ease, box-shadow .4s ease, transform .4s cubic-bezier(.34,1.2,.64,1);
 }
 .tlms-timer-wrap::before{
   top: 0; height: 100%;
@@ -1031,16 +1031,20 @@ body.dark .tlms-timer-wrap::after{
   background: linear-gradient(135deg, #6d5dfb, #ff6ec7);
   box-shadow: 0 8px 18px rgba(150,80,255,.12);
 }
+.tlms-timer-wrap:hover::before{ transform: rotate(-3.6deg) translateY(-2px); }
+.tlms-timer-wrap:hover::after{ transform: rotate(2.4deg); }
 
 .tlms-timer-card{
   position: relative;
   z-index: 2;
   background: var(--glass-bg);
   border-radius: 22px;
-  box-shadow: 0 20px 45px rgba(90,50,180,0.18);
+  box-shadow: 0 20px 45px rgba(90,50,180,0.14);
   padding: 30px 26px;
+  transition: transform .35s cubic-bezier(.34,1.2,.64,1), box-shadow .35s ease;
 }
 body.dark .tlms-timer-card{ box-shadow: 0 18px 40px rgba(0,0,0,.28), 0 0 26px rgba(150,80,255,.10); }
+.tlms-timer-wrap:hover .tlms-timer-card{ transform: translateY(-3px); }
 
 .tlms-timer-head{
   display: flex;
@@ -1109,18 +1113,28 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
   width: 70px; outline: none; font-family: inherit;
   appearance: textfield;
 }
-
+.tlms-timer-stepper .val.bump{ animation: valBump .22s ease; }
+@keyframes valBump{
+  0%{ transform: scale(1); }
+  40%{ transform: scale(1.18); color: #a855f7; }
+  100%{ transform: scale(1); }
+}
 .tlms-timer-primary{
   width: 100%; border: none; border-radius: 16px; padding: 17px;
   font-weight: 800; font-size: 15px; color: #fff; cursor: pointer;
   background: linear-gradient(135deg, #6d7cf7, #a855f7, #e879c8);
+  background-size: 160% 160%;
   box-shadow: 0 10px 24px rgba(140,80,220,0.4);
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin-bottom: 10px;
-  transition: transform .15s ease, box-shadow .15s ease;
+  transition: transform .18s ease, box-shadow .18s ease, background-position .5s ease;
   height: auto;
 }
-.tlms-timer-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(140,80,220,0.5); }
+.tlms-timer-primary:hover{
+  transform: translateY(-2px);
+  background-position: 100% 0;
+  box-shadow: 0 16px 34px rgba(150,80,220,.5);
+}
 .tlms-timer-primary:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
 
 .tlms-timer-secondary{
@@ -1135,3 +1149,9 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
 }
 .tlms-timer-secondary:hover{ background: rgba(140,120,180,0.08); color: #5c48b0; }
 .tlms-timer-secondary:disabled{ opacity: .6; cursor: not-allowed; }
+
+.tlms-btn2{
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+}
+.tlms-btn2:hover{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(140,90,230,.22); }
+.tlms-btn2:active{ transform: translateY(0) scale(.97); }
