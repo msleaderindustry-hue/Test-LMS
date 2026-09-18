@@ -1341,7 +1341,6 @@ const Icon = {
         </svg>
     ),
 };
-};
 
 function renderHighlightedFormula(lineText) {
     if (!lineText) return null;
