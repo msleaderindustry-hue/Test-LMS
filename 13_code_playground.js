@@ -83,9 +83,9 @@ const DEFAULT_CODE = {
 
 const LANGS = ['html', 'css', 'js'];
 const LANG_META = {
-    html: { file: 'index.html', short: 'HTML', accent: '#fb923c', icon: '</>' },
-    css: { file: 'style.css', short: 'CSS', accent: '#38bdf8', icon: '#' },
-    js: { file: 'script.js', short: 'JS', accent: '#fbbf24', icon: 'JS' }
+    html: { file: 'index.html', short: 'HTML', accent: '#fb923c', CQIcon: '</>' },
+    css: { file: 'style.css', short: 'CSS', accent: '#38bdf8', CQIcon: '#' },
+    js: { file: 'script.js', short: 'JS', accent: '#fbbf24', CQIcon: 'JS' }
 };
 
 const PAIR_MAP = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
@@ -95,7 +95,7 @@ const CLOSERS = [')', '}', ']', '"', "'"];
    ИКОНКИ (вместо эмодзи — чистые line-иконки, наследуют currentColor)
    ===================================================================== */
 
-const Icon = ({ size = 18, strokeWidth = 2, children, style, ...props }) => (
+const CQIcon = ({ size = 18, strokeWidth = 2, children, style, ...props }) => (
     <svg
         width={size} height={size} viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
@@ -106,21 +106,21 @@ const Icon = ({ size = 18, strokeWidth = 2, children, style, ...props }) => (
     </svg>
 );
 
-const IconRocket = (p) => (<Icon {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></Icon>);
-const IconWrench = (p) => (<Icon {...p}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z" /></Icon>);
-const IconSparkles = (p) => (<Icon {...p}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.288 1.287L3 12l5.8 1.9a2 2 0 0 1 1.287 1.288L12 21l1.9-5.8a2 2 0 0 1 1.288-1.287L21 12l-5.8-1.9a2 2 0 0 1-1.287-1.288Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></Icon>);
-const IconFolder = (p) => (<Icon {...p}><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></Icon>);
-const IconPlay = (p) => (<Icon {...p}><polygon points="6 3 20 12 6 21 6 3" /></Icon>);
-const IconRotateCcw = (p) => (<Icon {...p}><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8" /><path d="M3 3v5h5" /></Icon>);
-const IconDownload = (p) => (<Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></Icon>);
-const IconRefreshCw = (p) => (<Icon {...p}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 21v-5h5" /></Icon>);
-const IconLock = (p) => (<Icon {...p}><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></Icon>);
-const IconAlertTriangle = (p) => (<Icon {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></Icon>);
-const IconBot = (p) => (<Icon {...p}><path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" /></Icon>);
-const IconLightbulb = (p) => (<Icon {...p}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></Icon>);
-const IconX = (p) => (<Icon {...p}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></Icon>);
-const IconArrowLeft = (p) => (<Icon {...p}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></Icon>);
-const IconCheck = (p) => (<Icon {...p}><path d="M20 6 9 17l-5-5" /></Icon>);
+const CQIconRocket = (p) => (<CQIcon {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></CQIcon>);
+const CQIconWrench = (p) => (<CQIcon {...p}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z" /></CQIcon>);
+const CQIconSparkles = (p) => (<CQIcon {...p}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.288 1.287L3 12l5.8 1.9a2 2 0 0 1 1.287 1.288L12 21l1.9-5.8a2 2 0 0 1 1.288-1.287L21 12l-5.8-1.9a2 2 0 0 1-1.287-1.288Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></CQIcon>);
+const CQIconFolder = (p) => (<CQIcon {...p}><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></CQIcon>);
+const CQIconPlay = (p) => (<CQIcon {...p}><polygon points="6 3 20 12 6 21 6 3" /></CQIcon>);
+const CQIconRotateCcw = (p) => (<CQIcon {...p}><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8" /><path d="M3 3v5h5" /></CQIcon>);
+const CQIconDownload = (p) => (<CQIcon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></CQIcon>);
+const CQIconRefreshCw = (p) => (<CQIcon {...p}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 21v-5h5" /></CQIcon>);
+const CQIconLock = (p) => (<CQIcon {...p}><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></CQIcon>);
+const CQIconAlertTriangle = (p) => (<CQIcon {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></CQIcon>);
+const CQIconBot = (p) => (<CQIcon {...p}><path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" /></CQIcon>);
+const CQIconLightbulb = (p) => (<CQIcon {...p}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></CQIcon>);
+const CQIconX = (p) => (<CQIcon {...p}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></CQIcon>);
+const CQIconArrowLeft = (p) => (<CQIcon {...p}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></CQIcon>);
+const CQIconCheck = (p) => (<CQIcon {...p}><path d="M20 6 9 17l-5-5" /></CQIcon>);
 
 const TOKENS = {
     '--cq-bg-deep': '#120f22',
@@ -511,15 +511,15 @@ setAiResponse(answer);
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     {onBack && (
                         <button className="cq-back-btn" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--cq-border)', borderRadius: '10px', padding: '7px 13px', color: 'var(--cq-text-dim)', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-                            <IconArrowLeft size={14} strokeWidth={2.5} /> Назад
+                            <CQIconArrowLeft size={14} strokeWidth={2.5} /> Назад
                         </button>
                     )}
                     <div style={{ width: '38px', height: '38px', borderRadius: '12px', flexShrink: 0, background: 'linear-gradient(135deg, var(--cq-violet), var(--cq-sky))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(139,92,246,0.4)' }}>
-                        <IconRocket size={19} strokeWidth={2.2} style={{ color: '#fff' }} />
+                        <CQIconRocket size={19} strokeWidth={2.2} style={{ color: '#fff' }} />
                     </div>
                     <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--cq-text-hi)', fontFamily: "'Unbounded', sans-serif", letterSpacing: '-0.01em' }}>VS School</h2>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--cq-bg-soft)', color: 'var(--cq-text-dim)', padding: '5px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, border: '1px solid var(--cq-border)' }}>
-                        <IconFolder size={13} /> Мой первый сайт
+                        <CQIconFolder size={13} /> Мой первый сайт
                     </span>
                 </div>
 
@@ -536,7 +536,7 @@ setAiResponse(answer);
                         boxShadow: isAsking ? 'none' : '0 8px 20px rgba(139,92,246,0.4)'
                     }}
                 >
-                    {isAsking ? (<>Думаю над кодом <ThinkingDots /></>) : (<><IconSparkles size={16} /> Спросить наставника</>)}
+                    {isAsking ? (<>Думаю над кодом <ThinkingDots /></>) : (<><CQIconSparkles size={16} /> Спросить наставника</>)}
                 </button>
             </div>
 
@@ -551,10 +551,10 @@ setAiResponse(answer);
                         boxShadow: '0 6px 16px rgba(139,92,246,0.4)'
                     }} />
                     <button onClick={goCode} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'code' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
-                        <IconWrench size={15} /> Пишу код
+                        <CQIconWrench size={15} /> Пишу код
                     </button>
                     <button onClick={goPreview} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', border: 'none', background: 'transparent', padding: '10px 26px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '13.5px', color: mode === 'preview' ? '#fff' : 'var(--cq-text-dim)', whiteSpace: 'nowrap' }}>
-                        <IconRocket size={15} /> Смотрю сайт
+                        <CQIconRocket size={15} /> Смотрю сайт
                     </button>
                 </div>
             </div>
@@ -588,7 +588,7 @@ setAiResponse(answer);
                                                 fontWeight: 800, fontSize: '13.5px'
                                             }}
                                         >
-                                            <span style={{ fontFamily: "'Cascadia Code', monospace", color: LANG_META[lang].accent }}>{LANG_META[lang].icon}</span>
+                                            <span style={{ fontFamily: "'Cascadia Code', monospace", color: LANG_META[lang].accent }}>{LANG_META[lang].CQIcon}</span>
                                             {LANG_META[lang].short}
                                         </button>
                                     );
@@ -613,9 +613,9 @@ setAiResponse(answer);
                                 ))}
 
                                 <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 2 }}>
-                                    <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}><IconPlay size={17} strokeWidth={2.4} /></button>
-                                    <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}><IconRotateCcw size={17} strokeWidth={2.4} /></button>
-                                    <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}><IconDownload size={17} strokeWidth={2.4} /></button>
+                                    <button className="cq-fab" onClick={runNow} title="Запустить" style={fabStyle(TOKENS['--cq-mint'])}><CQIconPlay size={17} strokeWidth={2.4} /></button>
+                                    <button className="cq-fab" onClick={resetCurrent} title="Сбросить файл" style={fabStyle(TOKENS['--cq-rose'])}><CQIconRotateCcw size={17} strokeWidth={2.4} /></button>
+                                    <button className="cq-fab" onClick={downloadSite} title="Скачать сайт" style={fabStyle(TOKENS['--cq-sky'])}><CQIconDownload size={17} strokeWidth={2.4} /></button>
                                 </div>
 
                                 <div style={{ position: 'absolute', bottom: '10px', left: '58px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -630,7 +630,7 @@ setAiResponse(answer);
                                                 exit={{ opacity: 0, y: 4 }}
                                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--cq-mint)', fontWeight: 800, background: 'var(--cq-bg-soft)', padding: '3px 9px', borderRadius: '999px' }}
                                             >
-                                                <IconCheck size={11} strokeWidth={3} /> сохранено
+                                                <CQIconCheck size={11} strokeWidth={3} /> сохранено
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
@@ -651,11 +651,11 @@ setAiResponse(answer);
                                     <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--cq-mint)', boxShadow: '0 0 8px var(--cq-mint)' }} />
                                     <span style={{ fontSize: '13px', color: 'var(--text-hi)', fontWeight: 800 }}>Твой сайт готов!</span>
                                 </div>
-                                <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px' }}><IconRefreshCw size={14} strokeWidth={2.4} /></button>
+                                <button className="cq-fab" onClick={runNow} title="Обновить" style={{ ...fabStyle(TOKENS['--cq-sky']), width: '32px', height: '32px' }}><CQIconRefreshCw size={14} strokeWidth={2.4} /></button>
                             </div>
                             <div style={{ padding: '8px 16px', background: '#f5f3fb', borderBottom: '1px solid #e7e2f5', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#ffffff', border: '1px solid #e2ddef', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', color: '#6b6488', fontWeight: 700 }}>
-                                    <IconLock size={12} strokeWidth={2.3} /> мой-сайт.детский-код
+                                    <CQIconLock size={12} strokeWidth={2.3} /> мой-сайт.детский-код
                                 </div>
                             </div>
                             <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
@@ -680,12 +680,12 @@ setAiResponse(answer);
                                                 boxShadow: '0 12px 26px rgba(159,18,57,0.18)'
                                             }}
                                         >
-                                            <IconAlertTriangle size={18} style={{ marginTop: '1px' }} />
+                                            <CQIconAlertTriangle size={18} style={{ marginTop: '1px' }} />
                                             <div style={{ flex: 1 }}>
                                                 <div>Ой, в скрипте есть ошибка!</div>
                                                 <div style={{ fontWeight: 500, fontSize: '12.5px', marginTop: '3px', color: '#be123c', fontFamily: "'Cascadia Code', monospace" }}>{runtimeError}</div>
                                             </div>
-                                            <button onClick={() => setRuntimeError(null)} style={{ background: 'transparent', border: 'none', color: '#9f1239', cursor: 'pointer', display: 'flex' }}><IconX size={15} strokeWidth={2.4} /></button>
+                                            <button onClick={() => setRuntimeError(null)} style={{ background: 'transparent', border: 'none', color: '#9f1239', cursor: 'pointer', display: 'flex' }}><CQIconX size={15} strokeWidth={2.4} /></button>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -711,11 +711,11 @@ setAiResponse(answer);
                                 background: 'linear-gradient(135deg, var(--cq-violet), var(--cq-pink))',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 boxShadow: '0 0 0 3px rgba(139,92,246,0.2)'
-                            }}><IconBot size={19} strokeWidth={2.2} style={{ color: '#fff' }} /></div>
+                            }}><CQIconBot size={19} strokeWidth={2.2} style={{ color: '#fff' }} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
                                     <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--cq-text-hi)' }}>Наставник ИИ</span>
-                                    <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', padding: '5px', borderRadius: '7px', display: 'flex' }}><IconX size={15} /></button>
+                                    <button className="cq-close-btn" onClick={() => setAiResponse(null)} style={{ background: 'transparent', border: 'none', color: 'var(--cq-text-dim)', cursor: 'pointer', padding: '5px', borderRadius: '7px', display: 'flex' }}><CQIconX size={15} /></button>
                                 </div>
                                 <div style={{ background: 'var(--cq-bg-deep)', border: '1px solid var(--cq-border)', borderRadius: '14px', borderTopLeftRadius: '4px', padding: '14px 16px', lineHeight: '1.65', fontSize: '14.5px', whiteSpace: 'pre-wrap', color: 'var(--cq-text-hi)' }}>
                                     {aiResponse}
@@ -728,7 +728,7 @@ setAiResponse(answer);
 
             <div style={{ textAlign: 'center' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: 'var(--cq-text-dim)', background: 'var(--cq-bg-panel)', border: '1px solid var(--cq-border)', padding: '6px 16px', borderRadius: '999px' }}>
-                    <IconLightbulb size={14} /> Нажимай <b style={{ color: 'var(--cq-text-hi)' }}>Tab</b> для отступа — скобки и кавычки закрываются сами
+                    <CQIconLightbulb size={14} /> Нажимай <b style={{ color: 'var(--cq-text-hi)' }}>Tab</b> для отступа — скобки и кавычки закрываются сами
                 </span>
             </div>
         </motion.div>
