@@ -40,17 +40,17 @@ const logVisitor = async () => {
             }]
         };
         
-        let formData = new FormData(); 
-        formData.append('payload_json', JSON.stringify(payload));
-        await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+        await fetch(DISCORD_WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+});
     } catch (e) {
         console.error("Ошибка логгера:", e);
     }
 };
 
-const captureViolation = async (title, fp, extraFields = []) => {
-    let formData = new FormData();
-    const isPlanned = title.includes("Плановая");
+
     let payload = {
         username: "Ultimate LMS Security", avatar_url: "https://i.imgur.com/4M34hi2.png",
         embeds: [{
@@ -60,8 +60,13 @@ const captureViolation = async (title, fp, extraFields = []) => {
         }]
     };
 
-    formData.append('payload_json', JSON.stringify(payload));
-    try { await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData }); } catch(e) {}
+    try {
+    await fetch(DISCORD_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+} catch(e) {}
 };
 
 // НОВАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ РЕЗУЛЬТАТОВ ТЕСТА В DISCORD
@@ -97,9 +102,11 @@ const sendTestResultToDiscord = async (scoreData, failedQuestions, userEmail, fp
             }]
         };
 
-        let formData = new FormData(); 
-        formData.append('payload_json', JSON.stringify(payload));
-        await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+       await fetch(DISCORD_WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+});
     } catch (e) {
         console.error("Ошибка при отправке результата в Discord:", e);
     }
