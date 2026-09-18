@@ -978,3 +978,134 @@ body.light .et-shell .et-toast,
     max-width: none;
   }
 }
+/* --- Слоистая карточка экрана "Параметры теста" --- */
+.tlms-timer-wrap{
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding-top: 12px;
+}
+.tlms-timer-wrap::before,
+.tlms-timer-wrap::after{
+  content: '';
+  position: absolute;
+  left: 8px; right: 8px;
+  border-radius: 22px;
+}
+.tlms-timer-wrap::before{
+  top: 0; height: 100%;
+  background: #c9bdfa;
+  transform: rotate(-2deg);
+}
+.tlms-timer-wrap::after{
+  top: 4px; height: 100%;
+  background: #e8b8e0;
+  transform: rotate(1.2deg);
+}
+body.dark .tlms-timer-wrap::before{ background: #4a3d8c; }
+body.dark .tlms-timer-wrap::after{ background: #5c3a54; }
+
+.tlms-timer-card{
+  position: relative;
+  z-index: 2;
+  background: var(--glass-bg);
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(90,50,180,0.18);
+  padding: 30px 26px;
+}
+body.dark .tlms-timer-card{ box-shadow: 0 20px 45px rgba(0,0,0,0.4); }
+
+.tlms-timer-head{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+.tlms-timer-head-icon{
+  width: 42px; height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #a855f7, #d946ef);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(168,85,247,0.4);
+  flex-shrink: 0;
+}
+.tlms-timer-head-icon svg{ width: 20px; height: 20px; }
+.tlms-timer-head h2{
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.tlms-timer-field{ margin-bottom: 20px; }
+.tlms-timer-field-label{
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--text-sec);
+  margin-bottom: 10px;
+}
+.tlms-timer-field-label .lbl-ic{
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; flex-shrink: 0;
+}
+.tlms-timer-field-label .lbl-ic svg{ width: 12px; height: 12px; }
+
+.tlms-timer-stepper{
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.18);
+  border-radius: 14px;
+  padding: 8px 16px;
+}
+body.dark .tlms-timer-stepper{ background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.25); }
+.tlms-timer-stepper.shake{ animation: tlmsTimerShake .4s ease; border-color: #ef4444 !important; }
+@keyframes tlmsTimerShake{ 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-5px); } 75%{ transform: translateX(5px); } }
+
+.tlms-timer-stepper button{
+  width: 34px; height: 34px;
+  border-radius: 10px; border: none; cursor: pointer;
+  background: var(--glass-bg);
+  color: #7c3aed;
+  font-size: 18px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(124,58,237,0.15);
+  transition: transform .15s ease, background .15s ease;
+}
+.tlms-timer-stepper button:hover{ background: #f3ecff; transform: scale(1.08); }
+body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
+.tlms-timer-stepper .val{
+  font-size: 22px; font-weight: 800;
+  color: var(--text-main);
+  background: transparent; border: none; text-align: center;
+  width: 70px; outline: none; font-family: inherit;
+  appearance: textfield;
+}
+
+.tlms-timer-primary{
+  width: 100%; border: none; border-radius: 16px; padding: 17px;
+  font-weight: 800; font-size: 15px; color: #fff; cursor: pointer;
+  background: linear-gradient(135deg, #6d7cf7, #a855f7, #e879c8);
+  box-shadow: 0 10px 24px rgba(140,80,220,0.4);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 10px;
+  transition: transform .15s ease, box-shadow .15s ease;
+  height: auto;
+}
+.tlms-timer-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(140,80,220,0.5); }
+.tlms-timer-primary:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
+
+.tlms-timer-secondary{
+  width: 100%;
+  border: 1.5px solid rgba(140,120,180,0.25);
+  background: transparent;
+  border-radius: 16px; padding: 16px;
+  font-weight: 700; font-size: 14px;
+  color: var(--text-sec); cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+  height: auto;
+}
+.tlms-timer-secondary:hover{ background: rgba(140,120,180,0.08); color: #5c48b0; }
+.tlms-timer-secondary:disabled{ opacity: .6; cursor: not-allowed; }
