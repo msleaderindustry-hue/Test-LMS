@@ -1595,7 +1595,14 @@ function ToastStack({ toasts }) {
         <div className="et-toast-wrap">
             <AnimatePresence>
                 {toasts.map((tItem) => (
-                    <motion.div key={tItem.id} className="et-toast" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}>
+                    <motion.div
+                        key={tItem.id}
+                        className="et-toast"
+                        initial={{ opacity: 0, x: 60, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 40, scale: 0.9, transition: { duration: 0.2 } }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    >
                         {tItem.text}
                     </motion.div>
                 ))}
