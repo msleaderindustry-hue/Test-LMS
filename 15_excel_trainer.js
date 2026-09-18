@@ -1647,7 +1647,7 @@ function SyntaxBlock({ syntax, t, onCopy, copied }) {
                         <span className="et-terminal-dot et-dot-green" />
                     </div>
                     <div className="et-syntax-title-wrap">
-                        <span className="et-box-label">⚡ {t.syntaxTitle}</span>
+                        <span className="et-box-label"><Icon.Bolt style={{color:'#f59e0b'}}/> {t.syntaxTitle}</span>
                         <span className="et-syntax-badge">Formula</span>
                     </div>
                 </div>
@@ -1656,7 +1656,7 @@ function SyntaxBlock({ syntax, t, onCopy, copied }) {
                     onClick={onCopy}
                     title={t.copy}
                 >
-                    <span>{copied ? "✓" : "📋"}</span>
+                    <span style={{display:'flex'}}>{copied ? <Icon.Check style={{color:'var(--accent-green)'}}/> : <Icon.Copy/>}</span>
                     <span>{copied ? t.copied : t.copy}</span>
                 </button>
             </div>
@@ -2111,13 +2111,13 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                     </div>
                                     <div className="et-badges">
                                         <DifficultyBadge difficulty={difficulty} t={t} />
-                                        <span className="et-badge et-badge-xp">⚡ {xpForLesson} {t.xp}</span>
-                                        <span className="et-badge et-badge-theory">📘 {t.theory}</span>
+                                        <span className="et-badge et-badge-xp"><Icon.Bolt style={{color:'#c4b5fd'}}/> {xpForLesson} {t.xp}</span>
+                                        <span className="et-badge et-badge-theory"><Icon.Book style={{color:'var(--accent-green)'}}/> {t.theory}</span>
                                     </div>
                                 </div>
 
                                 <div className="et-def-box">
-                                    <div className="et-box-label">📖 {t.defTitle}</div>
+                                    <div className="et-box-label"><Icon.Book style={{color:'var(--accent-green)'}}/> {t.defTitle}</div>
                                     <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
                                 </div>
 
@@ -2133,9 +2133,9 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                             {/* ПРАКТИКА */}
                             <div className="et-practice-card">
                                 <div className="et-practice-top">
-                                    <div className="et-practice-title">🎯 {t.practice}</div>
-                                    {!hintsEnabled && (
-                                        <span className="et-badge et-badge-diff-hard">🔒 {t.btnExam}</span>
+                                    <div className="et-practice-title"><Icon.Target style={{color:'var(--accent-green)'}}/> {t.practice}</div>
+                                  {!hintsEnabled && (
+                                        <span className="et-badge et-badge-diff-hard"><Icon.Lock/> {t.btnExam}</span>
                                     )}
                                 </div>
 
@@ -2153,13 +2153,12 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                         onKeyDown={(e) => e.key === 'Enter' && !showSuccess && checkAnswer()}
                                     />
                                 </div>
-                                {answerStatus === "wrong" && !showSuccess && (
-                                    <div className="et-formula-status bad">⚠ {t.formulaBad}</div>
+                                  {answerStatus === "wrong" && !showSuccess && (
+                                    <div className="et-formula-status bad"><Icon.Warning width="14" height="14"/> {t.formulaBad}</div>
                                 )}
                                 {showSuccess && (
-                                    <div className="et-formula-status ok">✓ {t.formulaOk}</div>
+                                    <div className="et-formula-status ok"><Icon.Check/> {t.formulaOk}</div>
                                 )}
-
                                 {/* ПОДСКАЗКИ */}
                                 {!showSuccess && hintsEnabled && hintLevel > 0 && (
                                     <div className="et-hint-box">
@@ -2181,21 +2180,21 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
                                 <AnimatePresence>
                                     {showSuccess && (
                                         <motion.div className="et-success-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                            <div style={{ flex: '1 1 100%' }}>
-                                                <h4 className="et-success-title">{t.successMsg}</h4>
+                                                   <div style={{ flex: '1 1 100%' }}>
+                                                <h4 className="et-success-title" style={{display:'flex',alignItems:'center',gap:8}}><Icon.Star className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.successMsg}</h4>
                                                 <span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span>
                                             </div>
-                                            <div className="et-success-xp">+{xpForLesson} XP ✨</div>
+                                            <div className="et-success-xp" style={{display:'flex',alignItems:'center',gap:6}}>+{xpForLesson} XP <Icon.Sparkle className="et-icon-pulse" style={{color:'#c4b5fd'}}/></div>
 
                                             {/* Индикатор освоения */}
                                             {isMastered ? (
                                                 <div className="et-mastery-banner" style={{ width: '100%' }}>
-                                                    <span>🏆 {t.masteryTitle}</span>
-                                                    <span>✓ {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
+                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Trophy style={{color:'#fbbf24'}}/> {t.masteryTitle}</span>
+                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Check style={{color:'var(--accent-green)'}}/> {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
                                                 </div>
                                             ) : (
                                                 <div className="et-mastery-banner" style={{ width: '100%', borderColor: 'rgba(251, 191, 36, 0.35)', color: '#fbbf24' }}>
-                                                    <span>🎯 {t.streakStatus}</span>
+                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Target style={{color:'#fbbf24'}}/> {t.streakStatus}</span>
                                                     <span>{masteryCount} из {REQUIRED_MASTERY_STREAK} задач</span>
                                                 </div>
                                             )}
