@@ -593,7 +593,7 @@ body.light .et-shell .et-progress-card,
 .et-fn-en{color:var(--text-sec);font-size:14px;font-weight:600;}
 .et-fn-en b{color:var(--accent-green);font-weight:800;}
 .et-badges{display:flex;gap:8px;flex-wrap:wrap;}
-.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
 .et-badge-theory{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-easy{background:rgba(34,230,138,.12);color:var(--accent-green);}
 .et-badge-diff-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
