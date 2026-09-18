@@ -919,12 +919,13 @@ button:hover .tlms-icon-home{
 
 /* --- Toast-уведомления --- */
 .et-toast-wrap{
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 99999;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 14px;
+  z-index: 9999;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 10px;
   pointer-events: none;
   max-width: 320px;
@@ -974,7 +975,6 @@ body.light .et-shell .et-toast,
   .et-toast-wrap{
     left: 12px;
     right: 12px;
-    top: 12px;
     max-width: none;
   }
 }
