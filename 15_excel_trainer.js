@@ -57,17 +57,17 @@ const EXCEL_DATABASE = {
 };
 
 const CATEGORY_ICONS_SVG = {
-    "Математические": Icon.Bolt,
-    "Динамические массивы": Icon.Bolt,
-    "Поиск и ссылки": Icon.Search,
-    "Логические": Icon.Gear,
-    "Текстовые": null, // оставляем "Aa" текстом — это не эмодзи, а буквы
-    "Дата и время": Icon.Clock,
-    "Статистические": Icon.Chart,
-    "Финансовые": Icon.Coin,
-    "Базы данных": Icon.Database,
-    "Информационные": Icon.Info,
-    "Инженерные": Icon.Gear,
+    "Математические":       { iconName: "Bolt",     color: "#f59e0b" },
+    "Динамические массивы": { iconName: "Layers",   color: "#22d3ee" },
+    "Поиск и ссылки":       { iconName: "Search",   color: "#3b82f6" },
+    "Логические":           { iconName: "Toggle",   color: "#10b981" },
+    "Текстовые":            { iconName: null,       color: "#ec4899" },
+    "Дата и время":         { iconName: "Clock",    color: "#14b8a6" },
+    "Статистические":       { iconName: "Chart",    color: "#6366f1" },
+    "Финансовые":           { iconName: "Coin",     color: "#eab308" },
+    "Базы данных":          { iconName: "Database", color: "#64748b" },
+    "Информационные":       { iconName: "Info",     color: "#0ea5e9" },
+    "Инженерные":           { iconName: "Wrench",   color: "#f97316" },
 };
 
 const DIFFICULTY_MAP = {
@@ -1304,11 +1304,30 @@ const Icon = {
             <circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>
         </svg>
     ),
-    Gear: (p) => (
+        Gear: (p) => (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
             <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.77 1.05 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
     ),
+    Layers: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+        </svg>
+    ),
+    Toggle: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <rect x="1" y="7" width="22" height="10" rx="5"/>
+            <circle cx="16" cy="12" r="3" fill="currentColor" stroke="none"/>
+        </svg>
+    ),
+    Wrench: (p) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" {...p}>
+            <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L2 19l3 3 7.1-7.1a4 4 0 0 0 5.6-5.6l-2.5 2.5-2-2 2.5-2.5z"/>
+        </svg>
+    ),
+};
 };
 
 function renderHighlightedFormula(lineText) {
@@ -1412,9 +1431,11 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
                     <div className="et-cat" key={category}>
                         <div className="et-cat-head" onClick={() => toggleCat(category)}>
                             <div className="et-cat-head-left">
-                                <span className="et-cat-icon">
-    {CATEGORY_ICONS_SVG[category] ? React.createElement(CATEGORY_ICONS_SVG[category]) : "Aa"}
-</span>
+                            <span className="et-cat-icon" style={{ color: CATEGORY_ICONS_SVG[category]?.color }}>
+                                  {CATEGORY_ICONS_SVG[category]?.iconName
+                                      ? React.createElement(Icon[CATEGORY_ICONS_SVG[category].iconName])
+                                      : <span className="et-cat-letters">Aa</span>}
+                              </span>
                                 {category}
                             </div>
                             <span className={`et-cat-chevron ${isOpen ? "open" : ""}`}>▾</span>
