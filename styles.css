@@ -792,11 +792,11 @@ input:focus { outline: none; border-color: #C850C0 !important; }
   transform: rotate(1.4deg);
 }
 body.dark .tlms-layered-wrap::before{
-  background: linear-gradient(135deg, #232a42, #1a2036);
+  background: linear-gradient(135deg, #363c5e, #4a3763);
   box-shadow: 0 8px 18px rgba(150,80,255,.12);
 }
 body.dark .tlms-layered-wrap::after{
-  background: linear-gradient(135deg, #171c2c, #0e1119);
+  background: linear-gradient(135deg, #2c3155, #402d54);
   box-shadow: 0 8px 18px rgba(150,80,255,.12);
 }
 /* при наведении на карточку слои веером раскрываются — тот самый "живой" эффект */
@@ -814,7 +814,7 @@ body.dark .tlms-layered-wrap::after{
   transition: transform .35s cubic-bezier(.34,1.2,.64,1), box-shadow .35s ease, background .4s ease;
 }
 body.dark .tlms-layered-card{
-  background: #151A29;
+  background: linear-gradient(160deg, #1c2338 0%, #151A29 55%, #0f1220 100%);
   box-shadow: 0 18px 40px rgba(0,0,0,.28), 0 0 26px rgba(150,80,255,.10);
 }
 .tlms-layered-wrap:hover .tlms-layered-card{ transform: translateY(-3px); }
