@@ -145,7 +145,99 @@
         const [msgText, setMsgText] = useState('');
         const [isDarkTheme, setIsDarkTheme] = useState(false);
         const messagesEndRef = useRef(null);
+    // --- РАБОТА С ДАТОЙ СООБЩЕНИЙ ---
 
+    const getMessageDate = (message) => {
+        if (!message) return null;
+
+        const value = message.createdAt;
+
+        // Новые сообщения: Firestore Timestamp
+        if (value && typeof value.toDate === 'function') {
+            return value.toDate();
+        }
+
+        // На случай обычного объекта Timestamp
+        if (value && typeof value.seconds === 'number') {
+            return new Date(
+                value.seconds * 1000 +
+                Math.floor((value.nanoseconds || 0) / 1000000)
+            );
+        }
+
+        // Старые сообщения: ISO-строка
+        if (typeof value === 'string') {
+            const date = new Date(value);
+
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        // Если Firebase ещё не успел вернуть serverTimestamp
+        if (message.clientCreatedAt) {
+            return new Date(message.clientCreatedAt);
+        }
+
+        return null;
+    };
+
+
+    const getMessageTime = (message) => {
+        const date = getMessageDate(message);
+        return date ? date.getTime() : 0;
+    };
+
+
+    const isSameDay = (date1, date2) => {
+        if (!date1 || !date2) return false;
+
+        return (
+            date1.getFullYear() === date2.getFullYear() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate()
+        );
+    };
+
+
+    const formatChatDate = (date) => {
+        if (!date) return '';
+
+        const today = new Date();
+
+        const yesterday = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() - 1
+        );
+
+        if (isSameDay(date, today)) {
+            return 'Сегодня';
+        }
+
+        if (isSameDay(date, yesterday)) {
+            return 'Вчера';
+        }
+
+        return date.toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year:
+                date.getFullYear() !== today.getFullYear()
+                    ? 'numeric'
+                    : undefined
+        });
+    };
+
+
+    const formatMessageTime = (date) => {
+        if (!date) return '';
+
+        return date.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
         // 1. АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ТЕМЫ С <body>
         useEffect(() => {
             const checkTheme = () => setIsDarkTheme(document.body.classList.contains('dark'));
@@ -190,41 +282,77 @@
         }, [chatUsers.length, user.uid]);
 
         // 4. ЗАГРУЗКА СООБЩЕНИЙ АКТИВНОГО ЧАТА + АВТО-ПРОЧТЕНИЕ
-        useEffect(() => {
-            if(!activeChat || !window.db) return;
-            const chatId = [user.uid, activeChat.uid].sort().join('_');
-            
-            const unsub = window.db.collection('private_chats').doc(chatId).collection('messages')
-                .orderBy('createdAt', 'asc')
-                .onSnapshot(snap => {
-                    setMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
-                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 150);
+           useEffect(() => {
+        if (!activeChat || !window.db) return;
 
-                    // СРАЗУ помечаем все новые сообщения от собеседника как прочитанные (read: true)
-                    const unreadDocs = snap.docs.filter(doc => doc.data().senderId === activeChat.uid && doc.data().read === false);
-                    if (unreadDocs.length > 0) {
-                        const batch = window.db.batch();
-                        unreadDocs.forEach(doc => batch.update(doc.ref, { read: true }));
-                        batch.commit();
-                    }
-                });
-            return () => unsub();
-        }, [activeChat, user]);
+        const chatId = [user.uid, activeChat.uid]
+            .sort()
+            .join('_');
 
-        const sendMessage = async () => {
-            if(!msgText.trim()) return;
-            const text = msgText.trim();
-            setMsgText('');
-            const chatId = [user.uid, activeChat.uid].sort().join('_');
-            await window.db.collection('private_chats').doc(chatId).collection('messages').add({
-                text: text,
-                senderId: user.uid,
-                createdAt: new Date().toISOString(),
-                deletedFor: [],
-                deletedForEveryone: false,
-                read: false // По умолчанию сообщение не прочитано
+        const unsub = window.db
+            .collection('private_chats')
+            .doc(chatId)
+            .collection('messages')
+            .orderBy('createdAt', 'asc')
+            .onSnapshot(snap => {
+
+                const loadedMessages = snap.docs
+                    .map(d => ({
+                        id: d.id,
+                        ...d.data()
+                    }))
+                    .sort((a, b) => {
+
+                        const timeA = getMessageTime(a);
+                        const timeB = getMessageTime(b);
+
+                        // Главное:
+                        // более старое сообщение всегда выше,
+                        // более новое всегда ниже.
+                        if (timeA !== timeB) {
+                            return timeA - timeB;
+                        }
+
+                        // Если время вдруг полностью совпало
+                        return a.id.localeCompare(b.id);
+                    });
+
+                setMessages(loadedMessages);
+
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }, 100);
             });
-        };
+
+        return () => unsub();
+
+    }, [activeChat, user]);
+
+       const sendMessage = async () => {
+    if(!msgText.trim()) return;
+
+    const text = msgText.trim();
+    setMsgText('');
+
+    const chatId = [user.uid, activeChat.uid].sort().join('_');
+
+    await window.db
+        .collection('private_chats')
+        .doc(chatId)
+        .collection('messages')
+        .add({
+            text: text,
+            senderId: user.uid,
+
+            createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+
+            deletedFor: [],
+            deletedForEveryone: false,
+            read: false
+        });
+};
 
         const delForMe = async (msgId) => {
             const chatId = [user.uid, activeChat.uid].sort().join('_');
