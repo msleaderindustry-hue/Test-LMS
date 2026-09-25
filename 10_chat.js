@@ -54,7 +54,7 @@
         --chat-text-muted: #718096;
         --chat-bg-inner: #f0f2f5;
         --chat-bubble-theirs: #ffffff;
-        --chat-bubble-mine: linear-gradient(135deg, #667eea, #764ba2); /* Под твой primary-grad */
+        --chat-bubble-mine: linear-gradient(135deg, #667eea, #764ba2);
         --chat-border: rgba(0,0,0,0.08);
         --chat-input-bg: #f1f5f9;
         --chat-hover-bg: rgba(0,0,0,0.04);
@@ -68,7 +68,6 @@
         font-family: 'Montserrat', sans-serif;
     }
     
-    /* ТЕМНАЯ ТЕМА (Включается, когда у компонента есть класс dark) */
     .tg-chat-container.dark {
         --chat-bg-main: #0f172a;
         --chat-bg-header: rgba(15, 23, 42, 0.85);
@@ -123,6 +122,8 @@
     .tg-send-btn:disabled { background: var(--chat-text-muted); color: var(--chat-bg-main); cursor: not-allowed; box-shadow: none; transform: none; opacity: 0.5; }
     
     .tg-badge { background: #3b82f6; color: white; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 12px; min-width: 20px; text-align: center; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4); }
+
+    .tg-date-divider { align-self: center; background: var(--chat-bg-header); color: var(--chat-text-muted); font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 12px; margin: 10px 0; backdrop-filter: blur(4px); }
     `;
 
     const useInjectStyles = () => {
@@ -145,128 +146,48 @@
         const [msgText, setMsgText] = useState('');
         const [isDarkTheme, setIsDarkTheme] = useState(false);
         const messagesEndRef = useRef(null);
-    // --- РАБОТА С ДАТОЙ СООБЩЕНИЙ ---
 
-    const getMessageDate = (message) => {
-        if (!message) return null;
+        // === НОВОЕ: хелперы для дат ===
+        const getMsgDate = (createdAt) => {
+            if (!createdAt) return new Date();
+            if (createdAt.toDate) return createdAt.toDate(); // Firestore Timestamp
+            return new Date(createdAt); // старые сообщения (строка)
+        };
 
-        const value = message.createdAt;
+        const isSameDay = (a, b) =>
+            a.getFullYear() === b.getFullYear() &&
+            a.getMonth() === b.getMonth() &&
+            a.getDate() === b.getDate();
 
-        // Новые сообщения: Firestore Timestamp
-        if (value && typeof value.toDate === 'function') {
-            return value.toDate();
-        }
+        const formatDateLabel = (date) => {
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            if (isSameDay(date, today)) return 'Сегодня';
+            if (isSameDay(date, yesterday)) return 'Вчера';
+            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+        };
+        // === КОНЕЦ НОВОГО ===
 
-        // На случай обычного объекта Timestamp
-        if (value && typeof value.seconds === 'number') {
-            return new Date(
-                value.seconds * 1000 +
-                Math.floor((value.nanoseconds || 0) / 1000000)
-            );
-        }
-
-        // Старые сообщения: ISO-строка
-        if (typeof value === 'string') {
-            const date = new Date(value);
-
-            if (!isNaN(date.getTime())) {
-                return date;
-            }
-        }
-
-        // Если Firebase ещё не успел вернуть serverTimestamp
-        if (message.clientCreatedAt) {
-            return new Date(message.clientCreatedAt);
-        }
-
-        return null;
-    };
-
-
-    const getMessageTime = (message) => {
-        const date = getMessageDate(message);
-        return date ? date.getTime() : 0;
-    };
-
-
-    const isSameDay = (date1, date2) => {
-        if (!date1 || !date2) return false;
-
-        return (
-            date1.getFullYear() === date2.getFullYear() &&
-            date1.getMonth() === date2.getMonth() &&
-            date1.getDate() === date2.getDate()
-        );
-    };
-
-
-    const formatChatDate = (date) => {
-        if (!date) return '';
-
-        const today = new Date();
-
-        const yesterday = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate() - 1
-        );
-
-        if (isSameDay(date, today)) {
-            return 'Сегодня';
-        }
-
-        if (isSameDay(date, yesterday)) {
-            return 'Вчера';
-        }
-
-        return date.toLocaleDateString('ru-RU', {
-            day: 'numeric',
-            month: 'long',
-            year:
-                date.getFullYear() !== today.getFullYear()
-                    ? 'numeric'
-                    : undefined
-        });
-    };
-
-
-    const formatMessageTime = (date) => {
-        if (!date) return '';
-
-        return date.toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-        // 1. АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ТЕМЫ С <body>
         useEffect(() => {
             const checkTheme = () => setIsDarkTheme(document.body.classList.contains('dark'));
-            checkTheme(); // При первой загрузке
-            
-            // Наблюдатель за переключением класса dark на теге body
+            checkTheme();
             const observer = new MutationObserver(checkTheme);
             observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-            
             return () => observer.disconnect();
         }, []);
 
-        // 2. ЗАГРУЗКА СПИСКА КОНТАКТОВ
         useEffect(() => {
             if(!window.db) return;
             const unsub = window.db.collection('users').onSnapshot(snap => {
                 const usersList = snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid);
-                
-                // Инициализируем пользователей с unreadCount = 0
                 setChatUsers(usersList.map(u => ({ ...u, unreadCount: 0 })));
             });
             return () => unsub();
         }, [user]);
 
-        // 3. РЕАЛТАЙМ-ПРОСЛУШКА НЕПРОЧИТАННЫХ СООБЩЕНИЙ ДЛЯ БЕЙДЖЕЙ
         useEffect(() => {
             if (!window.db || chatUsers.length === 0) return;
-            
-            // Ставим слушатель на каждого пользователя, чтобы цифра "2" мгновенно исчезала
             const unsubs = chatUsers.map(u => {
                 const chatId = [user.uid, u.uid].sort().join('_');
                 return window.db.collection('private_chats').doc(chatId).collection('messages')
@@ -276,83 +197,44 @@
                         setChatUsers(prev => prev.map(p => p.uid === u.uid ? { ...p, unreadCount: snap.size } : p));
                     });
             });
-            
             return () => unsubs.forEach(fn => fn());
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [chatUsers.length, user.uid]);
 
-        // 4. ЗАГРУЗКА СООБЩЕНИЙ АКТИВНОГО ЧАТА + АВТО-ПРОЧТЕНИЕ
-           useEffect(() => {
-        if (!activeChat || !window.db) return;
+        useEffect(() => {
+            if(!activeChat || !window.db) return;
+            const chatId = [user.uid, activeChat.uid].sort().join('_');
+            
+            const unsub = window.db.collection('private_chats').doc(chatId).collection('messages')
+                .orderBy('createdAt', 'asc')
+                .onSnapshot(snap => {
+                    setMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
+                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 150);
 
-        const chatId = [user.uid, activeChat.uid]
-            .sort()
-            .join('_');
+                    const unreadDocs = snap.docs.filter(doc => doc.data().senderId === activeChat.uid && doc.data().read === false);
+                    if (unreadDocs.length > 0) {
+                        const batch = window.db.batch();
+                        unreadDocs.forEach(doc => batch.update(doc.ref, { read: true }));
+                        batch.commit();
+                    }
+                });
+            return () => unsub();
+        }, [activeChat, user]);
 
-        const unsub = window.db
-            .collection('private_chats')
-            .doc(chatId)
-            .collection('messages')
-            .orderBy('createdAt', 'asc')
-            .onSnapshot(snap => {
-
-                const loadedMessages = snap.docs
-                    .map(d => ({
-                        id: d.id,
-                        ...d.data()
-                    }))
-                    .sort((a, b) => {
-
-                        const timeA = getMessageTime(a);
-                        const timeB = getMessageTime(b);
-
-                        // Главное:
-                        // более старое сообщение всегда выше,
-                        // более новое всегда ниже.
-                        if (timeA !== timeB) {
-                            return timeA - timeB;
-                        }
-
-                        // Если время вдруг полностью совпало
-                        return a.id.localeCompare(b.id);
-                    });
-
-                setMessages(loadedMessages);
-
-                setTimeout(() => {
-                    messagesEndRef.current?.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }, 100);
+        const sendMessage = async () => {
+            if(!msgText.trim()) return;
+            const text = msgText.trim();
+            setMsgText('');
+            const chatId = [user.uid, activeChat.uid].sort().join('_');
+            await window.db.collection('private_chats').doc(chatId).collection('messages').add({
+                text: text,
+                senderId: user.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(), // ИЗМЕНЕНО: было new Date().toISOString()
+                deletedFor: [],
+                deletedForEveryone: false,
+                read: false
             });
-
-        return () => unsub();
-
-    }, [activeChat, user]);
-
-       const sendMessage = async () => {
-    if(!msgText.trim()) return;
-
-    const text = msgText.trim();
-    setMsgText('');
-
-    const chatId = [user.uid, activeChat.uid].sort().join('_');
-
-    await window.db
-        .collection('private_chats')
-        .doc(chatId)
-        .collection('messages')
-        .add({
-            text: text,
-            senderId: user.uid,
-
-            createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
-
-            deletedFor: [],
-            deletedForEveryone: false,
-            read: false
-        });
-};
+        };
 
         const delForMe = async (msgId) => {
             const chatId = [user.uid, activeChat.uid].sort().join('_');
@@ -375,10 +257,8 @@
                 animate={{ x: 0, opacity: 1 }} 
                 exit={{ x: '100%', opacity: 0.5 }} 
                 transition={{ type: 'spring', damping: 30, stiffness: 250 }} 
-                // Класс dark добавляется только если на сайте включена темная тема
                 className={`tg-chat-container ${isDarkTheme ? 'dark' : ''}`}
             >
-                {/* ШАПКА */}
                 <div className="tg-header">
                     <AnimatePresence mode="wait">
                         {!activeChat ? (
@@ -415,7 +295,6 @@
                     </AnimatePresence>
                 </div>
 
-                {/* ТЕЛО ЧАТА */}
                 <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
                     <AnimatePresence mode="wait">
                         {!activeChat ? (
@@ -434,8 +313,6 @@
                                                         <div style={{fontWeight: 800, color: 'var(--chat-text-main)', fontSize: 15, marginBottom: 2}}>{u.nickname || u.email}</div>
                                                         <div style={{fontSize: 13, color: 'var(--chat-text-muted)', fontWeight: 600}}>Написать сообщение...</div>
                                                     </div>
-                                                    
-                                                    {/* ИКОНКА УВЕДОМЛЕНИЙ */}
                                                     {u.unreadCount > 0 && (
                                                         <div className="tg-badge">
                                                             {u.unreadCount}
@@ -450,37 +327,43 @@
                         ) : (
                             <motion.div key="view-chat" initial={{opacity:0, x:50}} animate={{opacity:1, x:0}} exit={{opacity:0, x:50}} transition={{type:'spring', stiffness:300, damping:30}} style={{position:'absolute', inset:0, display:'flex', flexDirection:'column'}}>
                                 <div className="tg-chat-bg">
-                                    {messages.filter(m => !(m.deletedFor || []).includes(user.uid)).map((m, i) => {
+                                    {messages.filter(m => !(m.deletedFor || []).includes(user.uid)).map((m, i, arr) => {
                                         const isMine = m.senderId === user.uid;
+                                        const msgDate = getMsgDate(m.createdAt);
+                                        const prevDate = i > 0 ? getMsgDate(arr[i - 1].createdAt) : null;
+                                        const showDivider = !prevDate || !isSameDay(msgDate, prevDate);
+
                                         return (
-                                            <motion.div key={m.id} initial={{opacity:0, y:10, scale:0.95}} animate={{opacity:1, y:0, scale:1}} className={`tg-bubble-wrap ${isMine ? 'mine' : 'theirs'}`}>
-                                                <div className={`tg-bubble ${isMine ? 'mine' : 'theirs'}`}>
-                                                    <span>{m.text}</span>
-                                                    <div className="tg-meta">
-                                                        {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                        
-                                                        {/* ГАЛОЧКИ */}
+                                            <React.Fragment key={m.id}>
+                                                {showDivider && (
+                                                    <div className="tg-date-divider"><span>{formatDateLabel(msgDate)}</span></div>
+                                                )}
+                                                <motion.div initial={{opacity:0, y:10, scale:0.95}} animate={{opacity:1, y:0, scale:1}} className={`tg-bubble-wrap ${isMine ? 'mine' : 'theirs'}`}>
+                                                    <div className={`tg-bubble ${isMine ? 'mine' : 'theirs'}`}>
+                                                        <span>{m.text}</span>
+                                                        <div className="tg-meta">
+                                                            {msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                            {isMine && (
+                                                                <SvgIcon 
+                                                                    name={m.read ? "doubleCheck" : "check"} 
+                                                                    size={14} 
+                                                                    style={{ marginLeft: 4, color: m.read ? '#a78bfa' : 'currentColor' }} 
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="tg-actions">
+                                                        <button className="tg-action-btn" onClick={() => delForMe(m.id)} title="Удалить у себя">
+                                                            <SvgIcon name="trashMe" size={16} />
+                                                        </button>
                                                         {isMine && (
-                                                            <SvgIcon 
-                                                                name={m.read ? "doubleCheck" : "check"} 
-                                                                size={14} 
-                                                                style={{ marginLeft: 4, color: m.read ? '#a78bfa' : 'currentColor' }} 
-                                                            />
+                                                            <button className="tg-action-btn" onClick={() => delForEveryone(m.id)} title="Удалить у всех">
+                                                                <SvgIcon name="trashAll" size={16} />
+                                                            </button>
                                                         )}
                                                     </div>
-                                                </div>
-                                                
-                                                <div className="tg-actions">
-                                                    <button className="tg-action-btn" onClick={() => delForMe(m.id)} title="Удалить у себя">
-                                                        <SvgIcon name="trashMe" size={16} />
-                                                    </button>
-                                                    {isMine && (
-                                                        <button className="tg-action-btn" onClick={() => delForEveryone(m.id)} title="Удалить у всех">
-                                                            <SvgIcon name="trashAll" size={16} />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </motion.div>
+                                                </motion.div>
+                                            </React.Fragment>
                                         );
                                     })}
                                     <div ref={messagesEndRef} style={{height: 1}} />
