@@ -103,6 +103,21 @@ html.light .pt-root,body.light .pt-root,.theme-light .pt-root,[data-theme="light
 @keyframes pt-spin{to{transform:rotate(360deg)}}@keyframes pt-appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(max-width:720px){.pt-shell{padding:25px;border-radius:24px}.pt-stats{gap:32px}.pt-stat{min-width:65px}.pt-stat strong{font-size:29px}.pt-text{font-size:24px;min-height:240px;max-height:330px}.pt-header-actions .pt-btn{padding:9px 13px}.pt-key{height:40px;font-size:12px}.pt-key.special{font-size:8px}}
 @media(max-width:480px){.pt-shell{padding:22px 18px 18px;border-radius:22px}.pt-header{margin-bottom:28px;gap:16px;flex-wrap:wrap}.pt-brand h2{font-size:26px}.pt-brand p{font-size:8px;letter-spacing:1.3px}.pt-header-actions{gap:4px;width:100%}.pt-header-actions .pt-segment{margin-right:auto}.pt-header-actions .pt-btn{padding:8px 11px;font-size:10px!important}.pt-header-actions>.pt-icon-btn{padding:7px}.pt-icon-btn{padding:7px}.pt-stats{justify-content:space-between;gap:10px;margin-bottom:27px}.pt-stat{min-width:0}.pt-stat-title{font-size:8px;gap:0;white-space:nowrap;margin-bottom:4px}.pt-stat strong{font-size:25px;letter-spacing:-1px}.pt-stat.speed .pt-stat-title{margin-bottom:4px}.pt-stat small{font-size:8px;margin-left:2px}.pt-controls{margin-bottom:21px;gap:9px}.pt-segment button{padding:6px 13px;font-size:10px}.pt-mode-label{padding-left:11px;font-size:9px}.pt-ai{padding:14px}.pt-ai form{flex-wrap:wrap}.pt-topic{flex-basis:100%;font-size:16px!important}.pt-ai form .pt-btn{flex:1}.pt-practice-top{font-size:8px;letter-spacing:.3px;margin-bottom:12px}.pt-text{font-size:21px;line-height:1.85;min-height:235px;max-height:310px;letter-spacing:-.5px}.pt-practice-bottom{font-size:9px;align-items:flex-start;gap:6px}.pt-start-hint{font-size:10px!important}.pt-feedback.error{flex-wrap:wrap}.pt-pause-hint{font-size:8px}.pt-keyboard-section{margin-top:25px}.pt-keyboard{gap:4px}.pt-key-row{gap:3px}.pt-key{height:34px;font-size:10px;border-radius:5px}.pt-key.special{font-size:6px}.pt-key.space{height:30px;max-width:170px;font-size:8px}.pt-key.home:after{bottom:4px;width:4px;left:calc(50% - 2px)}.pt-results{padding:14px 0 10px}.pt-results h3{font-size:25px}.pt-results-grid{gap:6px}.pt-result-stat{padding:8px 2px}.pt-result-stat strong{font-size:30px}.pt-result-stat span{font-size:9px}.pt-bottom{font-size:8px;gap:8px;margin-top:18px;padding-top:13px}.pt-bottom .pt-formula{display:none}}
+/* Компактная компоновка: текст и клавиатура остаются рядом на экране. */
+.pt-shell{padding:22px 36px 16px}
+.pt-header{margin-bottom:14px}
+.pt-stats{margin:0 0 18px}
+.pt-practice-top{margin-bottom:10px}
+.pt-text{min-height:0;height:clamp(124px,calc(100dvh - 610px),202px);max-height:none;font-size:25px;line-height:1.55;padding:4px 3px}
+.pt-progress{margin-top:10px}
+.pt-practice-bottom{margin-top:9px;min-height:22px}
+.pt-keyboard-section{margin-top:14px}
+.pt-keyboard{gap:5px}
+.pt-key{height:clamp(32px,4.8dvh,42px);font-size:13px}
+.pt-key.space{height:29px}
+.pt-bottom{margin-top:13px;padding-top:10px}
+@media(max-width:720px){.pt-shell{padding:20px 22px 14px}.pt-stats{margin-bottom:16px}.pt-text{font-size:23px;line-height:1.6}.pt-key{font-size:11px}}
+@media(max-width:480px){.pt-shell{padding:18px 16px 13px}.pt-header{gap:12px;margin-bottom:18px}.pt-stats{margin:0 0 18px}.pt-text{height:clamp(132px,calc(100dvh - 510px),180px);min-height:0;max-height:none;font-size:21px;line-height:1.65}.pt-practice-top{margin-bottom:9px}.pt-keyboard-section{margin-top:17px}.pt-keyboard{gap:4px}.pt-key{height:31px;font-size:10px}.pt-key.space{height:27px}.pt-bottom{margin-top:12px;padding-top:9px}}
 @media(prefers-reduced-motion:reduce){.pt-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 `;
 const Button = ({ variant = '', children, ...props }) => <button type="button" className={`pt-btn ${variant}`} {...props}>{children}</button>;
@@ -293,7 +308,7 @@ function TypingTest({ onBack }) {
             const raw = Array.isArray(parts) ? parts.filter(part => !part.thought && typeof part.text === 'string').map(part => part.text).join(' ') : '';
             const text = normalizeAI(raw, lang);
             if (!alive.current || request.current !== job || job.controller.signal.aborted || current.current.lang !== lang) return;
-            request.current = null; clearTimeout(job.timer); setGenerating(false); install(text, lang, 'ai');
+            request.current = null; clearTimeout(job.timer); setGenerating(false); setShowAI(false); install(text, lang, 'ai');
         } catch (error) {
             if (!alive.current || request.current !== job) return;
             setNotice({ type: 'error', text: (job.timedOut ? 'Сервис не ответил за 45 секунд.' : error instanceof TypeError ? 'Не удалось подключиться к сервису.' : error.message) + ' Предыдущий текст сохранён.' });
