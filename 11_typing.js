@@ -108,7 +108,7 @@ html.light .pt-root,body.light .pt-root,.theme-light .pt-root,[data-theme="light
 .pt-header{margin-bottom:10px}
 .pt-stats{margin:0 0 14px}
 .pt-practice-top{margin-bottom:10px}
-.pt-text{min-height:0;height:clamp(124px,calc(100dvh - 610px),202px);max-height:none;font-size:25px;line-height:1.55;padding:4px 3px}
+.pt-text{min-height:0;height:clamp(164px,calc(100dvh - 570px),242px);max-height:none;font-size:25px;line-height:1.55;padding:4px 3px}
 .pt-progress{margin-top:10px}
 .pt-practice-bottom{margin-top:9px;min-height:22px}
 .pt-keyboard-section{margin-top:14px}
