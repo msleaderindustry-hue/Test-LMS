@@ -1,536 +1,657 @@
-// --- Статистика: StatsView и вспомогательные компоненты ---
+// Ultimate LMS · статистика v3. Только StatsView.
+// Полная замена файла статистики; модуль тестирования менять не нужно.
 (function () {
-const { useState, useEffect, useRef, useMemo } = React;
-const { motion, AnimatePresence } = window.Motion;
-const { Button } = window;
+  'use strict';
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ АВАТАРОК ---
-const AVATAR_PALETTE = [
-    ['#38bdf8', '#6366f1'], ['#f472b6', '#ec4899'], ['#34d399', '#10b981'],
-    ['#fbbf24', '#f59e0b'], ['#a78bfa', '#8b5cf6'], ['#2dd4bf', '#06b6d4'],
-    ['#fb7185', '#f43f5e'], ['#60a5fa', '#3b82f6']
-];
+  const {
+    useState,
+    useEffect,
+    useRef,
+    useMemo
+  } = React;
+  let nextId = 0;
+  const useId = React.useId || function () {
+    const ref = useRef(null);
+    if (!ref.current) ref.current = `usp-${++nextId}`;
+    return ref.current;
+  };
+  const list = value => Array.isArray(value) ? value : [];
+  const str = value => typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+  const num = (value, fallback = 0) => Number.isFinite(Number(value)) && value !== null && value !== '' ? Math.max(0, Number(value)) : fallback;
+  const score = value => value !== null && value !== undefined && str(value).trim() !== '' && Number.isFinite(Number(value)) ? Math.min(100, Math.max(0, Number(value))) : null;
+  const fmt = value => new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: 1
+  }).format(value);
+  const TABS = [{
+    id: 'tests',
+    label: 'Тесты',
+    icon: 'tests'
+  }, {
+    id: 'excel',
+    label: 'Excel',
+    icon: 'excel'
+  }, {
+    id: 'typing',
+    label: 'Печать',
+    icon: 'typing'
+  }, {
+    id: 'hotkeys',
+    label: 'Хоткеи',
+    icon: 'bolt'
+  }, {
+    id: 'leaderboard',
+    label: 'Рейтинг',
+    icon: 'cup'
+  }];
+  const ICONS = {
+    download: <><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" /></>,
+    tests: <><rect x="5" y="3" width="14" height="18" rx="3" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
+    excel: <><path d="M5 20V12M12 20V4M19 20V8" /><path d="M3 20h18" /></>,
+    typing: <><rect x="2" y="5" width="20" height="14" rx="3" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 15h8" /></>,
+    bolt: <path d="m13 2-9 12h7l-1 8 10-12h-8z" />,
+    cup: <><path d="M8 3h8v6a4 4 0 0 1-8 0ZM8 5H4v2a4 4 0 0 0 4 4M16 5h4v2a4 4 0 0 1-4 4M12 13v7M8 21h8" /></>,
+    check: <path d="m5 12 4 4L19 6" />,
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+    arrow: <path d="m14 6-6 6 6 6M8 12h12" />,
+    search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4 4" /></>,
+    trash: <><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" /></>,
+    refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6 7a7 7 0 0 1 12-2l2 3M4 16l2 3a7 7 0 0 0 12-2" /></>,
+    spark: <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z" />,
+    chevron: <path d="m9 5 7 7-7 7" />,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>
+  };
+  const Icon = ({
+    name,
+    size = 18
+  }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[name] || ICONS.spark}</svg>;
+  const CSS = `
+.usp{--up-bg:#131624;--up-surface:#1b2031;--up-soft:#252b40;--up-text:#f1f2fa;--up-muted:#a6afc8;--up-line:#32394f;--up-accent:#b5a1ff;--up-tint:#9b7aff1a;--up-green:#6ce2b5;--up-green-bg:#153e35;--up-red:#ffa9b7;--up-red-bg:#442834;--up-shadow:0 24px 80px #070b192b;color:var(--up-text);color-scheme:dark;font-family:inherit;font-size:16px;line-height:1.5;width:100%;max-width:1120px;margin:0 auto;min-width:0;isolation:isolate}
+:is(html.light,body.light,.theme-light,[data-theme="light"]) .usp,.usp.theme-light{--up-bg:#f4f5fc;--up-surface:#fff;--up-soft:#e9edf8;--up-text:#242941;--up-muted:#5e6881;--up-line:#d8deef;--up-accent:#7048d1;--up-tint:#7953da12;--up-green:#137353;--up-green-bg:#e0f4ea;--up-red:#ac3452;--up-red-bg:#fbe6ec;--up-shadow:0 24px 70px #46598a14;color-scheme:light}
+.usp.theme-dark{--up-bg:#131624;--up-surface:#1b2031;--up-soft:#252b40;--up-text:#f1f2fa;--up-muted:#a6afc8;--up-line:#32394f;--up-accent:#b5a1ff;--up-tint:#9b7aff1a;--up-green:#6ce2b5;--up-green-bg:#153e35;--up-red:#ffa9b7;--up-red-bg:#442834;color-scheme:dark}
+.usp *,.usp *:before,.usp *:after{box-sizing:border-box}.usp h2,.usp h3,.usp p{margin:0}.usp button,.usp input,.usp select{font:inherit;letter-spacing:inherit;color:inherit}.usp button{cursor:pointer}.usp button:disabled{cursor:default;opacity:.5}.usp svg{flex-shrink:0}.usp button:focus-visible,.usp input:focus-visible,.usp select:focus-visible,.usp [tabindex]:focus-visible{outline:3px solid var(--up-accent);outline-offset:4px}.usp [hidden]{display:none!important}
+.usp-shell{padding:36px;border:1px solid var(--up-line);border-radius:32px;background:radial-gradient(ellipse at 90% 0,var(--up-tint),transparent 48%),var(--up-bg);box-shadow:var(--up-shadow)}
+.usp-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:30px}.usp-eyebrow{display:flex;gap:8px;align-items:center;font-size:11px;letter-spacing:2px;font-weight:750;text-transform:uppercase;color:var(--up-accent);margin-bottom:10px}.usp h2{font-size:clamp(28px,3.4vw,38px);line-height:1.2;font-weight:800;letter-spacing:-1.2px}.usp-subtitle{font-size:15px;color:var(--up-muted);margin-top:10px!important}.usp-mark{width:64px;height:64px;display:grid;place-items:center;border:1px solid var(--up-line);border-radius:20px;background:var(--up-tint);color:var(--up-accent);transform:rotate(-8deg)}
+.usp-tabs{display:flex;gap:5px;padding:6px;border:1px solid var(--up-line);background:var(--up-soft);border-radius:19px;margin-bottom:27px;overflow-x:auto;scrollbar-width:thin}.usp-tab{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;flex:1;min-height:50px;padding:12px 16px;border:1px solid transparent;border-radius:13px;white-space:nowrap;color:var(--up-muted)!important;background:transparent;font-size:15px!important;font-weight:650!important;transition:background .2s,color .2s,transform .2s}.usp-tab:hover{background:var(--up-tint);color:var(--up-text)!important}.usp-tab[aria-selected=true]{color:#fff!important;background:linear-gradient(130deg,#8a5ce7,#6d4ad1);border-color:#ac89ef70;box-shadow:0 5px 16px #6336b626;animation:usp-tab-in .25s ease-out}.usp-tab:active{transform:scale(.97)}
+.usp-enter{animation:usp-in .4s cubic-bezier(.2,.75,.25,1) both}.usp-metrics{display:grid;grid-template-columns:repeat(var(--up-columns,4),minmax(0,1fr));gap:12px;margin-bottom:22px}.usp-metric{border:1px solid var(--up-line);background:var(--up-surface);border-radius:19px;padding:21px 18px;min-width:0;animation:usp-in .45s both;transition:transform .2s,border-color .2s}.usp-metric:hover{transform:translateY(-3px);border-color:var(--up-accent)}.usp-metric-label{display:flex;align-items:center;gap:7px;color:var(--up-muted);font-size:13px;min-height:39px}.usp-metric-label svg{width:17px;height:17px}.usp-metric-value{display:block;margin:7px 0;font-size:36px;font-weight:780;line-height:1.2;letter-spacing:-1px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.usp-metric-value small{font-size:15px;font-weight:500;margin-left:5px;color:var(--up-muted);letter-spacing:0}.usp-metric-note{font-size:12px;color:var(--up-muted)}.usp-accent{color:var(--up-accent)}
+.usp-card{background:var(--up-surface);border:1px solid var(--up-line);padding:25px;border-radius:23px;margin-top:20px;min-width:0}.usp-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px}.usp h3{font-size:19px;font-weight:730;letter-spacing:-.4px;line-height:1.3}.usp-caption{color:var(--up-muted);font-size:13px;line-height:1.5}.usp-section-head .usp-caption{margin-top:5px}.usp-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9px;background:var(--up-tint);color:var(--up-accent);font-size:12px;font-weight:650;white-space:nowrap}
+.usp-overview{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:20px;margin-bottom:22px}.usp-overview .usp-card{margin:0}.usp-ring-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:23px 16px}.usp-ring{position:relative;width:180px;height:180px;flex-shrink:0;margin:14px auto}.usp-ring svg{display:block;width:100%;height:100%;overflow:visible}.usp-ring-track{fill:none;stroke:var(--up-soft);stroke-width:10}.usp-ring-fill{fill:none;stroke:var(--up-accent);stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1.1s cubic-bezier(.16,1,.3,1);filter:drop-shadow(0 0 7px #9b74ee33)}.usp-ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px}.usp-ring-center strong{font-size:36px;letter-spacing:-1px;line-height:1.2;font-variant-numeric:tabular-nums}.usp-ring-center small{font-size:13px;color:var(--up-muted)}
+.usp-chart{height:224px;display:flex;gap:12px;padding-top:20px}.usp-scale{display:flex;flex-direction:column;justify-content:space-between;padding-bottom:29px;font-size:11px;color:var(--up-muted);width:26px;flex-shrink:0}.usp-bars{flex:1;display:flex;gap:clamp(5px,1.2vw,14px);align-items:stretch;justify-content:space-around;min-width:0;background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),var(--up-line) calc(25% - 1px),var(--up-line) 25%);background-size:100% calc(100% - 29px);background-repeat:no-repeat}.usp-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;max-width:62px;min-width:0;padding:0;border:0;background:transparent;border-radius:7px}.usp-bar-track{display:flex;align-items:flex-end;flex:1;width:100%;min-height:0;position:relative}.usp-bar{width:100%;min-height:3px;border-radius:8px 8px 4px 4px;background:linear-gradient(0deg,#7250cb,#c2abfc);position:relative;transform-origin:bottom;animation:usp-grow .7s cubic-bezier(.2,.75,.25,1) both;transition:filter .2s}.usp-bar-col[aria-pressed=true] .usp-bar{background:linear-gradient(0deg,#6a3ec4,#cbaeff);box-shadow:0 0 0 2px var(--up-accent),0 6px 16px #7145c433}.usp-bar-col:hover .usp-bar{filter:brightness(1.18)}.usp-bar-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);font-size:11px;font-weight:650;white-space:nowrap;color:var(--up-muted)}.usp-bar-label{flex:0 0 29px;padding-top:7px;font-size:11px;color:var(--up-muted)}.usp-chart-detail{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;margin-top:13px;background:var(--up-tint);border-radius:12px;min-height:68px}.usp-chart-detail>div{min-width:0}.usp-chart-detail strong{font-size:14px;display:block;overflow-wrap:anywhere}.usp-chart-detail>b{font-size:22px;color:var(--up-accent);white-space:nowrap}.usp-segment{display:flex;padding:3px;gap:3px;background:var(--up-soft);border-radius:11px;flex-shrink:0}.usp-segment button{border:0;background:transparent;padding:8px 11px;border-radius:8px;font-size:12px;color:var(--up-muted);font-weight:650}.usp-segment button[aria-pressed=true]{background:var(--up-surface);color:var(--up-text);box-shadow:0 2px 5px #00000012}
+.usp-tools{display:flex;gap:10px;align-items:center}.usp-search{display:flex;align-items:center;gap:10px;flex:1;min-width:0;border:1px solid var(--up-line);background:var(--up-bg);border-radius:13px;padding:0 14px;color:var(--up-muted)}.usp-search input{width:100%;min-width:0;height:48px;border:0;outline:none;background:transparent;font-size:15px}.usp-search input::placeholder{color:var(--up-muted)}.usp-search:focus-within{border-color:var(--up-accent);box-shadow:0 0 0 2px var(--up-tint)}.usp-search input:focus-visible{outline:none}.usp-select{height:50px;max-width:165px;border:1px solid var(--up-line);background:var(--up-bg);border-radius:13px;padding:0 12px;font-size:14px!important}.usp-filters{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 9px}.usp-chip{border:1px solid var(--up-line);background:transparent;border-radius:9px;padding:7px 13px;font-size:12px!important;color:var(--up-muted)!important;transition:background .2s}.usp-chip[aria-pressed=true]{border-color:var(--up-accent);background:var(--up-tint);color:var(--up-accent)!important}.usp-record{display:grid;grid-template-columns:42px minmax(0,1fr) auto 36px;gap:14px;align-items:center;padding:19px 0;border-bottom:1px solid var(--up-line)}.usp-record:last-child{border-bottom:0}.usp-record-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--up-tint);color:var(--up-accent)}.usp-record-title{font-size:15px;font-weight:650;overflow-wrap:anywhere}.usp-record-meta{font-size:12px;color:var(--up-muted);margin-top:4px;overflow-wrap:anywhere}.usp-record-score{font-size:23px;font-weight:750;letter-spacing:-.5px;white-space:nowrap;font-variant-numeric:tabular-nums}.usp-record-score small{font-size:13px;margin-left:2px}.usp-record-score.positive{color:var(--up-green)}.usp-record-score.negative{color:var(--up-red)}
+.usp-icon-btn{display:inline-grid;place-items:center;width:38px;height:40px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--up-muted)!important;transition:background .2s,transform .2s}.usp-icon-btn:hover:not(:disabled){background:var(--up-soft);transform:translateY(-2px);color:var(--up-accent)!important}.usp-icon-btn.danger:hover{color:var(--up-red)!important;background:var(--up-red-bg)}.usp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 15px;border:1px solid var(--up-line);border-radius:12px;background:var(--up-surface);font-size:13px!important;font-weight:650!important;transition:transform .18s,background .18s,border-color .18s}.usp-btn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--up-accent);background:var(--up-tint)}.usp-btn:active:not(:disabled){transform:scale(.97)}.usp-btn.danger{color:var(--up-red);background:var(--up-red-bg);border-color:var(--up-red)}.usp-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:18px}.usp-pagination>div{display:flex;gap:7px}
+.usp-empty{padding:38px 14px;text-align:center;color:var(--up-muted)}.usp-empty .usp-mark{margin:0 auto 17px;transform:none}.usp-empty h3{color:var(--up-text);margin-bottom:10px}.usp-empty p{max-width:420px;margin:auto;font-size:14px}.usp-empty .usp-btn{margin-top:18px}.usp-confirm{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:18px;background:var(--up-soft);border:1px solid var(--up-line);border-radius:15px;margin:15px 0;animation:usp-in .25s both}.usp-confirm-text{flex:1;min-width:170px;font-size:15px}.usp-confirm-actions{display:flex;gap:8px}.usp-error{font-size:14px;color:var(--up-red);flex-basis:100%;margin:12px 0!important}.usp-notice{font-size:14px;padding:12px 15px;border-radius:12px;color:var(--up-green);background:var(--up-green-bg);margin:12px 0}.usp-skeleton{height:78px;border-radius:16px;background:linear-gradient(100deg,var(--up-soft) 30%,var(--up-tint) 50%,var(--up-soft) 70%);background-size:220% 100%;margin:11px 0;animation:usp-shimmer 1.5s infinite}
+.usp-training-hero{display:grid;grid-template-columns:minmax(0,1fr) 240px;align-items:center;gap:35px;background:radial-gradient(ellipse at 90% 10%,var(--up-tint),transparent 60%),var(--up-surface);padding:30px;margin-top:0;margin-bottom:22px}.usp-training-copy h3{font-size:29px;letter-spacing:-.8px;margin:17px 0 12px;max-width:450px}.usp-training-copy p{font-size:15px;color:var(--up-muted);max-width:470px}.usp-training-ring{text-align:center}.usp-training-ring .usp-ring{width:195px;height:195px}.usp-activity{background:var(--up-bg);border:1px solid var(--up-line);padding:22px;border-radius:17px}.usp-dots{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:7px;margin:20px 0 13px}.usp-dot{aspect-ratio:1;border-radius:5px;background:var(--up-accent);animation:usp-in .45s both}.usp-dot.off{background:var(--up-soft);border:1px solid var(--up-line)}.usp-hint{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--up-muted);margin-top:19px}.usp-hint svg{margin-top:2px;color:var(--up-accent)}
+.usp-lb-top{display:flex;align-items:center;gap:10px;margin-bottom:20px}.usp-lb-top .usp-tabs{margin:0;flex:1;min-width:0}.usp-lb-top .usp-tab{font-size:13px!important;min-height:42px;padding:9px 13px}.usp-lb-row{display:grid;grid-template-columns:30px 46px minmax(0,1fr) auto;gap:15px;padding:17px 13px;border:1px solid transparent;border-bottom-color:var(--up-line);border-radius:15px;align-items:center;transition:background .2s}.usp-lb-row:hover{background:var(--up-tint)}.usp-lb-row.me{background:var(--up-tint);border-color:var(--up-accent)}.usp-rank{text-align:center;color:var(--up-muted);font-size:16px;font-weight:750}.usp-rank.top{background:var(--up-tint);color:var(--up-accent);border-radius:9px;padding:6px 0}.usp-avatar{width:46px;height:46px;border-radius:15px;background:hsl(var(--hue) 46% 45%);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:750}.usp-lb-name{font-size:16px;font-weight:650;overflow-wrap:anywhere}.usp-lb-name .usp-badge{font-size:10px;padding:3px 6px;margin-left:7px}.usp-lb-value{font-size:25px;font-weight:750;text-align:right;line-height:1.2;font-variant-numeric:tabular-nums}.usp-lb-value small{display:block;font-size:11px;color:var(--up-muted);font-weight:500;line-height:1.5;margin-top:4px}
+@keyframes usp-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes usp-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes usp-tab-in{from{filter:brightness(1.25)}to{filter:brightness(1)}}@keyframes usp-shimmer{to{background-position:-220% 0}}
+@media(max-width:920px){.usp-shell{padding:25px}.usp-overview{grid-template-columns:minmax(0,1fr) 205px;gap:13px}.usp-card{padding:21px}.usp-chart-head{align-items:flex-start;flex-direction:column;gap:12px}.usp-ring{width:160px;height:160px}.usp-metric{padding:18px 14px}.usp-metric-value{font-size:32px}}
+@media(max-width:680px){.usp-shell{padding:18px;border-radius:23px}.usp-heading{gap:12px;margin-bottom:24px}.usp-heading .usp-mark{display:none}.usp h2{font-size:29px}.usp-subtitle{font-size:14px}.usp-tabs{margin-bottom:20px}.usp-tab{flex-shrink:0;padding:11px 13px;min-height:46px;font-size:14px!important;gap:7px}.usp-tab svg{width:17px}.usp-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.usp-metric{padding:16px 13px}.usp-metric-value{font-size:31px}.usp-metric-label{font-size:12px;min-height:36px;gap:6px}.usp-metric-note{font-size:11px}.usp-overview{grid-template-columns:1fr}.usp-ring-card{display:grid;grid-template-columns:125px minmax(0,1fr);gap:0 15px;text-align:left}.usp-ring-card h3{grid-column:2;grid-row:1;align-self:end;font-size:17px}.usp-ring-card .usp-ring{grid-column:1;grid-row:1/3;width:125px;height:125px;margin:0}.usp-ring-card .usp-caption{grid-column:2;grid-row:2;align-self:start;margin-top:8px}.usp-ring-center strong{font-size:29px}.usp-ring-center small{font-size:11px}.usp-card{padding:18px;border-radius:18px}.usp h3{font-size:18px}.usp-chart{height:215px;gap:8px}.usp-chart-head{flex-direction:row;flex-wrap:wrap}.usp-bar-tip{font-size:9px}.usp-chart-detail{padding:11px;gap:10px}.usp-chart-detail strong{font-size:13px}.usp-chart-detail .usp-caption{font-size:11px}.usp-search{padding:0 10px}.usp-search input{font-size:14px}.usp-select{max-width:110px;padding:0 8px;font-size:12px!important}.usp-tools{gap:7px}.usp-record{grid-template-columns:minmax(0,1fr) auto 32px;gap:9px;padding:17px 0}.usp-record-icon{display:none}.usp-record-title{font-size:14px}.usp-record-meta{font-size:11px}.usp-record-score{font-size:20px}.usp-icon-btn{width:32px;min-height:40px}.usp-btn{font-size:12px!important;padding:9px 12px}.usp-training-hero{grid-template-columns:1fr;padding:22px;gap:20px}.usp-training-copy h3{font-size:26px}.usp-training-ring .usp-ring{width:180px;height:180px}.usp-dots{grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}.usp-lb-row{grid-template-columns:23px 35px minmax(0,1fr) auto;gap:9px;padding:15px 4px}.usp-avatar{width:35px;height:38px;font-size:12px;border-radius:12px}.usp-lb-name{font-size:14px}.usp-lb-value{font-size:21px}.usp-lb-value small{font-size:10px;max-width:76px}.usp-caption{font-size:12px}.usp-section-head{gap:10px}.usp-pagination{gap:8px}.usp-rank{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.usp *,.usp *:before,.usp *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
-function hashString(str) {
-    let h = 0;
-    for (let i = 0; i < (str || '').length; i++) { h = (h << 5) - h + str.charCodeAt(i); h |= 0; }
-    return Math.abs(h);
-}
-
-function getInitials(nameOrEmail) {
-    if (!nameOrEmail) return '?';
-    const clean = nameOrEmail.split('@')[0].trim();
-    const parts = clean.split(/[\s._-]+/).filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return clean.slice(0, 2).toUpperCase();
-}
-
-function avatarGradient(id) {
-    const pair = AVATAR_PALETTE[hashString(id) % AVATAR_PALETTE.length];
-    return `linear-gradient(135deg, ${pair[0]}, ${pair[1]})`;
-}
-
-// --- SVG ИКОНКИ ДЛЯ СТАТИСТИКИ ---
-const SVG_ICONS = {
-    tests: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />,
-    excel: <path d="M12 20V10 M18 20V4 M6 20v-4" />,
-    typing: <path d="M22 6H2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z M6 10h.01 M10 10h.01 M14 10h.01 M18 10h.01 M6 14h12" />,
-    hotkeys: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
-    leaderboard: <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6 M18 9h1.5a2.5 2.5 0 0 0 0-5H18 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22 M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22 M18 2H6v7a6 6 0 0 0 12 0V2z" />,
-    medal: <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
-};
-
-const StatIcon = ({ name, size = 16, color = 'currentColor' }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-        {SVG_ICONS[name]}
-    </svg>
-);
-
-
-/* =========================================================================
-   СТАТИСТИКА
-   ========================================================================= */
-
-// Кольцевой индикатор
-const RadialGauge = ({ value, max, size = 176, strokeWidth = 12, color, icon, valueDisplay, label }) => {
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const targetPct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
-    const [pct, setPct] = useState(0);
-
+`;
+  function useStyles() {
     useEffect(() => {
-        const t = setTimeout(() => setPct(targetPct), 50);
-        return () => clearTimeout(t);
-    }, [targetPct]);
-
-    return (
-        <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--glass-border)" strokeWidth={strokeWidth} />
-                <circle
-                    cx={size / 2} cy={size / 2} r={radius} fill="none"
-                    stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference - pct * circumference}
-                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    style={{ 
-                        transition: 'stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1)',
-                        filter: `drop-shadow(0 0 8px ${color}66)`
-                    }}
-                />
-            </svg>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                <span style={{ marginBottom: 2 }}><StatIcon name={icon} size={22} color={color} /></span>
-                <span style={{ fontSize: size * 0.19, fontWeight: 900, color: 'var(--text-main)', lineHeight: 1, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>{valueDisplay}</span>
-                <span style={{ fontSize: 11.5, color: 'var(--text-sec)', fontWeight: 600 }}>{label}</span>
-            </div>
-        </div>
-    );
-};
-
-// Горизонтальная рейка
-const StatRail = ({ items }) => (
-    <div style={{ display: 'flex', background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: 18, overflow: 'hidden', marginTop: 26, boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-        {items.map((it, i) => (
-            <div key={i} style={{ flex: 1, padding: '18px 10px', textAlign: 'center', borderLeft: i > 0 ? '1px solid var(--glass-border)' : 'none' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: it.color || 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>{it.value}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-sec)', marginTop: 4, fontWeight: 600 }}>{it.label}</div>
-            </div>
-        ))}
-    </div>
-);
-
-// Ряд точек-сессий
-const PipTrail = ({ total, color, cap = 24 }) => {
-    const shown = Math.min(total, cap);
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 6 }}>
-            {Array.from({ length: shown }).map((_, i) => (
-                <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.02 }}
-                    style={{ width: 8, height: 8, borderRadius: '50%', background: color, opacity: 0.85 }} />
-            ))}
-            {total > cap && <span style={{ fontSize: 12, color: 'var(--text-sec)', fontWeight: 700, marginLeft: 4 }}>+{total - cap}</span>}
-        </div>
-    );
-};
-
-const rankColor = (i) => (i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? '#c2854b' : '#3f3f46');
-
-const StatsView = ({ history, setHistory, userData }) => {
-    const [activeTab, setActiveTab] = useState('tests');
-    
-    // БЕРЕМ ДАННЫЕ ИЗ БАЗЫ FIREBASE (userData)
-    const historyToUse = userData?.testHistory || history || [];
-    const sortedHistory = [...historyToUse].sort((a, b) => b.percent - a.percent);
-
-    const excelStats = userData?.excelProgress || { level: 1, xp: 0, completedLessons: 0, streak: 0 };
-    const typingStats = userData?.typingProgress || { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
-    const hotkeyStats = userData?.hotkeyProgress || { maxScore: 0, sessionsPlayed: 0 };
-
-    // Производные показатели по тестам
-    const totalTests = historyToUse.length;
-    const avgPercent = totalTests ? Math.round(historyToUse.reduce((s, h) => s + h.percent, 0) / totalTests) : 0;
-    const bestPercent = totalTests ? Math.max(...historyToUse.map(h => h.percent)) : 0;
-    const passRate = totalTests ? Math.round((historyToUse.filter(h => h.percent >= 50).length / totalTests) * 100) : 0;
-
-    // --- СОСТОЯНИЯ ДЛЯ РЕЙТИНГА ---
-    const [lbCategory, setLbCategory] = useState('excel');
-    const [lbUsers, setLbUsers] = useState(null);
-    const [loadingLb, setLoadingLb] = useState(false);
-    const [lbError, setLbError] = useState(null);
-
-    // Загрузка глобального рейтинга из Firebase
-    useEffect(() => {
-        if (activeTab === 'leaderboard' && !lbUsers && !loadingLb) {
-            setLoadingLb(true);
-            try {
-                if (window.db) {
-                    window.db.collection('users').get().then(snap => {
-                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        setLbUsers(data);
-                        setLoadingLb(false);
-                    }).catch(e => {
-                        console.error(e);
-                        setLbError('Нет доступа к базе (возможно, вы не админ).');
-                        setLoadingLb(false);
-                    });
-                } else {
-                    setLbError('База данных не подключена.');
-                    setLoadingLb(false);
-                }
-            } catch(e) {
-                setLbError('Ошибка загрузки рейтинга.');
-                setLoadingLb(false);
-            }
-        }
-    }, [activeTab, lbUsers, loadingLb]);
-
-    // Сортировка и фильтрация рейтинга
-    const sortedLb = useMemo(() => {
-        if (!lbUsers) return [];
-        let list = [...lbUsers];
-        if (lbCategory === 'excel') {
-            list = list.sort((a, b) => (b.excelProgress?.xp || 0) - (a.excelProgress?.xp || 0));
-        } else if (lbCategory === 'typing') {
-            list = list.sort((a, b) => (b.typingProgress?.maxWpm || 0) - (a.typingProgress?.maxWpm || 0));
-        } else if (lbCategory === 'hotkeys') {
-            list = list.sort((a, b) => (b.hotkeyProgress?.maxScore || 0) - (a.hotkeyProgress?.maxScore || 0));
-        } else if (lbCategory === 'tests') {
-            list = list.sort((a, b) => {
-                const aAvg = a.testHistory?.length ? Math.round(a.testHistory.reduce((s, h) => s + h.percent, 0) / a.testHistory.length) : 0;
-                const bAvg = b.testHistory?.length ? Math.round(b.testHistory.reduce((s, h) => s + h.percent, 0) / b.testHistory.length) : 0;
-                return bAvg - aAvg; // Сортируем по убыванию среднего балла
-            });
-        }
-        
-        return list.filter(u => {
-            if (lbCategory === 'excel') return (u.excelProgress?.xp || 0) > 0;
-            if (lbCategory === 'typing') return (u.typingProgress?.maxWpm || 0) > 0;
-            if (lbCategory === 'hotkeys') return (u.hotkeyProgress?.maxScore || 0) > 0;
-            if (lbCategory === 'tests') return (u.testHistory?.length || 0) > 0;
-            return false;
-        }).slice(0, 50); // Берем ТОП-50
-    }, [lbUsers, lbCategory]);
-
-
-    const chartRef = useRef(null);
-    const chartInstance = useRef(null);
-
-    // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ CHART.JS
-    useEffect(() => {
-        let renderTimer;
-        
-        const tryRender = () => {
-            if (!chartRef.current) {
-                if (activeTab === 'tests') renderTimer = setTimeout(tryRender, 50);
-                return;
-            }
-
-            if (chartInstance.current) {
-                chartInstance.current.destroy();
-                chartInstance.current = null; 
-            }
-            
-            const ctx = chartRef.current.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
-            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
-
-            chartInstance.current = new window.Chart(ctx, {
-                type: 'bar',
-                data: { 
-                    labels: sortedHistory.slice(0,10).map(i => i.student), 
-                    datasets: [{ 
-                        label: '%', 
-                        data: sortedHistory.slice(0,10).map(i => i.percent), 
-                        backgroundColor: gradient, 
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barPercentage: 0.5
-                    }] 
-                },
-                options: { 
-                    scales: { 
-                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(128,128,128,0.1)', drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } }, 
-                        x: { grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(128,128,128,0.7)', font: { weight: '600' } } } 
-                    }, 
-                    plugins: { legend: { display: false } }, 
-                    responsive: true, 
-                    maintainAspectRatio: false 
-                }
-            });
-        };
-
-        if (activeTab === 'tests' && sortedHistory.length > 0) {
-            renderTimer = setTimeout(tryRender, 200); 
-        }
-
-        return () => { 
-            clearTimeout(renderTimer);
-            if (chartInstance.current) {
-                chartInstance.current.destroy(); 
-                chartInstance.current = null;
-            }
-        }
-    }, [activeTab, sortedHistory]);
-
-    const removeEntry = async (id) => {
-        if (!confirm('Удалить запись?')) return;
-        const nh = historyToUse.filter(item => item.id !== id);
-        
-        // Локально обновляем экран
-        setHistory(nh);
-        localStorage.setItem('test_history_v1', JSON.stringify(nh));
-        
-        // Удаляем из базы Firebase
-        try {
-            const uid = window.auth?.currentUser?.uid;
-            if (uid && window.db) {
-                await window.db.collection('users').doc(uid).set({ testHistory: nh }, { merge: true });
-            }
-        } catch (e) {
-            console.error("Ошибка при удалении теста из Firebase", e);
-        }
+      let node = document.getElementById('ultimate-progress-v3-styles');
+      if (!node) {
+        node = document.createElement('style');
+        node.id = 'ultimate-progress-v3-styles';
+        document.head.appendChild(node);
+      }
+      if (node.textContent !== CSS) node.textContent = CSS;
+    }, []);
+  }
+  function Empty({
+    title,
+    text,
+    icon = 'spark',
+    children
+  }) {
+    return <div className="usp-empty"><div className="usp-mark"><Icon name={icon} size={25} /></div><h3>{title}</h3><p>{text}</p>{children}</div>;
+  }
+  function normalizeHistory(value) {
+    return list(value).filter(x => x && typeof x === 'object').map((raw, index) => ({
+      raw,
+      index,
+      value: score(raw.percent)
+    }));
+  }
+  function testSummary(value) {
+    const valid = normalizeHistory(value).filter(x => x.value !== null);
+    return {
+      total: valid.length,
+      average: valid.length ? Math.round(valid.reduce((sum, x) => sum + x.value, 0) / valid.length) : 0,
+      best: valid.length ? Math.max(...valid.map(x => x.value)) : 0,
+      passed: valid.filter(x => x.value >= 50).length
     };
-
-    const TABS = [
-        { id: 'tests', label: 'Тесты', icon: 'tests', color: '#a855f7' },
-        { id: 'excel', label: 'Excel', icon: 'excel', color: '#22c55e' },
-        { id: 'typing', label: 'Печать', icon: 'typing', color: '#38bdf8' },
-        { id: 'hotkeys', label: 'Хоткеи', icon: 'hotkeys', color: '#f59e0b' },
-        { id: 'leaderboard', label: 'Рейтинг', icon: 'leaderboard', color: '#fbbf24' }
-    ];
-
-    return (
-        <motion.div key="stats" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel hide-scroll" style={{ width: '100%', maxWidth: 900, maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '40px', borderRadius: '32px' }}>
-            
-            <style>{`
-                .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-                .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-                .custom-scroll::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 10px; }
-                .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(150, 150, 150, 0.5); }
-                .custom-scroll { scrollbar-width: thin; scrollbar-color: rgba(150, 150, 150, 0.3) transparent; }
-                .hide-scroll::-webkit-scrollbar { display: none; }
-                .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-            `}</style>
-
-            <div style={{ textAlign: 'center', marginBottom: 30, flexShrink: 0 }}>
-                <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, background: 'linear-gradient(90deg, var(--text-main), #d8b4fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
-                    Мой прогресс
-                </h2>
-            </div>
-
-            <div className="modern-scroll hide-scroll" style={{ flexShrink: 0, display: 'flex', background: 'var(--bg-panel)', padding: '6px', borderRadius: '20px', gap: '4px', margin: '0 auto 35px', width: 'fit-content', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--glass-border)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                {TABS.map(t => {
-                    const isActive = activeTab === t.id;
-                    return (
-                        <div key={t.id} onClick={() => setActiveTab(t.id)} style={{ position: 'relative', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexShrink: 0, transition: 'all 0.2s ease' }}>
-                            <div style={{ 
-                                position: 'absolute', inset: 0, background: t.color, 
-                                borderRadius: '14px', zIndex: -1, 
-                                opacity: isActive ? 1 : 0, 
-                                boxShadow: isActive ? `0 4px 15px ${t.color}50` : 'none',
-                                transition: 'opacity 0.2s ease, box-shadow 0.2s ease'
-                            }} />
-                            
-                            <span style={{ 
-                                opacity: isActive ? 1 : 0.6, 
-                                display: 'flex', alignItems: 'center',
-                                transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                                transition: 'all 0.2s ease'
-                            }}>
-                                <StatIcon name={t.icon} size={18} color={isActive ? '#fff' : 'var(--text-sec)'} />
-                            </span>
-                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: isActive ? '#fff' : 'var(--text-sec)', transition: 'color 0.2s ease' }}>{t.label}</span>
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div style={{ flex: 1, minHeight: '450px' }}>
-                <AnimatePresence mode="wait">
-
-                    {/* ==================== ТЕСТЫ ==================== */}
-                    {activeTab === 'tests' && (
-                        <motion.div key="t-tests" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            {totalTests === 0 ? (
-                                <p style={{ textAlign: 'center', color: 'var(--text-sec)', padding: '40px 0', fontSize: '16px', fontWeight: 600 }}>Вы еще не проходили тесты</p>
-                            ) : (
-                                <>
-                                    {/* ГРАФИК */}
-                                    <div style={{
-                                        position: 'relative', height: '280px', minHeight: '280px', width: '100%', boxSizing: 'border-box',
-                                        background:'var(--bg-panel)', 
-                                        padding:'24px', borderRadius:'20px', marginBottom:'24px', 
-                                        border: '1px solid var(--glass-border)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-                                    }}>
-                                        <canvas ref={chartRef}></canvas>
-                                    </div>
-
-                                    <StatRail items={[
-                                        { label: 'Средний балл', value: `${avgPercent}%`, color: '#a855f7' },
-                                        { label: 'Лучший результат', value: `${bestPercent}%`, color: '#fbbf24' },
-                                        { label: 'Успешных попыток', value: `${passRate}%`, color: '#34d399' },
-                                        { label: 'Всего тестов', value: totalTests, color: 'var(--text-main)' },
-                                    ]} />
-
-                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', fontWeight: 700, marginTop: '32px', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                        История прохождений
-                                    </div>
-
-                                    <div>
-                                        {sortedHistory.map((h, i) => (
-                                            <div key={h.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 20, paddingTop: 6 }}>
-                                                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: rankColor(i), boxShadow: i < 3 ? `0 0 10px ${rankColor(i)}` : 'none', flexShrink: 0 }} />
-                                                    {i < sortedHistory.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 34, background: 'var(--glass-border)', marginTop: 4 }} />}
-                                                </div>
-                                                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} style={{ flex: 1, minWidth: 0, paddingBottom: 22 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-                                                        <span style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.topic}</span>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                                                            <span style={{ fontWeight: 900, fontSize: 15, color: h.percent >= 50 ? '#34d399' : '#f87171', fontVariantNumeric: 'tabular-nums' }}>{h.percent}%</span>
-                                                            <button onClick={() => removeEntry(h.id)} style={{ background: 'none', border: 'none', color: 'var(--text-sec)', fontSize: 15, cursor: 'pointer', padding: 2 }} title="Удалить">✕</button>
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ fontSize: 12, color: 'var(--text-sec)', fontWeight: 600, marginTop: 2 }}>{h.student} · {h.date}</div>
-                                                    <div style={{ height: 4, borderRadius: 2, background: 'var(--glass-border)', marginTop: 9, overflow: 'hidden' }}>
-                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${h.percent}%` }} transition={{ duration: 0.7, delay: i * 0.03 }}
-                                                            style={{ height: '100%', borderRadius: 2, background: h.percent >= 50 ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#f87171,#ef4444)' }} />
-                                                    </div>
-                                                </motion.div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {/* ==================== EXCEL ==================== */}
-                    {activeTab === 'excel' && (
-                        <motion.div key="t-excel" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            <RadialGauge
-                                value={excelStats.xp % 1000}
-                                max={1000}
-                                color="#22c55e"
-                                icon="excel"
-                                valueDisplay={excelStats.level}
-                                label="уровень"
-                            />
-                            <StatRail items={[
-                                { label: 'Решено формул', value: excelStats.completedLessons, color: '#f59e0b' },
-                                { label: 'Серия без ошибок', value: excelStats.streak, color: '#ef4444' },
-                                { label: 'Всего XP', value: excelStats.xp, color: '#3b82f6' },
-                            ]} />
-                        </motion.div>
-                    )}
-
-                    {/* ==================== ПЕЧАТЬ ==================== */}
-                    {activeTab === 'typing' && (
-                        <motion.div key="t-typing" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            <RadialGauge
-                                value={typingStats.maxWpm}
-                                max={120}
-                                color="#38bdf8"
-                                icon="typing"
-                                valueDisplay={typingStats.maxWpm}
-                                label="WPM рекорд"
-                            />
-                            <StatRail items={[
-                                { label: 'Лучшее комбо', value: `x${typingStats.maxCombo}`, color: '#a855f7' },
-                                { label: 'Пройдено текстов', value: typingStats.testsCompleted, color: 'var(--text-main)' },
-                            ]} />
-                        </motion.div>
-                    )}
-
-                    {/* ==================== ХОТКЕИ ==================== */}
-                    {activeTab === 'hotkeys' && (
-                        <motion.div key="t-hotkeys" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            <RadialGauge
-                                value={hotkeyStats.maxScore}
-                                max={Math.max(hotkeyStats.maxScore * 1.25, 100)}
-                                color="#f59e0b"
-                                icon="hotkeys"
-                                valueDisplay={hotkeyStats.maxScore}
-                                label="рекорд за сессию"
-                            />
-                            <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-main)', fontWeight: 700, marginTop: 28 }}>
-                                Сыграно сессий: {hotkeyStats.sessionsPlayed}
-                            </div>
-                            <PipTrail total={hotkeyStats.sessionsPlayed} color="#22c55e" />
-                        </motion.div>
-                    )}
-
-                    {/* ==================== ГЛОБАЛЬНЫЙ РЕЙТИНГ ==================== */}
-                    {activeTab === 'leaderboard' && (
-                        <motion.div key="t-leaderboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.2 }}>
-                            
-                            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px', width: 'fit-content', maxWidth: '100%', margin: '0 auto 24px auto' }}>
-                                {[
-                                    {id: 'excel', label: 'Excel XP', icon: 'excel'}, 
-                                    {id: 'typing', label: 'Печать WPM', icon: 'typing'}, 
-                                    {id: 'hotkeys', label: 'Хоткеи', icon: 'hotkeys'}, 
-                                    {id: 'tests', label: 'Тесты', icon: 'tests'}
-                                ].map(cat => (
-                                    <button key={cat.id} onClick={() => setLbCategory(cat.id)} style={{
-                                        display: 'flex', alignItems: 'center', gap: '6px',
-                                        padding: '8px 16px', borderRadius: '12px', 
-                                        border: lbCategory === cat.id ? 'none' : '1px solid var(--glass-border)',
-                                        background: lbCategory === cat.id ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'var(--bg-panel)',
-                                        color: lbCategory === cat.id ? '#fff' : 'var(--text-sec)', 
-                                        fontWeight: 800, fontSize: '12.5px', cursor: 'pointer',
-                                        boxShadow: lbCategory === cat.id ? '0 4px 12px rgba(245, 158, 11, 0.4)' : 'none', 
-                                        transition: 'all 0.2s',
-                                        flexShrink: 0
-                                    }}>
-                                        <StatIcon name={cat.icon} size={14} color={lbCategory === cat.id ? '#fff' : 'var(--text-sec)'} />
-                                        {cat.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {loadingLb ? (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-sec)', fontWeight: 700 }}>Загрузка рейтинга...</div>
-                            ) : lbError ? (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: '#ef4444', fontWeight: 700 }}>{lbError}</div>
-                            ) : sortedLb.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-sec)', fontWeight: 700 }}>Пока нет результатов в этой категории</div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {sortedLb.map((u, i) => {
-                                        const isMe = window.auth?.currentUser?.uid === u.id;
-                                        let val = 0;
-                                        if (lbCategory === 'excel') val = u.excelProgress?.xp || 0;
-                                        else if (lbCategory === 'typing') val = u.typingProgress?.maxWpm || 0;
-                                        else if (lbCategory === 'hotkeys') val = u.hotkeyProgress?.maxScore || 0;
-                                        else if (lbCategory === 'tests') val = u.testHistory?.length ? Math.round(u.testHistory.reduce((s, h) => s + h.percent, 0) / u.testHistory.length) : 0;
-
-                                        return (
-                                            <div key={u.id} style={{
-                                                display: 'flex', alignItems: 'center', padding: '14px 18px',
-                                                background: isMe ? 'var(--bg-elevated)' : 'var(--bg-panel)',
-                                                border: isMe ? '2px solid #38bdf8' : '1px solid var(--glass-border)',
-                                                borderRadius: '18px', gap: '10px',
-                                                boxShadow: isMe ? '0 4px 20px rgba(56, 189, 248, 0.15)' : 'none'
-                                            }}>
-                                                <div style={{ width: '30px', fontWeight: 900, fontSize: '18px', display: 'flex', justifyContent: 'center', color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : 'var(--text-sec)', flexShrink: 0 }}>
-                                                    {i < 3 ? <StatIcon name="medal" size={22} color={i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#d97706'} /> : i + 1}
-                                                </div>
-                                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: avatarGradient(u.id), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, flexShrink: 0, fontSize: '14px' }}>
-                                                    {getInitials(u.nickname || u.email)}
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
-                                                    <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        {u.nickname || u.email || 'Аноним'}
-                                                        {isMe && <span style={{ fontSize: '10px', background: '#38bdf8', color: '#fff', padding: '3px 7px', borderRadius: '6px', flexShrink: 0 }}>ВЫ</span>}
-                                                    </div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                        {u.role === 'admin' ? 'Преподаватель' : 'Ученик'}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, marginLeft: '5px' }}>
-                                                    <div style={{ fontWeight: 900, fontSize: '20px', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                                                        {val}
-                                                    </div>
-                                                    <div style={{ fontSize: '11px', color: 'var(--text-sec)', fontWeight: 700, marginTop: '4px', whiteSpace: 'nowrap' }}>
-                                                        {lbCategory === 'excel' ? 'XP' : lbCategory === 'typing' ? 'WPM' : lbCategory === 'tests' ? '% ср. балл' : ''}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                </AnimatePresence>
-            </div>
-        </motion.div>
-    )
-};
-
-Object.assign(window, { StatsView });
+  }
+  function useUserId() {
+    const [uid, setUid] = useState(() => window.auth?.currentUser?.uid || null);
+    useEffect(() => {
+      const auth = window.auth;
+      if (typeof auth?.onAuthStateChanged === 'function') return auth.onAuthStateChanged(user => setUid(user?.uid || null));
+    }, []);
+    return uid;
+  }
+  function AnimatedNumber({
+    value
+  }) {
+    const [display, setDisplay] = useState(0);
+    const previous = useRef(0);
+    useEffect(() => {
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        previous.current = value;
+        setDisplay(value);
+        return;
+      }
+      const from = previous.current;
+      previous.current = value;
+      let frame;
+      const start = performance.now();
+      const tick = now => {
+        const t = Math.min(1, (now - start) / 460);
+        setDisplay(Math.round((from + (value - from) * (1 - Math.pow(1 - t, 3))) * 10) / 10);
+        if (t < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(frame);
+    }, [value]);
+    return <span aria-label={fmt(value)}><span aria-hidden="true">{fmt(display)}</span></span>;
+  }
+  function Metrics({
+    items
+  }) {
+    return <div className="usp-metrics">{items.map(({
+        label,
+        value,
+        unit,
+        note,
+        icon
+      }, i) => <div className="usp-metric" key={label} style={{
+        animationDelay: `${i * 65}ms`
+      }}><div className="usp-metric-label"><Icon name={icon || 'spark'} size={14} />{label}</div><strong className={`usp-metric-value ${i === 0 ? 'usp-accent' : ''}`}><AnimatedNumber value={value} />{unit && <small>{unit}</small>}</strong><span className="usp-metric-note">{note}</span></div>)}</div>;
+  }
+  function Tabs({
+    value,
+    onChange,
+    tabs,
+    label,
+    id
+  }) {
+    return <div className="usp-tabs" role="tablist" aria-label={label}>{tabs.map((tab, index) => <button type="button" key={tab.id} id={`${id}-${tab.id}`} role="tab" aria-selected={value === tab.id} aria-controls={`${id}-panel-${tab.id}`} tabIndex={value === tab.id ? 0 : -1} className="usp-tab" onClick={() => onChange(tab.id)} onKeyDown={e => {
+        let next = index;
+        if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;else if (e.key === 'Home') next = 0;else if (e.key === 'End') next = tabs.length - 1;else return;
+        e.preventDefault();
+        onChange(tabs[next].id);
+        document.getElementById(`${id}-${tabs[next].id}`)?.focus();
+      }}>{tab.icon && <Icon name={tab.icon} />}<span>{tab.label}</span></button>)}</div>;
+  }
+  function stamp(row) {
+    const d = row?.date;
+    if (typeof d?.toMillis === 'function') return d.toMillis();
+    if (d && Number.isFinite(d.seconds)) return d.seconds * 1000;
+    if (typeof d === 'number' && Number.isFinite(d)) return d;
+    if (typeof d === 'string') {
+      const ru = d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+      if (ru) return new Date(+ru[3], +ru[2] - 1, +ru[1], +(ru[4] || 0), +(ru[5] || 0), +(ru[6] || 0)).getTime();
+      if (/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(d)) {
+        const t = Date.parse(d);
+        if (Number.isFinite(t)) return t;
+      }
+    }
+    const id = Number(row?.id);
+    return id > 1e12 && id < 1e14 ? id : null;
+  }
+  function dateLabel(raw) {
+    if (typeof raw.date === 'string') return raw.date;
+    const time = stamp(raw);
+    return time !== null && Number.isFinite(time) ? new Date(time).toLocaleDateString('ru-RU') : 'Дата не указана';
+  }
+  // Точный снимок записи: при параллельном изменении не удаляем чужую/новую версию.
+  function fingerprint(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (value instanceof Date) return JSON.stringify(value.toISOString());
+    if (Array.isArray(value)) return '[' + value.map(fingerprint).join(',') + ']';
+    return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + fingerprint(value[key])).join(',') + '}';
+  }
+  function removeExact(history, target) {
+    const signature = fingerprint(target);
+    const matches = list(history).map((x, i) => fingerprint(x) === signature ? i : -1).filter(i => i >= 0);
+    if (matches.length > 1) throw new Error('Есть одинаковые записи. Обновите историю перед удалением.');
+    if (!matches.length) throw new Error('Запись уже изменена или удалена. Обновите страницу.');
+    return history.filter((_, i) => i !== matches[0]);
+  }
+  function HistoryList({
+    rows,
+    onRemove,
+    canRemove
+  }) {
+    const historyId = useId();
+    const [filter, setFilter] = useState('all');
+    const [exportError, setExportError] = useState('');
+    const [query, setQuery] = useState('');
+    const [sort, setSort] = useState('recent');
+    const [page, setPage] = useState(0);
+    const [target, setTarget] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
+    const lock = useRef(false);
+    const cancelRef = useRef(null);
+    const opener = useRef(null);
+    const alive = useRef(true);
+    useEffect(() => {
+      alive.current = true;
+      return () => {
+        alive.current = false;
+      };
+    }, []);
+    useEffect(() => {
+      if (target) cancelRef.current?.focus();
+    }, [target]);
+    const found = useMemo(() => {
+      const q = query.trim().toLocaleLowerCase('ru');
+      return rows.filter(x => filter === 'all' || x.value !== null && (filter === 'passed' ? x.value >= 50 : x.value < 50)).filter(x => `${str(x.raw.topic)} ${str(x.raw.student)} ${dateLabel(x.raw)}`.toLocaleLowerCase('ru').includes(q)).slice().sort((a, b) => sort === 'best' ? (b.value ?? -1) - (a.value ?? -1) || a.index - b.index : (stamp(b.raw) ?? -1) - (stamp(a.raw) ?? -1) || a.index - b.index);
+    }, [rows, query, sort, filter]);
+    const pages = Math.max(1, Math.ceil(found.length / 8));
+    const current = Math.min(page, pages - 1);
+    const visible = found.slice(current * 8, current * 8 + 8);
+    function close() {
+      setTarget(null);
+      setError('');
+      opener.current?.focus();
+    }
+    async function confirmDelete() {
+      if (lock.current || !target) return;
+      lock.current = true;
+      setBusy(true);
+      setError('');
+      try {
+        await onRemove(target.raw);
+        if (alive.current) {
+          setTarget(null);
+          setNotice('Запись удалена');
+          requestAnimationFrame(() => document.getElementById(historyId)?.focus());
+        }
+      } catch (e) {
+        if (alive.current) setError(e.message || 'Не удалось удалить запись. Попробуйте ещё раз.');
+      } finally {
+        lock.current = false;
+        if (alive.current) setBusy(false);
+      }
+    }
+    return <div className="usp-card"><div className="usp-section-head"><div><h3 id={historyId} tabIndex={-1}>История попыток</h3><p className="usp-caption">{found.length} из {rows.length} записей</p></div><button type="button" className="usp-btn" disabled={!rows.length} onClick={() => {
+          try {
+            downloadHistory(rows);
+            setExportError('');
+          } catch {
+            setExportError('Не удалось скачать историю. Попробуй ещё раз.');
+          }
+        }}><Icon name="download" size={17} />Скачать</button></div>{rows.length > 0 && <div className="usp-tools"><label className="usp-search"><Icon name="search" size={16} /><input aria-label="Поиск в истории" placeholder="Найти тему или имя…" value={query} onChange={e => {
+            setQuery(e.target.value);
+            setPage(0);
+          }} /></label><select className="usp-select" aria-label="Порядок истории" value={sort} onChange={e => {
+          setSort(e.target.value);
+          setPage(0);
+        }}><option value="recent">По дате</option><option value="best">По баллу</option></select></div>}{rows.length > 0 && <div className="usp-filters" role="group" aria-label="Фильтр истории">{[['all', 'Все'], ['passed', 'От 50%'], ['retry', 'Ниже 50%']].map(([value, label]) => <button type="button" className="usp-chip" key={value} aria-pressed={filter === value} onClick={() => {
+          setFilter(value);
+          setPage(0);
+        }}>{label}</button>)}</div>}{exportError && <p className="usp-error" role="alert">{exportError}</p>}{notice && <div className="usp-notice" role="status">{notice}</div>}{target && <div className="usp-confirm" role="group" aria-label="Подтверждение удаления" onKeyDown={e => {
+        if (e.key === 'Escape' && !busy) close();
+      }}><div className="usp-confirm-text"><strong>Удалить результат?</strong><div className="usp-caption">{str(target.raw.topic) || 'Тест'} · отменить удаление нельзя.</div></div><div className="usp-confirm-actions"><button ref={cancelRef} type="button" className="usp-btn" disabled={busy} onClick={close}>Отмена</button><button type="button" className="usp-btn danger" disabled={busy} onClick={confirmDelete}>{busy ? 'Удаление…' : 'Удалить'}</button></div>{error && <p className="usp-error" role="alert">{error}</p>}</div>}{visible.length ? visible.map(x => <div className="usp-record" key={x.index}><span className="usp-record-icon"><Icon name="tests" size={17} /></span><div><div className="usp-record-title">{str(x.raw.topic) || 'Тест без названия'}</div><div className="usp-record-meta">{dateLabel(x.raw)}{x.raw.student ? ` · ${str(x.raw.student)}` : ''}</div></div><span className={`usp-record-score ${x.value === null ? '' : x.value >= 50 ? 'positive' : 'negative'}`}>{x.value === null ? '—' : fmt(x.value)}{x.value !== null && <small>%</small>}</span>{canRemove ? <button type="button" className="usp-icon-btn danger" title="Удалить результат" aria-label={`Удалить результат: ${str(x.raw.topic) || 'Тест'}`} disabled={busy} onClick={e => {
+          opener.current = e.currentTarget;
+          setTarget(x);
+          setError('');
+          setNotice('');
+        }}><Icon name="trash" size={15} /></button> : <span />}</div>) : <Empty title={query || filter !== 'all' ? 'Ничего не найдено' : 'Пока нет попыток'} text={query || filter !== 'all' ? 'Измени поиск или фильтр результатов.' : 'Результаты пройденных тестов появятся здесь.'} icon="tests" />}{pages > 1 && <div className="usp-pagination"><span className="usp-caption">{current + 1} / {pages}</span><div><button type="button" className="usp-btn" disabled={current === 0} onClick={() => setPage(current - 1)}>Назад</button><button type="button" className="usp-btn" disabled={current === pages - 1} onClick={() => setPage(current + 1)}>Далее</button></div></div>}</div>;
+  }
+  function boardMetric(user, type) {
+    return type === 'tests' ? testSummary(user.testHistory).average : type === 'excel' ? num(user.excelProgress?.xp) : type === 'typing' ? num(user.typingProgress?.maxWpm) : num(user.hotkeyProgress?.maxScore);
+  }
+  function userName(user) {
+    return str(user.nickname || user.displayName) || str(user.email).split('@')[0] || 'Ученик';
+  }
+  function initials(user) {
+    return userName(user).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+  }
+  function hue(id) {
+    return Array.from(str(id)).reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 0);
+  }
+  function Leaderboard({
+    uid
+  }) {
+    const [category, setCategory] = useState('excel');
+    const [users, setUsers] = useState([]);
+    const [status, setStatus] = useState('loading');
+    const [error, setError] = useState('');
+    const [retry, setRetry] = useState(0);
+    const id = useId();
+    useEffect(() => {
+      let active = true;
+      setStatus('loading');
+      setError('');
+      Promise.resolve().then(() => {
+        if (!window.db?.collection) throw new Error('База данных пока не подключена.');
+        return window.db.collection('users').get();
+      }).then(snap => {
+        if (active) {
+          setUsers(snap.docs.map(d => ({
+            ...d.data(),
+            id: d.id
+          })));
+          setStatus('ready');
+        }
+      }).catch(e => {
+        if (!active) return;
+        setUsers([]);
+        setStatus('error');
+        setError(String(e.code || '').includes('permission-denied') ? 'Рейтинг недоступен для этого аккаунта. Доступ определяется настройками платформы.' : 'Не удалось загрузить рейтинг. Проверь подключение и попробуй ещё раз.');
+      });
+      return () => {
+        active = false;
+      };
+    }, [uid, retry]);
+    const ranked = useMemo(() => {
+      const sorted = users.map(u => ({
+        user: u,
+        value: boardMetric(u, category)
+      })).filter(x => category === 'tests' ? testSummary(x.user.testHistory).total > 0 : x.value > 0).sort((a, b) => b.value - a.value || str(a.user.id).localeCompare(str(b.user.id)));
+      let rank = 0;
+      return sorted.map((x, i) => {
+        if (i === 0 || x.value !== sorted[i - 1].value) rank = i + 1;
+        return {
+          ...x,
+          rank
+        };
+      });
+    }, [users, category]);
+    const mine = ranked.findIndex(x => x.user.id === uid);
+    const unit = {
+      excel: 'XP',
+      typing: 'WPM',
+      hotkeys: 'очков',
+      tests: '% · средний балл'
+    }[category];
+    const renderRow = ({
+      user,
+      value,
+      rank
+    }) => <div className={`usp-lb-row ${user.id === uid ? 'me' : ''}`} key={user.id}><span className={`usp-rank ${rank <= 3 ? 'top' : ''}`}>{rank <= 3 ? <span title={`${rank} место`}>{rank}</span> : rank}</span><span className="usp-avatar" style={{
+        '--hue': hue(user.id)
+      }}>{initials(user)}</span><div><div className="usp-lb-name">{userName(user)}{user.id === uid && <span className="usp-badge">ВЫ</span>}</div><div className="usp-caption">{user.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div></div><div className="usp-lb-value">{fmt(value)}<small>{unit}</small></div></div>;
+    return <div className="usp-card" style={{
+      marginTop: 0
+    }}><div className="usp-section-head"><div><h3>Вместе двигаться интереснее</h3><p className="usp-caption">Топ-50 · одинаковый результат — одинаковое место</p></div></div><div className="usp-lb-top"><Tabs value={category} onChange={setCategory} tabs={TABS.slice(0, 4).map(({
+          id,
+          label
+        }) => ({
+          id,
+          label
+        }))} label="Категория рейтинга" id={id} /><button type="button" className="usp-icon-btn" title="Обновить рейтинг" aria-label="Обновить рейтинг" disabled={status === 'loading'} onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={17} /></button></div><div role="tabpanel" id={`${id}-panel-${category}`} aria-labelledby={`${id}-${category}`} aria-busy={status === 'loading'}>{status === 'loading' ? <div role="status" aria-label="Загрузка рейтинга">{[0, 1, 2, 3].map(i => <div className="usp-skeleton" key={i} />)}</div> : status === 'error' ? <div role="alert"><Empty title="Рейтинг пока недоступен" text={error} icon="cup"><button type="button" className="usp-btn" onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={15} />Повторить</button></Empty></div> : ranked.length ? <div className="usp-enter" key={category}>{ranked.slice(0, 50).map(renderRow)}{mine >= 50 && <><p className="usp-caption" style={{
+              margin: '20px 0 8px'
+            }}>Твоё место</p>{renderRow(ranked[mine])}</>}</div> : <Empty title="Первое место ещё свободно" text="В этой категории пока нет сохранённых результатов." icon="cup" />}</div></div>;
+  }
+  function Ring({
+    value,
+    max = 100,
+    label,
+    display,
+    unit = ''
+  }) {
+    const ratio = Math.max(0, Math.min(1, num(value) / Math.max(1, max)));
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }, []);
+    const circumference = 2 * Math.PI * 76;
+    return <div className="usp-ring" role="img" aria-label={`${label}: ${fmt(display ?? value)} ${unit}`}><svg viewBox="0 0 180 180" aria-hidden="true"><circle className="usp-ring-track" cx="90" cy="90" r="76" /><circle className="usp-ring-fill" cx="90" cy="90" r="76" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - (visible ? ratio : 0))} /></svg><div className="usp-ring-center" aria-hidden="true"><strong><AnimatedNumber value={display ?? value} />{unit === '%' ? '%' : ''}</strong><small>{unit === '%' ? 'от всех попыток' : unit || label}</small></div></div>;
+  }
+  function BestChart({
+    rows
+  }) {
+    const [mode, setMode] = useState('recent');
+    const [selected, setSelected] = useState(null);
+    const points = useMemo(() => {
+      const valid = rows.filter(x => x.value !== null);
+      if (mode === 'best') return valid.slice().sort((a, b) => b.value - a.value || a.index - b.index).slice(0, 10);
+      return valid.filter(x => stamp(x.raw) !== null).sort((a, b) => stamp(b.raw) - stamp(a.raw) || a.index - b.index).slice(0, 10).reverse();
+    }, [rows, mode]);
+    const current = points.find(x => x.index === selected) || points[points.length - 1];
+    return <div className="usp-card"><div className="usp-section-head usp-chart-head"><div><h3>Результаты тестов</h3><p className="usp-caption">{mode === 'recent' ? 'Последние 10 · по дате' : 'Лучшие 10 · по баллу'}</p></div><div className="usp-segment" role="group" aria-label="Режим графика">{[['recent', 'Последние'], ['best', 'Лучшие']].map(([id, label]) => <button type="button" aria-pressed={mode === id} key={id} onClick={() => {
+            setMode(id);
+            setSelected(null);
+          }}>{label}</button>)}</div></div>{points.length ? <><div className="usp-chart"><div className="usp-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div className="usp-bars" key={mode} role="group" aria-label="Выбрать результат на графике">{points.map((x, i) => <button type="button" className="usp-bar-col" key={x.index} aria-label={`${i + 1}. ${str(x.raw.topic) || 'Тест'}: ${fmt(x.value)}%, ${dateLabel(x.raw)}`} aria-pressed={current?.index === x.index} onClick={() => setSelected(x.index)} onFocus={() => setSelected(x.index)}><span className="usp-bar-track" aria-hidden="true"><span className="usp-bar" style={{
+                  height: `${x.value}%`,
+                  animationDelay: `${i * 35}ms`
+                }}><span className="usp-bar-tip">{fmt(x.value)}</span></span></span><span className="usp-bar-label" aria-hidden="true">{i + 1}</span></button>)}</div></div><div className="usp-chart-detail" aria-live="polite" aria-atomic="true"><div><strong>{str(current.raw.topic) || 'Тест без названия'}</strong><span className="usp-caption">{dateLabel(current.raw)}</span></div><b>{fmt(current.value)}%</b></div></> : <Empty title={rows.length ? 'Нет результатов для графика' : 'Твой первый результат впереди'} text={mode === 'recent' && rows.length ? 'Для этого режима нужны результаты с датой. Посмотри вкладку «Лучшие».' : 'После прохождения теста здесь появится график.'} icon="tests" />}</div>;
+  }
+  function downloadHistory(rows) {
+    const blob = new Blob([JSON.stringify({
+      format: 'ultimate-lms-test-history',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      testHistory: rows.map(x => x.raw)
+    }, null, 2)], {
+      type: 'application/json;charset=utf-8'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Ultimate_LMS_history.json';
+    document.body.appendChild(link);
+    try {
+      link.click();
+    } finally {
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+  function Training({
+    type,
+    userData
+  }) {
+    const excel = userData?.excelProgress || {},
+      typing = userData?.typingProgress || {},
+      hot = userData?.hotkeyProgress || {};
+    const content = {
+      excel: {
+        icon: 'excel',
+        title: 'От первой формулы к уверенной работе',
+        text: 'Все твои достижения в Excel — в одном месте.',
+        count: num(excel.completedLessons),
+        countLabel: 'Завершено уроков',
+        hint: 'Попробуй применить новую формулу в собственной таблице — так она запомнится лучше.',
+        value: num(excel.xp) % 1000,
+        max: 1000,
+        display: num(excel.level, 1),
+        unit: 'уровень',
+        ringNote: `До следующей отметки в 1 000 XP: ${fmt(1000 - num(excel.xp) % 1000)} XP.`,
+        metrics: [{
+          label: 'Уровень',
+          value: num(excel.level, 1),
+          note: 'Из профиля',
+          icon: 'excel'
+        }, {
+          label: 'Всего опыта',
+          value: num(excel.xp),
+          unit: 'XP',
+          note: 'Накоплено в Excel',
+          icon: 'spark'
+        }, {
+          label: 'Пройдено уроков',
+          value: num(excel.completedLessons),
+          note: 'Завершённые занятия',
+          icon: 'check'
+        }, {
+          label: 'Серия без ошибок',
+          value: num(excel.streak),
+          note: 'Сохранённая серия',
+          icon: 'bolt'
+        }]
+      },
+      typing: {
+        icon: 'typing',
+        title: 'Ровный ритм. Уверенная скорость.',
+        text: 'Следи за личным рекордом, комбо и количеством тренировок.',
+        count: num(typing.testsCompleted),
+        countLabel: 'Завершено тренировок',
+        hint: 'Точность важнее спешки. Ускоряйся, когда пальцы начинают находить клавиши без подсказок.',
+        value: num(typing.maxWpm),
+        max: 120,
+        display: num(typing.maxWpm),
+        unit: 'WPM · рекорд',
+        ringNote: 'Шкала до 120 WPM — ориентир для кольца, не ограничение рекорда.',
+        metrics: [{
+          label: 'Лучшая скорость',
+          value: num(typing.maxWpm),
+          unit: 'WPM',
+          note: 'Личный рекорд',
+          icon: 'typing'
+        }, {
+          label: 'Лучшее комбо',
+          value: num(typing.maxCombo),
+          note: 'Серия точных нажатий',
+          icon: 'bolt'
+        }, {
+          label: 'Тренировки',
+          value: num(typing.testsCompleted),
+          note: 'Завершённые тексты',
+          icon: 'check'
+        }]
+      },
+      hotkeys: {
+        icon: 'bolt',
+        title: 'Нужное действие — одним сочетанием',
+        text: 'Твой рекорд и регулярная практика горячих клавиш.',
+        count: num(hot.sessionsPlayed),
+        countLabel: 'Завершено сессий',
+        hint: 'Возьми одно новое сочетание и используй его в привычной работе сегодня.',
+        value: num(hot.sessionsPlayed),
+        max: (Math.floor(num(hot.sessionsPlayed) / 10) + 1) * 10,
+        display: num(hot.sessionsPlayed),
+        unit: 'сессий',
+        ringNote: `Следующая отметка — ${(Math.floor(num(hot.sessionsPlayed) / 10) + 1) * 10} сессий.`,
+        metrics: [{
+          label: 'Лучший результат',
+          value: num(hot.maxScore),
+          note: 'Очков за сессию',
+          icon: 'cup'
+        }, {
+          label: 'Всего сессий',
+          value: num(hot.sessionsPlayed),
+          note: 'Завершённые тренировки',
+          icon: 'check'
+        }]
+      }
+    }[type];
+    return <><div className="usp-card usp-training-hero"><div className="usp-training-copy"><span className="usp-badge"><Icon name={content.icon} size={16} />Личный прогресс</span><h3>{content.title}</h3><p>{content.text}</p></div><div className="usp-training-ring"><Ring value={content.value} max={content.max} display={content.display} unit={content.unit} label="Прогресс" /><p className="usp-caption">{content.ringNote}</p></div></div><div style={{
+        '--up-columns': content.metrics.length
+      }}><Metrics items={content.metrics} /></div><div className="usp-card"><div className="usp-section-head"><div><h3>{content.countLabel}</h3><p className="usp-caption">Каждое занятие добавляет уверенности</p></div><span className="usp-badge">{fmt(content.count)}</span></div><div className="usp-dots" aria-hidden="true">{Array.from({
+            length: 24
+          }, (_, i) => <span key={i} className={`usp-dot ${i >= content.count ? 'off' : ''}`} style={{
+            animationDelay: `${i * 22}ms`
+          }} />)}</div><p className="usp-caption">{content.count > 24 ? `Показаны 24 из ${fmt(content.count)} занятий.` : 'Один заполненный квадрат — одно завершённое занятие.'}</p><div className="usp-hint"><Icon name="spark" size={18} /><span>{content.hint}</span></div></div></>;
+  }
+  function StatsPanel({
+    history,
+    setHistory,
+    userData,
+    uid,
+    theme
+  }) {
+    useStyles();
+    const id = useId();
+    const [activeTab, setActiveTab] = useState('tests');
+    const source = Array.isArray(userData?.testHistory) ? userData.testHistory : list(history);
+    const sourceSignature = useMemo(() => fingerprint(source), [source]);
+    const [override, setOverride] = useState(null);
+    const mounted = useRef(true);
+    const writeLock = useRef(false);
+    useEffect(() => {
+      mounted.current = true;
+      return () => {
+        mounted.current = false;
+      };
+    }, []);
+    const activeHistory = override && override.uid === uid && override.base === sourceSignature ? override.value : source;
+    const rows = useMemo(() => normalizeHistory(activeHistory), [activeHistory]);
+    const summary = useMemo(() => testSummary(activeHistory), [activeHistory]);
+    async function removeEntry(target) {
+      if (writeLock.current) throw new Error('Дождитесь завершения удаления.');
+      writeLock.current = true;
+      const actor = window.auth?.currentUser?.uid || null;
+      const assertActor = () => {
+        if ((window.auth?.currentUser?.uid || null) !== actor) throw new Error('Аккаунт изменился. Обновите страницу.');
+      };
+      try {
+        if (actor !== uid) throw new Error('Аккаунт изменился. Обновите страницу.');
+        let updated;
+        if (actor) {
+          if (!window.db?.runTransaction) throw new Error('База недоступна. Запись не удалена. Попробуйте позже.');
+          const ref = window.db.collection('users').doc(actor);
+          updated = await window.db.runTransaction(async transaction => {
+            assertActor();
+            const snapshot = await transaction.get(ref);
+            assertActor();
+            if (!snapshot.exists) throw new Error('Профиль не найден. Запись не удалена.');
+            const remote = snapshot.data()?.testHistory;
+            if (!Array.isArray(remote)) throw new Error('История в профиле недоступна. Обновите страницу.');
+            const next = removeExact(remote, target);
+            transaction.update(ref, {
+              testHistory: next
+            });
+            return next;
+          });
+        } else {
+          if (typeof setHistory !== 'function') throw new Error('Для изменения истории нужно войти в аккаунт.');
+          updated = removeExact(activeHistory, target);
+        }
+        assertActor();
+        if (!mounted.current) return;
+        setOverride({
+          uid,
+          base: sourceSignature,
+          value: updated
+        });
+        if (typeof setHistory === 'function') setHistory(updated);
+        // Сохраняем прежний ключ для совместимости с родительским приложением.
+        try {
+          localStorage.setItem('test_history_v1', JSON.stringify(updated));
+        } catch {}
+      } finally {
+        writeLock.current = false;
+      }
+    }
+    const metrics = [{
+      label: 'Средний балл',
+      value: summary.average,
+      unit: '%',
+      note: 'По завершённым тестам',
+      icon: 'tests'
+    }, {
+      label: 'Лучший результат',
+      value: summary.best,
+      unit: '%',
+      note: 'Личный рекорд',
+      icon: 'cup'
+    }, {
+      label: 'Результат ≥ 50%',
+      value: summary.total ? Math.round(summary.passed / summary.total * 100) : 0,
+      unit: '%',
+      note: `${summary.passed} из ${summary.total} попыток`,
+      icon: 'check'
+    }, {
+      label: 'Пройдено тестов',
+      value: summary.total,
+      note: 'С корректным результатом',
+      icon: 'clock'
+    }];
+    const passRate = summary.total ? Math.round(summary.passed / summary.total * 100) : 0;
+    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения"><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
+  }
+  function StatsView(props) {
+    const uid = useUserId();
+    return <StatsPanel key={uid || 'guest'} {...props} uid={uid} />;
+  }
+  Object.assign(window, {
+    StatsView
+  });
 })();
