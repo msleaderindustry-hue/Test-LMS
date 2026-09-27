@@ -1,490 +1,302 @@
-// Умные карточки Ultimate LMS — полная замена исходного файла.
-// Экспорт FlashcardsLMS сохранён. Достаточно React; JSX подключается как раньше.
-// Прогресс хранится на устройстве отдельно для каждого аккаунта. Firebase не изменяется.
+// Полная замена модуля FlashcardsLMS. Требуется только window.React.
 (function () {
   'use strict';
 
   const {
     useState,
-    useEffect,
     useRef,
-    useReducer
+    useEffect
   } = React;
-  let instanceNumber = 0;
-  const API_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
-  const DEFAULT_TOPIC = 'Основы веб-разработки';
-  const DEFAULT_CARDS = [{
-    q: 'Что означает аббревиатура HTML?',
-    a: 'HyperText Markup Language — язык гипертекстовой разметки.'
-  }, {
-    q: 'За что отвечает CSS на веб-странице?',
-    a: 'За внешний вид, цвета, шрифты и расположение элементов — стилизацию страницы.'
-  }, {
-    q: 'Для чего нужен тег <a> в HTML?',
-    a: 'Он создаёт гиперссылку для перехода на другую страницу, файл или раздел страницы.'
-  }, {
-    q: 'Какая комбинация клавиш отменяет последнее действие?',
-    a: 'Ctrl + Z. В большинстве приложений macOS — Command + Z.'
-  }, {
-    q: 'Что делает свойство display: flex в CSS?',
-    a: 'Включает гибкую модель компоновки Flexbox для выравнивания и распределения элементов контейнера.'
-  }];
-  const PATHS = {
-    cards: <><rect x="6" y="4" width="15" height="17" rx="3" /><path d="M3 17V5a3 3 0 0 1 3-3h11M10 9h7M10 13h5" /></>,
+  const icons = {
+    cards: <><rect x="7" y="3" width="13" height="17" rx="3" /><path d="M4 7v12a3 3 0 0 0 3 3h9M11 8h5M11 12h3" /></>,
     spark: <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z" />,
-    left: <path d="m14 5-7 7 7 7" />,
-    right: <path d="m10 5 7 7-7 7" />,
-    flip: <><path d="M4 9a8 8 0 0 1 14-3l2 3M20 4v5h-5M20 15a8 8 0 0 1-14 3l-2-3M4 20v-5h5" /></>,
+    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
     check: <path d="m5 12 4 4L19 6" />,
-    close: <path d="m6 6 12 12M6 18 18 6" />,
-    more: <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>,
-    shuffle: <><path d="M3 5h3l12 14h3M17 15l4 4-4 3M3 19h3l4-5M14 10l4-5h3M17 2l4 3-4 4" /></>,
-    book: <><path d="M12 5C9 3 6 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1ZM12 5v15" /></>,
-    keyboard: <><rect x="2" y="5" width="20" height="14" rx="3" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 15h8M6 12h.01M18 12h.01" /></>,
-    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></>
+    repeat: <><path d="M20 4v6h-6" /><path d="M20 10a8 8 0 1 0-1 8" /></>,
+    flip: <><path d="M4 8h12l-3-3M20 16H8l3 3" /><path d="M4 8v5m16 3v-5" /></>,
+    close: <path d="m6 6 12 12M18 6 6 18" />
   };
-  function Icon({
+  const Icon = ({
     name,
     size = 20
-  }) {
-    return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{PATHS[name] || PATHS.cards}</svg>;
-  }
-  const STYLES = `
-  .fcl{--fc-bg:#111a2b;--fc-panel:#19253c;--fc-soft:#21304a;--fc-text:#f4f5ff;--fc-muted:#aebbd2;--fc-line:rgba(171,187,222,.17);--fc-purple:#c3a6ff;--fc-tint:rgba(164,112,251,.12);--fc-green:#6dddb6;--fc-green-bg:rgba(67,206,155,.12);--fc-warm:#f0c88b;--fc-warm-bg:rgba(238,179,84,.12);color:var(--fc-text);color-scheme:dark;font-family:inherit;font-size:16px;line-height:1.5;text-align:left;width:100%;max-width:980px;margin:0 auto;min-width:0;position:relative}
-  :is(html.light,body.light,.theme-light,[data-theme="light"]) .fcl:not(.fcl-dark),.fcl.fcl-light{--fc-bg:#f5f6ff;--fc-panel:#fff;--fc-soft:#eef0fc;--fc-text:#27334c;--fc-muted:#65718b;--fc-line:rgba(118,129,177,.20);--fc-purple:#8250ce;--fc-tint:#f0eafb;--fc-green:#127c5b;--fc-green-bg:#e8f7ef;--fc-warm:#9a621c;--fc-warm-bg:#fff5e5;color-scheme:light}
-  .fcl *,.fcl *:before,.fcl *:after{box-sizing:border-box}.fcl h2,.fcl h3,.fcl p{margin:0}.fcl button,.fcl input{font:inherit;color:inherit}.fcl button{cursor:pointer}.fcl button:disabled{cursor:default;opacity:.45}.fcl svg{flex-shrink:0}.fcl button:focus-visible,.fcl input:focus-visible,.fcl:focus-visible{outline:3px solid var(--fc-purple);outline-offset:4px}.fcl [hidden]{display:none!important}
-  .fcl-shell{padding:30px;border:1px solid var(--fc-line);border-radius:27px;background:radial-gradient(ellipse at 6% 0,var(--fc-tint),transparent 52%),var(--fc-bg);box-shadow:0 20px 65px rgba(18,24,59,.12)}.fcl-header{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:24px;border-bottom:1px solid var(--fc-line);margin-bottom:24px}.fcl-brand{display:flex;align-items:center;gap:14px}.fcl-logo{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#b781fb,#8260dc);color:#fff;box-shadow:0 7px 24px rgba(157,94,238,.2)}.fcl h2{font-size:30px;line-height:1.2;letter-spacing:-.8px;font-weight:800}.fcl h2 span{color:var(--fc-purple)}.fcl-subtitle{font-size:14px;color:var(--fc-muted);margin-top:6px!important}.fcl-ai-badge{display:flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid var(--fc-line);background:var(--fc-tint);border-radius:11px;color:var(--fc-purple);font-size:12px;font-weight:750;white-space:nowrap}
-  .fcl-generator{background:var(--fc-panel);border:1px solid var(--fc-line);border-radius:18px;padding:18px 20px;margin-bottom:23px}.fcl-field-label{font-size:13px;font-weight:700;color:var(--fc-muted);margin-bottom:10px;display:flex;align-items:center;gap:7px}.fcl-field-label svg{color:var(--fc-purple)}.fcl-generator-row{display:flex;gap:11px;align-items:center}.fcl-input{flex:1;min-width:0;width:100%;height:51px;border-radius:12px;border:1px solid var(--fc-line);background:var(--fc-bg);padding:0 15px;font-size:16px!important;outline:0;transition:border-color .2s,box-shadow .2s}.fcl-input:focus{border-color:var(--fc-purple);box-shadow:0 0 0 3px var(--fc-tint)}.fcl-input::placeholder{color:var(--fc-muted)}.fcl-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:11px 19px;background:var(--fc-panel);border:1px solid var(--fc-line);border-radius:12px;font-size:15px!important;font-weight:700!important;transition:transform .18s,box-shadow .18s,background .18s}.fcl-btn:hover:not(:disabled){transform:translateY(-2px);background:var(--fc-soft)}.fcl-btn:active:not(:disabled){transform:translateY(0)}.fcl-btn.primary{background:linear-gradient(115deg,#9b67ec,#7656d5);border-color:transparent;color:#fff;box-shadow:0 5px 17px rgba(139,87,220,.22)}.fcl-btn.primary:hover:not(:disabled){background:linear-gradient(115deg,#ac76f4,#8565e1);box-shadow:0 7px 23px rgba(139,87,220,.3)}.fcl-btn.remember{background:var(--fc-green-bg);border-color:var(--fc-green);color:var(--fc-green)}.fcl-btn.repeat{background:var(--fc-warm-bg);color:var(--fc-warm);border-color:var(--fc-line)}.fcl-btn.small{min-height:34px;padding:6px 11px;font-size:13px!important}.fcl-icon-btn{width:41px;height:41px;display:inline-grid;place-items:center;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--fc-muted)!important}.fcl-icon-btn:hover{background:var(--fc-soft);color:var(--fc-purple)!important}.fcl-error{display:flex;align-items:flex-start;gap:9px;padding:12px 14px;border-radius:11px;background:var(--fc-warm-bg);color:var(--fc-warm);font-size:14px;margin-top:13px}.fcl-error svg{margin-top:1px}.fcl-error>span{flex:1}
-  .fcl-deck-header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:13px}.fcl-deck-title{font-size:18px;font-weight:750;overflow-wrap:anywhere;line-height:1.4}.fcl .fcl-deck-caption{font-size:12px;color:var(--fc-muted);margin-top:4px}.fcl-deck-right{display:flex;align-items:center;gap:6px;flex-shrink:0}.fcl-count{padding:7px 12px;font-size:15px;font-weight:750;color:var(--fc-purple);background:var(--fc-tint);border-radius:10px;font-variant-numeric:tabular-nums;white-space:nowrap}.fcl-track{display:flex;height:7px;border-radius:20px;background:var(--fc-soft);overflow:hidden}.fcl-track>span{height:100%;transition:width .4s ease}.fcl-track-known{background:var(--fc-green)}.fcl-track-repeat{background:var(--fc-warm)}.fcl-progress-labels{display:flex;align-items:center;gap:17px;margin-top:10px;font-size:12px;color:var(--fc-muted);flex-wrap:wrap}.fcl-progress-labels span{display:flex;align-items:center;gap:6px}.fcl-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--fc-green)}.fcl-dot.repeat{background:var(--fc-warm)}.fcl-progress-labels>span:last-child{margin-left:auto}.fcl-mode{display:flex;align-items:center;gap:8px;margin-top:15px;color:var(--fc-warm);font-size:13px}.fcl-link{background:transparent;border:0;text-decoration:underline;text-underline-offset:3px;color:var(--fc-purple)!important;font-size:13px!important;padding:3px}
-  .fcl-stage{position:relative;padding:26px 8px 15px;perspective:1400px}.fcl-card-enter{max-width:800px;margin:0 auto;animation:fcl-in .3s ease both}.fcl-card{display:grid;grid-template-columns:minmax(0,1fr);width:100%;height:370px;position:relative;border:0;padding:0;background:transparent;border-radius:23px;transform-style:preserve-3d;transition:transform .62s cubic-bezier(.2,.7,.2,1);text-align:center;outline-offset:7px!important}.fcl-card.flipped{transform:rotateY(180deg)}.fcl-face{grid-area:1/1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:15px;width:100%;height:100%;padding:25px 34px;border:1px solid var(--fc-line);border-radius:23px;background:radial-gradient(ellipse at 50% 0,var(--fc-tint),transparent 70%),var(--fc-panel);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 12px 32px rgba(13,19,44,.09);overflow:hidden}.fcl-face.answer{transform:rotateY(180deg);background:radial-gradient(ellipse at 10% 0,rgba(202,159,255,.32),transparent 62%),linear-gradient(130deg,#7d46cf,#51329b);color:white;border-color:rgba(192,151,255,.7);box-shadow:0 14px 35px rgba(92,50,170,.2)}.fcl-face-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px}.fcl-face-tag{display:inline-flex;align-items:center;gap:6px;background:var(--fc-soft);color:var(--fc-muted);padding:6px 11px;border-radius:9px;font-size:12px;font-weight:750;letter-spacing:.5px;text-transform:uppercase}.fcl-face.answer .fcl-face-tag{background:rgba(255,255,255,.15);color:#fff}.fcl-face-number{font-size:12px;color:var(--fc-muted);font-variant-numeric:tabular-nums}.fcl-face.answer .fcl-face-number{color:#e5d8ff}.fcl-copy{display:block;overflow-y:auto;scrollbar-width:thin;max-height:230px;max-width:100%;padding:4px 7px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:27px;line-height:1.45;font-weight:750;letter-spacing:-.3px;text-wrap:pretty}.fcl-face.answer .fcl-copy{font-size:24px;font-weight:550;line-height:1.55}.fcl-face-footer{display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;font-size:13px;color:var(--fc-muted)}.fcl-face.answer .fcl-face-footer{color:#eadfff}.fcl-nav{display:flex;align-items:center;justify-content:center;gap:13px;margin-top:9px}.fcl-arrow{width:52px;height:52px;border:1px solid var(--fc-line);border-radius:14px;display:grid;place-items:center;background:var(--fc-panel);color:var(--fc-text);flex-shrink:0;transition:background .2s,transform .2s}.fcl-arrow:hover:not(:disabled){background:var(--fc-soft);transform:translateY(-2px)}.fcl-nav-center{display:flex;align-items:center;justify-content:center;gap:10px;min-width:290px}.fcl-nav-center>.primary{min-width:235px}.fcl-nav-center .fcl-btn{min-height:52px}.fcl .fcl-shortcuts{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:17px;color:var(--fc-muted);font-size:12px}.fcl-shortcuts kbd{font-family:inherit;border:1px solid var(--fc-line);border-radius:5px;padding:1px 5px;background:var(--fc-panel);font-size:11px}.fcl-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;padding-top:17px;border-top:1px solid var(--fc-line);font-size:12px;color:var(--fc-muted)}.fcl-footer span{display:flex;align-items:center;gap:6px}.fcl-live{min-height:22px;text-align:center;font-size:13px;color:var(--fc-purple);margin-top:13px}.fcl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-  .fcl-menu{position:relative}.fcl-menu-panel{position:absolute;right:0;top:calc(100% + 7px);z-index:5;min-width:230px;background:var(--fc-panel);border:1px solid var(--fc-line);box-shadow:0 13px 35px rgba(12,20,40,.18);border-radius:13px;padding:6px;animation:fcl-in .2s both}.fcl-menu-panel button{display:flex;align-items:center;gap:9px;width:100%;background:transparent;border:0;border-radius:8px;padding:12px;text-align:left;font-size:14px}.fcl-menu-panel button:hover{background:var(--fc-soft)}
-  .fcl-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:370px;border:1px solid var(--fc-line);border-radius:23px;background:var(--fc-panel);padding:30px;text-align:center;gap:14px}.fcl-loading-icon{display:grid;place-items:center;width:66px;height:66px;border-radius:21px;background:var(--fc-tint);color:var(--fc-purple);animation:fcl-breathe 1.5s infinite alternate}.fcl-loading h3{font-size:23px;font-weight:750}.fcl-loading p{color:var(--fc-muted);font-size:15px;max-width:450px}.fcl-loading-line{height:5px;width:180px;border-radius:10px;background:var(--fc-soft);overflow:hidden;margin:8px 0}.fcl-loading-line:after{content:'';display:block;height:100%;width:45%;background:var(--fc-purple);border-radius:inherit;animation:fcl-line 1.5s ease-in-out infinite alternate}.fcl-summary{padding:36px 25px;min-height:370px;background:radial-gradient(ellipse at 50% 0,var(--fc-tint),transparent 70%),var(--fc-panel);border:1px solid var(--fc-line);border-radius:23px;text-align:center;animation:fcl-in .3s both}.fcl-summary-icon{width:62px;height:62px;display:grid;place-items:center;margin:0 auto 17px;background:var(--fc-green-bg);color:var(--fc-green);border-radius:20px}.fcl-summary h3{font-size:28px;letter-spacing:-.6px;margin-bottom:9px}.fcl-summary p{font-size:16px;color:var(--fc-muted);max-width:450px;margin:auto}.fcl-summary-stats{display:flex;justify-content:center;gap:45px;margin:23px 0}.fcl-summary-stats strong{font-size:31px;font-variant-numeric:tabular-nums;display:block;line-height:1.3}.fcl-summary-stats span{font-size:13px;color:var(--fc-muted)}.fcl-summary-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-  @keyframes fcl-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}@keyframes fcl-breathe{from{transform:rotate(-7deg) scale(.94)}to{transform:rotate(7deg) scale(1.04)}}@keyframes fcl-line{from{transform:translateX(-40%)}to{transform:translateX(165%)}}
-  @media(max-width:650px){.fcl-shell{padding:21px;border-radius:23px}.fcl-header{gap:12px;padding-bottom:20px;margin-bottom:20px}.fcl h2{font-size:27px}.fcl-logo{width:46px;height:46px;border-radius:14px}.fcl-brand{gap:10px}.fcl-subtitle{font-size:13px}.fcl-ai-badge{padding:6px 8px;font-size:11px}.fcl-generator{padding:16px;margin-bottom:20px}.fcl-generator-row{flex-wrap:wrap}.fcl-generator-row>.fcl-btn{width:100%}.fcl-input{flex-basis:100%;font-size:16px!important}.fcl-stage{padding:22px 0 13px}.fcl-card{height:360px}.fcl-face{padding:20px;border-radius:20px}.fcl-copy{font-size:24px;max-height:226px;line-height:1.5}.fcl-face.answer .fcl-copy{font-size:21px}.fcl-face-footer{font-size:12px}.fcl-nav{gap:8px}.fcl-nav-center{min-width:0;flex:1;gap:7px}.fcl-nav-center>.primary{min-width:0;width:100%}.fcl-nav-center .fcl-btn{padding:11px 13px;font-size:14px!important}.fcl-arrow{width:44px;height:50px;border-radius:12px}.fcl-deck-title{font-size:17px}.fcl-progress-labels{gap:12px}.fcl-progress-labels>span:last-child{margin-left:0}.fcl-footer{align-items:flex-start;flex-wrap:wrap;gap:9px}.fcl .fcl-shortcuts{display:none}.fcl-live{margin-top:12px}.fcl-summary{padding:28px 18px}.fcl-summary h3{font-size:25px}}
-  @media(max-width:420px){.fcl-shell{padding:16px;border-radius:20px}.fcl-header{align-items:flex-start}.fcl-ai-badge{display:none}.fcl h2{font-size:26px}.fcl-subtitle{font-size:12px}.fcl-count{padding:7px 9px;font-size:14px}.fcl-deck-header{gap:8px}.fcl-deck-title{font-size:16px}.fcl-deck-right{gap:2px}.fcl-icon-btn{width:34px}.fcl-face{padding:18px 15px}.fcl-copy{font-size:23px}.fcl-face.answer .fcl-copy{font-size:20px}.fcl-nav-center .fcl-btn{font-size:13px!important;gap:5px;padding:10px}.fcl-nav-center .fcl-btn svg{width:16px;height:16px}.fcl-nav-center .remember,.fcl-nav-center .repeat{flex:1}.fcl-arrow{width:38px}.fcl-nav{gap:6px}.fcl-summary-actions>.fcl-btn{width:100%}}
-  @media(prefers-reduced-motion:reduce){.fcl *,.fcl *:before,.fcl *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-  `;
-  function useStyles() {
-    useEffect(() => {
-      let node = document.getElementById('lms-flashcards-v2-styles');
-      if (!node) {
-        node = document.createElement('style');
-        node.id = 'lms-flashcards-v2-styles';
-        document.head.appendChild(node);
-      }
-      if (node.textContent !== STYLES) node.textContent = STYLES;
-    }, []);
-  }
-  function validateCards(value) {
-    if (!Array.isArray(value) || value.length < 1 || value.length > 30) throw new Error('format');
+  }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icons[name]}</svg>;
+  const fresh = cards => ({
+    cards,
+    index: 0,
+    flipped: false,
+    ratings: cards.map(() => null),
+    done: false,
+    serial: 0,
+    direction: 1
+  });
+  function parseCards(text) {
+    const clean = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    const data = JSON.parse(clean);
+    if (!Array.isArray(data)) throw Error('shape');
     const seen = new Set();
     const cards = [];
-    for (const card of value) {
-      if (!card || typeof card.q !== 'string' || typeof card.a !== 'string') throw new Error('format');
-      const q = card.q.trim(),
-        a = card.a.trim();
-      if (!q || !a || q.length > 500 || a.length > 1200) throw new Error('format');
-      const key = q.toLocaleLowerCase('ru-RU').replace(/\s+/g, ' ');
-      if (seen.has(key)) continue;
-      seen.add(key);
+    for (const c of data.slice(0, 30)) {
+      if (!c || typeof c.q !== 'string' || typeof c.a !== 'string') continue;
+      const q = c.q.trim(),
+        a = c.a.trim();
+      if (!q || !a || q.length > 500 || a.length > 2000 || seen.has(q.toLowerCase())) continue;
+      seen.add(q.toLowerCase());
       cards.push({
         q,
         a
       });
     }
-    if (!cards.length) throw new Error('format');
-    return cards;
+    if (cards.length < 3) throw Error('few');
+    return cards.slice(0, 20);
   }
-  function deckState(cards = DEFAULT_CARDS, topic = DEFAULT_TOPIC, source = 'local') {
-    return {
-      cards,
-      topic,
-      source,
-      order: cards.map((_, i) => i),
-      index: 0,
-      flipped: false,
-      ratings: {},
-      mode: 'all',
-      finished: false,
-      notice: ''
-    };
-  }
-  const visibleCards = state => state.order.filter(id => state.mode !== 'repeat' || state.ratings[id] === 'repeat');
-  function restore(key) {
-    try {
-      const raw = JSON.parse(localStorage.getItem(key));
-      if (!raw || raw.version !== 2) return deckState();
-      const cards = validateCards(raw.cards);
-      if (cards.length !== raw.cards.length) return deckState();
-      const state = deckState(cards, typeof raw.topic === 'string' && raw.topic.trim() ? raw.topic.slice(0, 160) : DEFAULT_TOPIC, raw.source === 'ai' ? 'ai' : 'local');
-      if (Array.isArray(raw.order) && raw.order.length === cards.length && new Set(raw.order).size === cards.length && raw.order.every(x => Number.isInteger(x) && x >= 0 && x < cards.length)) state.order = raw.order;
-      for (let i = 0; i < cards.length; i++) if (['known', 'repeat'].includes(raw.ratings?.[i])) state.ratings[i] = raw.ratings[i];
-      state.mode = raw.mode === 'repeat' ? 'repeat' : 'all';
-      const ids = visibleCards(state);
-      state.index = Number.isInteger(raw.index) ? Math.max(0, Math.min(raw.index, Math.max(0, ids.length - 1))) : 0;
-      state.finished = raw.finished === true || ids.length === 0;
-      return state;
-    } catch {
-      return deckState();
-    }
-  }
-  function reducer(state, action) {
-    const ids = visibleCards(state);
-    switch (action.type) {
-      case 'replace':
-        return deckState(action.cards, action.topic, action.source);
-      case 'flip':
-        return ids.length && !state.finished ? {
-          ...state,
-          flipped: !state.flipped,
-          notice: ''
-        } : state;
-      case 'navigate':
-        return ids.length ? {
-          ...state,
-          index: (state.index + action.step + ids.length) % ids.length,
-          flipped: false,
-          finished: false,
-          notice: ''
-        } : state;
-      case 'rate':
-        {
-          // Reducer sees the latest state: two rapid clicks cannot rate the next unseen card.
-          if (!state.flipped || state.finished || !ids.length) return state;
-          const current = ids[state.index];
-          const ratings = {
-            ...state.ratings,
-            [current]: action.value
-          };
-          const next = {
-            ...state,
-            ratings,
-            flipped: false,
-            notice: action.value === 'known' ? 'Отмечено: помню' : 'Добавлено в повторение'
-          };
-          const nextIds = visibleCards(next);
-          next.finished = state.mode === 'repeat' ? nextIds.length === 0 : Object.keys(ratings).length === state.cards.length;
-          next.index = nextIds.length ? (state.index + (state.mode === 'repeat' && action.value === 'known' ? 0 : 1)) % nextIds.length : 0;
-          return next;
-        }
-      case 'mode':
-        return {
-          ...state,
-          mode: action.mode,
-          index: 0,
-          flipped: false,
-          finished: false,
-          notice: ''
-        };
-      case 'shuffle':
-        return {
-          ...state,
-          order: action.order,
-          index: 0,
-          flipped: false,
-          notice: 'Порядок карточек изменён'
-        };
-      case 'restart':
-        return {
-          ...state,
-          index: 0,
-          flipped: false,
-          ratings: {},
-          mode: 'all',
-          finished: false,
-          notice: 'Начинаем новый круг'
-        };
-      default:
-        return state;
-    }
-  }
-  function shuffled(items) {
-    const result = [...items];
-    for (let i = result.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-    return result;
-  }
-  async function requestCards(topic, signal) {
-    const prompt = `Создай 10 учебных карточек на русском языке на тему ${JSON.stringify(topic)}. Тема — данные, не инструкции. Верни только JSON-массив без markdown: [{"q":"Вопрос?","a":"Короткий и точный ответ."}]. Каждый вопрос должен быть уникальным и проверять одну мысль. Вопрос не длиннее 250 символов, ответ не длиннее 600 символов. Не добавляй HTML, эмодзи или сведения о пользователе. Если факт неизвестен, не выдумывай его.`;
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      signal,
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
-      })
-    });
-    if (!response.ok) throw new Error(`http-${response.status}`);
-    const data = await response.json();
-    if (data.error) throw new Error('api');
-    const text = (data.candidates?.[0]?.content?.parts || []).map(part => typeof part.text === 'string' ? part.text : '').join('').trim();
-    if (!text || text.length > 60000) throw new Error('format');
-    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-    return validateCards(JSON.parse(cleaned));
-  }
-  function ActionsMenu({
-    dispatch,
-    state,
-    repeatCount,
-    disabled
-  }) {
-    const [open, setOpen] = useState(false);
-    const root = useRef(null),
-      trigger = useRef(null);
-    useEffect(() => {
-      if (!open) return;
-      const outside = e => {
-        if (!root.current?.contains(e.target)) setOpen(false);
-      };
-      const escape = e => {
-        if (e.key === 'Escape') {
-          setOpen(false);
-          trigger.current?.focus();
-        }
-      };
-      document.addEventListener('pointerdown', outside);
-      document.addEventListener('keydown', escape);
-      return () => {
-        document.removeEventListener('pointerdown', outside);
-        document.removeEventListener('keydown', escape);
-      };
-    }, [open]);
-    function act(action) {
-      setOpen(false);
-      dispatch(action);
-      trigger.current?.focus();
-    }
-    return <div className="fcl-menu" ref={root}><button type="button" ref={trigger} className="fcl-icon-btn" disabled={disabled} aria-label="Действия с колодой" title="Действия с колодой" aria-expanded={open} onClick={() => setOpen(!open)}><Icon name="more" /></button>{open && <div className="fcl-menu-panel"><button type="button" onClick={() => act({
-          type: 'shuffle',
-          order: shuffled(state.order)
-        })}><Icon name="shuffle" size={17} />Перемешать</button><button type="button" disabled={!repeatCount} onClick={() => act({
-          type: 'mode',
-          mode: 'repeat'
-        })}><Icon name="flip" size={17} />Повторить сложные ({repeatCount})</button><button type="button" onClick={() => act({
-          type: 'restart'
-        })}><Icon name="flip" size={17} />Начать заново</button></div>}</div>;
-  }
-  function StudyCard({
-    card,
-    flipped,
-    position,
-    count,
-    onFlip
-  }) {
-    return <div className="fcl-card-enter"><button type="button" className={`fcl-card ${flipped ? 'flipped' : ''}`} onClick={onFlip} aria-label={`${flipped ? 'Ответ' : 'Вопрос'}: ${flipped ? card.a : card.q}. ${flipped ? 'Нажмите, чтобы скрыть ответ.' : 'Нажмите, чтобы показать ответ.'}`} aria-pressed={flipped}><span className="fcl-face" aria-hidden="true"><span className="fcl-face-top"><span className="fcl-face-tag"><Icon name="book" size={14} />Вопрос</span><span className="fcl-face-number">{position} / {count}</span></span><span className="fcl-copy">{card.q}</span><span className="fcl-face-footer"><Icon name="flip" size={16} />Вспомни ответ и переверни карточку</span></span><span className="fcl-face answer" aria-hidden="true"><span className="fcl-face-top"><span className="fcl-face-tag"><Icon name="check" size={14} />Ответ</span><span className="fcl-face-number">{position} / {count}</span></span><span className="fcl-copy">{card.a}</span><span className="fcl-face-footer"><Icon name="flip" size={16} />Нажми, чтобы вернуться к вопросу</span></span></button></div>;
-  }
-  function Summary({
-    state,
-    known,
-    repeat,
-    dispatch
-  }) {
-    return <div className="fcl-summary"><div className="fcl-summary-icon"><Icon name={repeat ? 'cards' : 'check'} size={29} /></div><h3 tabIndex={-1}>{repeat ? 'Круг пройден' : known === state.cards.length ? 'Отличная работа' : 'Повторение завершено'}</h3><p>{repeat ? 'Вернись к сложным вопросам — они уже собраны для повторения.' : known === state.cards.length ? 'Все карточки отмечены как знакомые. Можно повторить колоду ещё раз.' : 'Сложные карточки пройдены. В основной колоде ещё есть неоценённые вопросы.'}</p><div className="fcl-summary-stats"><div><strong style={{
-            color: 'var(--fc-green)'
-          }}>{known}</strong><span>Помню</span></div><div><strong style={{
-            color: 'var(--fc-warm)'
-          }}>{repeat}</strong><span>Повторить</span></div></div><div className="fcl-summary-actions">{repeat > 0 ? <button type="button" className="fcl-btn primary" onClick={() => dispatch({
-          type: 'mode',
-          mode: 'repeat'
-        })}><Icon name="flip" size={18} />Повторить сложные</button> : known === state.cards.length ? <button type="button" className="fcl-btn primary" onClick={() => dispatch({
-          type: 'restart'
-        })}><Icon name="flip" size={18} />Ещё один круг</button> : <button type="button" className="fcl-btn primary" onClick={() => dispatch({
-          type: 'mode',
-          mode: 'all'
-        })}>Продолжить колоду</button>}<button type="button" className="fcl-btn" onClick={() => dispatch({
-          type: 'mode',
-          mode: 'all'
-        })}>Просмотреть колоду</button></div></div>;
-  }
-  function FlashcardsPanel({
-    owner,
+  const DEFAULT_CARDS = [{
+    q: "Что означает аббревиатура HTML?",
+    a: "HyperText Markup Language (Язык гипертекстовой разметки)."
+  }, {
+    q: "За что отвечает CSS на веб-странице?",
+    a: "За внешний вид, цвета, шрифты и расположение элементов (стилизацию)."
+  }, {
+    q: "Для чего нужен тег <a> в HTML?",
+    a: "Он создает гиперссылку для перехода на другую страницу или сайт."
+  }, {
+    q: "Какая комбинация клавиш отменяет последнее действие?",
+    a: "Ctrl + Z"
+  }, {
+    q: "Что делает свойство 'display: flex' в CSS?",
+    a: "Включает гибкую модель (Flexbox), которая позволяет легко выравнивать элементы."
+  }];
+  const CSS = `.fc2{--f-bg:#12101d;--f-panel:#1d192c;--f-soft:#29223c;--f-text:#f5f1ff;--f-muted:#b1a7c6;--f-line:#cdb6ff1b;--f-accent:#b59aff;--f-tint:#a27bec12;--f-green:#89e3bc;--f-shadow:#00000030;max-width:960px;width:100%;margin:auto;color:var(--f-text);color-scheme:dark;font:16px/1.5 'Segoe UI',Inter,system-ui,sans-serif;isolation:isolate}
+:is(html.light,body.light,.theme-light,[data-theme=light]) .fc2,.fc2.fc2-light{--f-bg:#f5f2fb;--f-panel:#fff;--f-soft:#ece5f6;--f-text:#2c233d;--f-muted:#756781;--f-line:#71538e25;--f-accent:#794abd;--f-tint:#9661df10;--f-green:#177a54;--f-shadow:#5e3d8715;color-scheme:light}
+.fc2.fc2-dark{--f-bg:#12101d;--f-panel:#1d192c;--f-soft:#29223c;--f-text:#f5f1ff;--f-muted:#b1a7c6;--f-line:#cdb6ff1b;--f-accent:#b59aff;--f-tint:#a27bec12;--f-green:#89e3bc;--f-shadow:#00000030;color-scheme:dark}
+.fc2 *,.fc2 *:before,.fc2 *:after{box-sizing:border-box}.fc2 h2,.fc2 h3,.fc2 h4,.fc2 p{margin:0}.fc2 button,.fc2 input{font:inherit;color:inherit}.fc2 button{cursor:pointer;letter-spacing:normal}.fc2 button:disabled{opacity:.45;cursor:default;transform:none}.fc2 svg{display:block;flex-shrink:0}.fc2 button:focus-visible,.fc2 input:focus-visible,.fc2 [tabindex]:focus-visible{outline:3px solid var(--f-accent);outline-offset:4px}.fc2-shell{padding:32px;background:radial-gradient(ellipse at 100% 0,var(--f-tint),transparent 60%),var(--f-bg);border:1px solid var(--f-line);border-radius:28px;box-shadow:0 24px 70px var(--f-shadow);animation:fc2-appear .55s ease both}.fc2-header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:23px;border-bottom:1px solid var(--f-line)}.fc2-brand{display:flex;align-items:center;gap:13px}.fc2-brand-icon{display:grid;place-items:center;width:48px;height:48px;background:linear-gradient(145deg,#b887f5,#8055db);border-radius:15px;color:white;box-shadow:0 8px 22px #8b54d52b,inset 0 1px 0 #ffffff40}.fc2-brand h2{font-size:23px;font-weight:750;letter-spacing:-.7px}.fc2-brand>div>span{font-size:8px;letter-spacing:1.6px;color:var(--f-muted);font-weight:650}.fc2-pill{display:flex;align-items:center;gap:6px;border:1px solid var(--f-line);border-radius:9px;padding:6px 10px;font-size:10px;letter-spacing:1px;color:var(--f-accent)}.fc2-intro{display:grid;grid-template-columns:1fr 150px;gap:24px;align-items:center;margin:28px 0}.fc2-eyebrow{display:block;color:var(--f-accent);font-size:9px;letter-spacing:1.5px;font-weight:700;margin-bottom:10px}.fc2-intro h3{font-size:clamp(27px,3vw,36px);line-height:1.23;letter-spacing:-1px;font-weight:750}.fc2-intro h3>span{color:var(--f-accent)}.fc2-intro p{font-size:13px;color:var(--f-muted);max-width:500px;margin-top:13px;line-height:1.75}.fc2-art{position:relative;height:145px;perspective:600px}.fc2-art>span{position:absolute;width:92px;height:119px;border-radius:15px;left:15px;top:12px;background:var(--f-soft);border:1px solid var(--f-line);transform:rotate(-19deg);box-shadow:0 8px 25px var(--f-shadow)}.fc2-art>span:nth-child(2){transform:rotate(-4deg);left:31px;background:#7545b6}.fc2-art>span:last-child{display:grid;place-items:center;color:#fff;left:48px;transform:rotate(12deg);background:linear-gradient(145deg,#bc8af1,#8256d6);border-color:#ffffff40;animation:fc2-float 6s ease-in-out infinite}.fc2-generator{padding:19px 20px;border:1px solid var(--f-line);border-radius:18px;background:var(--f-panel)}.fc2-generator label{display:block;font-size:12px;color:var(--f-muted);font-weight:650;margin-bottom:10px}.fc2-generator-row{display:flex;gap:10px}.fc2-generator input{flex:1;min-width:0;width:100%;height:49px;border:1px solid var(--f-line);background:var(--f-bg);border-radius:11px;padding:0 14px;font-size:14px;transition:border-color .2s}.fc2-generator input:focus{border-color:var(--f-accent)}.fc2-generator-note{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;min-height:19px;font-size:10px;color:var(--f-muted)}.fc2 .fc2-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:47px;height:auto;padding:11px 19px;border:1px solid var(--f-line);border-radius:12px;background:var(--f-panel);font-size:13px;font-weight:650;line-height:1.5;transition:transform .18s,box-shadow .2s,border-color .2s;position:relative;overflow:hidden}.fc2 .fc2-btn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--f-accent)}.fc2 .fc2-btn:active:not(:disabled){transform:translateY(1px) scale(.98)}.fc2 .fc2-generate{flex-shrink:0;background:var(--f-tint);color:var(--f-accent);border-color:var(--f-accent)}.fc2 .fc2-primary{color:#fff;background:linear-gradient(115deg,#a168e3,#7954d9);border-color:#b18bec60;box-shadow:0 8px 23px #8152c526,inset 0 1px 0 #ffffff20}.fc2-primary:after{content:'';position:absolute;inset:-70%;background:linear-gradient(110deg,transparent 44%,#ffffff25 50%,transparent 56%);transform:translateX(-65%);transition:transform .65s;pointer-events:none}.fc2-primary:hover:after{transform:translateX(65%)}.fc2 .fc2-text-btn{border:0;background:none;padding:4px;min-height:0;height:auto;font-size:11px;color:var(--f-muted);line-height:1.5}.fc2-text-btn:hover{text-decoration:underline;color:var(--f-accent)}.fc2-error,.fc2-notice{display:flex;align-items:center;gap:9px;padding:10px 13px;margin-top:12px;border-radius:10px;font-size:12px;animation:fc2-appear .25s both}.fc2-error{background:#dd4e7515;color:#ec809f;border:1px solid #dc54762b}.fc2-error button{margin-left:auto;background:transparent;border:0;padding:5px;min-height:0}.fc2-notice{background:#30b17b12;color:var(--f-green)}.fc2-study{margin-top:28px}.fc2-deck-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.fc2-deck-heading .fc2-eyebrow{font-size:8px;margin-bottom:4px}.fc2-deck-heading h4{font-size:16px;font-weight:650;overflow-wrap:anywhere}.fc2-counter{font-size:24px;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums}.fc2-counter small{font-size:13px;color:var(--f-muted);font-weight:500}.fc2-progress{height:4px;border-radius:5px;background:var(--f-soft);overflow:hidden;margin-top:17px}.fc2-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#895bd5,#c49ef6);transition:width .45s cubic-bezier(.2,.8,.2,1)}.fc2-progress-meta{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:10px;color:var(--f-muted)}.fc2-progress-meta>span:last-child{display:flex;gap:6px;align-items:center}.fc2-progress-meta i{display:block;width:5px;height:5px;background:var(--f-green);border-radius:50%}.fc2-progress-meta b{font-weight:400;margin:0 3px}
+.fc2-stage{position:relative;margin:26px auto 28px;max-width:740px;perspective:1400px;animation:fc2-slide .35s cubic-bezier(.2,.8,.2,1) both}.fc2-stage:before,.fc2-stage:after{content:'';position:absolute;inset:10px 10px -8px;border:1px solid var(--f-line);background:var(--f-panel);border-radius:23px;z-index:-1;pointer-events:none}.fc2-stage:after{inset:20px 20px -15px;z-index:-2;background:var(--f-soft)}.fc2-card{cursor:pointer;border-radius:23px;-webkit-tap-highlight-color:transparent;outline-offset:7px!important}.fc2-card-inner{display:grid;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.25,1)}.fc2-card-inner.is-flipped{transform:rotateY(180deg)}.fc2-face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;min-height:310px;display:flex;flex-direction:column;padding:24px 29px;border-radius:23px;border:1px solid var(--f-line);background:radial-gradient(ellipse at 95% 0,var(--f-tint),transparent 70%),var(--f-panel);box-shadow:0 15px 35px var(--f-shadow);overflow-wrap:anywhere}.fc2-front{transform:translateZ(1px)}.fc2-back{transform:rotateY(180deg) translateZ(1px);background:radial-gradient(ellipse at 100% 0,#c689ff35,transparent 65%),linear-gradient(135deg,#613c9e,#352553);border-color:#b38add65;color:#fff}.fc2-face-top,.fc2-face-foot{display:flex;align-items:center;justify-content:space-between;gap:15px;color:var(--f-muted);font-size:11px}.fc2-face-top{font-size:9px;font-weight:650;letter-spacing:1.6px}.fc2-back .fc2-face-top,.fc2-back .fc2-face-foot{color:#e2d1f7}.fc2-face-content{flex:1;display:grid;place-items:center;text-align:center;padding:35px 8px}.fc2-face-content h3{font-size:clamp(22px,2.8vw,29px);font-weight:650;line-height:1.5;letter-spacing:-.4px;max-width:590px}.fc2-face-content p{font-size:clamp(18px,2.3vw,23px);font-weight:500;line-height:1.65;white-space:pre-wrap;max-width:600px}.fc2-face-foot{font-size:10px}.fc2-navigation{display:flex;align-items:center;justify-content:center;gap:13px}.fc2 .fc2-nav-arrow{display:grid;place-items:center;width:46px;height:46px;min-height:0;padding:0;border:1px solid var(--f-line);border-radius:12px;background:var(--f-panel);color:var(--f-muted);transition:background .2s,transform .18s}.fc2-nav-arrow:hover:not(:disabled){color:var(--f-accent);background:var(--f-soft);transform:translateY(-2px)}.fc2-prev svg{transform:rotate(180deg)}.fc2-reveal{min-width:220px}.fc2-rating-area{min-height:62px;display:grid;place-items:center;margin-top:14px}.fc2-shortcuts{font-size:10px;color:var(--f-muted)}.fc2-shortcuts span{margin:0 8px}.fc2-rating{display:flex;justify-content:center;gap:10px}.fc2-rating .fc2-btn{min-width:140px;min-height:40px;font-size:12px}.fc2 .fc2-known{background:#29b47a12;color:var(--f-green);border-color:#3dbe8738}.fc2 .fc2-again{background:var(--f-tint);color:var(--f-accent)}.fc2-enter{animation:fc2-appear .35s both}.fc2-loading{min-height:450px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;text-align:center}.fc2-loading-art{width:80px;height:80px;display:grid;place-items:center;color:var(--f-accent);background:var(--f-tint);border:1px solid var(--f-line);border-radius:22px;animation:fc2-breathe 2s ease-in-out infinite}.fc2-loading h3{font-size:23px}.fc2-loading p{font-size:13px;color:var(--f-muted)}.fc2-loader-line{height:4px;width:160px;margin-top:9px;background:var(--f-soft);border-radius:5px;overflow:hidden;position:relative}.fc2-loader-line:after{content:'';position:absolute;width:45%;height:100%;background:var(--f-accent);border-radius:inherit;animation:fc2-loading 1.4s ease-in-out infinite}.fc2-spinner{display:block;width:16px;height:16px;border:2px solid var(--f-line);border-top-color:var(--f-accent);border-radius:50%;animation:fc2-spin .8s linear infinite}.fc2-summary{text-align:center;padding:35px 10px 12px;display:flex;flex-direction:column;align-items:center}.fc2-summary-icon{display:grid;place-items:center;width:76px;height:76px;border-radius:24px;color:white;background:linear-gradient(145deg,#b17fed,#7952d3);box-shadow:0 12px 32px #8854ce2a;margin-bottom:23px;animation:fc2-pop .55s cubic-bezier(.2,.9,.2,1.3)}.fc2-summary h3{font-size:30px;letter-spacing:-.8px}.fc2-summary>p{font-size:14px;line-height:1.7;max-width:460px;color:var(--f-muted);margin-top:12px}.fc2-summary-stats{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:560px;gap:12px;margin:27px 0}.fc2-summary-stats>div{padding:19px 12px;border:1px solid var(--f-line);border-radius:15px;background:var(--f-panel)}.fc2-summary-stats strong{display:block;font-size:28px;font-weight:650;color:var(--f-accent)}.fc2-summary-stats span{display:block;font-size:11px;color:var(--f-muted);margin-top:4px}.fc2-summary>.fc2-text-btn{margin-top:14px}
+@keyframes fc2-appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes fc2-slide{from{opacity:0;transform:translateX(var(--fc2-slide,20px))}to{opacity:1;transform:translateX(0)}}@keyframes fc2-float{0%,100%{transform:translateY(0) rotate(12deg)}50%{transform:translateY(-7px) rotate(9deg)}}@keyframes fc2-breathe{50%{transform:translateY(-5px);box-shadow:0 0 30px var(--f-tint)}}@keyframes fc2-loading{from{transform:translateX(-100%)}to{transform:translateX(325%)}}@keyframes fc2-spin{to{transform:rotate(360deg)}}@keyframes fc2-pop{from{opacity:0;transform:scale(.7) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@media(max-width:600px){.fc2-shell{padding:19px;border-radius:22px}.fc2-brand{gap:10px}.fc2-brand h2{font-size:20px}.fc2-brand-icon{width:41px;height:41px;border-radius:12px}.fc2-brand>div>span{font-size:7px;letter-spacing:1px}.fc2-header{padding-bottom:18px}.fc2-intro{grid-template-columns:1fr;gap:0;margin:24px 0}.fc2-art{display:none}.fc2-intro h3{font-size:30px}.fc2-eyebrow{font-size:8px;letter-spacing:1px}.fc2-generator{padding:16px}.fc2-generator-row{flex-direction:column}.fc2-generator input{flex:auto}.fc2-generator-note{align-items:flex-start;font-size:9px}.fc2-deck-heading h4{font-size:14px}.fc2-progress-meta{font-size:9px}.fc2-face{padding:20px;min-height:320px}.fc2-face-content{padding:26px 0}.fc2-face-content h3{font-size:23px}.fc2-face-content p{font-size:19px}.fc2-face-foot{font-size:9px}.fc2-navigation{gap:8px}.fc2-reveal{min-width:0;flex:1;max-width:230px}.fc2 .fc2-nav-arrow{width:40px;height:44px;flex-shrink:0}.fc2 .fc2-reveal{font-size:12px;padding:11px 10px}.fc2-rating{width:100%}.fc2-rating .fc2-btn{min-width:0;flex:1;max-width:180px}.fc2-shortcuts{font-size:9px}.fc2-summary h3{font-size:27px}.fc2-summary-stats{gap:8px}.fc2-summary-stats>div{padding:14px 8px}.fc2-summary-stats strong{font-size:26px}.fc2-loading{min-height:380px}}
+@media(prefers-reduced-motion:reduce){.fc2 *,.fc2 *:before,.fc2 *:after{animation:none!important;transition:none!important}}
+/* Perspective belongs to the rotating card's immediate parent. */
+.fc2 .fc2-card{perspective:1400px;-webkit-perspective:1400px}
+.fc2 .fc2-card-inner{transform:rotateY(0deg);transform-origin:50% 50%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform 850ms cubic-bezier(.45,0,.2,1);will-change:transform}
+.fc2 .fc2-card-inner.is-flipped{transform:rotateY(180deg)}
+.fc2 .fc2-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+
+
+/* The requested user-triggered flip stays animated in both motion modes. */
+.fc2 .fc2-card .fc2-card-inner{transform:rotateY(0deg)!important;transition:transform 850ms cubic-bezier(.45,0,.2,1)!important;transform-style:preserve-3d!important;overflow:visible!important}
+.fc2 .fc2-card .fc2-card-inner.is-flipped{transform:rotateY(180deg)!important}
+.fc2 .fc2-card .fc2-front{transform:translateZ(1px)!important;visibility:visible!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
+.fc2 .fc2-card .fc2-back{transform:rotateY(180deg) translateZ(1px)!important;visibility:visible!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
+`;
+  function FlashcardsLMS({
     theme
-  }) {
-    const storageKey = `lms-flashcards:v2:${owner}`;
-    const [state, dispatch] = useReducer(reducer, storageKey, restore);
-    const [topic, setTopic] = useState(state.topic);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [storageError, setStorageError] = useState(false);
-    const controller = useRef(null),
-      request = useRef(0),
-      requestLock = useRef(false),
-      live = useRef(true);
-    const topicInput = useRef(null),
-      panelRef = useRef(null),
-      focusRequested = useRef(false);
-    const inputId = useRef(null);
-    if (!inputId.current) inputId.current = `flashcards-topic-${++instanceNumber}`;
-    function act(action) {
-      focusRequested.current = true;
-      dispatch(action);
-    }
-    const ids = visibleCards(state),
-      current = ids[state.index],
-      card = state.cards[current];
-    const known = Object.values(state.ratings).filter(value => value === 'known').length;
-    const repeat = Object.values(state.ratings).filter(value => value === 'repeat').length;
-    const summary = state.finished || !ids.length;
+  } = {}) {
+    const [session, setSession] = useState(() => fresh(DEFAULT_CARDS)),
+      [topic, setTopic] = useState('Основы веб-разработки'),
+      [deckName, setDeckName] = useState('Основы веб-разработки'),
+      [busy, setBusy] = useState(false),
+      [error, setError] = useState(''),
+      [notice, setNotice] = useState('');
+    const state = useRef(session),
+      request = useRef(null),
+      mounted = useRef(true),
+      version = useRef(0),
+      root = useRef(null),
+      fullDeck = useRef(DEFAULT_CARDS),
+      restoreFocus = useRef(false);
+    const commit = s => {
+      state.current = s;
+      setSession(s);
+    };
     useEffect(() => {
-      try {
-        const {
-          flipped,
-          notice,
-          ...saved
-        } = state;
-        localStorage.setItem(storageKey, JSON.stringify({
-          version: 2,
-          ...saved
-        }));
-        setStorageError(false);
-      } catch {
-        setStorageError(true);
+      mounted.current = true;
+      let style = document.getElementById('flashcards-lms-v2-styles');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'flashcards-lms-v2-styles';
+        document.head.appendChild(style);
       }
-    }, [state, storageKey]);
-    useEffect(() => {
-      live.current = true;
+      style.textContent = CSS;
       return () => {
-        live.current = false;
-        request.current++;
-        controller.current?.abort();
+        mounted.current = false;
+        version.current++;
+        request.current?.abort();
       };
     }, []);
     useEffect(() => {
-      if (!focusRequested.current || loading) return;
-      const target = panelRef.current?.querySelector('.fcl-card, .fcl-summary h3');
-      if (target) {
-        target.focus({
+      if (!notice) return;
+      const timer = setTimeout(() => setNotice(''), 3000);
+      return () => clearTimeout(timer);
+    }, [notice]);
+    useEffect(() => {
+      if (restoreFocus.current) {
+        root.current?.querySelector(session.done ? '.fc2-summary-title' : '.fc2-card')?.focus({
           preventScroll: true
         });
-        focusRequested.current = false;
+        restoreFocus.current = false;
       }
-    }, [state, loading]);
-    async function generate() {
-      if (requestLock.current) return;
-      const chosenTopic = topic.trim();
-      if (!chosenTopic) {
-        setError('Введи тему, чтобы создать колоду.');
-        topicInput.current?.focus();
+    }, [session.serial, session.done]);
+    function flip() {
+      if (request.current || state.current.done) return;
+      commit({
+        ...state.current,
+        flipped: !state.current.flipped
+      });
+    }
+    function move(step) {
+      const s = state.current;
+      if (request.current || s.done) return;
+      const index = s.index + step;
+      if (index < 0 || index >= s.cards.length) return;
+      restoreFocus.current = true;
+      commit({
+        ...s,
+        index,
+        flipped: false,
+        serial: s.serial + 1,
+        direction: step
+      });
+    }
+    function rate(value) {
+      const s = state.current;
+      if (request.current || s.done || !s.flipped) return;
+      const ratings = s.ratings.map((v, i) => i === s.index ? value : v);
+      let next = -1;
+      for (let n = 1; n <= s.cards.length; n++) {
+        const i = (s.index + n) % s.cards.length;
+        if (ratings[i] === null) {
+          next = i;
+          break;
+        }
+      }
+      restoreFocus.current = true;
+      commit({
+        ...s,
+        ratings,
+        index: next < 0 ? s.index : next,
+        done: next < 0,
+        flipped: false,
+        serial: s.serial + 1,
+        direction: 1
+      });
+    }
+    function restart(difficult = false) {
+      const s = state.current;
+      const cards = difficult ? s.cards.filter((_, i) => s.ratings[i] === 'again') : fullDeck.current;
+      if (!cards.length) return;
+      restoreFocus.current = true;
+      commit({
+        ...fresh(cards),
+        serial: s.serial + 1
+      });
+    }
+    function onKeyDown(e) {
+      if (e.defaultPrevented || e.repeat || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.target.closest('input,textarea,select,[contenteditable=true]')) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        move(-1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        move(1);
+      } else if (e.key === ' ' && !e.target.closest('button')) {
+        e.preventDefault();
+        flip();
+      }
+    }
+    async function generate(e) {
+      e?.preventDefault();
+      if (request.current) return;
+      const name = topic.trim();
+      if (!name) {
+        setError('Введи тему для новой колоды.');
         return;
       }
-      requestLock.current = true;
-      const serial = ++request.current,
-        aborter = new AbortController();
-      controller.current = aborter;
-      setLoading(true);
+      const controller = new AbortController(),
+        id = ++version.current;
+      request.current = controller;
+      setBusy(true);
       setError('');
+      setNotice('');
       let timedOut = false;
       const timer = setTimeout(() => {
         timedOut = true;
-        aborter.abort();
+        controller.abort();
       }, 30000);
       try {
-        const cards = await requestCards(chosenTopic, aborter.signal);
-        if (!live.current || request.current !== serial) return;
-        act({
-          type: 'replace',
-          cards,
-          topic: chosenTopic,
-          source: 'ai'
+        const response = await fetch('https://gemini-proxy-lms.msleaderindustry.workers.dev', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Создай 10 учебных карточек на русском языке по теме ${JSON.stringify(name)}. В каждой один понятный вопрос и точный краткий ответ. Не выдумывай факты. Верни только JSON-массив [{"q":"Вопрос","a":"Ответ"}], без markdown.`
+              }]
+            }]
+          })
         });
+        if (!response.ok) throw Error('HTTP');
+        const data = await response.json();
+        if (data.error) throw Error('API');
+        const text = (data.candidates?.[0]?.content?.parts || []).map(p => typeof p.text === 'string' ? p.text : '').join('');
+        const cards = parseCards(text);
+        if (!mounted.current || id !== version.current || controller.signal.aborted) return;
+        fullDeck.current = cards;
+        commit({
+          ...fresh(cards),
+          serial: state.current.serial + 1
+        });
+        setDeckName(name);
+        setNotice(`Колода готова · ${cards.length} карточек`);
       } catch (e) {
-        if (!live.current || request.current !== serial) return;
-        setError(timedOut ? 'ИИ не ответил вовремя. Попробуй ещё раз — прежняя колода сохранена.' : 'Не удалось получить корректные карточки. Попробуй ещё раз или уточни тему. Прежняя колода сохранена.');
+        if (mounted.current && id === version.current && (!controller.signal.aborted || timedOut)) setError(timedOut ? 'Генерация заняла слишком много времени. Попробуй ещё раз.' : 'Не удалось создать колоду. Попробуй уточнить тему. Текущие карточки остались на месте.');
       } finally {
         clearTimeout(timer);
-        if (live.current && request.current === serial) {
-          requestLock.current = false;
-          controller.current = null;
-          setLoading(false);
+        if (mounted.current && id === version.current) {
+          request.current = null;
+          setBusy(false);
         }
       }
     }
     function cancel() {
-      request.current++;
-      controller.current?.abort();
-      controller.current = null;
-      requestLock.current = false;
-      setLoading(false);
+      version.current++;
+      request.current?.abort();
+      request.current = null;
+      setBusy(false);
     }
-    function keydown(e) {
-      if (loading || e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.nativeEvent.isComposing) return;
-      if (e.target.closest('input,textarea,select,[contenteditable="true"],.fcl-menu')) return;
-      if (summary) return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        act({
-          type: 'navigate',
-          step: e.key === 'ArrowRight' ? 1 : -1
-        });
-      } else if ((e.key === ' ' || e.key === 'Enter') && e.target === panelRef.current) {
-        e.preventDefault();
-        act({
-          type: 'flip'
-        });
-      } else if (state.flipped && (e.key === '1' || e.key === '2')) {
-        e.preventDefault();
-        act({
-          type: 'rate',
-          value: e.key === '1' ? 'repeat' : 'known'
-        });
-      }
-    }
-    return <section ref={panelRef} className={`fcl ${theme === 'light' ? 'fcl-light' : theme === 'dark' ? 'fcl-dark' : ''}`} tabIndex={0} aria-label="Тренажёр умных карточек" onKeyDown={keydown}><div className="fcl-shell"><header className="fcl-header"><div className="fcl-brand"><div className="fcl-logo"><Icon name="cards" size={28} /></div><div><h2>Умные <span>карточки</span></h2><p className="fcl-subtitle">Вспоминай. Проверяй себя. Закрепляй.</p></div></div><span className="fcl-ai-badge"><Icon name="spark" size={14} />С помощью ИИ</span></header><form className="fcl-generator" onSubmit={e => {
-          e.preventDefault();
-          generate();
-        }}><label className="fcl-field-label" htmlFor={inputId.current}><Icon name="spark" size={16} />Тема новой колоды</label><div className="fcl-generator-row"><input ref={topicInput} id={inputId.current} className="fcl-input" aria-label="Тема новой колоды" placeholder="Например, функции Excel или биология" value={topic} maxLength={160} disabled={loading} onChange={e => {
-              setTopic(e.target.value);
-              if (error) setError('');
-            }} onKeyDown={e => {
-              if (e.key === 'Enter' && e.nativeEvent.isComposing) e.preventDefault();
-            }} /><button type="submit" className="fcl-btn primary" disabled={loading}><Icon name="spark" size={19} />{loading ? 'Создаём…' : 'Создать колоду'}</button></div>{error && <div className="fcl-error" role="alert"><Icon name="info" size={18} /><span>{error}</span><button type="button" className="fcl-icon-btn" aria-label="Закрыть сообщение об ошибке" onClick={() => setError('')}><Icon name="close" size={15} /></button></div>}</form><div className="fcl-deck-header"><div><h3 className="fcl-deck-title">{state.topic}</h3><p className="fcl-deck-caption">{state.mode === 'repeat' ? 'Повторение сложных вопросов' : 'Твоя учебная колода'}</p></div><div className="fcl-deck-right"><span className="fcl-count" aria-label={`Карточка ${ids.length && !summary ? state.index + 1 : 0} из ${ids.length}`}>{summary ? `${state.cards.length} карточек` : `${state.index + 1} / ${ids.length}`}</span><ActionsMenu {...{
-              state,
-              dispatch,
-              repeatCount: repeat,
-              disabled: loading
-            }} /></div></div><div className="fcl-track" role="progressbar" aria-label="Карточки, отмеченные как знакомые" aria-valuemin={0} aria-valuemax={state.cards.length} aria-valuenow={known}><span className="fcl-track-known" style={{
-            width: `${known / state.cards.length * 100}%`
-          }} /><span className="fcl-track-repeat" style={{
-            width: `${repeat / state.cards.length * 100}%`
-          }} /></div><div className="fcl-progress-labels"><span><i className="fcl-dot" />Помню {known}</span><span><i className="fcl-dot repeat" />Повторить {repeat}</span><span>Осталось оценить {state.cards.length - known - repeat}</span></div>{state.mode === 'repeat' && !summary && <div className="fcl-mode"><Icon name="flip" size={15} />Только сложные карточки<button type="button" className="fcl-link" disabled={loading} onClick={() => act({
-            type: 'mode',
-            mode: 'all'
-          })}>Показать все</button></div>}<div className="fcl-stage" aria-busy={loading}>{loading ? <div className="fcl-loading" role="status"><div className="fcl-loading-icon"><Icon name="spark" size={30} /></div><h3>Собираем твою колоду</h3><p>ИИ готовит вопросы и короткие ответы по выбранной теме.</p><div className="fcl-loading-line" aria-hidden="true" /><button type="button" className="fcl-btn small" onClick={cancel}>Отменить генерацию</button></div> : summary ? <Summary state={state} known={known} repeat={repeat} dispatch={act} /> : <StudyCard key={`${state.topic}:${current}:${card.q}`} card={card} flipped={state.flipped} position={state.index + 1} count={ids.length} onFlip={() => act({
-            type: 'flip'
-          })} />}</div>{!loading && !summary && <><div className="fcl-nav"><button type="button" className="fcl-arrow" aria-label="Предыдущая карточка" title="Предыдущая карточка" disabled={ids.length < 2} onClick={() => act({
-              type: 'navigate',
-              step: -1
-            })}><Icon name="left" size={21} /></button><div className="fcl-nav-center">{state.flipped ? <><button type="button" className="fcl-btn repeat" title="Клавиша 1" onClick={() => act({
-                  type: 'rate',
-                  value: 'repeat'
-                })}><Icon name="flip" size={18} />Повторить</button><button type="button" className="fcl-btn remember" title="Клавиша 2" onClick={() => act({
-                  type: 'rate',
-                  value: 'known'
-                })}><Icon name="check" size={18} />Помню</button></> : <button type="button" className="fcl-btn primary" onClick={() => act({
-                type: 'flip'
-              })}><Icon name="flip" size={19} />Показать ответ</button>}</div><button type="button" className="fcl-arrow" aria-label="Следующая карточка" title="Следующая карточка" disabled={ids.length < 2} onClick={() => act({
-              type: 'navigate',
-              step: 1
-            })}><Icon name="right" size={21} /></button></div><p className="fcl-shortcuts"><Icon name="keyboard" size={16} /><kbd>←</kbd><kbd>→</kbd> карточки · <kbd>Пробел</kbd> ответ · <kbd>1</kbd><kbd>2</kbd> оценка</p></>}<div className="fcl-live" role="status" aria-live="polite">{!loading ? state.notice : ''}</div><footer className="fcl-footer"><span><Icon name={storageError ? 'info' : 'check'} size={14} />{storageError ? 'Не удалось сохранить прогресс на устройстве' : 'Колода и прогресс сохранены на устройстве'}</span><span>{state.source === 'ai' ? 'Материалы ИИ могут содержать ошибки' : 'Стартовая колода'}</span></footer></div></section>;
-  }
-  function FlashcardsLMS({
-    theme
-  } = {}) {
-    useStyles();
-    const [uid, setUid] = useState(() => window.auth?.currentUser?.uid || 'guest');
-    useEffect(() => {
-      const auth = window.auth;
-      if (typeof auth?.onAuthStateChanged === 'function') return auth.onAuthStateChanged(user => setUid(user?.uid || 'guest'));
-    }, []);
-    return <FlashcardsPanel key={uid} owner={uid} theme={theme} />;
+    const {
+        cards,
+        index,
+        flipped,
+        ratings,
+        done
+      } = session,
+      card = cards[index],
+      known = ratings.filter(v => v === 'known').length,
+      again = ratings.filter(v => v === 'again').length,
+      reviewed = known + again,
+      progress = reviewed / cards.length * 100;
+    return <section ref={root} className={`fc2 ${theme === 'light' ? 'fc2-light' : theme === 'dark' ? 'fc2-dark' : ''}`} aria-label="Умные карточки" onKeyDown={onKeyDown}><div className="fc2-shell">
+ <header className="fc2-header"><div className="fc2-brand"><span className="fc2-brand-icon"><Icon name="cards" size={24} /></span><div><h2>Умные карточки</h2><span>ULTIMATE LMS · ОБУЧЕНИЕ</span></div></div><span className="fc2-pill"><Icon name="spark" size={13} /> AI</span></header>
+ <div className="fc2-intro"><div><span className="fc2-eyebrow">ОДНА КАРТОЧКА — ОДИН ШАГ ВПЕРЁД</span><h3>Вспоминай.<br /><span>И запоминай надолго.</span></h3><p>Попробуй ответить сам, переверни карточку и отметь, что стоит повторить.</p></div><div className="fc2-art" aria-hidden="true"><span /><span /><span><Icon name="spark" size={40} /></span></div></div>
+ <form className="fc2-generator" onSubmit={generate}><label htmlFor="fc2-topic">Что изучаем сегодня?</label><div className="fc2-generator-row"><input id="fc2-topic" value={topic} onChange={e => setTopic(e.target.value)} maxLength={160} placeholder="Например, Excel или основы биологии" disabled={busy} autoComplete="off" /><button type="submit" className="fc2-btn fc2-generate" disabled={busy || !topic.trim()}>{busy ? <span className="fc2-spinner" /> : <Icon name="spark" size={18} />} {busy ? 'Создаём…' : 'Создать колоду'}</button></div><div className="fc2-generator-note"><span>Карточки ИИ могут содержать ошибки — проверяй важные факты.</span>{busy && <button type="button" className="fc2-text-btn" onClick={cancel}>Отменить</button>}</div></form>
+ {error && <div className="fc2-error" role="alert"><span>{error}</span><button type="button" aria-label="Закрыть сообщение" onClick={() => setError('')}><Icon name="close" size={16} /></button></div>}{notice && <div className="fc2-notice" role="status"><Icon name="check" size={16} />{notice}</div>}
+ {busy ? <div className="fc2-loading" role="status" aria-live="polite"><div className="fc2-loading-art"><Icon name="cards" size={36} /></div><h3>Собираем твою колоду</h3><p>Подбираем вопросы и короткие объяснения.</p><div className="fc2-loader-line" /></div> : done ? <div className="fc2-summary fc2-enter"><div className="fc2-summary-icon"><Icon name="check" size={34} /></div><span className="fc2-eyebrow">ПОДХОД ЗАВЕРШЁН</span><h3 className="fc2-summary-title" tabIndex={-1}>{again ? 'Закрепим сложное?' : 'Вся колода пройдена'}</h3><p>{again ? 'Вернись к карточкам, которые пока не удалось вспомнить.' : 'Ты отметил все ответы как знакомые. Можно пройти колоду ещё раз.'}</p><div className="fc2-summary-stats"><div><strong>{known}</strong><span>Помню</span></div><div><strong>{again}</strong><span>Повторить</span></div><div><strong>{cards.length}</strong><span>Всего</span></div></div><button type="button" className="fc2-btn fc2-primary" onClick={() => restart(again > 0)}><Icon name="repeat" size={18} />{again ? `Повторить сложные · ${again}` : 'Пройти ещё раз'}</button>{again > 0 && <button type="button" className="fc2-text-btn" onClick={() => restart()}>Повторить всю колоду</button>}</div> : <div className="fc2-study"><div className="fc2-deck-heading"><div><span className="fc2-eyebrow">ТВОЯ КОЛОДА</span><h4>{deckName}</h4></div><span className="fc2-counter" aria-live="polite">{index + 1}<small> / {cards.length}</small></span></div><div className="fc2-progress" role="progressbar" aria-label="Оценено карточек" aria-valuemin={0} aria-valuemax={cards.length} aria-valuenow={reviewed}><span style={{
+              width: `${progress}%`
+            }} /></div><div className="fc2-progress-meta"><span>Оценено {reviewed} из {cards.length}</span><span><i />{known} помню <b>·</b> {again} повторить</span></div>
+ <div className="fc2-stage" key={session.serial} style={{
+            '--fc2-slide': session.direction < 0 ? '-22px' : '22px'
+          }}><div className="fc2-card" tabIndex={0} role="button" aria-label={flipped ? 'Ответ. Нажми, чтобы показать вопрос' : 'Вопрос. Нажми, чтобы показать ответ'} aria-pressed={flipped} onClick={flip} onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                flip();
+              }
+            }}><div className={`fc2-card-inner ${flipped ? 'is-flipped' : ''}`}><div className="fc2-face fc2-front" aria-hidden={flipped}><div className="fc2-face-top"><span>ВОПРОС</span><Icon name="cards" size={21} /></div><div className="fc2-face-content"><h3>{card.q}</h3></div><div className="fc2-face-foot"><span>Сначала попробуй вспомнить</span><Icon name="flip" size={19} /></div></div><div className="fc2-face fc2-back" aria-hidden={!flipped}><div className="fc2-face-top"><span>ОТВЕТ</span><Icon name="spark" size={21} /></div><div className="fc2-face-content"><p>{card.a}</p></div><div className="fc2-face-foot"><span>Получилось вспомнить?</span><Icon name="flip" size={19} /></div></div></div></div></div>
+ <div className="fc2-navigation"><button type="button" className="fc2-nav-arrow fc2-prev" aria-label="Предыдущая карточка" onClick={() => move(-1)} disabled={index === 0}><Icon name="arrow" /></button><button type="button" className="fc2-btn fc2-primary fc2-reveal" onClick={flip}><Icon name="flip" size={18} />{flipped ? 'Показать вопрос' : 'Показать ответ'}</button><button type="button" className="fc2-nav-arrow" aria-label="Следующая карточка" onClick={() => move(1)} disabled={index === cards.length - 1}><Icon name="arrow" /></button></div>
+ <div className="fc2-rating-area">{flipped ? <div className="fc2-rating fc2-enter"><button type="button" className="fc2-btn fc2-again" onClick={() => rate('again')}><Icon name="repeat" size={17} />Повторить</button><button type="button" className="fc2-btn fc2-known" onClick={() => rate('known')}><Icon name="check" size={18} />Помню</button></div> : <p className="fc2-shortcuts">Пробел — переворот <span>·</span> ← → — смена карточки</p>}</div>
+ </div>}
+ </div></section>;
   }
   Object.assign(window, {
     FlashcardsLMS
