@@ -4,6 +4,7 @@ const { motion, AnimatePresence } = window.Motion;
 
 // Реальные модули платформы (соответствуют файлам проекта) —
 // вместо выдуманных цифр показываем то, что действительно есть.
+
 const CAPABILITIES = [
     {
         id: 'tests',
