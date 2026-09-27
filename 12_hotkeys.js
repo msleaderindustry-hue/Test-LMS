@@ -365,6 +365,10 @@
 .hx-theory-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-height:420px;overflow-y:auto;align-content:start}.hx-theory-card{display:flex;align-items:flex-start;gap:13px;padding:18px;min-height:112px}.hx-theory-icon{flex:0 0 42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--hx-tint);color:var(--hx-purple)}.hx-theory-content{display:flex;flex-direction:column;gap:12px;min-width:0}.hx-theory-card h4{font-size:16px;font-weight:650;margin:0;line-height:1.45;min-height:0}.hx-theory-card .hx-combo{justify-content:flex-start;gap:6px}.hx-theory-card .hx-combo kbd{font-size:14px;min-width:34px;min-height:35px;padding:5px 8px}.hx-unified .hx-program-row{margin-bottom:18px}.hx-shell{container-type:inline-size}
 @container(max-width:540px){.hx-theory-grid{grid-template-columns:1fr}.hx-program-row{flex-direction:column}.hx-program-row input{flex:auto}}
 @media(max-width:580px){.hx-theory-grid{grid-template-columns:1fr}.hx-theory-card{padding:16px}.hx-theory-card .hx-combo{justify-content:flex-start}}
+
+.hx-program-row{align-items:flex-start}.hx-program-row>.hx-button{min-height:52px}.hx-picker{flex:1;min-width:0}.hx-picker-field{display:flex;align-items:center;border:1px solid var(--hx-line);border-radius:12px;background:var(--hx-bg);transition:border-color .2s,box-shadow .2s}.hx-picker-field.is-open,.hx-picker-field:focus-within{border-color:var(--hx-purple);box-shadow:0 0 0 3px var(--hx-tint)}.hx .hx-picker-field input{border:0!important;background:transparent;min-width:0;flex:1;width:100%;outline:none!important;box-shadow:none;height:50px}.hx-picker-toggle{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:0;border-radius:10px;background:transparent;color:var(--hx-muted)!important}.hx-picker-toggle svg{transition:transform .22s}.hx-picker-toggle[aria-expanded=true] svg{transform:rotate(180deg)}.hx-picker-dropdown{margin-top:8px;border:1px solid var(--hx-line);border-radius:14px;background:var(--hx-panel);padding:6px;box-shadow:0 12px 24px var(--hx-shadow);animation:hx-in .22s ease-out both}.hx-picker-dropdown [role=listbox]{max-height:228px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--hx-purple) transparent}.hx-picker-dropdown [role=option]{width:100%;display:flex;align-items:center;gap:11px;text-align:left;border:0;background:transparent;border-radius:9px;padding:10px;font-size:14px;transition:background .15s,color .15s}.hx-picker-dropdown [role=option][aria-selected=true],.hx-picker-dropdown [role=option]:hover{background:var(--hx-tint);color:var(--hx-purple)}.hx-program-mark{width:30px;height:30px;flex-shrink:0;display:grid;place-items:center;border-radius:8px;background:var(--hx-soft);color:var(--hx-purple);font-size:11px;font-weight:750}.hx-picker-dropdown [role=option]>svg{margin-left:auto}.hx-picker-empty{display:block;padding:13px;color:var(--hx-muted);font-size:12px}.hx-result-actions{display:flex;flex-direction:column;align-items:center;gap:13px;margin:28px 0}.hx-result-main{min-width:270px;min-height:50px}.hx-result-secondary{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap}.hx-result-secondary .hx-link{color:var(--hx-muted)!important;font-weight:500;padding:6px 16px;font-size:12px!important}.hx-result-secondary .hx-link+.hx-link{border-left:1px solid var(--hx-line);border-radius:0}.hx-result-secondary .hx-link:hover{color:var(--hx-purple)!important}
+@media(max-width:580px){.hx-program-row{align-items:stretch}.hx-picker{width:100%}.hx-result-main{width:100%;min-width:0;max-width:340px}.hx-result-secondary .hx-link{padding:7px 10px;font-size:11px!important}}
+@container(max-width:540px){.hx-program-row{align-items:stretch}.hx-picker{width:100%}}
 `;
   const EXTRA = {
     ru: {
@@ -639,6 +643,69 @@
       paused: false
     };
   }
+  const PROGRAMS = [['Microsoft Word', 'W'], ['Excel', 'E'], ['PowerPoint', 'P'], ['Photoshop', 'Ps'], ['Chrome', 'C'], ['VS Code', '<>'], ['Figma', 'F'], ['Telegram', 'T']];
+  function ProgramPicker({
+    value,
+    onChange,
+    disabled,
+    placeholder,
+    label
+  }) {
+    const [open, setOpen] = useState(false),
+      [filter, setFilter] = useState(false),
+      [index, setIndex] = useState(0);
+    const root = useRef(null);
+    const options = PROGRAMS.filter(([name]) => !filter || name.toLowerCase().includes(value.trim().toLowerCase()));
+    const choose = name => {
+      onChange(name);
+      setOpen(false);
+      setFilter(false);
+      setIndex(0);
+      root.current?.querySelector('input')?.focus();
+    };
+    useEffect(() => {
+      if (disabled) setOpen(false);
+    }, [disabled]);
+    useEffect(() => {
+      if (open) root.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({
+        block: 'nearest'
+      });
+    }, [index, open]);
+    return <div className="hx-picker" ref={root} onBlur={e => {
+      if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+    }}><div className={`hx-picker-field ${open ? 'is-open' : ''}`}><input id="hx-program" role="combobox" aria-label={label} aria-expanded={open} aria-controls="hx-program-list" aria-autocomplete="list" aria-activedescendant={open && options.length ? `hx-program-option-${index}` : undefined} value={value} maxLength={100} autoComplete="off" placeholder={placeholder} disabled={disabled} onClick={() => {
+          if (!open) {
+            setFilter(false);
+            setIndex(0);
+            setOpen(true);
+          }
+        }} onChange={e => {
+          onChange(e.target.value);
+          setFilter(true);
+          setIndex(0);
+          setOpen(true);
+        }} onKeyDown={e => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!open) {
+              setFilter(false);
+              setIndex(0);
+              setOpen(true);
+            } else setIndex(i => options.length ? (i + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length : 0);
+          } else if (e.key === 'Escape' && open) {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(false);
+          } else if (e.key === 'Enter' && open && options.length) {
+            e.preventDefault();
+            choose(options[index][0]);
+          }
+        }} /><button type="button" className="hx-picker-toggle" disabled={disabled} aria-label={label} aria-expanded={open} aria-controls="hx-program-list" onClick={() => {
+          setFilter(false);
+          setIndex(0);
+          setOpen(v => !v);
+        }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button></div>{open && <div className="hx-picker-dropdown"><div id="hx-program-list" role="listbox" aria-label={label}>{options.map(([name, mark], i) => <button type="button" role="option" tabIndex={-1} aria-selected={i === index} id={`hx-program-option-${i}`} key={name} onMouseDown={e => e.preventDefault()} onClick={() => choose(name)}><span className="hx-program-mark">{mark}</span><span>{name}</span>{name === value && <Icon name="check" size={16} />}</button>)}</div>{!options.length && <span className="hx-picker-empty">{placeholder}</span>}</div>}</div>;
+  }
   function HotkeyTrainer({
     theme
   }) {
@@ -884,7 +951,7 @@
  <div className="hx-card hx-ai-card hx-unified"><form onSubmit={e => {
               e.preventDefault();
               generate();
-            }}><label className="hx-field-label" htmlFor="hx-program">{t.customPanelLabel}</label><div className="hx-program-row"><input id="hx-program" list="hx-programs" maxLength={100} value={topic} onChange={e => setTopic(e.target.value)} disabled={generating} placeholder={t.inputPlaceholder} autoComplete="off" /><button className="hx-button hx-secondary" disabled={generating || !topic.trim()} type="submit">{generating ? <span className="hx-spinner" /> : <Icon name="spark" size={17} />} {generating ? t.generating : t.generateButton}</button></div><datalist id="hx-programs">{['Microsoft Word', 'Excel', 'PowerPoint', 'Photoshop', 'Chrome', 'VS Code', 'Figma', 'Telegram'].map(name => <option key={name} value={name} />)}</datalist>{generating && <button type="button" className="hx-link" onClick={cancel}>{u.cancel}</button>}</form><p className="hx-caption">{setKind === 'custom' ? custom.name : u.baseNote} · {Math.min(size, active.length)} {u.keys}</p>{custom && setKind === 'custom' && !generating && !error && <div className="hx-notice" role="status"><Icon name="check" size={17} />{u.loaded}<button type="button" className="hx-link" onClick={() => setSetKind('base')}>{u.base}</button></div>}{error && <div className="hx-error" role="alert">{error}</div>}<p className="hx-caption hx-ai-note">{u.aiNote}</p></div>
+            }}><label className="hx-field-label" htmlFor="hx-program">{t.customPanelLabel}</label><div className="hx-program-row"><ProgramPicker value={topic} onChange={setTopic} disabled={generating} placeholder={t.inputPlaceholder} label={t.customPanelLabel} /><button className="hx-button hx-secondary" disabled={generating || !topic.trim()} type="submit">{generating ? <span className="hx-spinner" /> : <Icon name="spark" size={17} />} {generating ? t.generating : t.generateButton}</button></div>{generating && <button type="button" className="hx-link" onClick={cancel}>{u.cancel}</button>}</form><p className="hx-caption">{setKind === 'custom' ? custom.name : u.baseNote} · {Math.min(size, active.length)} {u.keys}</p>{custom && setKind === 'custom' && !generating && !error && <div className="hx-notice" role="status"><Icon name="check" size={17} />{u.loaded}<button type="button" className="hx-link" onClick={() => setSetKind('base')}>{u.base}</button></div>}{error && <div className="hx-error" role="alert">{error}</div>}<p className="hx-caption hx-ai-note">{u.aiNote}</p></div>
  <footer className="hx-setup-footer"><span className="hx-caption">{Math.min(size, active.length)} {u.keys} · {setKind === 'base' ? u.base : custom?.name}</span><button type="button" className="hx-button hx-primary" disabled={generating} onClick={() => begin()}>{t.startTraining}<Icon name="arrow" /></button></footer></div>}
  {phase === 'theory' && session && <div className="hx-enter"><div className="hx-title-row"><div><span className="hx-eyebrow">{t.theoryStep}</span><h3>{t.theoryTitle}</h3><p>{t.theoryDesc}</p></div><button className="hx-button" type="button" onClick={() => setPhase('setup')}>{u.configure}</button></div><div className="hx-theory-tools"><span className="hx-badge">{title} · {session.tasks.length}</span></div><div className="hx-theory-grid">{filtered.map((hk, i) => <article className="hx-theory-card" key={hk.key + hk.shift} style={{
               animationDelay: `${i * 35}ms`
@@ -904,7 +971,7 @@
               })}><Icon name="spark" size={17} />{u.hint}</button><span className="hx-caption">{u.physicalHelp}</span>{record.status === 'pending' ? <button type="button" className="hx-link" onClick={() => advance(true)}>{u.skip}<Icon name="arrow" size={16} /></button> : <span className="hx-caption" role="status">{u.next}…</span>}</div>
  {stats}</>}
  </div>}
- {phase === 'result' && session && <div className="hx-result hx-enter"><div className="hx-result-hero"><span className="hx-result-icon"><Icon name="check" size={37} /></span><span className="hx-eyebrow">{u.results}</span><h3>{t.finishedTitle}</h3><p>{u.doneNote}</p></div>{stats}<div className="hx-result-actions">{difficult.length > 0 && <button className="hx-button hx-primary" type="button" onClick={() => begin(difficult, false)}><Icon name="repeat" size={18} />{u.retry} · {difficult.length}</button>}<button className="hx-button" type="button" onClick={() => begin(undefined, false)}>{u.all}<Icon name="arrow" size={18} /></button><button className="hx-link" type="button" onClick={() => setPhase('setup')}>{u.newSet}</button></div><div className="hx-review"><h4>{u.review}</h4>{session.tasks.map((hk, i) => {
+ {phase === 'result' && session && <div className="hx-result hx-enter"><div className="hx-result-hero"><span className="hx-result-icon"><Icon name="check" size={37} /></span><span className="hx-eyebrow">{u.results}</span><h3>{t.finishedTitle}</h3><p>{u.doneNote}</p></div>{stats}<div className="hx-result-actions"><button className="hx-button hx-primary hx-result-main" type="button" onClick={() => difficult.length ? begin(difficult, false) : begin(undefined, false)}><Icon name="repeat" size={18} />{difficult.length ? `${u.retry} · ${difficult.length}` : u.all}</button><div className="hx-result-secondary">{difficult.length > 0 && <button className="hx-link" type="button" onClick={() => begin(undefined, false)}>{u.all}</button>}<button className="hx-link" type="button" onClick={() => setPhase('setup')}>{u.newSet}</button></div></div><div className="hx-review"><h4>{u.review}</h4>{session.tasks.map((hk, i) => {
               const r = session.records[i];
               return <div className="hx-review-row" key={i}><div><strong>{desc(hk, lang)}</strong><small>{r.status === 'skipped' ? u.skipped : r.hint || r.errors ? u.assisted : u.learned}</small></div><Combo hk={hk} /></div>;
             })}</div></div>}
