@@ -943,14 +943,10 @@
                         Время (минуты)
                     </div>
                     <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeTime ? 'shake' : ''}`}>
-                    <button onClick={() => updateTime(5)} aria-label="Больше">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                    </button>
-                    <input type="number" className={`val ${bumpTime ? 'bump' : ''}`} value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} />
-                    <button onClick={() => updateTime(-5)} aria-label="Меньше">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                </motion.div>
+                        <button onClick={() => updateTime(-5)}>−</button>
+                        <input type="number" className={`val ${bumpTime ? 'bump' : ''}`} value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} />
+                        <button onClick={() => updateTime(5)}>+</button>
+                    </motion.div>
                 </div>
 
                 <div className="tlms-timer-field">
@@ -960,15 +956,11 @@
                         </span>
                         Количество вопросов (макс. {Math.min(25, tests.length)})
                     </div>
-                   <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeQ ? 'shake' : ''}`}>
-                    <button onClick={() => updateQCount(1)} aria-label="Больше">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                    </button>
-                    <input type="number" className={`val ${bumpQ ? 'bump' : ''}`} value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} />
-                    <button onClick={() => updateQCount(-1)} aria-label="Меньше">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                </motion.div>
+                    <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeQ ? 'shake' : ''}`}>
+                        <button onClick={() => updateQCount(-1)}>−</button>
+                        <input type="number" className={`val ${bumpQ ? 'bump' : ''}`} value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} />
+                        <button onClick={() => updateQCount(1)}>+</button>
+                    </motion.div>
                 </div>
 
                 <button className="tlms-timer-primary" onClick={launchTestWithTimer} disabled={isStarting}>
