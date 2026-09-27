@@ -1,341 +1,484 @@
 // --- 13_landing.js ---
-// Заменить содержимое файла целиком. Стили: landing.css.
-// API сохранён: window.LandingView({ onLogin }). Нужен только React.
-(function () {
-  'use strict';
+const { useState, useEffect, useRef } = React;
+const { motion, AnimatePresence } = window.Motion;
 
-  const {
-    useState,
-    useEffect,
-    useRef
-  } = React;
-  const ICONS = {
-    cap: <><path d="m2 9 10-5 10 5-10 5-10-5Z" /><path d="M6 11v6c4 3 8 3 12 0v-6M22 9v8" /></>,
-    arrow: <path d="M4 12h16m-6-6 6 6-6 6" />,
-    chevron: <path d="m8 10 4 4 4-4" />,
-    check: <path d="m5 12 4 4L19 6" />,
-    close: <path d="m6 6 12 12M6 18 18 6" />,
-    menu: <path d="M4 6h16M4 12h16M4 18h16" />,
-    spark: <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z" />,
-    tests: <><rect x="5" y="3" width="14" height="18" rx="3" /><path d="m8 9 2 2 5-5M8 15h8M8 18h5" /></>,
-    cards: <><rect x="3" y="7" width="14" height="14" rx="3" /><path d="M7 3h11a3 3 0 0 1 3 3v11M7 12h6M7 16h4" /></>,
-    excel: <><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></>,
-    typing: <><rect x="2" y="5" width="20" height="14" rx="3" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" /></>,
-    code: <path d="m8 6-6 6 6 6m8-12 6 6-6 6M14 3l-4 18" />,
-    chat: <path d="M21 11a9 9 0 0 1-9 9H3l2-5a9 9 0 1 1 16-4Z" />,
-    bolt: <path d="m13 2-9 12h7l-1 8 10-12h-8z" />,
-    chart: <><path d="M4 20h17M7 16v-5M12 16V5M17 16V8" /></>,
-    play: <path d="m8 5 11 7-11 7V5Z" />,
-    pause: <path d="M8 5v14M16 5v14" />,
-    repeat: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6 7a7 7 0 0 1 12-2l2 3M4 16l2 3a7 7 0 0 0 12-2" /></>,
-    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a19 19 0 0 1 0 18 19 19 0 0 1 0-18" /></>
-  };
-  const Icon = ({
-    name,
-    size = 22
-  }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[name] || ICONS.spark}</svg>;
-  const MODULES = [{
-    id: 'tests',
-    icon: 'tests',
-    label: 'Тесты и экзамены',
-    tag: 'Проверь знания',
-    text: 'Проходи задания и разбирай ошибки.',
-    detail: 'Выбирай тему, отвечай на вопросы и возвращайся к сложным моментам в работе над ошибками.'
-  }, {
-    id: 'flashcards',
-    icon: 'cards',
-    label: 'Флеш-карты',
-    tag: 'Запоминай надолго',
-    text: 'Вопрос, ответ и ещё одно повторение.',
-    detail: 'Переворачивай карточки, отмечай знакомые ответы и отдельно повторяй то, что пока не запомнилось.'
-  }, {
-    id: 'excel',
-    icon: 'excel',
-    label: 'Тренажёр Excel',
-    tag: 'От формулы к практике',
-    text: 'Разбирай функции на понятных примерах.',
-    detail: 'Изучай формулы и сразу проверяй, как они работают в заданиях тренажёра.'
-  }, {
-    id: 'typing',
-    icon: 'typing',
-    label: 'Тренажёр печати',
-    tag: 'Поймай свой ритм',
-    text: 'Развивай скорость и точность набора.',
-    detail: 'Тренируй печать, следи за точностью и сравнивай результат со своим личным рекордом.'
-  }, {
-    id: 'playground',
-    icon: 'code',
-    label: 'Кодовая песочница',
-    tag: 'Попробуй свою идею',
-    text: 'Пиши код и экспериментируй.',
-    detail: 'Практикуй программирование: пробуй небольшие примеры и разбирай, как устроено решение.'
-  }, {
-    id: 'hotkeys',
-    icon: 'bolt',
-    label: 'Горячие клавиши',
-    tag: 'Действуй быстрее',
-    text: 'Превращай сочетания клавиш в привычку.',
-    detail: 'Повторяй сочетания и закрепляй их в тренировках, чтобы увереннее пользоваться привычными программами.'
-  }, {
-    id: 'chat',
-    icon: 'chat',
-    label: 'ИИ-помощник',
-    tag: 'Разберись в сложном',
-    text: 'Задавай вопросы по материалу.',
-    detail: 'Попроси объяснить тему или подсказать следующий шаг. Ответы помощника стоит проверять по учебным материалам.'
-  }, {
-    id: 'account',
-    icon: 'chart',
-    label: 'Личный прогресс',
-    tag: 'Замечай результат',
-    text: 'История, рекорды и статистика обучения.',
-    detail: 'Смотри результаты тестов, достижения в тренажёрах и свой прогресс в личном кабинете.'
-  }];
-  function useReducedMotion() {
-    const [reduced, setReduced] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false);
-    useEffect(() => {
-      const q = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-      if (!q) return;
-      const update = () => setReduced(q.matches);
-      q.addEventListener?.('change', update);
-      return () => q.removeEventListener?.('change', update);
-    }, []);
-    return reduced;
-  }
-  function Reveal({
-    children,
-    className = ''
-  }) {
-    const ref = useRef(null);
-    const [seen, setSeen] = useState(false);
-    useEffect(() => {
-      const node = ref.current;
-      if (!node) return;
-      if (!window.IntersectionObserver) {
-        setSeen(true);
-        return;
-      }
-      const observer = new IntersectionObserver(entries => {
-        if (entries.some(x => x.isIntersecting)) {
-          setSeen(true);
-          observer.disconnect();
-        }
-      }, {
-        threshold: 0.08
-      });
-      observer.observe(node);
-      return () => observer.disconnect();
-    }, []);
-    return <div ref={ref} className={`lv-reveal ${seen ? 'lv-seen' : ''} ${className}`}>{children}</div>;
-  }
-  function Brand() {
-    return <span className="lv-brand"><span className="lv-brand-mark"><Icon name="cap" size={25} /></span><span><b>Ultimate LMS</b><small>LEARN. PRACTICE. GROW.</small></span></span>;
-  }
-  function Demo({
-    quiet
-  }) {
-    const [tab, setTab] = useState('tests');
-    const [answer, setAnswer] = useState(null);
-    const [flipped, setFlipped] = useState(false);
-    const [formula, setFormula] = useState(false);
-    const panel = useRef(null),
-      frame = useRef(null);
-    const tabs = useRef([]);
-    const resetTilt = () => {
-      cancelAnimationFrame(frame.current);
-      panel.current?.style.setProperty('--lv-rx', '0deg');
-      panel.current?.style.setProperty('--lv-ry', '0deg');
-    };
-    useEffect(() => {
-      if (quiet) resetTilt();
-      return () => cancelAnimationFrame(frame.current);
-    }, [quiet]);
-    const tilt = e => {
-      if (quiet || e.pointerType !== 'mouse') return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - .5,
-        y = (e.clientY - rect.top) / rect.height - .5;
-      cancelAnimationFrame(frame.current);
-      frame.current = requestAnimationFrame(() => {
-        panel.current?.style.setProperty('--lv-rx', `${-y * 5}deg`);
-        panel.current?.style.setProperty('--lv-ry', `${x * 6}deg`);
-      });
-    };
-    const choices = [['tests', 'tests', 'Тест'], ['cards', 'cards', 'Карточки'], ['excel', 'excel', 'Excel']];
-    return <div className="lv-demo-stage" onPointerMove={tilt} onPointerLeave={resetTilt}>
-      <div className="lv-orbit" aria-hidden="true" /><div className="lv-orbit lv-orbit-two" aria-hidden="true" />
-      <div className="lv-demo-panel" ref={panel}>
-        <div className="lv-window-bar"><span className="lv-window-dots" aria-hidden="true"><i /><i /><i /></span><span>Твоё пространство обучения</span><Icon name="spark" size={16} /></div>
-        <div className="lv-demo-body"><div className="lv-demo-heading"><div><span className="lv-overline">МАЛЕНЬКАЯ ПРАКТИКА</span><h2>Попробуй прямо здесь</h2></div><span className="lv-demo-badge">Демо</span></div>
-          <div className="lv-demo-tabs" role="tablist" aria-label="Примеры возможностей">{choices.map(([id, icon, label], index) => <button ref={node => tabs.current[index] = node} key={id} id={`lv-demo-tab-${id}`} type="button" role="tab" aria-selected={tab === id} aria-controls={`lv-demo-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)} onKeyDown={e => {
-              let next = index;
-              if (e.key === 'ArrowRight') next = (index + 1) % 3;else if (e.key === 'ArrowLeft') next = (index + 2) % 3;else if (e.key === 'Home') next = 0;else if (e.key === 'End') next = 2;else return;
-              e.preventDefault();
-              setTab(choices[next][0]);
-              tabs.current[next]?.focus();
-            }}><Icon name={icon} size={17} />{label}</button>)}</div>
-          <div key={tab} className="lv-demo-content" role="tabpanel" id={`lv-demo-${tab}`} aria-labelledby={`lv-demo-tab-${tab}`}>
-            {tab === 'tests' && <><div className="lv-question-meta"><span>ВОПРОС 01</span><span>Один ответ</span></div><h3>Какое сочетание копирует выделенный текст в Windows?</h3><div className="lv-demo-options">{['Ctrl + V', 'Ctrl + C', 'Ctrl + Z'].map((text, i) => <button type="button" key={text} disabled={answer !== null} className={answer === null ? '' : i === 1 ? 'is-right' : answer === i ? 'is-wrong' : ''} onClick={() => setAnswer(i)}><span>{String.fromCharCode(65 + i)}</span><b>{text}</b>{answer !== null && i === 1 ? <Icon name="check" size={17} /> : answer === i ? <Icon name="close" size={17} /> : null}</button>)}</div><div className="lv-demo-feedback" role="status">{answer === null ? <span>Выбери вариант — и сразу проверь себя.</span> : <><span>{answer === 1 ? 'Верно! Ctrl + C копирует текст.' : 'Запомни: Ctrl + C — копировать.'}</span><button type="button" onClick={() => setAnswer(null)} aria-label="Повторить демо-вопрос"><Icon name="repeat" size={17} /></button></>}</div></>}
-            {tab === 'cards' && <><div className="lv-question-meta"><span>ОДНА КАРТОЧКА</span><span>Нажми, чтобы перевернуть</span></div><button type="button" className={`lv-flip ${flipped ? 'is-flipped' : ''}`} aria-label={flipped ? 'Ответ: Ctrl + Z отменяет последнее действие. Показать вопрос' : 'Что делает Ctrl + Z? Показать ответ'} aria-pressed={flipped} onClick={() => setFlipped(v => !v)}><span className="lv-flip-inner"><span className="lv-flip-face" aria-hidden="true"><Icon name="cards" size={30} /><small>ВОПРОС</small><b>Что делает<br />Ctrl + Z?</b><span>Нажми для ответа <Icon name="arrow" size={16} /></span></span><span className="lv-flip-face lv-flip-back" aria-hidden="true"><Icon name="check" size={30} /><small>ОТВЕТ</small><b>Отменяет последнее действие.</b><span>Нажми, чтобы вернуться</span></span></span></button><div className="lv-demo-feedback">Повторяй сложное, пока ответ не станет привычным.</div></>}
-            {tab === 'excel' && <><div className="lv-question-meta"><span>ПРАКТИКА EXCEL</span><span>Сумма значений</span></div><div className="lv-sheet"><div className="lv-formula"><span>ƒx</span><code>{formula ? '=СУММ(B2:B4)' : 'Выбери «Посчитать»'}</code></div><table><thead><tr><th scope="col">A</th><th scope="col">B</th></tr></thead><tbody><tr><td>Тетради</td><td>120</td></tr><tr><td>Ручки</td><td>80</td></tr><tr><td>Книги</td><td>300</td></tr><tr className="lv-sheet-total"><th scope="row">Итого</th><td aria-live="polite">{formula ? '500' : '—'}</td></tr></tbody></table></div><button className="lv-calculate" type="button" onClick={() => setFormula(v => !v)}><Icon name={formula ? 'repeat' : 'excel'} size={17} />{formula ? 'Ещё раз' : 'Посчитать сумму'}<Icon name="arrow" size={17} /></button><div className="lv-demo-feedback">СУММ складывает числа в выбранном диапазоне.</div></>}
-          </div>
-          <div className="lv-demo-foot"><span className="lv-status-dot" />Интерактивный пример · результаты не сохраняются</div>
-        </div>
-      </div>
-      <div className="lv-floating-label" aria-hidden="true"><span><Icon name="bolt" size={21} /></span><div><b>Знания в действии</b><small>Изучай. Пробуй. Повторяй.</small></div></div>
-    </div>;
-  }
-  const LEGAL_TEXTS = {
+// Реальные модули платформы (соответствуют файлам проекта) —
+// вместо выдуманных цифр показываем то, что действительно есть.
+const CAPABILITIES = [
+    {
+        id: 'tests',
+        label: 'Тесты и экзамены',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+        ),
+    },
+    {
+        id: 'flashcards',
+        label: 'Флеш-карты',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="6" width="14" height="10" rx="2" />
+                <path d="M7 3h14v10" />
+            </svg>
+        ),
+    },
+    
+    {
+        id: 'excel',
+        label: 'Тренажёр Excel',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" />
+                <line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" />
+            </svg>
+        ),
+    },
+    {
+        id: 'chat',
+        label: 'ИИ-чат поддержки',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4A8.9 8.9 0 0 1 3 12a8.4 8.4 0 0 1 8.5-8.5A8.4 8.4 0 0 1 21 11.5z" />
+            </svg>
+        ),
+    },
+    {
+        id: 'typing',
+        label: 'Тренажёр печати',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8" />
+            </svg>
+        ),
+    },
+    {
+        id: 'playground',
+        label: 'Кодовая песочница',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+        ),
+    },
+    {
+        id: 'hotkeys',
+        label: 'Горячие клавиши',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="10" rx="2" />
+                <path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M8 14h8" />
+            </svg>
+        ),
+    },
+    {
+        id: 'account',
+        label: 'Личный кабинет',
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+        ),
+    },
+];
+
+const BAR_HEIGHTS = [35, 60, 42, 82, 52, 95, 68];
+
+const LEGAL_TEXTS = {
     privacy: {
-      title: "Политика конфиденциальности",
-      content: "Ваша конфиденциальность очень важна для нас. Мы собираем минимально необходимое количество данных (email, имя, статистика обучения) исключительно для обеспечения работы платформы Ultimate LMS. Мы не передаем ваши данные третьим лицам. Использование платформы подразумевает ваше согласие на обработку этих данных."
+        title: "Политика конфиденциальности",
+        content: "Ваша конфиденциальность очень важна для нас. Мы собираем минимально необходимое количество данных (email, имя, статистика обучения) исключительно для обеспечения работы платформы Ultimate LMS. Мы не передаем ваши данные третьим лицам. Использование платформы подразумевает ваше согласие на обработку этих данных."
     },
     terms: {
-      title: "Условия использования",
-      content: "Платформа Ultimate LMS предоставляется «как есть». Администрация оставляет за собой право блокировать пользователей за нарушение правил (читы, передача аккаунта, оскорбления в чате). Копирование материалов платформы без разрешения запрещено. Приятного обучения!"
+        title: "Условия использования",
+        content: "Платформа Ultimate LMS предоставляется «как есть». Администрация оставляет за собой право блокировать пользователей за нарушение правил (читы, передача аккаунта, оскорбления в чате). Копирование материалов платформы без разрешения запрещено. Приятного обучения!"
     }
-  };
-  function LegalModal({
-    type,
-    onClose,
-    backgroundRef
-  }) {
-    const ref = useRef(null),
-      closeRef = useRef(null);
+};
+
+const LegalModal = ({ type, onClose }) => {
+    if (!type) return null;
     const data = LEGAL_TEXTS[type];
+
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999, 
+                background: 'rgba(5, 3, 8, 0.8)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+            }}
+        >
+            <motion.div 
+                initial={{ scale: 0.9, y: 20 }} 
+                animate={{ scale: 1, y: 0 }} 
+                onClick={(e) => e.stopPropagation()}
+                className="glass-panel"
+                style={{
+                    background: 'var(--bg-panel)', border: '1px solid var(--glass-border)',
+                    borderRadius: '24px', padding: '40px', maxWidth: '600px', width: '100%',
+                    position: 'relative', boxShadow: '0 25px 50px -12px rgba(168,85,247,0.25)'
+                }}
+            >
+                <button 
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute', top: '20px', right: '20px', 
+                        background: 'transparent', border: 'none', color: 'var(--text-sec)',
+                        fontSize: '24px', cursor: 'pointer', display: 'flex'
+                    }}
+                >
+                    ✕
+                </button>
+                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-main)', fontSize: '24px', fontWeight: 900 }}>
+                    {data.title}
+                </h2>
+                <p style={{ color: 'var(--text-sec)', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
+                    {data.content}
+                </p>
+                <button 
+                    onClick={onClose} 
+                    style={{ 
+                        width: '100%', marginTop: '30px', background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)', 
+                        color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' 
+                    }}
+                >
+                    Понятно
+                </button>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+const LandingView = ({ onLogin }) => {
+    const [heroIn, setHeroIn] = useState(false);
+    const [barsIn, setBarsIn] = useState(false);
+    const [tilt, setTilt] = useState({ x: 0, y: 0 });
+    const [aboutVisible, setAboutVisible] = useState(false);
+    const [activeLegalModal, setActiveLegalModal] = useState(null);
+    const laptopWrapRef = useRef(null);
+    const aboutRef = useRef(null);
+
+    // Единая последовательность появления хиро-блока при загрузке —
+    // осознанный момент, а не разбросанные fade-in на каждом элементе.
     useEffect(() => {
-      const opener = document.activeElement,
-        bg = backgroundRef.current,
-        previousInert = bg?.inert;
-      if (bg) bg.inert = true;
-      const previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      closeRef.current?.focus();
-      const handle = e => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          onClose();
-        }
-        if (e.key === 'Tab') {
-          const nodes = Array.from(ref.current?.querySelectorAll('button,[href],[tabindex="0"]') || []);
-          if (!nodes.length) return;
-          const first = nodes[0],
-            last = nodes[nodes.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      };
-      document.addEventListener('keydown', handle);
-      return () => {
-        document.removeEventListener('keydown', handle);
-        document.body.style.overflow = previousOverflow;
-        if (bg) bg.inert = previousInert;
-        if (opener?.isConnected) opener.focus();
-      };
-    }, [type, onClose, backgroundRef]);
-    if (!data) return null;
-    return <div className="lv-modal-backdrop" onClick={e => {
-      if (e.target === e.currentTarget) onClose();
-    }}><section ref={ref} className="lv-modal" role="dialog" aria-modal="true" aria-labelledby="lv-legal-title"><button ref={closeRef} type="button" className="lv-icon-button lv-modal-close" aria-label="Закрыть окно" onClick={onClose}><Icon name="close" /></button><span className="lv-overline">ULTIMATE LMS</span><h2 id="lv-legal-title">{data.title}</h2><p>{data.content}</p><button type="button" className="lv-button lv-primary" onClick={onClose}>Понятно<Icon name="check" size={18} /></button></section></div>;
-  }
-  const FAQ = [['Нужно ли что-то устанавливать?', 'Нет. Платформа работает в браузере. Для входа и загрузки материалов нужен интернет.'], ['Что можно попробовать без входа?', 'На этой странице доступны три небольших демо: вопрос теста, карточка и пример формулы Excel. Они показывают механику обучения и не сохраняют результат.'], ['Где смотреть свои результаты?', 'После входа используй раздел статистики: там собраны сохранённые результаты тестов и показатели тренажёров.'], ['Если я не понимаю тему?', 'Начни с небольшого примера, повтори материал с карточками или задай вопрос ИИ-помощнику внутри платформы.']];
-  const LandingView = ({
-    onLogin,
-    theme
-  }) => {
-    const systemReduced = useReducedMotion();
-    const [paused, setPaused] = useState(false),
-      [menu, setMenu] = useState(false),
-      [legal, setLegal] = useState(null),
-      [expanded, setExpanded] = useState(null),
-      [loginError, setLoginError] = useState(''),
-      [loginBusy, setLoginBusy] = useState(false);
-    const background = useRef(null),
-      menuButton = useRef(null),
-      alive = useRef(true),
-      loginLock = useRef(false);
-    const quiet = systemReduced || paused;
-    useEffect(() => {
-      alive.current = true;
-      return () => {
-        alive.current = false;
-      };
+        const t1 = setTimeout(() => setHeroIn(true), 80);
+        const t2 = setTimeout(() => setBarsIn(true), 620);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
     }, []);
-    const closeLegal = React.useCallback(() => setLegal(null), []);
-    const login = async () => {
-      if (loginLock.current) return;
-      if (typeof onLogin !== 'function') {
-        setLoginError('Вход пока не подключён. Попробуй обновить страницу.');
-        return;
-      }
-      loginLock.current = true;
-      setLoginBusy(true);
-      setLoginError('');
-      try {
-        await onLogin();
-      } catch {
-        if (alive.current) setLoginError('Не удалось открыть вход. Попробуй ещё раз.');
-      } finally {
-        loginLock.current = false;
-        if (alive.current) setLoginBusy(false);
-      }
+
+    // Плавное появление секции "О платформе" при прокрутке до неё.
+    useEffect(() => {
+        if (!aboutRef.current || typeof IntersectionObserver === 'undefined') {
+            setAboutVisible(true);
+            return;
+        }
+        const obs = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setAboutVisible(true);
+                    obs.disconnect();
+                }
+            },
+            { threshold: 0.25 }
+        );
+        obs.observe(aboutRef.current);
+        return () => obs.disconnect();
+    }, []);
+
+    // Лёгкий наклон ноутбука вслед за курсором — отвечает на действие пользователя,
+    // а не крутится сам по себе.
+    const handleMouseMove = (e) => {
+        const el = laptopWrapRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        setTilt({ x: py * -8, y: px * 10 });
     };
-    const go = (event, id) => {
-      event.preventDefault();
-      const target = document.getElementById(id);
-      setMenu(false);
-      if (target) {
-        target.focus({
-          preventScroll: true
-        });
-        target.scrollIntoView({
-          behavior: quiet ? 'auto' : 'smooth',
-          block: 'start'
-        });
-      }
-    };
-    const links = [['lv-features', 'Возможности'], ['lv-about', 'Как это работает'], ['lv-faq', 'Вопросы']];
-    return <div className={`landing-v4 ${quiet ? 'lv-quiet' : ''} ${theme === 'light' ? 'lv-light' : theme === 'dark' ? 'lv-dark' : ''}`}>
-      <div className="lv-background" aria-hidden="true"><div className="lv-aurora lv-aurora-a" /><div className="lv-aurora lv-aurora-b" /><div className="lv-grid-glow" /></div>
-      <div ref={background} aria-hidden={legal ? 'true' : undefined}>
-        <a className="lv-skip" href="#lv-main" onClick={e => go(e, 'lv-main')}>Перейти к содержимому</a>
-        <header className="lv-header"><div className="lv-container lv-nav"><a className="lv-home" href="#lv-main" aria-label="Ultimate LMS — начало страницы" onClick={e => go(e, 'lv-main')}><Brand /></a><nav className="lv-desktop-nav" aria-label="Основная навигация">{links.map(([id, label]) => <a key={id} href={`#${id}`} onClick={e => go(e, id)}>{label}</a>)}</nav><div className="lv-nav-actions"><button type="button" className="lv-icon-button lv-motion-toggle" disabled={systemReduced} aria-label={systemReduced ? 'Анимации отключены в системе' : paused ? 'Включить анимации' : 'Отключить анимации'} title={systemReduced ? 'Анимации отключены в системе' : paused ? 'Включить анимации' : 'Отключить анимации'} aria-pressed={quiet} onClick={() => setPaused(v => !v)}><Icon name={quiet ? 'play' : 'pause'} size={17} /></button><button type="button" className="lv-button lv-secondary lv-login" onClick={login} disabled={loginBusy}>Войти<Icon name="arrow" size={17} /></button><button ref={menuButton} type="button" className="lv-icon-button lv-menu-toggle" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} aria-controls="lv-mobile-menu" onClick={() => setMenu(v => !v)}><Icon name={menu ? 'close' : 'menu'} /></button></div></div>{menu && <nav id="lv-mobile-menu" className="lv-mobile-nav lv-container" aria-label="Мобильная навигация" onKeyDown={e => {
-            if (e.key === 'Escape') {
-              setMenu(false);
-              menuButton.current?.focus();
-            }
-          }}>{links.map(([id, label]) => <a key={id} href={`#${id}`} onClick={e => go(e, id)}>{label}<Icon name="arrow" size={18} /></a>)}</nav>}</header>
-        <main id="lv-main" tabIndex={-1}>
-          <section className="lv-hero lv-container" aria-labelledby="lv-title"><div className="lv-hero-copy"><div className="lv-eyebrow lv-intro" style={{
-                '--lv-delay': '40ms'
-              }}><span className="lv-status-dot" />Твоё пространство для роста</div><h1 id="lv-title"><span className="lv-title-line"><span>Учись.</span></span><span className="lv-title-line"><span>Пробуй.</span></span><span className="lv-title-line"><span className="lv-gradient">Превосходи себя.</span></span></h1><p className="lv-hero-description lv-intro" style={{
-                '--lv-delay': '330ms'
-              }}>От первого вопроса до уверенного навыка.<br className="lv-desktop-break" /> Тесты, тренажёры и ИИ-помощник —<br className="lv-desktop-break" /> в одном месте.</p><div className="lv-hero-actions lv-intro" style={{
-                '--lv-delay': '430ms'
-              }}><button type="button" className="lv-button lv-primary" onClick={login} disabled={loginBusy}>{loginBusy ? 'Открываем…' : 'Начать обучение'}<Icon name="arrow" size={20} /></button><a className="lv-text-link" href="#lv-features" onClick={e => go(e, 'lv-features')}>Изучить возможности<Icon name="chevron" size={18} /></a></div><div className="lv-hero-note lv-intro" style={{
-                '--lv-delay': '500ms'
-              }}><Icon name="globe" size={16} />Работает в браузере. В твоём темпе.</div>{loginError && <p className="lv-error" role="alert">{loginError}</p>}</div><div className="lv-hero-visual lv-intro" style={{
-              '--lv-delay': '230ms'
-            }}><Demo quiet={quiet} /></div></section>
-          <div className="lv-container"><Reveal><div className="lv-shortcuts"><span>ОТ ЗНАНИЙ К ПРАКТИКЕ</span>{[['tests', 'Проверь себя'], ['typing', 'Прокачай навык'], ['cards', 'Закрепи знания'], ['chart', 'Замечай прогресс']].map(([icon, label]) => <div key={icon}><Icon name={icon} size={20} />{label}</div>)}</div></Reveal></div>
-          <section className="lv-section lv-container" id="lv-features" tabIndex={-1} aria-labelledby="lv-features-title"><Reveal><div className="lv-section-heading"><div><span className="lv-overline">ВОЗМОЖНОСТИ ПЛАТФОРМЫ</span><h2 id="lv-features-title">Разные навыки.<br /><span className="lv-muted">Одно пространство.</span></h2></div><p>Выбирай, что хочешь освоить сегодня.<br />Нажми на карточку, чтобы узнать больше.</p></div></Reveal><div className="lv-module-grid">{MODULES.map((item, i) => <Reveal key={item.id} className={`lv-module-reveal lv-module-${item.id}`}><article className={`lv-module ${expanded === item.id ? 'is-expanded' : ''}`} style={{
-                  '--lv-card-index': i
-                }}><button type="button" className="lv-module-trigger" aria-expanded={expanded === item.id} aria-controls={`lv-module-detail-${item.id}`} onClick={() => setExpanded(v => v === item.id ? null : item.id)}><span className="lv-module-top"><span className={`lv-module-icon lv-color-${i % 4}`}><Icon name={item.icon} size={25} /></span><span className="lv-module-arrow"><Icon name="arrow" size={20} /></span></span><span className="lv-module-tag">{item.tag}</span><span className="lv-module-title">{item.label}</span><span className="lv-module-text">{item.text}</span></button><div className="lv-module-detail" id={`lv-module-detail-${item.id}`} hidden={expanded !== item.id}><p>{item.detail}</p></div></article></Reveal>)}</div></section>
-          <section className="lv-section lv-container" id="lv-about" tabIndex={-1} aria-labelledby="lv-about-title"><Reveal><div className="lv-about"><div className="lv-about-copy"><span className="lv-overline">КАК ЭТО РАБОТАЕТ</span><h2 id="lv-about-title">Меньше откладывать.<br /><span className="lv-gradient">Больше пробовать.</span></h2><p>Не нужно разбираться во всём сразу. Выбери одну тему и начни с небольшого задания. Платформа поможет соединить изучение, практику и повторение.</p><a className="lv-text-link" href="#lv-main" onClick={e => go(e, 'lv-main')}>Попробовать демо<Icon name="arrow" size={19} /></a></div><ol className="lv-steps">{[['Выбери направление', 'Тесты, код, Excel или тренировка печати.'], ['Проверь на практике', 'Выполни задание и посмотри на результат.'], ['Разбери сложное', 'Повтори материал или спроси ИИ-помощника.'], ['Вернись чуть увереннее', 'Следи за прогрессом и продолжай в своём темпе.']].map(([title, text], i) => <li key={title}><span className="lv-step-number">0{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol></div></Reveal></section>
-          <section className="lv-section lv-container lv-faq" id="lv-faq" tabIndex={-1} aria-labelledby="lv-faq-title"><Reveal><div className="lv-section-heading"><div><span className="lv-overline">ПЕРЕД ПЕРВЫМ ШАГОМ</span><h2 id="lv-faq-title">Есть вопросы?</h2></div><p>Несколько вещей, которые полезно знать.</p></div><div className="lv-faq-list">{FAQ.map(([question, answer]) => <details key={question}><summary>{question}<Icon name="chevron" size={21} /></summary><p>{answer}</p></details>)}</div></Reveal></section>
-          <div className="lv-container lv-bottom-wrap"><Reveal><section className="lv-bottom-cta"><span className="lv-bottom-orbit" aria-hidden="true" /><span className="lv-overline">ТВОЙ СЛЕДУЮЩИЙ ШАГ</span><h2>Начни с любопытства.<br />Продолжи с уверенностью.</h2><p>Одна тема. Одна попытка. Уже движение вперёд.</p><button type="button" className="lv-button lv-primary" onClick={login} disabled={loginBusy}>{loginBusy ? 'Открываем…' : 'Перейти к обучению'}<Icon name="arrow" size={20} /></button></section></Reveal></div>
-        </main>
-        <footer className="lv-footer lv-container"><div className="lv-footer-top"><Brand /><div className="lv-footer-links"><button type="button" onClick={() => setLegal('privacy')}>Конфиденциальность</button><button type="button" onClick={() => setLegal('terms')}>Условия использования</button></div></div><div className="lv-footer-bottom"><span>© {new Date().getFullYear()} Ultimate LMS Platform</span><span>Учись. Практикуйся. Развивайся.</span></div></footer>
-      </div>
-      {legal && <LegalModal type={legal} onClose={closeLegal} backgroundRef={background} />}
-    </div>;
-  };
-  Object.assign(window, {
-    LandingView
-  });
-})();
+    const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
+
+    return (
+        <div className="landing-wrapper">
+            <div className="glow-field">
+                <div className="glow glow-a"></div>
+                <div className="glow glow-b"></div>
+                <div className="glow glow-c"></div>
+                <div className="glow glow-d"></div>
+            </div>
+            <div className="noise"></div>
+
+            <header>
+                <div className="nav">
+                    <div className="logo">
+                        <div className="logo-mark">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3L2 8l10 5 8-4.2V15h1V8L12 3z" fill="#fff" />
+                                <path d="M6 12.5V17c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5l-6 3.15-6-3.15z" fill="#fff" opacity=".85" />
+                            </svg>
+                        </div>
+                        <div className="logo-text">
+                            <b>Ultimate LMS</b>
+                            <small>PLATFORM</small>
+                        </div>
+                    </div>
+                    <nav className="nav-links">
+                        <a href="#features">Возможности</a>
+                        <a href="#about">О платформе</a>
+                        <a href="#pricing">Тарифы</a>
+                        <a href="#contacts">Контакты</a>
+                    </nav>
+                    <div className="nav-actions">
+                        {/* КНОПКИ В ШАПКЕ */}
+                        <button className="btn-lnd btn-ghost" onClick={onLogin}>Войти</button>
+                        <button className="btn-lnd btn-grad" onClick={onLogin}>Зарегистрироваться</button>
+                    </div>
+                </div>
+            </header>
+
+            <section className="hero">
+                <div className="hero-inner">
+                    <div className={`hero-content${heroIn ? ' in' : ''}`}>
+                        <span className="eyebrow">новая площадка обучения</span>
+                        <h1 className="hero-title">Обучение.<br />Тестирование.<br /><span className="grad">Развитие.</span></h1>
+                        <p className="hero-sub">Ultimate LMS Platform — тесты, флеш-карты, тренажёр Excel, тренажёр печати и ИИ-чат в одном месте, чтобы учиться и сразу проверять себя.</p>
+                        <div className="hero-cta">
+                            {/* ГЛАВНЫЕ КНОПКИ */}
+                            <button className="btn-lnd btn-grad" onClick={onLogin}>Зарегистрироваться</button>
+                            <button className="btn-lnd btn-outline" onClick={onLogin}>Войти в систему</button>
+                        </div>
+                        <div className="hero-note"><span className="dot"></span> Ваши данные защищены. Работает прямо в браузере — ничего устанавливать не нужно</div>
+                    </div>
+
+                    <div className="hero-visual">
+                        <div
+                            className="laptop-wrap"
+                            ref={laptopWrapRef}
+                            onMouseMove={handleMouseMove}
+                            onMouseLeave={handleMouseLeave}
+                        >
+                            <div
+                                className="laptop-tilt"
+                                style={{
+                                    transform: `perspective(1400px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                                    transition: (tilt.x === 0 && tilt.y === 0) ? 'transform .6s ease' : 'transform .12s ease-out',
+                                }}
+                            >
+                                <div className="laptop">
+                                    <div className="laptop-screen">
+                                        <div className="dash-topbar">
+                                            <div className="greet">Добрый вечер 👋<span>Продолжим обучение?</span></div>
+                                            <div className="dash-avatar"></div>
+                                        </div>
+                                        <div className="tile-grid">
+                                            <div className="tile t1"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg></div>
+                                            <div className="tile t2"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg></div>
+                                            <div className="tile t3"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></div>
+                                            <div className="tile t4"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg></div>
+                                        </div>
+                                        <div className="dash-row">
+                                            <div className="glass-card">
+                                                <div className="label">Прогресс за неделю</div>
+                                                <div className="bar-row">
+                                                    {BAR_HEIGHTS.map((h, i) => (
+                                                        <div
+                                                            key={i}
+                                                            style={{
+                                                                height: barsIn ? `${h}%` : '0%',
+                                                                transition: 'height .9s cubic-bezier(.16,1,.3,1)',
+                                                                transitionDelay: `${i * 0.07}s`,
+                                                            }}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="glass-card ring-card">
+                                                <div className="ring"></div>
+                                                <div className="label" style={{ margin: 0 }}>Курс пройден</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="laptop-base"></div>
+
+                                    <div className="float-badge fb1">
+                                        <div className="ic">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                        </div>
+                                        <div>Тест пройден<span>Результат: 98%</span></div>
+                                    </div>
+                                    <div className="float-badge fb2">
+                                        <div className="ic">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+                                        </div>
+                                        <div>Прогресс растёт<span>+24% за месяц</span></div>
+                                    </div>
+                                    <svg className="cap-badge" viewBox="0 0 100 100" fill="none">
+                                        <defs>
+                                            <linearGradient id="capGradSmall" x1="0" y1="0" x2="100" y2="100">
+                                                <stop offset="0%" stopColor="#8a5cff" />
+                                                <stop offset="100%" stopColor="#c25bff" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M50 20 10 38l40 18 40-18-40-18z" fill="url(#capGradSmall)" />
+                                        <path d="M28 46v16c0 6 10 11 22 11s22-5 22-11V46l-22 10-22-10z" fill="url(#capGradSmall)" opacity=".85" />
+                                        <line x1="85" y1="40" x2="85" y2="64" stroke="url(#capGradSmall)" strokeWidth="2.4" />
+                                        <circle cx="85" cy="67" r="3.4" fill="url(#capGradSmall)" />
+                                    </svg>
+                                    <div className="pin-badge">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9b3ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="tech-strip">
+                <div className="tech-head">Собрано на современном стеке</div>
+                <div className="tech-inner">
+                    <div className="tech-item">
+                        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.2" fill="#61dafb" /><g stroke="#61dafb" strokeWidth="1.4"><ellipse cx="12" cy="12" rx="10" ry="4.2" /><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)" /><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)" /></g></svg>
+                        React
+                    </div>
+                    <div className="tech-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2 2 5l1.6 15L12 22l8.4-2L22 5 12 2z" fill="#8f5cff" /><path d="M12 2v20l8.4-2L22 5 12 2z" fill="#c15bff" /></svg>
+                        Vite
+                    </div>
+                    <div className="tech-item">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 6c-2.7 0-4.3 1.3-5 4 1-1.3 2.2-1.8 3.5-1.5.8.2 1.4.8 2 1.4.9 1 2 2.1 4.5 2.1 2.7 0 4.3-1.3 5-4-1 1.3-2.2 1.8-3.5 1.5-.8-.2-1.4-.8-2-1.4-.9-1-2-2.1-4.5-2.1zM7 12c-2.7 0-4.3 1.3-5 4 1-1.3 2.2-1.8 3.5-1.5.8.2 1.4.8 2 1.4.9 1 2 2.1 4.5 2.1 2.7 0 4.3-1.3 5-4-1 1.3-2.2 1.8-3.5 1.5-.8-.2-1.4-.8-2-1.4-.9-1-2-2.1-4.5-2.1z" fill="#38bdf8" /></svg>
+                        Tailwind CSS
+                    </div>
+                    <div className="tech-item">
+                        <svg viewBox="0 0 24 24" fill="#e879f9"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8z" /></svg>
+                        Flowbite Motion
+                    </div>
+                    <div className="tech-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" strokeWidth="2.2" strokeLinecap="round"><line x1="4" y1="20" x2="4" y2="12" /><line x1="12" y1="20" x2="12" y2="6" /><line x1="20" y1="20" x2="20" y2="15" /></svg>
+                        Chart.js
+                    </div>
+                </div>
+            </section>
+
+            {/* Раньше здесь были придуманные цифры (1000+ пользователей, 5000+ тестов).
+                Заменили на список того, что реально работает в платформе. */}
+            <section className="capabilities">
+                <div className="cap-head">Что уже работает в платформе</div>
+                <div className="cap-grid">
+                    {CAPABILITIES.map((item) => (
+                        <div className="cap-item" key={item.id}>
+                            <div className="cap-ic">{item.icon}</div>
+                            <div className="cap-label">{item.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="features" id="features">
+                <span className="eyebrow2">почему выбирают нас</span>
+                <h2>Всё для вашего <span className="grad">успеха</span></h2>
+                <div className="feat-grid">
+                    <div className="feat-card">
+                        <div className="ic ic-1"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg></div>
+                        <h3>Умное обучение</h3>
+                        <p>Интерактивные материалы и тесты для максимально эффективного усвоения знаний.</p>
+                    </div>
+                    <div className="feat-card">
+                        <div className="ic ic-2"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></div>
+                        <h3>Надёжность и безопасность</h3>
+                        <p>Ваши данные под надёжной защитой с современным шифрованием.</p>
+                    </div>
+                    <div className="feat-card">
+                        <div className="ic ic-3"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg></div>
+                        <h3>Быстрый доступ</h3>
+                        <p>Работайте с платформой в любое время и с любого устройства.</p>
+                    </div>
+                    <div className="feat-card">
+                        <div className="ic ic-4"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg></div>
+                        <h3>Аналитика и прогресс</h3>
+                        <p>Отслеживайте результаты и улучшайте свои показатели день за днём.</p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Новая секция — раньше ссылка "О платформе" в шапке никуда не вела. */}
+            <section className={`about${aboutVisible ? ' visible' : ''}`} id="about" ref={aboutRef}>
+                <div className="about-inner">
+                    <div className="about-media">
+                        <img
+                            src="https://images.unsplash.com/photo-1758270705290-62b6294dd044?fm=jpg&q=80&w=1200&auto=format&fit=crop"
+                            alt="Студенты за ноутбуком во время занятия"
+                            loading="lazy"
+                        />
+                    </div>
+                    <div className="about-text">
+                        <span className="eyebrow2">о платформе</span>
+                        <h2>Учиться и сразу <span className="grad">проверять себя</span></h2>
+                        <p>Ultimate LMS Platform объединяет то, что обычно разбросано по разным сервисам: тесты и экзамены, флеш-карты для повторения, тренажёр Excel, тренажёр слепой печати и кодовую песочницу для практики.</p>
+                        <p>Если что-то непонятно — рядом встроенный ИИ-чат, который отвечает на вопросы по материалу, а личный кабинет хранит весь прогресс на одном месте.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="quote-section">
+                <div className="quote-inner">
+                    <div>
+                        <div className="quote-mark">&ldquo;</div>
+                        <div className="quote-text">Образование — это ключ к <span className="grad">будущему.</span><br />Начните свой путь уже сегодня.</div>
+                    </div>
+                    <div className="quote-cap">
+                        <svg viewBox="0 0 100 100" fill="none">
+                            <defs>
+                                <linearGradient id="capGrad" x1="0" y1="0" x2="100" y2="100">
+                                    <stop offset="0%" stopColor="#8a5cff" />
+                                    <stop offset="100%" stopColor="#c25bff" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 20 10 38l40 18 40-18-40-18z" fill="url(#capGrad)" />
+                            <path d="M28 46v16c0 6 10 11 22 11s22-5 22-11V46l-22 10-22-10z" fill="url(#capGrad)" opacity=".85" />
+                            <line x1="85" y1="40" x2="85" y2="64" stroke="url(#capGrad)" strokeWidth="2.4" />
+                            <circle cx="85" cy="67" r="3.4" fill="url(#capGrad)" />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                <div className="footer-inner">
+                    <div className="logo">
+                        <div className="logo-mark" style={{ width: '28px', height: '28px' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3L2 8l10 5 8-4.2V15h1V8L12 3z" fill="#fff" />
+                                <path d="M6 12.5V17c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5l-6 3.15-6-3.15z" fill="#fff" opacity=".85" />
+                            </svg>
+                        </div>
+                        <div className="logo-text" style={{ fontSize: '12px' }}>
+                            <b>Ultimate LMS</b>
+                            <small>PLATFORM</small>
+                        </div>
+                    </div>
+                    <div className="copyright">© 2026 Ultimate LMS Platform. Все права защищены.</div>
+                    <div className="footer-links">
+                        <span onClick={() => setActiveLegalModal('privacy')} style={{ cursor: 'pointer', color: 'var(--text-sec)' }}>Политика конфиденциальности</span>
+                        <span onClick={() => setActiveLegalModal('terms')} style={{ cursor: 'pointer', color: 'var(--text-sec)' }}>Условия использования</span>
+                    </div>
+                </div>
+            </footer>
+            
+            <AnimatePresence>
+                {activeLegalModal && (
+                    <LegalModal type={activeLegalModal} onClose={() => setActiveLegalModal(null)} />
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+Object.assign(window, { LandingView });
