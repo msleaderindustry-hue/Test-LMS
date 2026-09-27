@@ -86,6 +86,20 @@
 @media(max-width:680px){.usp-shell{padding:18px;border-radius:23px}.usp-heading{gap:12px;margin-bottom:24px}.usp-heading .usp-mark{display:none}.usp h2{font-size:29px}.usp-subtitle{font-size:14px}.usp-tabs{margin-bottom:20px}.usp-tab{flex-shrink:0;padding:11px 13px;min-height:46px;font-size:14px!important;gap:7px}.usp-tab svg{width:17px}.usp-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.usp-metric{padding:16px 13px}.usp-metric-value{font-size:31px}.usp-metric-label{font-size:12px;min-height:36px;gap:6px}.usp-metric-note{font-size:11px}.usp-overview{grid-template-columns:1fr}.usp-ring-card{display:grid;grid-template-columns:125px minmax(0,1fr);gap:0 15px;text-align:left}.usp-ring-card h3{grid-column:2;grid-row:1;align-self:end;font-size:17px}.usp-ring-card .usp-ring{grid-column:1;grid-row:1/3;width:125px;height:125px;margin:0}.usp-ring-card .usp-caption{grid-column:2;grid-row:2;align-self:start;margin-top:8px}.usp-ring-center strong{font-size:29px}.usp-ring-center small{font-size:11px}.usp-card{padding:18px;border-radius:18px}.usp h3{font-size:18px}.usp-chart{height:215px;gap:8px}.usp-chart-head{flex-direction:row;flex-wrap:wrap}.usp-bar-tip{font-size:9px}.usp-chart-detail{padding:11px;gap:10px}.usp-chart-detail strong{font-size:13px}.usp-chart-detail .usp-caption{font-size:11px}.usp-search{padding:0 10px}.usp-search input{font-size:14px}.usp-select{max-width:110px;padding:0 8px;font-size:12px!important}.usp-tools{gap:7px}.usp-record{grid-template-columns:minmax(0,1fr) auto 32px;gap:9px;padding:17px 0}.usp-record-icon{display:none}.usp-record-title{font-size:14px}.usp-record-meta{font-size:11px}.usp-record-score{font-size:20px}.usp-icon-btn{width:32px;min-height:40px}.usp-btn{font-size:12px!important;padding:9px 12px}.usp-training-hero{grid-template-columns:1fr;padding:22px;gap:20px}.usp-training-copy h3{font-size:26px}.usp-training-ring .usp-ring{width:180px;height:180px}.usp-dots{grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}.usp-lb-row{grid-template-columns:23px 35px minmax(0,1fr) auto;gap:9px;padding:15px 4px}.usp-avatar{width:35px;height:38px;font-size:12px;border-radius:12px}.usp-lb-name{font-size:14px}.usp-lb-value{font-size:21px}.usp-lb-value small{font-size:10px;max-width:76px}.usp-caption{font-size:12px}.usp-section-head{gap:10px}.usp-pagination{gap:8px}.usp-rank{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.usp *,.usp *:before,.usp *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+/* Единая фиксированная область построения; не зависит от глобальной высоты кнопок. */
+.usp .usp-chart{--up-plot-height:190px;height:239px;min-height:239px;align-items:flex-start;padding:20px 0 0;}
+.usp .usp-scale{position:relative;height:var(--up-plot-height);padding:0;display:block;}
+.usp .usp-scale>span{position:absolute;left:0;line-height:1;transform:translateY(-50%);}
+.usp .usp-scale>span:nth-child(1){top:0%}.usp .usp-scale>span:nth-child(2){top:25%}.usp .usp-scale>span:nth-child(3){top:50%}.usp .usp-scale>span:nth-child(4){top:75%}.usp .usp-scale>span:nth-child(5){top:100%}
+.usp .usp-bars{position:relative;height:calc(var(--up-plot-height) + 29px);background:none;}
+.usp .usp-bars:before{content:"";position:absolute;top:0;left:0;right:0;height:var(--up-plot-height);pointer-events:none;border-bottom:1px solid var(--up-line);background:linear-gradient(to bottom,var(--up-line) 1px,transparent 1px);background-size:100% 25%;}
+.usp button.usp-bar-col{appearance:none;position:relative;display:block!important;height:calc(var(--up-plot-height) + 29px)!important;min-height:0!important;max-height:none!important;align-self:flex-start;padding:0!important;line-height:normal;overflow:visible;box-shadow:none;transform:none;}
+.usp .usp-bar-track{display:block;position:relative;flex:none;height:var(--up-plot-height);width:100%;}
+.usp .usp-bar{display:block;position:absolute;bottom:0;left:0;width:100%;min-height:0;}
+.usp .usp-bar-label{display:block;height:29px;padding-top:7px;}
+.usp .usp-bar.zero{box-shadow:none!important;animation:none;}
+.usp .usp-bar.zero:after{content:"";position:absolute;bottom:0;left:0;right:0;border-top:2px solid var(--up-accent);}
+
 `;
   function useStyles() {
     useEffect(() => {
@@ -233,6 +247,11 @@
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    useEffect(() => {
+      if (!notice) return;
+      const timer = setTimeout(() => setNotice(''), 3000);
+      return () => clearTimeout(timer);
+    }, [notice]);
     const lock = useRef(false);
     const cancelRef = useRef(null);
     const opener = useRef(null);
@@ -284,7 +303,7 @@
           } catch {
             setExportError('Не удалось скачать историю. Попробуй ещё раз.');
           }
-        }}><Icon name="download" size={17} />Скачать</button></div>{rows.length > 0 && <div className="usp-tools"><label className="usp-search"><Icon name="search" size={16} /><input aria-label="Поиск в истории" placeholder="Найти тему или имя…" value={query} onChange={e => {
+        }}><Icon name="download" size={17} />Excel</button></div>{rows.length > 0 && <div className="usp-tools"><label className="usp-search"><Icon name="search" size={16} /><input aria-label="Поиск в истории" placeholder="Найти тему или имя…" value={query} onChange={e => {
             setQuery(e.target.value);
             setPage(0);
           }} /></label><select className="usp-select" aria-label="Порядок истории" value={sort} onChange={e => {
@@ -418,31 +437,48 @@
     return <div className="usp-card"><div className="usp-section-head usp-chart-head"><div><h3>Результаты тестов</h3><p className="usp-caption">{mode === 'recent' ? 'Последние 10 · по дате' : 'Лучшие 10 · по баллу'}</p></div><div className="usp-segment" role="group" aria-label="Режим графика">{[['recent', 'Последние'], ['best', 'Лучшие']].map(([id, label]) => <button type="button" aria-pressed={mode === id} key={id} onClick={() => {
             setMode(id);
             setSelected(null);
-          }}>{label}</button>)}</div></div>{points.length ? <><div className="usp-chart"><div className="usp-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div className="usp-bars" key={mode} role="group" aria-label="Выбрать результат на графике">{points.map((x, i) => <button type="button" className="usp-bar-col" key={x.index} aria-label={`${i + 1}. ${str(x.raw.topic) || 'Тест'}: ${fmt(x.value)}%, ${dateLabel(x.raw)}`} aria-pressed={current?.index === x.index} onClick={() => setSelected(x.index)} onFocus={() => setSelected(x.index)}><span className="usp-bar-track" aria-hidden="true"><span className="usp-bar" style={{
+          }}>{label}</button>)}</div></div>{points.length ? <><div className="usp-chart"><div className="usp-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div className="usp-bars" key={mode} role="group" aria-label="Выбрать результат на графике">{points.map((x, i) => <button type="button" className="usp-bar-col" key={x.index} aria-label={`${i + 1}. ${str(x.raw.topic) || 'Тест'}: ${fmt(x.value)}%, ${dateLabel(x.raw)}`} aria-pressed={current?.index === x.index} onClick={() => setSelected(x.index)} onFocus={() => setSelected(x.index)}><span className="usp-bar-track" aria-hidden="true"><span className={`usp-bar ${x.value === 0 ? 'zero' : ''}`} style={{
                   height: `${x.value}%`,
                   animationDelay: `${i * 35}ms`
                 }}><span className="usp-bar-tip">{fmt(x.value)}</span></span></span><span className="usp-bar-label" aria-hidden="true">{i + 1}</span></button>)}</div></div><div className="usp-chart-detail" aria-live="polite" aria-atomic="true"><div><strong>{str(current.raw.topic) || 'Тест без названия'}</strong><span className="usp-caption">{dateLabel(current.raw)}</span></div><b>{fmt(current.value)}%</b></div></> : <Empty title={rows.length ? 'Нет результатов для графика' : 'Твой первый результат впереди'} text={mode === 'recent' && rows.length ? 'Для этого режима нужны результаты с датой. Посмотри вкладку «Лучшие».' : 'После прохождения теста здесь появится график.'} icon="tests" />}</div>;
   }
-  function downloadHistory(rows) {
-    const blob = new Blob([JSON.stringify({
-      format: 'ultimate-lms-test-history',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      testHistory: rows.map(x => x.raw)
-    }, null, 2)], {
-      type: 'application/json;charset=utf-8'
+  // Минимальный OOXML-экспорт: настоящий XLSX, без CDN и дополнительных скриптов.
+  function historyWorkbook(rows) {
+    const xml = v => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const textCell=(ref,value,style=0)=>`<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xml(String(value??'').slice(0,32767))}</t></is></c>`;
+    const numberCell=(ref,value,style=0)=>`<c r="${ref}" s="${style}"><v>${value}</v></c>`;
+    const headings=['№','Тема теста','Ученик','Дата','Результат','Оценка результата'];
+    const lines=[`<row r="1" ht="28" customHeight="1">${headings.map((v,i)=>textCell(String.fromCharCode(65+i)+'1',v,1)).join('')}</row>`];
+    rows.forEach((x,i)=>{
+      const n=i+2, raw=x.raw;
+      lines.push(`<row r="${n}" ht="32" customHeight="1">${numberCell('A'+n,i+1)}${textCell('B'+n,str(raw.topic))}${textCell('C'+n,str(raw.student))}${textCell('D'+n,dateLabel(raw))}${x.value===null?textCell('E'+n,'Нет данных'):numberCell('E'+n,x.value/100,2)}${textCell('F'+n,x.value===null?'Нет данных':x.value>=50?'От 50%':'Ниже 50%')}</row>`);
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Ultimate_LMS_history.json';
-    document.body.appendChild(link);
-    try {
-      link.click();
-    } finally {
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    const files={
+      '[Content_Types].xml':'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+      '_rels/.rels':'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+      'xl/workbook.xml':`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Результаты тестов" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+      'xl/_rels/workbook.xml.rels':'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+      'xl/styles.xml':`<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="${ns}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF7048D1"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="10" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`,
+      'xl/worksheets/sheet1.xml':`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="${ns}"><dimension ref="A1:F${rows.length+1}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="7" customWidth="1"/><col min="2" max="2" width="50" customWidth="1"/><col min="3" max="3" width="26" customWidth="1"/><col min="4" max="4" width="24" customWidth="1"/><col min="5" max="5" width="16" customWidth="1"/><col min="6" max="6" width="24" customWidth="1"/></cols><sheetData>${lines.join('')}</sheetData><autoFilter ref="A1:F${rows.length+1}"/></worksheet>`
+    };
+    const encoder=new TextEncoder(), chunks=[], directory=[];let offset=0;
+    const crc32=bytes=>{let crc=0xffffffff;for(const b of bytes){crc^=b;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;};
+    for(const [name,content] of Object.entries(files)){
+      const filename=encoder.encode(name),data=encoder.encode(content),crc=crc32(data);
+      const local=new Uint8Array(30+filename.length),lv=new DataView(local.buffer);
+      lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x800,true);lv.setUint16(12,33,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,filename.length,true);local.set(filename,30);
+      const central=new Uint8Array(46+filename.length),cv=new DataView(central.buffer);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x800,true);cv.setUint16(14,33,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,filename.length,true);cv.setUint32(42,offset,true);central.set(filename,46);
+      chunks.push(local,data);directory.push(central);offset+=local.length+data.length;
     }
+    const end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,directory.length,true);ev.setUint16(10,directory.length,true);ev.setUint32(12,directory.reduce((sum,x)=>sum+x.length,0),true);ev.setUint32(16,offset,true);
+    return new Blob([...chunks,...directory,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  function downloadHistory(rows) {
+    const url=URL.createObjectURL(historyWorkbook(rows));const link=document.createElement('a');
+    link.href=url;link.download='Ultimate_LMS_results.xlsx';document.body.appendChild(link);
+    try{link.click();}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   }
   function Training({
     type,
