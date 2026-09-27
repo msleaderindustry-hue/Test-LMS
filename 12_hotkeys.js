@@ -898,6 +898,7 @@
             })}</div></div>}
  </div></section>;
   }
+
   Object.assign(window, {
     HotkeyTrainer
   });
