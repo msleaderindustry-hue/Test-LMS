@@ -85,10 +85,15 @@
 .fc2 .fc2-card .fc2-card-inner.is-flipped{transform:rotateY(180deg)!important}
 .fc2 .fc2-card .fc2-front{transform:translateZ(1px)!important;visibility:visible!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
 .fc2 .fc2-card .fc2-back{transform:rotateY(180deg) translateZ(1px)!important;visibility:visible!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
+
+.fc2-setup-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-top:23px;margin-top:23px;border-top:1px solid var(--f-line)}.fc2-prepared{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--f-muted);min-width:0}.fc2-prepared svg{color:var(--f-green)}.fc2-prepared small{display:block;margin-top:4px;font-size:11px;overflow-wrap:anywhere}.fc2 .fc2-start{min-width:170px;min-height:49px}.fc2-session-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px}.fc2-session-toolbar>span{font-size:9px;letter-spacing:1.5px;color:var(--f-accent);font-weight:650}.fc2-session .fc2-study{margin-top:18px}.fc2-setup .fc2-loading{min-height:220px}.fc2-setup .fc2-notice{display:none}
+@media(max-width:600px){.fc2-setup-footer{flex-direction:column;align-items:stretch;gap:16px}.fc2 .fc2-start{width:100%}.fc2-session-toolbar{margin-top:17px}}
 `;
   function FlashcardsLMS({
     theme
   } = {}) {
+    const [phase, setPhase] = useState('setup'),
+      [ready, setReady] = useState(false);
     const [session, setSession] = useState(() => fresh(DEFAULT_CARDS)),
       [topic, setTopic] = useState('Основы веб-разработки'),
       [deckName, setDeckName] = useState('Основы веб-разработки'),
@@ -133,9 +138,9 @@
         });
         restoreFocus.current = false;
       }
-    }, [session.serial, session.done]);
+    }, [session.serial, session.done, phase]);
     function flip() {
-      if (request.current || state.current.done) return;
+      if (phase !== 'study' || request.current || state.current.done) return;
       commit({
         ...state.current,
         flipped: !state.current.flipped
@@ -143,7 +148,7 @@
     }
     function move(step) {
       const s = state.current;
-      if (request.current || s.done) return;
+      if (phase !== 'study' || request.current || s.done) return;
       const index = s.index + step;
       if (index < 0 || index >= s.cards.length) return;
       restoreFocus.current = true;
@@ -157,7 +162,7 @@
     }
     function rate(value) {
       const s = state.current;
-      if (request.current || s.done || !s.flipped) return;
+      if (phase !== 'study' || request.current || s.done || !s.flipped) return;
       const ratings = s.ratings.map((v, i) => i === s.index ? value : v);
       let next = -1;
       for (let n = 1; n <= s.cards.length; n++) {
@@ -189,7 +194,7 @@
       });
     }
     function onKeyDown(e) {
-      if (e.defaultPrevented || e.repeat || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.target.closest('input,textarea,select,[contenteditable=true]')) return;
+      if (phase !== 'study' || e.defaultPrevented || e.repeat || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.target.closest('input,textarea,select,[contenteditable=true]')) return;
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         move(-1);
@@ -247,6 +252,7 @@
           serial: state.current.serial + 1
         });
         setDeckName(name);
+        setReady(true);
         setNotice(`Колода готова · ${cards.length} карточек`);
       } catch (e) {
         if (mounted.current && id === version.current && (!controller.signal.aborted || timedOut)) setError(timedOut ? 'Генерация заняла слишком много времени. Попробуй ещё раз.' : 'Не удалось создать колоду. Попробуй уточнить тему. Текущие карточки остались на месте.');
@@ -257,6 +263,20 @@
           setBusy(false);
         }
       }
+    }
+    function start() {
+      if (request.current || !ready || topic.trim() !== deckName) return;
+      restoreFocus.current = true;
+      commit({
+        ...fresh(fullDeck.current),
+        serial: state.current.serial + 1
+      });
+      setPhase('study');
+    }
+    function chooseTopic() {
+      setPhase('setup');
+      setError('');
+      setNotice('');
     }
     function cancel() {
       version.current++;
@@ -278,24 +298,28 @@
       progress = reviewed / cards.length * 100;
     return <section ref={root} className={`fc2 ${theme === 'light' ? 'fc2-light' : theme === 'dark' ? 'fc2-dark' : ''}`} aria-label="Умные карточки" onKeyDown={onKeyDown}><div className="fc2-shell">
  <header className="fc2-header"><div className="fc2-brand"><span className="fc2-brand-icon"><Icon name="cards" size={24} /></span><div><h2>Умные карточки</h2><span>ULTIMATE LMS · ОБУЧЕНИЕ</span></div></div><span className="fc2-pill"><Icon name="spark" size={13} /> AI</span></header>
- <div className="fc2-intro"><div><span className="fc2-eyebrow">ОДНА КАРТОЧКА — ОДИН ШАГ ВПЕРЁД</span><h3>Вспоминай.<br /><span>И запоминай надолго.</span></h3><p>Попробуй ответить сам, переверни карточку и отметь, что стоит повторить.</p></div><div className="fc2-art" aria-hidden="true"><span /><span /><span><Icon name="spark" size={40} /></span></div></div>
- <form className="fc2-generator" onSubmit={generate}><label htmlFor="fc2-topic">Что изучаем сегодня?</label><div className="fc2-generator-row"><input id="fc2-topic" value={topic} onChange={e => setTopic(e.target.value)} maxLength={160} placeholder="Например, Excel или основы биологии" disabled={busy} autoComplete="off" /><button type="submit" className="fc2-btn fc2-generate" disabled={busy || !topic.trim()}>{busy ? <span className="fc2-spinner" /> : <Icon name="spark" size={18} />} {busy ? 'Создаём…' : 'Создать колоду'}</button></div><div className="fc2-generator-note"><span>Карточки ИИ могут содержать ошибки — проверяй важные факты.</span>{busy && <button type="button" className="fc2-text-btn" onClick={cancel}>Отменить</button>}</div></form>
+ {phase === 'setup' && <div className="fc2-setup fc2-enter">
+ <div className="fc2-intro"><div><span className="fc2-eyebrow">ОДНА КАРТОЧКА — ОДИН ШАГ ВПЕРЁД</span><h3>Вспоминай.<br /><span>И запоминай надолго.</span></h3><p>Укажи тему, создай колоду с ИИ и нажми «Начать». Затем отвечай на вопросы и повторяй сложное.</p></div><div className="fc2-art" aria-hidden="true"><span /><span /><span><Icon name="spark" size={40} /></span></div></div>
+ <form className="fc2-generator" onSubmit={generate}><label htmlFor="fc2-topic">По какой теме задавать вопросы?</label><div className="fc2-generator-row"><input id="fc2-topic" value={topic} onChange={e => setTopic(e.target.value)} maxLength={160} placeholder="Например, формулы Excel: СУММ, ЕСЛИ и ВПР" disabled={busy} autoComplete="off" /><button type="submit" className="fc2-btn fc2-generate" disabled={busy || !topic.trim()}>{busy ? <span className="fc2-spinner" /> : <Icon name="spark" size={18} />} {busy ? 'Создаём…' : 'Создать колоду'}</button></div><div className="fc2-generator-note"><span>Карточки ИИ могут содержать ошибки — проверяй важные факты.</span>{busy && <button type="button" className="fc2-text-btn" onClick={cancel}>Отменить</button>}</div></form>
  {error && <div className="fc2-error" role="alert"><span>{error}</span><button type="button" aria-label="Закрыть сообщение" onClick={() => setError('')}><Icon name="close" size={16} /></button></div>}{notice && <div className="fc2-notice" role="status"><Icon name="check" size={16} />{notice}</div>}
- {busy ? <div className="fc2-loading" role="status" aria-live="polite"><div className="fc2-loading-art"><Icon name="cards" size={36} /></div><h3>Собираем твою колоду</h3><p>Подбираем вопросы и короткие объяснения.</p><div className="fc2-loader-line" /></div> : done ? <div className="fc2-summary fc2-enter"><div className="fc2-summary-icon"><Icon name="check" size={34} /></div><span className="fc2-eyebrow">ПОДХОД ЗАВЕРШЁН</span><h3 className="fc2-summary-title" tabIndex={-1}>{again ? 'Закрепим сложное?' : 'Вся колода пройдена'}</h3><p>{again ? 'Вернись к карточкам, которые пока не удалось вспомнить.' : 'Ты отметил все ответы как знакомые. Можно пройти колоду ещё раз.'}</p><div className="fc2-summary-stats"><div><strong>{known}</strong><span>Помню</span></div><div><strong>{again}</strong><span>Повторить</span></div><div><strong>{cards.length}</strong><span>Всего</span></div></div><button type="button" className="fc2-btn fc2-primary" onClick={() => restart(again > 0)}><Icon name="repeat" size={18} />{again ? `Повторить сложные · ${again}` : 'Пройти ещё раз'}</button>{again > 0 && <button type="button" className="fc2-text-btn" onClick={() => restart()}>Повторить всю колоду</button>}</div> : <div className="fc2-study"><div className="fc2-deck-heading"><div><span className="fc2-eyebrow">ТВОЯ КОЛОДА</span><h4>{deckName}</h4></div><span className="fc2-counter" aria-live="polite">{index + 1}<small> / {cards.length}</small></span></div><div className="fc2-progress" role="progressbar" aria-label="Оценено карточек" aria-valuemin={0} aria-valuemax={cards.length} aria-valuenow={reviewed}><span style={{
-              width: `${progress}%`
-            }} /></div><div className="fc2-progress-meta"><span>Оценено {reviewed} из {cards.length}</span><span><i />{known} помню <b>·</b> {again} повторить</span></div>
+ {busy && <div className="fc2-loading" role="status" aria-live="polite"><div className="fc2-loading-art"><Icon name="cards" size={36} /></div><h3>Собираем твою колоду</h3><p>Подбираем вопросы и короткие объяснения.</p><div className="fc2-loader-line" /></div>}
+ <div className="fc2-setup-footer"><div className="fc2-prepared" aria-live="polite">{ready && topic.trim() === deckName ? <><Icon name="check" size={18} /><span>Колода готова <small>{fullDeck.current.length} карточек · {deckName}</small></span></> : <span>Сначала создай колоду по своей теме.</span>}</div><button type="button" className="fc2-btn fc2-primary fc2-start" onClick={start} disabled={busy || !ready || topic.trim() !== deckName}>Начать<Icon name="arrow" size={18} /></button></div>
+ </div>}
+ {phase === 'study' && <div className="fc2-session fc2-enter"><div className="fc2-session-toolbar"><span>ПРАКТИКА</span><button type="button" className="fc2-text-btn" onClick={chooseTopic}>Изменить тему</button></div>{done ? <div className="fc2-summary fc2-enter"><div className="fc2-summary-icon"><Icon name="check" size={34} /></div><span className="fc2-eyebrow">ПОДХОД ЗАВЕРШЁН</span><h3 className="fc2-summary-title" tabIndex={-1}>{again ? 'Закрепим сложное?' : 'Вся колода пройдена'}</h3><p>{again ? 'Вернись к карточкам, которые пока не удалось вспомнить.' : 'Ты отметил все ответы как знакомые. Можно пройти колоду ещё раз.'}</p><div className="fc2-summary-stats"><div><strong>{known}</strong><span>Помню</span></div><div><strong>{again}</strong><span>Повторить</span></div><div><strong>{cards.length}</strong><span>Всего</span></div></div><button type="button" className="fc2-btn fc2-primary" onClick={() => restart(again > 0)}><Icon name="repeat" size={18} />{again ? `Повторить сложные · ${again}` : 'Пройти ещё раз'}</button>{again > 0 && <button type="button" className="fc2-text-btn" onClick={() => restart()}>Повторить всю колоду</button>}</div> : <div className="fc2-study"><div className="fc2-deck-heading"><div><span className="fc2-eyebrow">ТВОЯ КОЛОДА</span><h4>{deckName}</h4></div><span className="fc2-counter" aria-live="polite">{index + 1}<small> / {cards.length}</small></span></div><div className="fc2-progress" role="progressbar" aria-label="Оценено карточек" aria-valuemin={0} aria-valuemax={cards.length} aria-valuenow={reviewed}><span style={{
+                width: `${progress}%`
+              }} /></div><div className="fc2-progress-meta"><span>Оценено {reviewed} из {cards.length}</span><span><i />{known} помню <b>·</b> {again} повторить</span></div>
  <div className="fc2-stage" key={session.serial} style={{
-            '--fc2-slide': session.direction < 0 ? '-22px' : '22px'
-          }}><div className="fc2-card" tabIndex={0} role="button" aria-label={flipped ? 'Ответ. Нажми, чтобы показать вопрос' : 'Вопрос. Нажми, чтобы показать ответ'} aria-pressed={flipped} onClick={flip} onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                flip();
-              }
-            }}><div className={`fc2-card-inner ${flipped ? 'is-flipped' : ''}`}><div className="fc2-face fc2-front" aria-hidden={flipped}><div className="fc2-face-top"><span>ВОПРОС</span><Icon name="cards" size={21} /></div><div className="fc2-face-content"><h3>{card.q}</h3></div><div className="fc2-face-foot"><span>Сначала попробуй вспомнить</span><Icon name="flip" size={19} /></div></div><div className="fc2-face fc2-back" aria-hidden={!flipped}><div className="fc2-face-top"><span>ОТВЕТ</span><Icon name="spark" size={21} /></div><div className="fc2-face-content"><p>{card.a}</p></div><div className="fc2-face-foot"><span>Получилось вспомнить?</span><Icon name="flip" size={19} /></div></div></div></div></div>
+              '--fc2-slide': session.direction < 0 ? '-22px' : '22px'
+            }}><div className="fc2-card" tabIndex={0} role="button" aria-label={flipped ? 'Ответ. Нажми, чтобы показать вопрос' : 'Вопрос. Нажми, чтобы показать ответ'} aria-pressed={flipped} onClick={flip} onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  flip();
+                }
+              }}><div className={`fc2-card-inner ${flipped ? 'is-flipped' : ''}`}><div className="fc2-face fc2-front" aria-hidden={flipped}><div className="fc2-face-top"><span>ВОПРОС</span><Icon name="cards" size={21} /></div><div className="fc2-face-content"><h3>{card.q}</h3></div><div className="fc2-face-foot"><span>Сначала попробуй вспомнить</span><Icon name="flip" size={19} /></div></div><div className="fc2-face fc2-back" aria-hidden={!flipped}><div className="fc2-face-top"><span>ОТВЕТ</span><Icon name="spark" size={21} /></div><div className="fc2-face-content"><p>{card.a}</p></div><div className="fc2-face-foot"><span>Получилось вспомнить?</span><Icon name="flip" size={19} /></div></div></div></div></div>
  <div className="fc2-navigation"><button type="button" className="fc2-nav-arrow fc2-prev" aria-label="Предыдущая карточка" onClick={() => move(-1)} disabled={index === 0}><Icon name="arrow" /></button><button type="button" className="fc2-btn fc2-primary fc2-reveal" onClick={flip}><Icon name="flip" size={18} />{flipped ? 'Показать вопрос' : 'Показать ответ'}</button><button type="button" className="fc2-nav-arrow" aria-label="Следующая карточка" onClick={() => move(1)} disabled={index === cards.length - 1}><Icon name="arrow" /></button></div>
  <div className="fc2-rating-area">{flipped ? <div className="fc2-rating fc2-enter"><button type="button" className="fc2-btn fc2-again" onClick={() => rate('again')}><Icon name="repeat" size={17} />Повторить</button><button type="button" className="fc2-btn fc2-known" onClick={() => rate('known')}><Icon name="check" size={18} />Помню</button></div> : <p className="fc2-shortcuts">Пробел — переворот <span>·</span> ← → — смена карточки</p>}</div>
- </div>}
+ </div>}</div>}
  </div></section>;
   }
   Object.assign(window, {
