@@ -1,737 +1,1328 @@
 // --- 11_tests_module.js ---
 (function () {
-    const { useState, useEffect, useRef, memo } = React;
-    const { motion, AnimatePresence } = window.Motion;
-    const { Button, Input, captureViolation, sendTestResultToDiscord, shuffleArray } = window;
-
-// --- КОМПОНЕНТЫ ТЕСТА ---
-const TestQuestionCard = memo(({ question, index, answers, onAnswer }) => {
-     const cardRef = useRef(null); 
-     if (window.useMathJax) window.useMathJax(cardRef, [question]); 
-     if (!question) return null;
-
-     return (
-       <motion.div ref={cardRef} key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="glass-panel" style={{width: '100%', display:'block'}}>
-         <h3 style={{textAlign:'center', marginBottom:15, opacity:0.6, fontSize:14, textTransform:'uppercase'}}>Вопрос {index+1}</h3>
-         <div style={{fontSize:18, marginBottom:20, fontWeight:600}} dangerouslySetInnerHTML={{__html: question.question}} />
-         {question.questionImg && <img src={question.questionImg} className="question-image" />}
-         <div style={{display:'flex', flexDirection:'column', gap:10}}>
-            {question.variants.map((v, i) => {
-               const isAnswered = answers[index] !== null; const isSelected = answers[index] === i; const isCorrect = question.correctIndex === i;
-               let styleOverride = {}; let animationProps = { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 }, transition: { delay: i * 0.1 } };
-               if(isAnswered) {
-                 if(isCorrect) { styleOverride = {background: '#d1fae5', borderColor: '#10b981', color: '#064e3b'}; if(isSelected) animationProps.animate = { opacity: 1, x: 0, scale: [1, 1.05, 1] }; } 
-                 else if(isSelected) { styleOverride = {background: '#fee2e2', borderColor: '#ef4444', color: '#7f1d1d'}; animationProps.animate = { opacity: 1, x: [-5, 5, -5, 5, 0] }; animationProps.transition = { duration: 0.3 }; } 
-                 else if(question.correctIndex === i) { styleOverride = {borderColor: '#10b981', opacity: 0.7}; } 
-               }
-               return (
-                 <motion.div key={i} {...animationProps} className="variant-item" onClick={() => !isAnswered && onAnswer(i)} style={{ pointerEvents: isAnswered ? 'none' : 'auto', ...styleOverride }} whileHover={!isAnswered ? { scale: 1.01 } : {}}>
-                    {v.img && <img src={v.img} style={{display:'block', maxWidth:200, marginBottom:8, borderRadius:8}} />}
-                    {v.text}
-                 </motion.div>
-               )
-            })}
-         </div>
-       </motion.div>
-     );
-});
-
-const ReviewView = ({ questions, answers, onBack }) => {
-      const reviewRef = useRef(null); 
-      if (window.useMathJax) window.useMathJax(reviewRef, [questions]); 
-      return (
-          <motion.div ref={reviewRef} key="review" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-panel review-container">
-             <div className="review-header"><h2 style={{textAlign:'center', margin:0}}>Работа над ошибками</h2></div>
-             <div className="review-content">
-                 {questions.map((q, i) => {
-                     const userAns = answers[i]; const isCorrect = userAns === q.correctIndex;
-                     return (
-                         <div key={i} style={{ background: 'var(--variant-default)', padding:25, borderRadius:20, marginBottom:20, border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444' }}>
-                             <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}><strong>Вопрос {i+1}</strong><span style={{color: isCorrect ? '#059669' : '#b91c1c', fontWeight:'bold'}}>{isCorrect ? 'ВЕРНО' : 'ОШИБКА'}</span></div>
-                             <div style={{marginBottom:20, fontSize:16}} dangerouslySetInnerHTML={{__html: q.question}}></div>
-                             {q.questionImg && <img src={q.questionImg} className="question-image" style={{maxWidth:'100%', maxHeight:200, display:'block', margin:'0 auto 15px auto', borderRadius:10}} />}
-                             {q.variants.map((v, vi) => {
-                                 let style = {padding:'10px 15px', borderRadius:10, margin:'5px 0', border:'2px solid transparent', background:'var(--glass-bg)', opacity:0.8, color:'var(--text-main)'};
-                                 if(vi === q.correctIndex) { style.background = '#d1fae5'; style.borderColor = '#10b981'; style.color = '#064e3b'; style.opacity=1; }
-                                 if(vi === userAns && !isCorrect) { style.background = '#fee2e2'; style.borderColor = '#ef4444'; style.color = '#7f1d1d'; style.opacity=1; }
-                                 return <div key={vi} style={style} dangerouslySetInnerHTML={{__html: v.text || 'Image'}}></div>
-                             })}
-                         </div>
-                     )
-                 })}
-             </div>
-             <div className="review-footer"><Button onClick={onBack} style={{boxShadow:'0 5px 15px rgba(0,0,0,0.1)', width:'auto', padding:'0 40px'}}>В меню</Button></div>
-          </motion.div>
-      );
-};
-
-
-    // --- КОМПОНЕНТ ЗАСТАВКИ ---
-    const AnimatedHeader = () => {
-        const stageRef = useRef(null);
-        const tagOldRef = useRef(null);
-        const tagNewRef = useRef(null);
-        const wandRef = useRef(null);
-
-        useEffect(() => {
-            const phrases = [
-                "Learn without limits",
-                "Small steps lead to big changes",
-                "Believe. Learn. Achieve."
-            ];
-            let index = 0;
-            let ambientTimer = null;
-            let transitionTimeout = null;
-            let animationFrameId = null;
-
-            const stage = stageRef.current;
-            const tagOld = tagOldRef.current;
-            const tagNew = tagNewRef.current;
-            const wand = wandRef.current;
-
-            if (!stage || !tagOld || !tagNew || !wand) return;
-
-            function spawnSparkle(x, y, size) {
-                const s = document.createElement('div');
-                s.className = 'sparkle-anim';
-                s.style.left = x + 'px';
-                s.style.top = y + 'px';
-                const scale = size || (0.7 + Math.random() * 0.7);
-                s.style.width = (8 * scale) + 'px';
-                s.style.height = (8 * scale) + 'px';
-                stage.appendChild(s);
-                s.addEventListener('animationend', () => s.remove());
-            }
-
-            function easeInOutCubic(t) {
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            }
-
-            function runWandTransition() {
-                if (!tagOld || !tagNew || !stage || !wand) return;
-                const oldWidth = tagOld.getBoundingClientRect().width;
-                const nextIndex = (index + 1) % phrases.length;
-                tagNew.textContent = phrases[nextIndex];
-                const newWidth = tagNew.getBoundingClientRect().width;
-
-                const stageWidth = Math.max(oldWidth, newWidth);
-                stage.style.width = stageWidth + 'px';
-
-                const oldLeft = (stageWidth - oldWidth) / 2;
-                const newLeft = (stageWidth - newWidth) / 2;
-
-                const pad = 8;
-                const startX = newLeft - pad;
-                const endX = newLeft + newWidth + pad;
-                const pathLength = endX - startX;
-                const midY = stage.getBoundingClientRect().height / 2;
-
-                const duration = 500 + pathLength * 1.0;
-                const start = performance.now();
-                let lastSparkleTime = 0;
-
-                function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
-                function frame(now) {
-                    const elapsed = now - start;
-                    const t = Math.min(1, elapsed / duration);
-
-                    if (t < 0.1) {
-                        wand.style.opacity = String(t * 10);
-                    } else {
-                        wand.style.opacity = '1';
-                    }
-
-                    const eased = easeInOutCubic(t);
-                    const x = startX + pathLength * eased;
-                    const y = midY + Math.sin(t * Math.PI * 2.4) * 5;
-
-                    wand.style.transform = `translate(${x - 7}px, ${y - 7}px) rotate(${t * 220}deg)`;
-
-                    const newLocalX = clamp(x - newLeft, 0, newWidth);
-                    const newClipFromRight = newWidth - newLocalX;
-                    tagNew.style.clipPath = `inset(0 ${newClipFromRight}px 0 0)`;
-
-                    const oldLocalX = (oldWidth + pad * 2) * eased - pad;
-                    const clampedOldX = clamp(oldLocalX, 0, oldWidth);
-                    tagOld.style.clipPath = `inset(0 0 0 ${clampedOldX}px)`;
-
-                    if (now - lastSparkleTime > 28) {
-                        spawnSparkle(x + (Math.random() * 6 - 3), y + (Math.random() * 6 - 3));
-                        lastSparkleTime = now;
-                    }
-
-                    if (t < 1) {
-                        animationFrameId = requestAnimationFrame(frame);
-                    } else {
-                        index = nextIndex;
-                        tagOld.textContent = phrases[index];
-                        tagOld.style.clipPath = 'inset(0 0 0 0)';
-                        fadeOutWand(x, y);
-                    }
-                }
-                animationFrameId = requestAnimationFrame(frame);
-            }
-
-            function fadeOutWand(fromX, fromY) {
-                spawnSparkle(fromX, fromY, 0.9);
-                const duration = 500;
-                const start = performance.now();
-
-                function fadeFrame(now) {
-                    const elapsed = now - start;
-                    const t = Math.min(1, elapsed / duration);
-                    const eased = 1 - Math.pow(1 - t, 3);
-
-                    const scale = 1 - eased * 0.3;
-                    wand.style.transform = `translate(${fromX - 7}px, ${fromY - 7}px) rotate(${220 + eased * 40}deg) scale(${scale})`;
-                    wand.style.opacity = String(1 - t);
-
-                    if (t < 1) {
-                        animationFrameId = requestAnimationFrame(fadeFrame);
-                    } else {
-                        wand.style.opacity = '0';
-                        stage.style.width = '';
-                        scheduleNext();
-                    }
-                }
-                animationFrameId = requestAnimationFrame(fadeFrame);
-            }
-
-            function ambientSparkle() {
-                if (!stage) return;
-                const rect = stage.getBoundingClientRect();
-                const x = Math.random() * rect.width;
-                const y = rect.height / 2 + (Math.random() * 10 - 5);
-                spawnSparkle(x, y, 0.55 + Math.random() * 0.4);
-            }
-
-            function startAmbient() {
-                ambientTimer = setInterval(ambientSparkle, 900);
-            }
-            function stopAmbient() {
-                clearInterval(ambientTimer);
-            }
-
-            function scheduleNext() {
-                startAmbient();
-                transitionTimeout = setTimeout(() => {
-                    stopAmbient();
-                    runWandTransition();
-                }, 2800);
-            }
-
-            tagOld.textContent = phrases[0];
-            tagNew.textContent = phrases[0];
+  const {
+    useState,
+    useEffect,
+    useRef,
+    memo
+  } = React;
+  const {
+    motion,
+    AnimatePresence
+  } = window.Motion;
+  const {
+    Button,
+    Input,
+    captureViolation,
+    sendTestResultToDiscord,
+    shuffleArray
+  } = window;
+  const ActionIcon = ({
+    name
+  }) => /*#__PURE__*/React.createElement("svg", {
+    width: "20",
+    height: "20",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.8",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, {
+    play: /*#__PURE__*/React.createElement("path", {
+      d: "m9 5 11 7-11 7V5Z"
+    }),
+    back: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "m9 6-6 6 6 6M3 12h18"
+    })),
+    close: /*#__PURE__*/React.createElement("path", {
+      d: "m6 6 12 12M18 6 6 18"
+    }),
+    print: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M7 8V3h10v5M7 17H4V9h16v8h-3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M7 14h10v7H7zM17 11h.01"
+    })),
+    upload: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"
+    })),
+    review: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "4",
+      y: "3",
+      width: "16",
+      height: "18",
+      rx: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m8 9 2 2 5-5M8 16h8"
+    })),
+    repeat: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M20 4v6h-6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M20 10a8 8 0 1 0-1 8"
+    }))
+  }[name]);
+  const TestIcon = ({
+    name,
+    size = 20
+  }) => /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.8",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, {
+    check: /*#__PURE__*/React.createElement("path", {
+      d: "m5 12 4 4L19 6"
+    }),
+    arrow: /*#__PURE__*/React.createElement("path", {
+      d: "M4 12h16m-6-6 6 6-6 6"
+    }),
+    clock: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M12 7v5l3 2"
+    })),
+    list: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "4",
+      y: "3",
+      width: "16",
+      height: "18",
+      rx: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 8h8M8 12h8M8 16h5"
+    })),
+    close: /*#__PURE__*/React.createElement("path", {
+      d: "m6 6 12 12M18 6 6 18"
+    }),
+    spark: /*#__PURE__*/React.createElement("path", {
+      d: "m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"
+    }),
+    repeat: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M20 4v6h-6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M20 10a8 8 0 1 0-1 8"
+    })),
+    save: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M7 3v5h8V3M7 21v-8h10v8"
+    }))
+  }[name] || /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "8"
+  }));
+  const safeImage = value => typeof value === 'string' && /^(https?:\/\/|data:image\/(png|jpeg|gif|webp);base64,|blob:)/i.test(value) ? value : null;
+  function cleanHTML(value) {
+    const doc = new DOMParser().parseFromString(String(value || ''), 'text/html');
+    const allowed = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'SUB', 'SUP', 'SPAN', 'DIV', 'UL', 'OL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'CODE', 'PRE', 'BLOCKQUOTE']);
+    for (const el of [...doc.body.querySelectorAll('*')]) {
+      if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'LINK', 'META'].includes(el.tagName)) {
+        el.remove();
+        continue;
+      }
+      if (!allowed.has(el.tagName)) {
+        el.replaceWith(...el.childNodes);
+        continue;
+      }
+      for (const a of [...el.attributes]) el.removeAttribute(a.name);
+    }
+    return doc.body.innerHTML;
+  }
+  function normalizeTests(data) {
+    if (!Array.isArray(data) || !data.length || data.length > 5000) throw Error('Файл должен содержать от 1 до 5000 вопросов.');
+    return data.map((q, i) => {
+      if (!q || !Array.isArray(q.variants) || q.variants.length < 2 || q.variants.length > 12 || !Number.isInteger(q.correctIndex) || q.correctIndex < 0 || q.correctIndex >= q.variants.length) throw Error(`Проверь варианты и correctIndex в вопросе ${i + 1}.`);
+      const variants = q.variants.map(v => {
+        const obj = typeof v === 'string' ? {
+          text: v
+        } : v;
+        if (!obj || typeof obj !== 'object') throw Error(`Неверный вариант в вопросе ${i + 1}.`);
+        const text = cleanHTML(obj.text),
+          img = safeImage(obj.img);
+        if (!text.trim() && !img) throw Error(`Пустой вариант в вопросе ${i + 1}.`);
+        return {
+          text,
+          img
+        };
+      });
+      const question = cleanHTML(q.question),
+        questionImg = safeImage(q.questionImg);
+      if (!question.trim() && !questionImg) throw Error(`Вопрос ${i + 1} пустой.`);
+      return {
+        ...q,
+        question,
+        questionImg,
+        variants
+      };
+    });
+  }
+  const shuffled = items => {
+    const a = [...items];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const shuffledQuestion = q => {
+    const variants = shuffled(q.variants.map((v, i) => ({
+      ...v,
+      _isCorrectOriginal: i === q.correctIndex
+    })));
+    return {
+      ...q,
+      variants,
+      correctIndex: variants.findIndex(v => v._isCorrectOriginal)
+    };
+  };
+  const TestQuestionCard = memo(({
+    question,
+    index,
+    answers,
+    onAnswer,
+    locked = false,
+    leaving = false
+  }) => {
+    const cardRef = useRef(null);
+    if (window.useMathJax) window.useMathJax(cardRef, [question]);
+    if (!question) return null;
+    const answered = Number.isInteger(answers[index]);
+    return /*#__PURE__*/React.createElement("article", {
+      ref: cardRef,
+      className: `tx-question ${leaving ? 'tx-leaving' : 'tx-arriving'}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-question-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u0412\u041E\u041F\u0420\u041E\u0421 ", String(index + 1).padStart(2, '0')), /*#__PURE__*/React.createElement("span", {
+      className: "tx-caption"
+    }, "\u041E\u0434\u0438\u043D \u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u044B\u0439 \u043E\u0442\u0432\u0435\u0442")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-question-text",
+      dangerouslySetInnerHTML: {
+        __html: question.question
+      }
+    }), question.questionImg && /*#__PURE__*/React.createElement("img", {
+      src: question.questionImg,
+      className: "tx-question-image",
+      alt: "\u0418\u043B\u043B\u044E\u0441\u0442\u0440\u0430\u0446\u0438\u044F \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0443"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "tx-options"
+    }, question.variants.map((v, i) => {
+      const selected = answers[index] === i,
+        correct = i === question.correctIndex;
+      return /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        key: i,
+        disabled: answered || locked,
+        className: `tx-option ${answered && correct ? 'correct' : ''} ${answered && selected && !correct ? 'wrong' : ''} ${selected ? 'selected' : ''}`,
+        onClick: () => onAnswer(i),
+        style: {
+          '--option-delay': `${i * 35}ms`
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "tx-option-index"
+      }, answered && correct ? /*#__PURE__*/React.createElement(TestIcon, {
+        name: "check",
+        size: 17
+      }) : answered && selected ? /*#__PURE__*/React.createElement(TestIcon, {
+        name: "close",
+        size: 17
+      }) : String(i + 1).padStart(2, '0')), /*#__PURE__*/React.createElement("span", {
+        className: "tx-option-content"
+      }, v.img && /*#__PURE__*/React.createElement("img", {
+        src: v.img,
+        alt: `Изображение варианта ${i + 1}`
+      }), /*#__PURE__*/React.createElement("span", {
+        dangerouslySetInnerHTML: {
+          __html: v.text
+        }
+      })), answered && (selected || correct) && /*#__PURE__*/React.createElement("span", {
+        className: "tx-option-status"
+      }, correct ? 'Верный ответ' : 'Твой ответ'));
+    })), answered && /*#__PURE__*/React.createElement("div", {
+      className: `tx-answer-note ${answers[index] === question.correctIndex ? 'correct' : 'wrong'}`,
+      role: "status"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: answers[index] === question.correctIndex ? 'check' : 'close',
+      size: 17
+    }), answers[index] === question.correctIndex ? 'Верно. Продолжаем!' : 'Ответ принят. Правильный вариант выделен.'));
+  });
+  const ReviewView = ({
+    questions,
+    answers,
+    onBack
+  }) => {
+    const reviewRef = useRef(null);
+    const [onlyMistakes, setOnlyMistakes] = useState(true);
+    if (window.useMathJax) window.useMathJax(reviewRef, [questions]);
+    const rows = questions.map((q, i) => ({
+      q,
+      i
+    })).filter(({
+      q,
+      i
+    }) => !onlyMistakes || answers[i] !== q.correctIndex);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "tx-tests"
+    }, /*#__PURE__*/React.createElement("section", {
+      ref: reviewRef,
+      className: "tx-panel tx-review tx-enter"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "tx-page-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u0420\u0410\u0417\u0411\u041E\u0420 \u041F\u0420\u041E\u0425\u041E\u0416\u0414\u0415\u041D\u0418\u042F"), /*#__PURE__*/React.createElement("h2", null, "\u0420\u0430\u0431\u043E\u0442\u0430 \u043D\u0430\u0434 \u043E\u0448\u0438\u0431\u043A\u0430\u043C\u0438"), /*#__PURE__*/React.createElement("p", null, "\u0421\u0440\u0430\u0432\u043D\u0438 \u0441\u0432\u043E\u0439 \u043E\u0442\u0432\u0435\u0442 \u0441 \u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u044B\u043C.")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button",
+      onClick: onBack
+    }, "\u041A \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0443")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-tabs"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-pressed": onlyMistakes,
+      onClick: () => setOnlyMistakes(true)
+    }, "\u041E\u0448\u0438\u0431\u043A\u0438 \u0438 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0438"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-pressed": !onlyMistakes,
+      onClick: () => setOnlyMistakes(false)
+    }, "\u0412\u0441\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u044B")), !rows.length && /*#__PURE__*/React.createElement("div", {
+      className: "tx-empty"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "check",
+      size: 30
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0412\u0441\u0435 \u043E\u0442\u0432\u0435\u0442\u044B \u0432\u0435\u0440\u043D\u044B\u0435"), /*#__PURE__*/React.createElement("p", null, "\u041C\u043E\u0436\u043D\u043E \u043F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u0432\u0435\u0441\u044C \u0442\u0435\u0441\u0442 \u043D\u0430 \u0432\u043A\u043B\u0430\u0434\u043A\u0435 \xAB\u0412\u0441\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u044B\xBB.")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-review-list"
+    }, rows.map(({
+      q,
+      i
+    }) => /*#__PURE__*/React.createElement("article", {
+      className: "tx-review-card",
+      key: i
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-review-meta"
+    }, /*#__PURE__*/React.createElement("span", null, "\u0412\u043E\u043F\u0440\u043E\u0441 ", i + 1), /*#__PURE__*/React.createElement("span", null, answers[i] == null ? 'Пропущен' : answers[i] === q.correctIndex ? 'Верно' : 'Ошибка')), /*#__PURE__*/React.createElement("div", {
+      className: "tx-question-text",
+      dangerouslySetInnerHTML: {
+        __html: q.question
+      }
+    }), q.questionImg && /*#__PURE__*/React.createElement("img", {
+      src: q.questionImg,
+      className: "tx-question-image",
+      alt: "\u0418\u043B\u043B\u044E\u0441\u0442\u0440\u0430\u0446\u0438\u044F \u0432\u043E\u043F\u0440\u043E\u0441\u0430"
+    }), q.variants.map((v, j) => /*#__PURE__*/React.createElement("div", {
+      key: j,
+      className: `tx-review-option ${j === q.correctIndex ? 'correct' : j === answers[i] ? 'wrong' : ''}`
+    }, /*#__PURE__*/React.createElement("span", null, j + 1, "."), /*#__PURE__*/React.createElement("div", null, v.img && /*#__PURE__*/React.createElement("img", {
+      src: v.img,
+      alt: "\u0418\u043B\u043B\u044E\u0441\u0442\u0440\u0430\u0446\u0438\u044F \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u0430"
+    }), /*#__PURE__*/React.createElement("div", {
+      dangerouslySetInnerHTML: {
+        __html: v.text
+      }
+    })), j === q.correctIndex && /*#__PURE__*/React.createElement(TestIcon, {
+      name: "check",
+      size: 18
+    }))))))));
+  };
+  const FinishConfirm = ({
+    remaining,
+    onContinue,
+    onFinish
+  }) => {
+    const ref = useRef(null);
+    useEffect(() => {
+      const el = ref.current;
+      el.showModal();
+      return () => {
+        if (el.open) el.close();
+      };
+    }, []);
+    return /*#__PURE__*/React.createElement("dialog", {
+      className: "tx-confirm-dialog",
+      ref: ref,
+      "aria-labelledby": "tx-confirm-title",
+      onCancel: e => {
+        e.preventDefault();
+        onContinue();
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) {
+          const r = e.currentTarget.getBoundingClientRect();
+          if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) onContinue();
+        }
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-confirm-symbol"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "clock",
+      size: 26
+    })), /*#__PURE__*/React.createElement("h3", {
+      id: "tx-confirm-title"
+    }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0442\u0435\u0441\u0442?"), /*#__PURE__*/React.createElement("p", null, "\u041E\u0441\u0442\u0430\u043B\u043E\u0441\u044C \u0431\u0435\u0437 \u043E\u0442\u0432\u0435\u0442\u0430: ", /*#__PURE__*/React.createElement("b", null, remaining), ".", /*#__PURE__*/React.createElement("br", null), "\u041C\u043E\u0436\u043D\u043E \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C \u0438\u043B\u0438 \u043F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442."), /*#__PURE__*/React.createElement("div", {
+      className: "tx-confirm-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button primary",
+      autoFocus: true,
+      onClick: onContinue
+    }, "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0442\u0435\u0441\u0442"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button tx-finish-danger",
+      onClick: onFinish
+    }, "\u0414\u0430, \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C")));
+  };
+  const AnimatedHeader = () => {
+    const stageRef = useRef(null);
+    const tagOldRef = useRef(null);
+    const tagNewRef = useRef(null);
+    const wandRef = useRef(null);
+    const phrases = ['Увидь свой прогресс.', 'Каждый шаг — новый опыт.', 'Учись. Пробуй. Достигай.'];
+    useEffect(() => {
+      const stage = stageRef.current,
+        tagOld = tagOldRef.current,
+        tagNew = tagNewRef.current,
+        wand = wandRef.current;
+      if (!stage || !tagOld || !tagNew || !wand) return;
+      let index = 0,
+        ambientTimer = null,
+        transitionTimeout = null,
+        rafId = null;
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      function spawnSparkle(x, y, size) {
+        const s = document.createElement('span');
+        s.className = 'tx-sparkle';
+        s.style.left = x + 'px';
+        s.style.top = y + 'px';
+        const scale = size || 0.7 + Math.random() * 0.7;
+        s.style.width = 13 * scale + 'px';
+        s.style.height = 13 * scale + 'px';
+        stage.appendChild(s);
+        s.addEventListener('animationend', () => s.remove());
+      }
+      function runWandTransition() {
+        const nextIndex = (index + 1) % phrases.length;
+        tagNew.textContent = phrases[nextIndex];
+        const oldWidth = tagOld.getBoundingClientRect().width;
+        const newWidth = tagNew.getBoundingClientRect().width;
+        const maxW = Math.max(oldWidth, newWidth);
+        stage.style.width = maxW + 'px';
+        const pad = 10;
+        const startX = -pad;
+        // палочка идёт ровно до конца НОВОЙ фразы: длинная — дальше, короткая — ближе
+        const pathLength = newWidth + pad * 2;
+        const midY = stage.getBoundingClientRect().height / 2;
+        const duration = 700 + pathLength * 1.2;
+        const start = performance.now();
+        let lastSparkle = 0;
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          wand.style.opacity = t < 0.1 ? String(t * 10) : '1';
+          const eased = easeInOutCubic(t);
+          const x = startX + pathLength * eased;
+          const y = midY + Math.sin(t * Math.PI * 2.4) * 8;
+          wand.style.transform = `translate(${x - 12}px, ${y - 12}px) rotate(${t * 220}deg)`;
+          // слева от палочки — новая фраза, справа — ещё старая
+          tagNew.style.clipPath = `inset(0 ${newWidth - clamp(x, 0, newWidth)}px 0 0)`;
+          // старая фраза стирается в своём масштабе и исчезает полностью одновременно с приходом палочки в конец новой
+          tagOld.style.clipPath = `inset(0 0 0 ${clamp((oldWidth + pad * 2) * eased - pad, 0, oldWidth)}px)`;
+          if (now - lastSparkle > 28) {
+            spawnSparkle(x + (Math.random() * 8 - 4), y + (Math.random() * 8 - 4));
+            lastSparkle = now;
+          }
+          if (t < 1) {
+            rafId = requestAnimationFrame(frame);
+          } else {
+            index = nextIndex;
+            tagOld.textContent = phrases[index];
+            tagOld.style.clipPath = 'inset(0 0 0 0)';
+            tagNew.style.clipPath = 'inset(0 100% 0 0)';
+            fadeOutWand(x, y);
+          }
+        }
+        rafId = requestAnimationFrame(frame);
+      }
+      function fadeOutWand(fromX, fromY) {
+        spawnSparkle(fromX, fromY, 1.1);
+        const duration = 500;
+        const start = performance.now();
+        function fadeFrame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          wand.style.transform = `translate(${fromX - 12}px, ${fromY - 12}px) rotate(${220 + eased * 40}deg) scale(${1 - eased * 0.3})`;
+          wand.style.opacity = String(1 - t);
+          if (t < 1) {
+            rafId = requestAnimationFrame(fadeFrame);
+          } else {
+            wand.style.opacity = '0';
+            stage.style.width = '';
             scheduleNext();
+          }
+        }
+        rafId = requestAnimationFrame(fadeFrame);
+      }
+      function ambientSparkle() {
+        const rect = stage.getBoundingClientRect();
+        spawnSparkle(Math.random() * rect.width, rect.height / 2 + (Math.random() * 14 - 7), 0.55 + Math.random() * 0.4);
+      }
+      let firstRun = true;
+      function scheduleNext() {
+        ambientTimer = setInterval(ambientSparkle, 900);
+        transitionTimeout = setTimeout(() => {
+          clearInterval(ambientTimer);
+          runWandTransition();
+        }, firstRun ? 1500 : 2800);
+        firstRun = false;
+      }
+      tagOld.textContent = phrases[0];
+      tagNew.textContent = phrases[0];
+      scheduleNext();
+      return () => {
+        clearInterval(ambientTimer);
+        clearTimeout(transitionTimeout);
+        if (rafId) cancelAnimationFrame(rafId);
+      };
+    }, []);
+    return /*#__PURE__*/React.createElement("header", {
+      className: "tx-hero"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "ULTIMATE LMS \xB7 \u0422\u0415\u0421\u0422\u0418\u0420\u041E\u0412\u0410\u041D\u0418\u0415"), /*#__PURE__*/React.createElement("h1", null, "\u041F\u0440\u043E\u0432\u0435\u0440\u044C \u0437\u043D\u0430\u043D\u0438", /*#__PURE__*/React.createElement("span", {
+      className: "tx-cap-letter"
+    }, "\u044F", /*#__PURE__*/React.createElement("svg", {
+      className: "tx-cap",
+      viewBox: "0 0 64 64",
+      fill: "none",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+      id: "txCapGrad",
+      x1: "0",
+      y1: "0",
+      x2: "64",
+      y2: "64",
+      gradientUnits: "userSpaceOnUse"
+    }, /*#__PURE__*/React.createElement("stop", {
+      offset: "0%",
+      stopColor: "#7ab8ff"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "100%",
+      stopColor: "#8a5bff"
+    }))), /*#__PURE__*/React.createElement("path", {
+      d: "M32 10L58 22L32 34L6 22L32 10Z",
+      fill: "url(#txCapGrad)"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M18 27V40C18 40 24 46 32 46C40 46 46 40 46 40V27L32 34L18 27Z",
+      fill: "#3a4bcf"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M56 24V38",
+      stroke: "#1c2a99",
+      strokeWidth: "2.5",
+      strokeLinecap: "round"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "56",
+      cy: "40",
+      r: "2.6",
+      fill: "#1c2a99"
+    }))), ".", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+      className: "tx-wand-stage",
+      ref: stageRef
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-wand-text",
+      ref: tagOldRef
+    }, phrases[0]), /*#__PURE__*/React.createElement("span", {
+      className: "tx-wand-text new",
+      ref: tagNewRef,
+      "aria-hidden": "true"
+    }, phrases[0]), /*#__PURE__*/React.createElement("span", {
+      className: "tx-wand",
+      ref: wandRef,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24",
+      fill: "currentColor"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2z"
+    }))))), /*#__PURE__*/React.createElement("p", null, "\u0412\u044B\u0431\u0435\u0440\u0438 \u043D\u0430\u0431\u043E\u0440, \u043D\u0430\u0441\u0442\u0440\u043E\u0439 \u0432\u0440\u0435\u043C\u044F \u0438 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438 \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C.")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-hero-art",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "list",
+      size: 48
+    }))));
+  };
 
-            return () => {
-                stopAmbient();
-                clearTimeout(transitionTimeout);
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            };
-        }, []);
+  // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
+  const SwipeableRow = ({
+    children,
+    rowKey,
+    registerClose,
+    onArm,
+    onDismiss,
+    onClick
+  }) => {
+    const itemRef = useRef(null);
+    const hintRef = useRef(null);
+    const stateRef = useRef({
+      dragging: false,
+      axis: null,
+      startX: 0,
+      startY: 0,
+      baseX: 0,
+      armed: false,
+      overDismiss: false,
+      suppressNextClick: false
+    });
+    const dismissTimer = useRef(null),
+      dismissed = useRef(false);
+    const OPEN = 84,
+      DISMISS = 190;
+    const vibrate = ms => {
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(ms);
+        } catch (e) {}
+      }
+    };
+    const setX = x => {
+      const item = itemRef.current,
+        hint = hintRef.current;
+      if (!item || !hint) return;
+      item.style.transform = `translateX(${x}px)`;
+      item.dataset.x = x;
+      const absX = Math.abs(x);
+      hint.style.opacity = Math.min(1, absX / OPEN);
+      const openP = Math.min(1, absX / OPEN);
+      const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
+      hint.style.setProperty('--icon-scale', (0.8 + openP * 0.2 + dismissP * 0.25).toFixed(3));
+      hint.style.filter = `brightness(${1 + dismissP * 0.18})`;
+      const s = stateRef.current;
+      const nowArmed = absX >= OPEN * 0.5;
+      if (nowArmed && !s.armed) vibrate(9);
+      s.armed = nowArmed;
+      const nowOver = absX >= DISMISS;
+      if (nowOver && !s.overDismiss) vibrate(16);
+      s.overDismiss = nowOver;
+    };
+    const close = () => setX(0);
+    const animateOutAndDismiss = () => {
+      const item = itemRef.current;
+      if (!item || dismissed.current) return;
+      dismissed.current = true;
+      item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
+      item.style.transform = 'translateX(-120%) scale(0.95)';
+      item.style.opacity = '0';
+      dismissTimer.current = setTimeout(() => {
+        onDismiss && onDismiss();
+      }, 280);
+    };
+    useEffect(() => {
+      if (registerClose) registerClose(rowKey, close);
+      const el = itemRef.current;
+      const guard = e => {
+        if (stateRef.current.suppressNextClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          stateRef.current.suppressNextClick = false;
+        }
+      };
+      el.addEventListener('click', guard, true);
+      return () => {
+        el.removeEventListener('click', guard, true);
+        clearTimeout(dismissTimer.current);
+        registerClose?.(rowKey, null);
+      };
+    }, []);
+    const onDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const s = stateRef.current;
+      s.dragging = true;
+      s.axis = null;
+      s.startX = e.clientX;
+      s.startY = e.clientY;
+      s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
+      itemRef.current.style.transition = 'none';
+      itemRef.current.setPointerCapture(e.pointerId);
+    };
+    const onMove = e => {
+      const s = stateRef.current;
+      if (!s.dragging) return;
+      const dx = e.clientX - s.startX,
+        dy = e.clientY - s.startY;
+      if (s.axis === null) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (s.axis === 'y') {
+          s.dragging = false;
+          return;
+        }
+        if (onArm) onArm();
+      }
+      if (s.axis !== 'x') return;
+      let x = s.baseX + dx;
+      if (x > 0) x *= 0.25;
+      setX(x);
+    };
+    const onUp = e => {
+      const s = stateRef.current;
+      if (!s.dragging) return;
+      s.dragging = false;
+      const item = itemRef.current;
+      item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+      if (item.hasPointerCapture(e.pointerId)) item.releasePointerCapture(e.pointerId);
+      if (s.axis === 'x') {
+        const x = parseFloat(item.dataset.x) || 0;
+        if (Math.abs(x) > 4) s.suppressNextClick = true;
+        if (x < -DISMISS) {
+          vibrate(20);
+          animateOutAndDismiss();
+        } else if (x < -OPEN * 0.5) {
+          setX(-OPEN);
+          if (hintRef.current) {
+            hintRef.current.classList.add('armed-pop');
+            setTimeout(() => hintRef.current && hintRef.current.classList.remove('armed-pop'), 320);
+          }
+        } else {
+          close();
+        }
+      } else {
+        if (onClick) onClick();
+      }
+      s.axis = null;
+    };
+    const handleHintClick = e => {
+      e.stopPropagation();
+      const x = parseFloat(itemRef.current.dataset.x) || 0;
+      if (Math.abs(x) < OPEN * 0.6) return;
+      vibrate(20);
+      animateOutAndDismiss();
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      className: "tlms-swrow-track"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-swrow-hint",
+      ref: hintRef,
+      onClick: handleHintClick
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "18",
+      height: "18",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "#fff",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M3 6h18"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+    })), /*#__PURE__*/React.createElement("span", null, "\u0423\u0434\u0430\u043B\u0438\u0442\u044C")), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-swrow-item",
+      ref: itemRef,
+      "data-x": "0",
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      },
+      onPointerDown: onDown,
+      onPointerMove: onMove,
+      onPointerUp: onUp,
+      onPointerCancel: e => {
+        stateRef.current.dragging = false;
+        stateRef.current.axis = null;
+        close();
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    }, children));
+  };
+  const TestsLMS = ({
+    view,
+    setView,
+    currentSet,
+    tests,
+    setTests,
+    user,
+    history = [],
+    setHistory,
+    fp,
+    sets = [],
+    addSet,
+    deleteSet,
+    openSet,
+    teacherTests = [],
+    openTeacherAssignedTest,
+    removeTeacherTestStudent
+  }) => {
+    // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
+    const [testSession, setTestSession] = useState({
+      questions: [],
+      currentIdx: 0,
+      answers: [],
+      score: 0
+    });
+    const [isResultSaved, setIsResultSaved] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(1200);
+    const [customTime, setCustomTime] = useState('20');
+    const [customQCount, setCustomQCount] = useState('');
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [isNavOpen, setIsNavOpen] = useState(true);
 
-        return (
-            <div style={{ textAlign: 'center', marginBottom: '35px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-<style dangerouslySetInnerHTML={{__html: `
-                    .icon-wrap-anim { width:96px; height:96px; margin:0 auto 16px; position:relative; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.7); animation: iconInAnim .5s .05s cubic-bezier(.2,.8,.2,1) forwards; }
-                    @keyframes iconInAnim { to { opacity:1; transform:scale(1); } }
-                    .halo-anim { position:absolute; inset:-20px; border-radius:50%; background: radial-gradient(circle, rgba(122,184,255,0.30), rgba(138,91,255,0.14) 60%, transparent 75%); filter: blur(10px); pointer-events:none; }
-                    .icon-float-anim { width:56px; height:56px; position:relative; z-index:2; filter: drop-shadow(0 6px 16px rgba(90,110,255,0.5)); }
-                    .icon-float-anim svg { width:100%; height:100%; display:block; }
-                    .title-anim { font-size:30px; font-weight:800; letter-spacing:-0.01em; margin:0 0 8px; background: linear-gradient(100deg, #7ab8ff, #8a5bff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; transform:translateY(8px); animation: titleInAnim .5s .18s ease forwards; }
-                    @keyframes titleInAnim { to { opacity:1; transform:translateY(0); } }
-                    .tagline-wrap-anim { opacity:0; animation: taglineInAnim .5s .4s ease forwards; display:flex; justify-content:center; overflow:visible; width: 100%; }
-                    @keyframes taglineInAnim { to { opacity:1; } }
-                    .tag-stage-anim { position:relative; height:24px; display:flex; align-items:center; justify-content:center; overflow:visible; transition: width 0.1s ease; margin: 0 auto; }
-                    .tag-text-anim { font-size:15px; font-weight:600; letter-spacing:.01em; white-space:nowrap; color:var(--text-sec, #8b87a8); }
-                    #tagNewAnim { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
-                    .wand-anim { position:absolute; top:50%; left:0; width:14px; height:14px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; color:#fff; filter: drop-shadow(0 0 6px rgba(122,184,255,0.9)) drop-shadow(0 0 3px #fff); z-index: 10;}
-                    .wand-anim svg { width:100%; height:100%; display:block; }
-                    .sparkle-anim { position:absolute; top:0; left:0; background: var(--sparkle-grad, linear-gradient(45deg, #fff, #7ab8ff)); clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%); opacity:0; pointer-events:none; animation: sparklePopAnim 1s ease-out forwards; z-index: 5; filter: drop-shadow(0 0 3px var(--sparkle-glow));}
-                    @keyframes sparklePopAnim { 0% { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); } 18% { opacity:1; transform: translate(-50%,-50%) scale(1) rotate(50deg); } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.35) translateY(-16px) rotate(140deg); } }
-                `}} />
-                <div className="icon-wrap-anim">
-                    <div className="halo-anim"></div>
-                    <div className="icon-float-anim">
-                        <svg viewBox="0 0 64 64" fill="none">
-                            <defs>
-                                <linearGradient id="capGrad" x1="0" y1="0" x2="64" y2="64">
-                                    <stop offset="0%" stopColor="#7ab8ff"/>
-                                    <stop offset="100%" stopColor="#8a5bff"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M32 10L58 22L32 34L6 22L32 10Z" fill="url(#capGrad)"/>
-                            <path d="M18 27V40C18 40 24 46 32 46C40 46 46 40 46 40V27L32 34L18 27Z" fill="#3a4bcf"/>
-                            <path d="M56 24V38" stroke="#1c2a99" strokeWidth="2.5" strokeLinecap="round"/>
-                            <circle cx="56" cy="40" r="2.6" fill="#1c2a99"/>
-                        </svg>
-                    </div>
-                </div>
-                <h1 className="title-anim">Ultimate LMS Platform</h1>
-                <div className="tagline-wrap-anim">
-                    <div className="tag-stage-anim" ref={stageRef}>
-                        <span className="tag-text-anim" ref={tagOldRef}>Learn without limits</span>
-                        <span className="tag-text-anim" id="tagNewAnim" ref={tagNewRef} style={{clipPath: 'inset(0 100% 0 0)'}}>Learn without limits</span>
-                        <div className="wand-anim" ref={wandRef}>
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0l1.8 6.2L20 8l-6.2 1.8L12 16l-1.8-6.2L4 8l6.2-1.8L12 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+    // --- СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
+    const [shakeTime, setShakeTime] = useState(false);
+    const [shakeQ, setShakeQ] = useState(false);
+    const [bumpTime, setBumpTime] = useState(false);
+    const [bumpQ, setBumpQ] = useState(false);
+    const [isStarting, setIsStarting] = useState(false);
+
+    // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
+    const [pendingDelete, setPendingDelete] = useState(null);
+
+    // --- Состояния для поля добавления ---
+    const [addFocused, setAddFocused] = useState(false);
+    const [addVal, setAddVal] = useState('');
+    const [addShake, setAddShake] = useState(false);
+    const [addDone, setAddDone] = useState(false);
+    const closeRegistryRef = useRef({});
+    const registerClose = (key, fn) => {
+      if (fn) closeRegistryRef.current[key] = fn;else delete closeRegistryRef.current[key];
+    };
+    const closeOthers = exceptKey => {
+      Object.entries(closeRegistryRef.current).forEach(([k, fn]) => {
+        if (k !== String(exceptKey) && fn) fn();
+      });
+    };
+    useEffect(() => {
+      const handler = e => {
+        if (!e.target.closest('.tlms-swrow-track')) {
+          Object.values(closeRegistryRef.current).forEach(fn => fn && fn());
+        }
+      };
+      document.addEventListener('pointerdown', handler);
+      return () => document.removeEventListener('pointerdown', handler);
+    }, []);
+    const requestDelete = (key, label, commitFn) => {
+      if (pendingDelete) {
+        clearTimeout(pendingDelete.timer);
+        pendingDelete.commitFn();
+      }
+      const timer = setTimeout(() => {
+        commitFn();
+        setPendingDelete(null);
+      }, 3500);
+      setPendingDelete({
+        key,
+        label,
+        commitFn,
+        timer
+      });
+    };
+    const undoDelete = () => {
+      if (!pendingDelete) return;
+      clearTimeout(pendingDelete.timer);
+      setPendingDelete(null);
+    };
+    const handleAddNewSet = () => {
+      const val = addVal.trim();
+      if (!val) {
+        setAddShake(true);
+        setTimeout(() => setAddShake(false), 380);
+        return;
+      }
+
+      // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
+      setAddDone(true);
+      setTimeout(() => setAddDone(false), 550);
+      addSet(val);
+      setAddVal('');
+    };
+    const [questionLeaving, setQuestionLeaving] = useState(false);
+    const [notice, setNotice] = useState(null),
+      [confirmFinish, setConfirmFinish] = useState(false),
+      [saving, setSaving] = useState(false),
+      [saveError, setSaveError] = useState(''),
+      [studentName, setStudentName] = useState(''),
+      [syncMessage, setSyncMessage] = useState('');
+    const sessionRef = useRef(testSession),
+      advanceTimer = useRef(null),
+      switchTimer = useRef(null),
+      answerLock = useRef(false),
+      launchLock = useRef(false),
+      finished = useRef(false),
+      deadline = useRef(0),
+      durationRef = useRef(1200),
+      viewRef = useRef(view),
+      setRef = useRef(currentSet),
+      alive = useRef(true),
+      savingRef = useRef(false),
+      savedRef = useRef(false),
+      resultRecord = useRef(null);
+    viewRef.current = view;
+    setRef.current = currentSet;
+    const commitSession = s => {
+      sessionRef.current = s;
+      setTestSession(s);
+    };
+    useEffect(() => {
+      alive.current = true;
+      return () => {
+        alive.current = false;
+        finished.current = true;
+        clearTimeout(advanceTimer.current);
+        clearTimeout(switchTimer.current);
+      };
+    }, []);
+    useEffect(() => {
+      if (view !== 'test') {
+        clearTimeout(advanceTimer.current);
+        clearTimeout(switchTimer.current);
+        answerLock.current = false;
+        setIsAnimating(false);
+        setQuestionLeaving(false);
+        setConfirmFinish(false);
+      }
+    }, [view]);
+    useEffect(() => {
+      if (!notice || notice.error) return;
+      const id = setTimeout(() => setNotice(null), 3000);
+      return () => clearTimeout(id);
+    }, [notice]);
+    // --- АНТИЧИТ ---
+    useEffect(() => {
+      if (view !== 'test') return;
+      const handleVisibility = () => {
+        if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp);
+      };
+      const handleBlur = () => {
+        if (typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)", fp);
+      };
+      const handlePaste = e => {
+        if (typeof captureViolation === 'function') captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", fp, [{
+          name: "Содержимое",
+          value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\``
+        }]);
+      };
+      window.addEventListener('visibilitychange', handleVisibility);
+      window.addEventListener('blur', handleBlur);
+      window.addEventListener('paste', handlePaste);
+      return () => {
+        window.removeEventListener('visibilitychange', handleVisibility);
+        window.removeEventListener('blur', handleBlur);
+        window.removeEventListener('paste', handlePaste);
+      };
+    }, [view, fp]);
+    useEffect(() => {
+      if (view !== 'test' || !deadline.current) return;
+      const tick = () => {
+        const left = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
+        setTimeLeft(left);
+        if (left === 0) finishTest();
+      };
+      tick();
+      const timer = setInterval(tick, 250);
+      document.addEventListener('visibilitychange', tick);
+      return () => {
+        clearInterval(timer);
+        document.removeEventListener('visibilitychange', tick);
+      };
+    }, [view]);
+    const formatTime = s => {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${m}:${sec < 10 ? '0' + sec : sec}`;
     };
 
-    // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
-    const SwipeableRow = ({ children, rowKey, registerClose, onArm, onDismiss, onClick }) => {
-        const itemRef = useRef(null);
-        const hintRef = useRef(null);
-        const stateRef = useRef({ dragging:false, axis:null, startX:0, startY:0, baseX:0, armed:false, overDismiss:false, suppressNextClick:false });
-        const OPEN = 84, DISMISS = 190;
-
-        const vibrate = (ms) => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } };
-
-        const setX = (x) => {
-            const item = itemRef.current, hint = hintRef.current;
-            if (!item || !hint) return;
-            item.style.transform = `translateX(${x}px)`;
-            item.dataset.x = x;
-            const absX = Math.abs(x);
-            hint.style.opacity = Math.min(1, absX / OPEN);
-            const openP = Math.min(1, absX / OPEN);
-            const dismissP = Math.max(0, Math.min(1, (absX - OPEN) / (DISMISS - OPEN)));
-            hint.style.setProperty('--icon-scale', (0.8 + openP * 0.2 + dismissP * 0.25).toFixed(3));
-            hint.style.filter = `brightness(${1 + dismissP * 0.18})`;
-            const s = stateRef.current;
-            const nowArmed = absX >= OPEN * 0.5;
-            if (nowArmed && !s.armed) vibrate(9);
-            s.armed = nowArmed;
-            const nowOver = absX >= DISMISS;
-            if (nowOver && !s.overDismiss) vibrate(16);
-            s.overDismiss = nowOver;
-        };
-
-        const close = () => setX(0);
-
-        const animateOutAndDismiss = () => {
-            const item = itemRef.current;
-            if (!item) return;
-            item.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
-            item.style.transform = 'translateX(-120%) scale(0.95)';
-            item.style.opacity = '0';
-            setTimeout(() => {
-                onDismiss && onDismiss();
-            }, 280);
-        };
-
-        useEffect(() => {
-            if (registerClose) registerClose(rowKey, close);
-            const el = itemRef.current;
-            const guard = (e) => {
-                if (stateRef.current.suppressNextClick) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    stateRef.current.suppressNextClick = false;
-                }
-            };
-            el.addEventListener('click', guard, true);
-            return () => el.removeEventListener('click', guard, true);
-        }, []);
-
-        const onDown = (e) => {
-            if (e.pointerType === 'mouse' && e.button !== 0) return;
-            const s = stateRef.current;
-            s.dragging = true; s.axis = null;
-            s.startX = e.clientX; s.startY = e.clientY;
-            s.baseX = parseFloat(itemRef.current.dataset.x) || 0;
-            itemRef.current.style.transition = 'none';
-            itemRef.current.setPointerCapture(e.pointerId);
-        };
-        const onMove = (e) => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            const dx = e.clientX - s.startX, dy = e.clientY - s.startY;
-            if (s.axis === null) {
-                if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-                s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-                if (s.axis === 'y') { s.dragging = false; return; }
-                if (onArm) onArm();
-            }
-            if (s.axis !== 'x') return;
-            let x = s.baseX + dx;
-            if (x > 0) x *= 0.25;
-            setX(x);
-        };
-        const onUp = (e) => {
-            const s = stateRef.current;
-            if (!s.dragging) return;
-            s.dragging = false;
-            const item = itemRef.current;
-            item.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
-            if (item.hasPointerCapture(e.pointerId)) item.releasePointerCapture(e.pointerId);
-
-            if (s.axis === 'x') {
-                const x = parseFloat(item.dataset.x) || 0;
-                if (Math.abs(x) > 4) s.suppressNextClick = true;
-                
-                if (x < -DISMISS) {
-                    vibrate(20);
-                    animateOutAndDismiss();
-                } else if (x < -OPEN * 0.5) {
-                    setX(-OPEN);
-                    if (hintRef.current) {
-                        hintRef.current.classList.add('armed-pop');
-                        setTimeout(() => hintRef.current && hintRef.current.classList.remove('armed-pop'), 320);
-                    }
-                } else {
-                    close();
-                }
-            } else {
-                if (onClick) onClick(); 
-            }
-            s.axis = null;
-        };
-
-        const handleHintClick = (e) => {
-            e.stopPropagation();
-            const x = parseFloat(itemRef.current.dataset.x) || 0;
-            if (Math.abs(x) < OPEN * 0.6) return;
-            vibrate(20);
-            animateOutAndDismiss();
-        };
-
-        return (
-            <div className="tlms-swrow-track">
-                <div className="tlms-swrow-hint" ref={hintRef} onClick={handleHintClick}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    <span>Удалить</span>
-                </div>
-                <div className="tlms-swrow-item" ref={itemRef} data-x="0"
-                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-                    {children}
-                </div>
-            </div>
-        );
+    // --- ЛОГИКА ТЕСТА ---
+    const importJSON = async e => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) {
+        setNotice({
+          error: true,
+          text: 'Файл слишком большой. Максимум — 10 МБ.'
+        });
+        return;
+      }
+      const setName = currentSet;
+      try {
+        const normalized = normalizeTests(JSON.parse(await file.text()));
+        if (!alive.current || viewRef.current !== 'set_menu' || setRef.current !== setName) return;
+        localStorage.setItem('tests_' + setName, JSON.stringify(normalized));
+        setTests(normalized);
+        setNotice({
+          text: `Импортировано вопросов: ${normalized.length}`
+        });
+      } catch (err) {
+        if (alive.current) setNotice({
+          error: true,
+          text: err instanceof SyntaxError ? 'Не удалось прочитать JSON. Проверь формат файла.' : err.message
+        });
+      }
     };
-
-    
-
-    const TestsLMS = ({ view, setView, currentSet, tests, setTests, user, history, setHistory, fp, sets, addSet, deleteSet, openSet, teacherTests, openTeacherAssignedTest, removeTeacherTestStudent }) => {
-
-        // --- ЛОКАЛЬНЫЕ СОСТОЯНИЯ ТЕСТА ---
-        const [testSession, setTestSession] = useState({ questions: [], currentIdx: 0, answers: [], score: 0 });
-        const [isResultSaved, setIsResultSaved] = useState(false);
-        const [timeLeft, setTimeLeft] = useState(1200);
-        const [customTime, setCustomTime] = useState('20');
-        const [customQCount, setCustomQCount] = useState('');
-        const [isAnimating, setIsAnimating] = useState(false);
-        const [isNavOpen, setIsNavOpen] = useState(true);
-        
-        // --- СОСТОЯНИЯ ДЛЯ ЭКРАНА НАСТРОЕК ТЕСТА ---
-        const [shakeTime, setShakeTime] = useState(false);
-        const [shakeQ, setShakeQ] = useState(false);
-        const [bumpTime, setBumpTime] = useState(false);
-        const [bumpQ, setBumpQ] = useState(false);
-        const [isStarting, setIsStarting] = useState(false);
-
-        // --- СОСТОЯНИЯ ДЛЯ СВАЙПА, ДОБАВЛЕНИЯ И ОТМЕНЫ (UNDO) ---
-        const [pendingDelete, setPendingDelete] = useState(null);
-        
-        // --- Состояния для поля добавления ---
-        const [addFocused, setAddFocused] = useState(false);
-        const [addVal, setAddVal] = useState('');
-        const [addShake, setAddShake] = useState(false);
-        const [addDone, setAddDone] = useState(false);
-
-        const closeRegistryRef = useRef({});
-
-        const registerClose = (key, fn) => { closeRegistryRef.current[key] = fn; };
-        const closeOthers = (exceptKey) => {
-            Object.entries(closeRegistryRef.current).forEach(([k, fn]) => { if (k !== String(exceptKey) && fn) fn(); });
-        };
-
-        useEffect(() => {
-            const handler = (e) => {
-                if (!e.target.closest('.tlms-swrow-track')) {
-                    Object.values(closeRegistryRef.current).forEach(fn => fn && fn());
-                }
-            };
-            document.addEventListener('pointerdown', handler);
-            return () => document.removeEventListener('pointerdown', handler);
-        }, []);
-
-                const requestDelete = (key, label, commitFn) => {
-            if (pendingDelete) { 
-                clearTimeout(pendingDelete.timer); 
-                pendingDelete.commitFn(); 
-            }
-            const timer = setTimeout(() => { 
-                commitFn(); 
-                setPendingDelete(null); 
-            }, 3500);
-            setPendingDelete({ key, label, commitFn, timer });
-        };
-        
-        const undoDelete = () => {
-            if (!pendingDelete) return;
-            clearTimeout(pendingDelete.timer);
-            setPendingDelete(null);
-        };
-
-        const handleAddNewSet = () => {
-            const val = addVal.trim();
-            if (!val) {
-                setAddShake(true);
-                setTimeout(() => setAddShake(false), 380);
-                return;
-            }
-            
-            // ИСПРАВЛЕНИЕ: Убираем новое имя из скрытых, вдруг оно там застряло
-            setAddDone(true);
-            setTimeout(() => setAddDone(false), 550);
-            addSet(val);
-            setAddVal('');
-        };
-
-        // --- АНТИЧИТ ---
-        useEffect(() => {
-            if (view !== 'test') return;
-            const handleVisibility = () => { if (document.hidden && typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Смена вкладки / Сворачивание", fp); };
-            const handleBlur = () => { if (typeof captureViolation === 'function') captureViolation("⚠️ ВНИМАНИЕ: Потеря фокуса (переход в другое окно)", fp); };
-            const handlePaste = (e) => { if (typeof captureViolation === 'function') captureViolation("📋 ПЕРЕХВАТ: Попытка вставки (Paste)", fp, [{ name: "Содержимое", value: `\`\`\`${e.clipboardData.getData('text') || 'пусто'}\`\`\`` }]); };
-            
-            window.addEventListener('visibilitychange', handleVisibility); 
-            window.addEventListener('blur', handleBlur); 
-            window.addEventListener('paste', handlePaste); 
-            
-            return () => { 
-                window.removeEventListener('visibilitychange', handleVisibility); 
-                window.removeEventListener('blur', handleBlur); 
-                window.removeEventListener('paste', handlePaste); 
-            };
-        }, [view, fp]);
-
-       // --- ТАЙМЕР ---
-        useEffect(() => {
-            if (view !== 'test') return;
-            const timer = setInterval(() => {
-                setTimeLeft((prev) => { if (prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
-            }, 1000);
-            return () => clearInterval(timer);
-        }, [view]);
-        
-        useEffect(() => { if (timeLeft === 0 && view === 'test') finishTest(); }, [timeLeft]);
-        
-
-        const formatTime = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec < 10 ? '0' + sec : sec}`; };
-
-        // --- ЛОГИКА ТЕСТА ---
-        const importJSON = (e) => {
-            const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-            reader.onload = ev => { 
-                try { 
-                    const data = JSON.parse(ev.target.result); 
-                    const normalized = data.map(t => ({ question: t.question || '', questionImg: t.questionImg || null, variants: (t.variants || []).map(v => typeof v === 'object' ? v : {text:String(v),img:null}), correctIndex: t.correctIndex })); 
-                    setTests(normalized); 
-                    localStorage.setItem('tests_' + currentSet, JSON.stringify(normalized)); 
-                    alert(`✅ Импортировано: ${normalized.length}`); 
-                } catch { 
-                    alert('Ошибка JSON'); 
-                } 
-            };
-            reader.readAsText(file);
-        };
-
-        const startTest = () => { 
-            if (tests.length === 0) return alert('Нет вопросов!'); 
-            setCustomQCount(Math.min(25, tests.length).toString()); 
-            setCustomTime('20');
-            setView('timer_setup'); 
-        };
-
-        const updateTime = (delta) => {
-    let val = parseInt(customTime) || 20;
-    val += delta;
-    if (val < 5 || val > 180) {
-        setShakeTime(true); setTimeout(() => setShakeTime(false), 400);
+    const startTest = () => {
+      if (tests.length === 0) return setNotice({
+        error: true,
+        text: 'Сначала импортируй вопросы в этот набор.'
+      });
+      setCustomQCount(Math.min(25, tests.length).toString());
+      setCustomTime('20');
+      setView('timer_setup');
+    };
+    const updateTime = delta => {
+      let val = parseInt(customTime) || 20;
+      val += delta;
+      if (val < 5 || val > 180) {
+        setShakeTime(true);
+        setTimeout(() => setShakeTime(false), 400);
         return;
-    }
-    setCustomTime(val.toString());
-    setBumpTime(true); setTimeout(() => setBumpTime(false), 220);
-};
-
-       const updateQCount = (delta) => {
-    let val = parseInt(customQCount) || tests.length;
-    val += delta;
-    const maxQ = Math.min(25, tests.length);
-    if (val < 1 || val > maxQ) {
-        setShakeQ(true); setTimeout(() => setShakeQ(false), 400);
+      }
+      setCustomTime(val.toString());
+      setBumpTime(true);
+      setTimeout(() => setBumpTime(false), 220);
+    };
+    const updateQCount = delta => {
+      let val = parseInt(customQCount) || tests.length;
+      val += delta;
+      const maxQ = Math.min(25, tests.length);
+      if (val < 1 || val > maxQ) {
+        setShakeQ(true);
+        setTimeout(() => setShakeQ(false), 400);
         return;
-    }
-    setCustomQCount(val.toString());
-    setBumpQ(true); setTimeout(() => setBumpQ(false), 220);
-};
-
-        const handleCancelSetup = () => {
-            setCustomTime('20');
-            setCustomQCount(Math.min(25, tests.length).toString());
-            setView('set_menu');
+      }
+      setCustomQCount(val.toString());
+      setBumpQ(true);
+      setTimeout(() => setBumpQ(false), 220);
+    };
+    const handleCancelSetup = () => {
+      setCustomTime('20');
+      setCustomQCount(Math.min(25, tests.length).toString());
+      setView('set_menu');
+    };
+    const launchTestWithTimer = () => {
+      if (launchLock.current) return;
+      launchLock.current = true;
+      try {
+        const valid = normalizeTests(tests),
+          mins = Math.max(5, Math.min(180, parseInt(customTime) || 20)),
+          count = Math.max(1, Math.min(25, valid.length, parseInt(customQCount) || 1));
+        const qs = shuffled(valid).slice(0, count).map(shuffledQuestion);
+        beginSession(qs, mins);
+      } catch (e) {
+        setNotice({
+          error: true,
+          text: e.message
+        });
+      } finally {
+        launchLock.current = false;
+        setIsStarting(false);
+      }
+    };
+    const beginSession = (qs, mins) => {
+      clearTimeout(advanceTimer.current);
+      clearTimeout(switchTimer.current);
+      finished.current = false;
+      answerLock.current = false;
+      setIsAnimating(false);
+      setQuestionLeaving(false);
+      setConfirmFinish(false);
+      setIsResultSaved(false);
+      savedRef.current = false;
+      resultRecord.current = null;
+      setSaveError('');
+      setSyncMessage('');
+      setStudentName('');
+      setCustomTime(String(mins));
+      durationRef.current = mins * 60;
+      deadline.current = Date.now() + mins * 60000;
+      setTimeLeft(mins * 60);
+      commitSession({
+        questions: qs,
+        currentIdx: 0,
+        answers: qs.map(() => null),
+        score: 0
+      });
+      setView('test');
+    };
+    const changeQuestion = i => {
+      const before = sessionRef.current;
+      if (i < 0 || i >= before.questions.length || i === before.currentIdx) {
+        answerLock.current = false;
+        setIsAnimating(false);
+        return;
+      }
+      answerLock.current = true;
+      setIsAnimating(true);
+      setQuestionLeaving(true);
+      clearTimeout(switchTimer.current);
+      switchTimer.current = setTimeout(() => {
+        if (finished.current || viewRef.current !== 'test') return;
+        commitSession({
+          ...sessionRef.current,
+          currentIdx: i
+        });
+        setQuestionLeaving(false);
+        answerLock.current = false;
+        setIsAnimating(false);
+      }, 190);
+    };
+    const handleAnswer = variantIdx => {
+      const s = sessionRef.current;
+      if (finished.current || answerLock.current || !s.questions[s.currentIdx] || s.answers[s.currentIdx] !== null || !Number.isInteger(variantIdx) || variantIdx < 0 || variantIdx >= s.questions[s.currentIdx].variants.length) return;
+      answerLock.current = true;
+      const idx = s.currentIdx;
+      commitSession({
+        ...s,
+        answers: s.answers.map((a, i) => i === idx ? variantIdx : a)
+      });
+      setIsAnimating(true);
+      clearTimeout(advanceTimer.current);
+      advanceTimer.current = setTimeout(() => {
+        if (finished.current || viewRef.current !== 'test') return;
+        changeQuestion(idx + 1);
+      }, 750);
+    };
+    const handleNavClick = i => {
+      const s = sessionRef.current;
+      if (finished.current || answerLock.current || !Number.isInteger(i) || i < 0 || i >= s.questions.length || i === s.currentIdx) return;
+      changeQuestion(i);
+    };
+    const finishTest = () => {
+      if (finished.current || !sessionRef.current.questions.length) return;
+      finished.current = true;
+      clearTimeout(advanceTimer.current);
+      clearTimeout(switchTimer.current);
+      answerLock.current = false;
+      setIsAnimating(false);
+      setQuestionLeaving(false);
+      setConfirmFinish(false);
+      const s = sessionRef.current,
+        score = s.questions.reduce((n, q, i) => n + (s.answers[i] === q.correctIndex ? 1 : 0), 0);
+      commitSession({
+        ...s,
+        score
+      });
+      setView('result');
+      void saveResult({
+        ...s,
+        score
+      });
+    };
+    const requestFinish = () => {
+      if (sessionRef.current.answers.some(a => a === null)) setConfirmFinish(true);else finishTest();
+    };
+    useEffect(() => {
+      if (view !== 'test') return;
+      const onKey = e => {
+        if (e.defaultPrevented || e.repeat || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.target.closest('input,textarea,select,button,[contenteditable=true]') || confirmFinish) return;
+        const s = sessionRef.current;
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          handleNavClick(s.currentIdx + 1);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          handleNavClick(s.currentIdx - 1);
+        } else if (/^[1-9]$/.test(e.key)) {
+          e.preventDefault();
+          handleAnswer(Number(e.key) - 1);
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, [view, confirmFinish]);
+    const restartMistakes = () => {
+      const s = sessionRef.current,
+        wrong = s.questions.filter((q, i) => s.answers[i] !== q.correctIndex).map(shuffledQuestion);
+      if (wrong.length) beginSession(wrong, Math.max(5, Math.min(180, parseInt(customTime) || 20)));
+    };
+    // Один стабильный ID на прохождение: повтор синхронизации не создаёт дубликат.
+    const saveResult = async completed => {
+      if (savingRef.current) return;
+      const s = completed || sessionRef.current;
+      if (!s.questions.length) return;
+      savingRef.current = true;
+      setSaving(true);
+      setSaveError('');
+      setSyncMessage('Сохраняем результат…');
+      const account = user || window.auth?.currentUser;
+      if (!resultRecord.current) {
+        resultRecord.current = {
+          record: {
+            id: Date.now(),
+            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0, 5),
+            student: account?.nickname?.trim() || account?.displayName?.trim() || account?.email || 'Гость',
+            percent: Math.round(s.score / s.questions.length * 100),
+            score: s.score,
+            total: s.questions.length,
+            topic: currentSet
+          },
+          account,
+          questions: s.questions,
+          answers: s.answers,
+          local: false,
+          cloud: false,
+          discord: false
         };
-
-        const launchTestWithTimer = async () => {
-            setIsStarting(true);
-            const mins = parseInt(customTime) || 20;
-            let qCount = parseInt(customQCount);
-            const maxQ = Math.min(25, tests.length);
-            if (!qCount || qCount < 1) qCount = 1;
-            if (qCount > maxQ) qCount = maxQ;
-
-            setTimeout(() => {
-                let fullList = shuffleArray(tests);
-                let selectedQuestions = fullList.slice(0, qCount);
-                let finalQuestions = selectedQuestions.map(t => {
-                    let varsWithFlag = t.variants.map((v, i) => ({ ...v, _isCorrectOriginal: i === t.correctIndex }));
-                    varsWithFlag = shuffleArray(varsWithFlag);
-                    return { ...t, variants: varsWithFlag, correctIndex: varsWithFlag.findIndex(v => v._isCorrectOriginal) };
-                });
-                setIsResultSaved(false); setTimeLeft(mins * 60); 
-                setTestSession({ questions: finalQuestions, currentIdx: 0, answers: new Array(finalQuestions.length).fill(null), score: 0 }); 
-                
-                if (window.showToast) window.showToast(`⏱ ${mins} мин. • 📝 ${qCount} вопр.`);
-                
-                setIsStarting(false);
-                setView('test');
-            }, 1000);
-        };
-
-        const handleAnswer = (variantIdx) => {
-            if (testSession.answers[testSession.currentIdx] !== null) return; 
-            const newAnswers = [...testSession.answers]; newAnswers[testSession.currentIdx] = variantIdx;
-            setTestSession(prev => ({ ...prev, answers: newAnswers }));
-            setIsAnimating(true);
-            setTimeout(() => { 
-                if (testSession.currentIdx < testSession.questions.length - 1) { setTestSession(prev => ({ ...prev, currentIdx: prev.currentIdx + 1 })); }
-                setIsAnimating(false);
-            }, 700);
-        };
-
-        const handleNavClick = (i) => {
-            if (isAnimating) return; 
-            if (i === testSession.currentIdx) return;
-            setIsAnimating(true); setTestSession(p => ({ ...p, currentIdx: i }));
-            setTimeout(() => setIsAnimating(false), 350); 
-        };
-
-        const finishTest = () => {
-            let correct = 0; testSession.questions.forEach((q, i) => { if (testSession.answers[i] === q.correctIndex) correct++; });
-            setTestSession(prev => ({ ...prev, score: correct }));
-            if (correct / testSession.questions.length >= 0.5 && window.confetti) window.confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            setView('result');
-        };
-
-        // НАВИГАЦИЯ С КЛАВИАТУРЫ
-        useEffect(() => {
-            if (view !== 'test') return;
-            const handleKeyDown = (e) => {
-                if (isAnimating) return; 
-                const { currentIdx, questions, answers } = testSession;
-                if (e.key === 'ArrowRight' || e.key === 'Enter') { if (currentIdx < questions.length - 1) handleNavClick(currentIdx + 1); }
-                else if (e.key === 'ArrowLeft') { if (currentIdx > 0) handleNavClick(currentIdx - 1); }
-                else if (e.key >= '1' && e.key <= '9') {
-                    const variantIndex = parseInt(e.key) - 1; 
-                    if (questions[currentIdx] && variantIndex < questions[currentIdx].variants.length) {
-                        if (answers[currentIdx] === null) handleAnswer(variantIndex);
-                    }
-                }
+      }
+      const job = resultRecord.current,
+        record = job.record,
+        owner = job.account,
+        issues = [];
+      const ref = owner?.uid && window.db ? window.db.collection('users').doc(owner.uid) : null;
+      try {
+        if (ref && !job.cloud) {
+          try {
+            const mergeProfile = doc => {
+              const profile = doc.exists ? doc.data() : {};
+              record.student = profile.nickname?.trim() || owner.nickname?.trim() || owner.displayName?.trim() || owner.email || 'Гость';
+              return {
+                testHistory: [...(Array.isArray(profile.testHistory) ? profile.testHistory : []).filter(r => r.id !== record.id), record]
+              };
             };
-            window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [view, testSession, isAnimating]);
-
-        const restartMistakes = async () => {
-            const wrongQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-            if (wrongQuestionsRaw.length === 0) return; 
-            const reShuffledQuestions = wrongQuestionsRaw.map(q => {
-               const newVars = shuffleArray([...q.variants]);
-               const newCorrectIdx = newVars.findIndex(v => v._isCorrectOriginal);
-               return { ...q, variants: newVars, correctIndex: newCorrectIdx };
-            });
-            const mins = parseInt(customTime) || 20; setTimeLeft(mins * 60);
-            setTestSession({ questions: reShuffledQuestions, currentIdx: 0, answers: new Array(reShuffledQuestions.length).fill(null), score: 0 });
-            setIsResultSaved(false); setView('test');
-        };
-
-        const saveResult = async (name) => {
-            if (!name.trim()) return alert('Введите имя!');
-            const scoreData = { student: name, percent: Math.round((testSession.score / testSession.questions.length) * 100), score: testSession.score, total: testSession.questions.length, topic: currentSet };
-            
-            const failedQuestionsRaw = testSession.questions.filter((q, i) => testSession.answers[i] !== q.correctIndex);
-            const failedQuestions = failedQuestionsRaw.map(q => {
-                const originalIndex = testSession.questions.indexOf(q);
-                const userAnsIdx = testSession.answers[originalIndex];
-                return {
-                    question: q.question.replace(/<[^>]+>/g, ''),
-                    userAnsText: userAnsIdx !== null && q.variants[userAnsIdx] ? q.variants[userAnsIdx].text : "Пропустил",
-                    correctAnsText: q.variants[q.correctIndex].text
-                };
-            });
-
-            if (typeof sendTestResultToDiscord === 'function') {
-                sendTestResultToDiscord(scoreData, failedQuestions, user ? user.email : "Неизвестно", fp);
+            if (typeof window.db.runTransaction === 'function') await window.db.runTransaction(async tx => {
+              const doc = await tx.get(ref);
+              tx.set(ref, mergeProfile(doc), {
+                merge: true
+              });
+            });else {
+              const doc = await ref.get();
+              await ref.set(mergeProfile(doc), {
+                merge: true
+              });
             }
-            
-            const newRecord = { id: Date.now(), date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), ...scoreData };
-            
+            job.cloud = true;
+          } catch (e) {
+            issues.push('Не удалось синхронизировать статистику с аккаунтом.');
+          }
+        } else if (owner?.uid && !ref) issues.push('Подключение к статистике аккаунта недоступно.');
+        if (alive.current) setStudentName(record.student);
+        // Локальная история и состояние родителя сохраняют исходный формат статистики.
+        let local = [];
+        try {
+          local = JSON.parse(localStorage.getItem('test_history_v1') || '[]');
+        } catch (e) {}
+        const merged = new Map();
+        for (const row of [...(Array.isArray(local) ? local : []), ...(Array.isArray(history) ? history : []), record]) merged.set(row.id, row);
+        try {
+          localStorage.setItem('test_history_v1', JSON.stringify([...merged.values()]));
+          job.local = true;
+        } catch (e) {
+          if (!job.cloud) issues.push('Браузер не разрешил сохранить историю.');
+        }
+        setHistory?.(prev => [...(Array.isArray(prev) ? prev : []).filter(r => r.id !== record.id), record]);
+        savedRef.current = job.local || job.cloud;
+        if (alive.current) setIsResultSaved(savedRef.current);
+        if (!job.discord) {
+          if (typeof sendTestResultToDiscord === 'function') {
+            const failed = job.questions.flatMap((q, i) => job.answers[i] === q.correctIndex ? [] : [{
+              question: q.question.replace(/<[^>]+>/g, ''),
+              userAnsText: q.variants[job.answers[i]]?.text || 'Пропустил',
+              correctAnsText: q.variants[q.correctIndex]?.text || ''
+            }]);
             try {
-                if (user && window.db) {
-                    const userDoc = await window.db.collection('users').doc(user.uid).get();
-                    const currentHistory = userDoc.exists ? (userDoc.data().testHistory || []) : [];
-                    const updatedHistory = [...currentHistory, newRecord];
-                    await window.db.collection('users').doc(user.uid).set({ testHistory: updatedHistory }, { merge: true });
-                }
+              const response = await sendTestResultToDiscord(record, failed, owner?.email || 'Неизвестно', fp);
+              if (response === false || response?.ok === false) throw Error('Discord');
+              job.discord = true;
             } catch (e) {
-                console.error("Ошибка сохранения в Firebase", e);
+              issues.push('Не удалось отправить результат в Discord.');
             }
-            
-            const newHistory = [...history, newRecord]; 
-            setHistory(newHistory); 
-            localStorage.setItem('test_history_v1', JSON.stringify(newHistory)); 
-            setIsResultSaved(true);
-        };
-
-        const handlePrint = () => {
-            const area = document.getElementById('printArea');
-            let html = `<div class="print-header"><h1>ТЕСТ: ${currentSet}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
-            const printTests = tests.map(t => ({ ...t, variants: shuffleArray([...t.variants]) }));
-            printTests.forEach((t, i) => {
-              html += `<div class="print-q"><h4>${i+1}. ${t.question}</h4>`; if (t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
-              t.variants.forEach(v => { html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`; }); html += `</div>`;
-            });
-            area.innerHTML = html; 
-            if (window.MathJax) { MathJax.typesetPromise([area]).then(() => { setTimeout(() => { window.print(); }, 800); }); } else { window.print(); }
-        };
-
-        const resultPercent = testSession.questions.length > 0 ? Math.round((testSession.score / testSession.questions.length) * 100) : 0;
-        const circleRadius = 80;
-        const circleCircumference = 2 * Math.PI * circleRadius;
-        const circleStrokeDashoffset = circleCircumference - (resultPercent / 100) * circleCircumference;
-        const totalTestTime = (parseInt(customTime) || 20) * 60;
-        const timePercent = totalTestTime > 0 ? Math.max(0, Math.min(1, timeLeft / totalTestTime)) : 1;
-        const timerRadius = 18;
-        const timerCircumference = 2 * Math.PI * timerRadius;
-        const timerDashoffset = timerCircumference * (1 - timePercent);
-        const timerStateClass = timePercent <= 0.1 ? 'danger' : (timePercent <= 0.3 ? 'warning' : '');
-
-        return (
-            <AnimatePresence mode="wait">
-                {view === 'menu' && (
-                    <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{width:'100%', maxWidth:'800px', paddingTop: '40px'}}>
-                        
-                        <AnimatedHeader />
-                        
-                        <style dangerouslySetInnerHTML={{__html: `
+          } else issues.push('Функция отправки в Discord не подключена.');
+        }
+        if (alive.current) {
+          setSyncMessage(job.cloud ? 'Результат сохранён в статистике аккаунта.' : job.local ? 'Результат сохранён в истории этого браузера.' : 'Сохранение не завершено.');
+          setSaveError(issues.join(' '));
+        }
+      } finally {
+        savingRef.current = false;
+        if (alive.current) setSaving(false);
+      }
+    };
+    const handlePrint = () => {
+      const area = document.getElementById('printArea');
+      if (!area) {
+        setNotice({
+          error: true,
+          text: 'Не найдена область печати printArea.'
+        });
+        return;
+      }
+      let html = `<div class="print-header"><h1>ТЕСТ: ${cleanHTML(currentSet)}</h1><div style="display:flex;justify-content:space-between"><div>ФИО: <div class="print-input"></div></div><div>Оценка: <div class="print-input"></div></div></div></div>`;
+      const printTests = normalizeTests(tests).map(t => ({
+        ...t,
+        variants: shuffleArray([...t.variants])
+      }));
+      printTests.forEach((t, i) => {
+        html += `<div class="print-q"><h4>${i + 1}. ${t.question}</h4>`;
+        if (t.questionImg) html += `<img src="${t.questionImg}" style="max-width:200px;display:block;">`;
+        t.variants.forEach(v => {
+          html += `<div class="print-var">${v.text} ${v.img ? '(см. рис)' : ''}</div>`;
+        });
+        html += `</div>`;
+      });
+      area.innerHTML = html;
+      if (window.MathJax) {
+        MathJax.typesetPromise([area]).then(() => {
+          window.print();
+        });
+      } else {
+        window.print();
+      }
+    };
+    const resultPercent = testSession.questions.length > 0 ? Math.round(testSession.score / testSession.questions.length * 100) : 0;
+    const circleRadius = 80;
+    const circleCircumference = 2 * Math.PI * circleRadius;
+    const circleStrokeDashoffset = circleCircumference - resultPercent / 100 * circleCircumference;
+    const totalTestTime = durationRef.current;
+    const timePercent = totalTestTime > 0 ? Math.max(0, Math.min(1, timeLeft / totalTestTime)) : 1;
+    const timerRadius = 18;
+    const timerCircumference = 2 * Math.PI * timerRadius;
+    const timerDashoffset = timerCircumference * (1 - timePercent);
+    const timerStateClass = timePercent <= 0.1 ? 'danger' : timePercent <= 0.3 ? 'warning' : '';
+    return /*#__PURE__*/React.createElement("section", {
+      className: "tx-tests",
+      "aria-label": "\u0422\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435"
+    }, notice && /*#__PURE__*/React.createElement("div", {
+      className: `tx-notice ${notice.error ? 'error' : ''}`,
+      role: notice.error ? 'alert' : 'status'
+    }, /*#__PURE__*/React.createElement("span", null, notice.text), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435",
+      onClick: () => setNotice(null)
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "close",
+      size: 16
+    }))), /*#__PURE__*/React.createElement(AnimatePresence, {
+      mode: "wait"
+    }, view === 'menu' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "menu",
+      initial: {
+        opacity: 0
+      },
+      animate: {
+        opacity: 1
+      },
+      exit: {
+        opacity: 0
+      },
+      className: "glass-panel tx-menu",
+      style: {
+        width: '100%'
+      }
+    }, /*#__PURE__*/React.createElement(AnimatedHeader, null), /*#__PURE__*/React.createElement("style", {
+      dangerouslySetInnerHTML: {
+        __html: `
                             .tlms-swrow-track{ position:relative; border-radius:18px; overflow:hidden; }
                             .tlms-swrow-hint{
                               position:absolute; inset:0; border-radius:18px;
@@ -836,331 +1427,586 @@ const ReviewView = ({ questions, answers, onBack }) => {
                             .tlms-add-btn.done .ic-plus { opacity:0; transform: rotate(45deg) scale(.5); }
                             .tlms-add-btn.done .ic-check { opacity:1; transform: rotate(0) scale(1); }
 
-                        `}} />
-
-                        <div style={{maxHeight:300, overflowY:'auto', margin:'0 0 10px 0', paddingRight:5}}>
-                        <AnimatePresence initial={false}>
-                            {teacherTests?.map(test => (
-                                <motion.div
-                                    key={test.id}
-                                    layout
-                                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, x: -60, height: 0, marginBottom: 0, scale: 0.97 }}
-                                    transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
-                                    style={{ overflow: 'hidden', marginBottom: 10 }}
-                                >
-                                    {pendingDelete && pendingDelete.key === test.id ? (
-                                        <div className="tlms-undo-row">
-                                            <div className="tlms-undo-left">
-                                                <div className="tlms-undo-icon">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                                </div>
-                                                <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
-                                            </div>
-                                            <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
-                                            <div className="tlms-undo-bar" key={pendingDelete.key}></div>
-                                        </div>
-                                    ) : (
-                                        <SwipeableRow 
-                                            rowKey={test.id} 
-                                            registerClose={registerClose} 
-                                            onArm={() => closeOthers(test.id)} 
-                                            onDismiss={() => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title))}
-                                            onClick={() => openTeacherAssignedTest(test)}
-                                        >
-                                            <div className="tlms-item">
-                                                <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #38bdf8, #0ea5e9)' }}>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                                                </div>
-                                                <div style={{display: 'flex', flexDirection: 'column', flex:1}}>
-                                                    <span style={{fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Опубликован</span>
-                                                    <div className="tlms-item-label">{test.title}</div>
-                                                </div>
-                                            </div>
-                                        </SwipeableRow>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-
-                            <AnimatePresence initial={false}>
-                                {sets?.map(name => (
-                                    <motion.div
-                                        key={name}
-                                        layout
-                                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, x: -60, height: 0, marginBottom: 0, scale: 0.97 }}
-                                        transition={{ duration: 0.3, ease: [0.32,0.72,0,1] }}
-                                        style={{ overflow: 'hidden', marginBottom: 10 }}
-                                    >
-                                        {pendingDelete && pendingDelete.key === name ? (
-                                           <div className="tlms-undo-row">
-                                                <div className="tlms-undo-left">
-                                                    <div className="tlms-undo-icon">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                                    </div>
-                                                    <div className="tlms-undo-text">«<b>{pendingDelete.label}</b>» удалено</div>
-                                                </div>
-                                                <button className="tlms-undo-btn" onClick={undoDelete}>Отменить</button>
-                                                <div className="tlms-undo-bar" key={pendingDelete.key}></div>
-                                            </div>
-                                        ) : (
-                                            <SwipeableRow 
-                                                rowKey={name} 
-                                                registerClose={registerClose} 
-                                                onArm={() => closeOthers(name)} 
-                                                onDismiss={() => requestDelete(name, name, () => deleteSet(name))}
-                                                onClick={() => openSet(name)}
-                                            >
-                                                <div className="tlms-item">
-                                                    <div className="tlms-icon-box" style={{ background: 'linear-gradient(150deg, #a78bfa, #7c3aed)' }}>
-                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-                                                    </div>
-                                                    <div className="tlms-item-label">{name}</div>
-                                                </div>
-                                            </SwipeableRow>
-                                        )}
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-
-                        <div className={`tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`}>
-                            <input 
-                                className="tlms-add-input" 
-                                placeholder="Новый тест" 
-                                value={addVal}
-                                onChange={e => setAddVal(e.target.value)}
-                                onFocus={() => setAddFocused(true)}
-                                onBlur={() => setAddFocused(false)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAddNewSet(); }}
-                                maxLength={48}
-                                autoComplete="off"
-                            />
-                            <button 
-                                className={`tlms-add-btn ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`}
-                                onClick={handleAddNewSet}
-                            >
-                                <svg className="ic-plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/></svg>
-                                <svg className="ic-check" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </button>
-                        </div>
-                        
-                        <div style={{textAlign: 'center', fontSize: 12, color: 'var(--text-sec)', opacity: 0.7}}>© 2026 Ultimate LMS Platform. All Rights Reserved.</div>
-                        
-                    </motion.div>
-                )}
-
-                {view === 'set_menu' && (
-                    <motion.div key="set" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0}} transition={{duration:0.3, ease:[0.32,0.72,0,1]}} style={{width:'100%', maxWidth:'600px'}}>
-                        <div className="tlms-layered-wrap">
-                            <div className="tlms-layered-card">
-                                <button className="tlms-back-btn" onClick={() => setView('menu')} aria-label="Назад">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="15 18 9 12 15 6" pathLength="1"></polyline>
-                                    </svg>
-                                </button>
-
-                                <h2 className="tlms-layered-title" style={{ fontSize: currentSet && currentSet.length > 18 ? '20px' : '26px', wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentSet}</h2>
-                                <div className="tlms-layered-divider"></div>
-
-                               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15, marginBottom:25, alignItems:'stretch'}}>
-                                    <Button onClick={handlePrint} className="tlms-btn2" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1eeff', color: '#5c48b0', border: 'none', padding: '16px', boxShadow: 'none'}}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                                        Печать
-                                    </Button>
-                                    <label className="tlms-btn2" style={{ background: '#f1eeff', color:'#5c48b0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '16px', padding: '16px', margin: 0, fontWeight: 600, fontSize: '15px', textAlign: 'center', transition: 'transform 0.1s', boxShadow: 'none' }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                        Импорт
-                                        <input type="file" style={{display:'none'}} accept=".json" onChange={importJSON} />
-                                    </label>
-                                </div>
-
-                                <Button onClick={startTest} style={{fontSize:18, height:60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                                    Начать тест
-                                </Button>
-                                <p style={{textAlign:'center', color:'var(--text-sec)', marginTop:15}}>Вопросов:&nbsp;<b>{tests.length}</b></p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-{view === 'timer_setup' && (
-    <motion.div key="timer" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{opacity:0, scale:0.9}} style={{width:'100%', maxWidth:420}}>
-        <div className="tlms-timer-wrap">
-            <div className="tlms-timer-card">
-                <div className="tlms-timer-head">
-                    <div className="tlms-timer-head-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    </div>
-                    <h2>Параметры теста</h2>
-                </div>
-
-                <div className="tlms-timer-field">
-                    <div className="tlms-timer-field-label">
-                        <span className="lbl-ic" style={{background:'#a855f7'}}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        </span>
-                        Время (минуты)
-                    </div>
-                    <motion.div animate={shakeTime ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeTime ? 'shake' : ''}`}>
-                        <button onClick={() => updateTime(-5)}>−</button>
-                        <input type="number" className={`val ${bumpTime ? 'bump' : ''}`} value={customTime} onChange={e => setCustomTime(e.target.value)} onBlur={() => { let v = parseInt(customTime)||20; if(v<5)v=5; if(v>180)v=180; setCustomTime(v.toString()); }} />
-                        <button onClick={() => updateTime(5)}>+</button>
-                    </motion.div>
-                </div>
-
-                <div className="tlms-timer-field">
-                    <div className="tlms-timer-field-label">
-                        <span className="lbl-ic" style={{background:'#06b6d4'}}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                        </span>
-                        Количество вопросов (макс. {Math.min(25, tests.length)})
-                    </div>
-                    <motion.div animate={shakeQ ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{duration: 0.3}} className={`tlms-timer-stepper ${shakeQ ? 'shake' : ''}`}>
-                        <button onClick={() => updateQCount(-1)}>−</button>
-                        <input type="number" className={`val ${bumpQ ? 'bump' : ''}`} value={customQCount} onChange={e => setCustomQCount(e.target.value)} onBlur={() => { let v = parseInt(customQCount)||tests.length; let maxQ = Math.min(25, tests.length); if(v<1)v=1; if(v>maxQ)v=maxQ; setCustomQCount(v.toString()); }} />
-                        <button onClick={() => updateQCount(1)}>+</button>
-                    </motion.div>
-                </div>
-
-                <button className="tlms-timer-primary" onClick={launchTestWithTimer} disabled={isStarting}>
-                    {isStarting ? (
-                        <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} style={{display:'flex', gap:'6px', justifyContent:'center'}}>
-                            <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                            <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                            <span style={{width:'6px',height:'6px',background:'#fff',borderRadius:'50%'}}></span>
-                        </motion.div>
-                    ) : (
-                        <>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            Начать
-                        </>
-                    )}
-                </button>
-                <button className="tlms-timer-secondary" onClick={handleCancelSetup} disabled={isStarting}>Отмена</button>
-            </div>
-        </div>
-    </motion.div>
-)}
-
-                {view === 'test' && (
-                    <motion.div key="test-wrapper" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="test-layout">
-                        <div className="question-column">
-                            <AnimatePresence mode="wait">
-                                <TestQuestionCard key={testSession.currentIdx} question={testSession.questions[testSession.currentIdx]} index={testSession.currentIdx} answers={testSession.answers} onAnswer={handleAnswer} />
-                            </AnimatePresence>
-                        </div>
-                        <div className="sidebar-column">
-                            <div className="sidebar-content">
-                              <div
-                                className={`sidebar-timer ${timerStateClass}`}
-                                onClick={() => setIsNavOpen(o => !o)}
-                                style={{ '--fill': `${Math.round(timePercent * 100)}%` }}
-                            >
-                                <div className="timer-fill"></div>
-                                <svg className="timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="9"/>
-                                    <polyline points="12 7 12 12 15.5 14"/>
-                                </svg>
-                                <div className="timer-text">{formatTime(timeLeft)}</div>
-                                <div className={`toggle-chevron ${isNavOpen ? 'open' : ''}`}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </div>
-                            </div>
-                            
-                            <div className={`nav-grid-wrapper ${isNavOpen ? '' : 'collapsed'}`}>
-                                <div className="nav-grid-compact">
-                                    {testSession.questions.map((_, i) => {
-                                        let c = 'var(--nav-item-bg)'; let txt = 'var(--nav-item-text)';
-                                        if (i === testSession.currentIdx) { c = '#764ba2'; txt = 'white'; }
-                                        else if (testSession.answers[i] !== null) { c = testSession.answers[i] === testSession.questions[i].correctIndex ? '#48bb78' : '#f56565'; txt = 'white'; }
-                                        const itemClass = `nav-item ${isAnimating ? 'disabled' : ''}`;
-                                        return (<div key={i} className={itemClass} style={{background:c, color:txt}} onClick={() => handleNavClick(i)}>{i+1}</div>)
-                                    })}
-                                </div>
-                            </div>
-                                <Button variant="green" onClick={finishTest} style={{marginTop:10}}>Завершить</Button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {view === 'result' && (
-                    <motion.div key="res" initial={{scale:0.95}} animate={{scale:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width:'100%', maxWidth:500}}>
-                        <h2 style={{marginBottom:25}}>{resultPercent >= 50 ? 'Отлично!' : 'Результат'}</h2>
-                        <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 30px auto' }}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="100" cy="100" r={circleRadius} fill="none" stroke="rgba(138, 143, 160, 0.4)" strokeWidth="14" />
-                                <motion.circle cx="100" cy="100" r={circleRadius} fill="none" stroke="#00f2fe" strokeWidth="14" strokeLinecap="round" strokeDasharray={circleCircumference} initial={{ strokeDashoffset: circleCircumference }} animate={{ strokeDashoffset: circleStrokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} />
-                            </svg>
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ fontSize: '48px', fontWeight: 800, margin: 0, lineHeight: '1', color: 'var(--text-main)' }}>{resultPercent}%</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-sec)', marginTop: '8px', opacity: 0.8 }}>Правильных ответов</span>
-                            </div>
-                        </div>
-                        <div style={{padding:'15px', background:'rgba(128,128,128,0.1)', borderRadius:'14px', marginBottom:'25px'}}>
-                            <p style={{fontSize:18, color:'var(--text-main)', margin:0, fontWeight:700}}>Правильно: {testSession.score} из {testSession.questions.length}</p>
-                        </div>
-                        <div style={{background:'rgba(128,128,128,0.05)', padding:25, borderRadius:20, margin:'25px 0', border:'1px solid rgba(138, 143, 160, 0.4)'}}>
-                            {!isResultSaved ? (
-                                <>
-                                    <Input id="sName" placeholder="Введите ваше имя" style={{textAlign:'center', marginTop:0, marginBottom:15}} />
-                                    <Button variant="teal" onClick={() => saveResult(document.getElementById('sName').value)}>
-    <svg className="tlms-btn-icon tlms-icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-        <polyline className="corner" points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
-    </svg>
-    Сохранить
-</Button>
-                                </>
-                            ) : (
-                                <motion.div initial={{scale:0.8}} animate={{scale:1}} style={{color:'#10b981', fontWeight:'bold', fontSize:18, padding:'15px 0'}}>✅ Результат успешно сохранен!</motion.div>
-                            )}
-                        </div>
-                        <div style={{display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center'}}>
-                            <Button variant="orange" onClick={() => setView('review')}>
-    <svg className="tlms-btn-icon tlms-icon-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <line className="dot" x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    Ошибки
-</Button>
-                            {testSession.score < testSession.questions.length && (
-    <Button variant="red" onClick={restartMistakes}>
-        <svg className="tlms-btn-icon tlms-icon-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-        </svg>
-        Повторить ошибки
-    </Button>
-)}
-                            <Button onClick={() => setView('menu')}>
-    <svg className="tlms-btn-icon tlms-icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
-    Меню
-</Button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {view === 'review' && (
-                    <motion.div key="review" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-                        <ReviewView questions={testSession.questions} answers={testSession.answers} onBack={() => setView('menu')} />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        );
-    };
-
-    Object.assign(window, { TestsLMS, TestQuestionCard, ReviewView });
+                        `
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        maxHeight: 300,
+        overflowY: 'auto',
+        margin: '0 0 10px 0',
+        paddingRight: 5
+      }
+    }, /*#__PURE__*/React.createElement(AnimatePresence, {
+      initial: false
+    }, teacherTests?.map(test => /*#__PURE__*/React.createElement(motion.div, {
+      key: test.id,
+      layout: true,
+      initial: {
+        opacity: 0,
+        y: -8,
+        scale: 0.96
+      },
+      animate: {
+        opacity: 1,
+        y: 0,
+        scale: 1
+      },
+      exit: {
+        opacity: 0,
+        x: -60,
+        height: 0,
+        marginBottom: 0,
+        scale: 0.97
+      },
+      transition: {
+        duration: 0.3,
+        ease: [0.32, 0.72, 0, 1]
+      },
+      style: {
+        overflow: 'hidden',
+        marginBottom: 10
+      }
+    }, pendingDelete && pendingDelete.key === test.id ? /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-row"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-left"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-icon"
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "14",
+      height: "14",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M3 6h18"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-text"
+    }, "\xAB", /*#__PURE__*/React.createElement("b", null, pendingDelete.label), "\xBB \u0443\u0434\u0430\u043B\u0435\u043D\u043E")), /*#__PURE__*/React.createElement("button", {
+      className: "tlms-undo-btn",
+      onClick: undoDelete
+    }, "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C"), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-bar",
+      "aria-hidden": "true",
+      key: pendingDelete.key
+    })) : /*#__PURE__*/React.createElement(SwipeableRow, {
+      rowKey: test.id,
+      registerClose: registerClose,
+      onArm: () => closeOthers(test.id),
+      onDismiss: () => requestDelete(test.id, test.title, () => removeTeacherTestStudent(test.id, test.title)),
+      onClick: () => openTeacherAssignedTest(test)
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-item"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-icon-box",
+      style: {
+        background: 'linear-gradient(150deg, #38bdf8, #0ea5e9)'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "20",
+      height: "20",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "#fff",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
+    }))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '11px',
+        fontWeight: 700,
+        color: '#38bdf8',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        marginBottom: '2px'
+      }
+    }, "\u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u043D"), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-item-label"
+    }, test.title))))))), /*#__PURE__*/React.createElement(AnimatePresence, {
+      initial: false
+    }, sets?.map(name => /*#__PURE__*/React.createElement(motion.div, {
+      key: name,
+      layout: true,
+      initial: {
+        opacity: 0,
+        y: -8,
+        scale: 0.96
+      },
+      animate: {
+        opacity: 1,
+        y: 0,
+        scale: 1
+      },
+      exit: {
+        opacity: 0,
+        x: -60,
+        height: 0,
+        marginBottom: 0,
+        scale: 0.97
+      },
+      transition: {
+        duration: 0.3,
+        ease: [0.32, 0.72, 0, 1]
+      },
+      style: {
+        overflow: 'hidden',
+        marginBottom: 10
+      }
+    }, pendingDelete && pendingDelete.key === name ? /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-row"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-left"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-icon"
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "14",
+      height: "14",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M3 6h18"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-text"
+    }, "\xAB", /*#__PURE__*/React.createElement("b", null, pendingDelete.label), "\xBB \u0443\u0434\u0430\u043B\u0435\u043D\u043E")), /*#__PURE__*/React.createElement("button", {
+      className: "tlms-undo-btn",
+      onClick: undoDelete
+    }, "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C"), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-undo-bar",
+      "aria-hidden": "true",
+      key: pendingDelete.key
+    })) : /*#__PURE__*/React.createElement(SwipeableRow, {
+      rowKey: name,
+      registerClose: registerClose,
+      onArm: () => closeOthers(name),
+      onDismiss: () => requestDelete(name, name, () => deleteSet(name)),
+      onClick: () => openSet(name)
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-item"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tlms-icon-box",
+      style: {
+        background: 'linear-gradient(150deg, #a78bfa, #7c3aed)'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "20",
+      height: "20",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "#fff",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.8A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tlms-item-label"
+    }, name))))))), /*#__PURE__*/React.createElement("div", {
+      className: `tlms-add-row ${addFocused ? 'focused' : ''} ${addShake ? 'shake' : ''}`
+    }, /*#__PURE__*/React.createElement("input", {
+      className: "tlms-add-input",
+      placeholder: "\u041D\u043E\u0432\u044B\u0439 \u0442\u0435\u0441\u0442",
+      value: addVal,
+      onChange: e => setAddVal(e.target.value),
+      onFocus: () => setAddFocused(true),
+      onBlur: () => setAddFocused(false),
+      onKeyDown: e => {
+        if (e.key === 'Enter') handleAddNewSet();
+      },
+      maxLength: 48,
+      autoComplete: "off"
+    }), /*#__PURE__*/React.createElement("button", {
+      className: `tlms-add-btn ${addVal.trim().length > 0 ? 'visible' : ''} ${addDone ? 'done' : ''}`,
+      onClick: handleAddNewSet
+    }, /*#__PURE__*/React.createElement("svg", {
+      className: "ic-plus",
+      viewBox: "0 0 24 24",
+      fill: "none"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M12 5v14M5 12h14",
+      stroke: "#fff",
+      strokeWidth: "2.4",
+      strokeLinecap: "round"
+    })), /*#__PURE__*/React.createElement("svg", {
+      className: "ic-check",
+      viewBox: "0 0 24 24",
+      fill: "none"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M5 13l4 4L19 7",
+      stroke: "#fff",
+      strokeWidth: "2.6",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    })))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: 'center',
+        fontSize: 12,
+        color: 'var(--text-sec)',
+        opacity: 0.7
+      }
+    }, "\xA9 2026 Ultimate LMS Platform. All Rights Reserved.")), view === 'set_menu' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "set",
+      initial: {
+        opacity: 0,
+        y: 12
+      },
+      animate: {
+        opacity: 1,
+        y: 0
+      },
+      exit: {
+        opacity: 0
+      },
+      className: "tx-panel tx-set"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "tx-page-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u0422\u0412\u041E\u0419 \u041D\u0410\u0411\u041E\u0420"), /*#__PURE__*/React.createElement("h2", null, currentSet), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u044C \u0432\u043E\u043F\u0440\u043E\u0441\u044B \u0438 \u0432\u044B\u0431\u0435\u0440\u0438 \u0443\u0434\u043E\u0431\u043D\u044B\u0439 \u0442\u0435\u043C\u043F."))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-set-body"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-set-visual"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "list",
+      size: 52
+    }), /*#__PURE__*/React.createElement("strong", null, tests.length), /*#__PURE__*/React.createElement("span", null, "\u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432 \u0432 \u043D\u0430\u0431\u043E\u0440\u0435")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-set-controls"
+    }, /*#__PURE__*/React.createElement("h3", null, "\u0413\u043E\u0442\u043E\u0432 \u043A \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0435 \u0437\u043D\u0430\u043D\u0438\u0439?"), /*#__PURE__*/React.createElement("p", null, "\u0412\u0440\u0435\u043C\u044F \u0438 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432 \u043C\u043E\u0436\u043D\u043E \u043D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C \u043F\u0435\u0440\u0435\u0434 \u043D\u0430\u0447\u0430\u043B\u043E\u043C."), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button primary tx-start-action tx-fx tx-fx-play",
+      onClick: startTest
+    }, "\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C \u0442\u0435\u0441\u0442", /*#__PURE__*/React.createElement(TestIcon, {
+      name: "arrow"
+    })))), /*#__PURE__*/React.createElement("footer", {
+      className: "tx-set-toolbar"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-link tx-fx tx-fx-back",
+      onClick: () => setView('menu')
+    }, React.createElement(ActionIcon, {
+      name: "back"
+    }), "\u0414\u0440\u0443\u0433\u043E\u0439 \u043D\u0430\u0431\u043E\u0440"), /*#__PURE__*/React.createElement("div", {
+      className: "tx-tools"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button tx-fx tx-fx-print",
+      onClick: handlePrint,
+      disabled: !tests.length
+    }, React.createElement(ActionIcon, {
+      name: "print"
+    }), "\u041F\u0435\u0447\u0430\u0442\u044C \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"), /*#__PURE__*/React.createElement("label", {
+      className: "tx-button tx-upload tx-fx tx-fx-upload"
+    }, React.createElement(ActionIcon, {
+      name: "upload"
+    }), "\u0418\u043C\u043F\u043E\u0440\u0442 JSON", /*#__PURE__*/React.createElement("input", {
+      type: "file",
+      accept: ".json,application/json",
+      onChange: importJSON,
+      "aria-label": "\u0418\u043C\u043F\u043E\u0440\u0442 JSON"
+    }))))), view === 'timer_setup' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "setup",
+      initial: {
+        opacity: 0,
+        y: 12
+      },
+      animate: {
+        opacity: 1,
+        y: 0
+      },
+      exit: {
+        opacity: 0
+      },
+      className: "tx-panel"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "tx-page-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u041F\u0415\u0420\u0415\u0414 \u0421\u0422\u0410\u0420\u0422\u041E\u041C"), /*#__PURE__*/React.createElement("h2", null, "\u0422\u0432\u043E\u0439 \u0442\u0435\u0441\u0442. \u0422\u0432\u043E\u0439 \u0442\u0435\u043C\u043F."), /*#__PURE__*/React.createElement("p", null, currentSet)), /*#__PURE__*/React.createElement("span", {
+      className: "tx-badge"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "spark",
+      size: 15
+    }), "\u0412\u043E\u043F\u0440\u043E\u0441\u044B \u043F\u0435\u0440\u0435\u043C\u0435\u0448\u0438\u0432\u0430\u044E\u0442\u0441\u044F")), /*#__PURE__*/React.createElement("div", {
+      className: "tx-settings tx-settings-rows"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-setting tx-setting-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-setting-icon"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "clock",
+      size: 24
+    })), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "tx-minutes"
+    }, "\u0412\u0440\u0435\u043C\u044F \u043D\u0430 \u043F\u0440\u043E\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("p", null, "\u041E\u0442 5 \u0434\u043E 180 \u043C\u0438\u043D\u0443\u0442"), /*#__PURE__*/React.createElement("div", {
+      className: `tx-stepper tx-stepper-compact ${shakeTime ? 'shake' : ''}`
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "\u0423\u043C\u0435\u043D\u044C\u0448\u0438\u0442\u044C \u0432\u0440\u0435\u043C\u044F",
+      onClick: () => updateTime(-5)
+    }, "\u2212"), /*#__PURE__*/React.createElement("input", {
+      id: "tx-minutes",
+      type: "number",
+      min: "5",
+      max: "180",
+      value: customTime,
+      onChange: e => setCustomTime(e.target.value),
+      onBlur: () => setCustomTime(String(Math.max(5, Math.min(180, parseInt(customTime) || 20))))
+    }), /*#__PURE__*/React.createElement("span", null, "\u043C\u0438\u043D"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "\u0423\u0432\u0435\u043B\u0438\u0447\u0438\u0442\u044C \u0432\u0440\u0435\u043C\u044F",
+      onClick: () => updateTime(5)
+    }, "+"))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-setting tx-setting-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-setting-icon"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "list",
+      size: 24
+    })), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "tx-count"
+    }, "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0434\u043E ", Math.min(25, tests.length), " \u0437\u0430 \u043F\u043E\u0434\u0445\u043E\u0434"), /*#__PURE__*/React.createElement("div", {
+      className: `tx-stepper tx-stepper-compact ${shakeQ ? 'shake' : ''}`
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "\u041C\u0435\u043D\u044C\u0448\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432",
+      onClick: () => updateQCount(-1)
+    }, "\u2212"), /*#__PURE__*/React.createElement("input", {
+      id: "tx-count",
+      type: "number",
+      min: "1",
+      max: Math.min(25, tests.length),
+      value: customQCount,
+      onChange: e => setCustomQCount(e.target.value),
+      onBlur: () => setCustomQCount(String(Math.max(1, Math.min(25, tests.length, parseInt(customQCount) || 1))))
+    }), /*#__PURE__*/React.createElement("span", null, "\u0448\u0442"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "\u0411\u043E\u043B\u044C\u0448\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432",
+      onClick: () => updateQCount(1)
+    }, "+")))), /*#__PURE__*/React.createElement("footer", {
+      className: "tx-panel-footer"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-link tx-fx tx-fx-close",
+      onClick: handleCancelSetup
+    }, React.createElement(ActionIcon, {
+      name: "close"
+    }), "\u041E\u0442\u043C\u0435\u043D\u0430"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button primary tx-fx tx-fx-play",
+      disabled: isStarting || !tests.length,
+      onClick: launchTestWithTimer
+    }, "\u041D\u0430\u0447\u0430\u0442\u044C \u0442\u0435\u0441\u0442", /*#__PURE__*/React.createElement(TestIcon, {
+      name: "arrow"
+    })))), view === 'test' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "test",
+      initial: {
+        opacity: 0
+      },
+      animate: {
+        opacity: 1
+      },
+      exit: {
+        opacity: 0
+      },
+      className: "tx-running"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "tx-test-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u041F\u0420\u041E\u0412\u0415\u0420\u041A\u0410 \u0417\u041D\u0410\u041D\u0418\u0419"), /*#__PURE__*/React.createElement("h2", null, currentSet)), /*#__PURE__*/React.createElement("span", {
+      className: "tx-counter"
+    }, testSession.currentIdx + 1, /*#__PURE__*/React.createElement("small", null, " / ", testSession.questions.length))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-test-layout"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-main"
+    }, /*#__PURE__*/React.createElement(TestQuestionCard, {
+      key: testSession.currentIdx,
+      question: testSession.questions[testSession.currentIdx],
+      index: testSession.currentIdx,
+      answers: testSession.answers,
+      locked: isAnimating,
+      leaving: questionLeaving,
+      onAnswer: handleAnswer
+    })), /*#__PURE__*/React.createElement("aside", {
+      className: "tx-sidebar"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: `tx-time ${timerStateClass}`
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "clock",
+      size: 19
+    }), "\u041E\u0441\u0442\u0430\u043B\u043E\u0441\u044C \u0432\u0440\u0435\u043C\u0435\u043D\u0438"), /*#__PURE__*/React.createElement("strong", {
+      role: "timer",
+      "aria-label": "\u041E\u0441\u0442\u0430\u0432\u0448\u0435\u0435\u0441\u044F \u0432\u0440\u0435\u043C\u044F"
+    }, formatTime(timeLeft)), /*#__PURE__*/React.createElement("div", {
+      className: "tx-time-bar"
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: `${timePercent * 100}%`
+      }
+    }))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-nav-toggle",
+      "aria-expanded": isNavOpen,
+      onClick: () => setIsNavOpen(v => !v)
+    }, "\u041A\u0430\u0440\u0442\u0430 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432", /*#__PURE__*/React.createElement("span", null, isNavOpen ? '−' : '+')), isNavOpen && /*#__PURE__*/React.createElement("div", {
+      className: "tx-map"
+    }, testSession.questions.map((q, i) => /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: i,
+      "aria-label": `Вопрос ${i + 1}${testSession.answers[i] == null ? ', без ответа' : testSession.answers[i] === q.correctIndex ? ', верно' : ', ошибка'}`,
+      "aria-current": i === testSession.currentIdx ? 'step' : undefined,
+      disabled: isAnimating,
+      className: `${testSession.answers[i] == null ? '' : testSession.answers[i] === q.correctIndex ? 'correct' : 'wrong'}`,
+      onClick: () => handleNavClick(i)
+    }, i + 1))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-sidebar-progress"
+    }, /*#__PURE__*/React.createElement("span", null, "\u041E\u0442\u0432\u0435\u0442\u043E\u0432 ", /*#__PURE__*/React.createElement("b", null, testSession.answers.filter(a => a !== null).length, " / ", testSession.questions.length)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("i", {
+      style: {
+        width: `${testSession.answers.filter(a => a !== null).length / Math.max(1, testSession.questions.length) * 100}%`
+      }
+    }))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button primary",
+      onClick: requestFinish
+    }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0442\u0435\u0441\u0442"), confirmFinish && /*#__PURE__*/React.createElement(FinishConfirm, {
+      remaining: testSession.answers.filter(a => a === null).length,
+      onContinue: () => setConfirmFinish(false),
+      onFinish: finishTest
+    })))), view === 'result' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "result",
+      initial: {
+        opacity: 0,
+        y: 15
+      },
+      animate: {
+        opacity: 1,
+        y: 0
+      },
+      exit: {
+        opacity: 0
+      },
+      className: "tx-panel tx-result"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "tx-page-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u041F\u041E\u0414\u0425\u041E\u0414 \u0417\u0410\u0412\u0415\u0420\u0428\u0401\u041D"), /*#__PURE__*/React.createElement("h2", null, resultPercent >= 80 ? 'Отличная работа!' : 'Твой результат'), /*#__PURE__*/React.createElement("p", null, currentSet)), /*#__PURE__*/React.createElement("span", {
+      className: "tx-result-check"
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "check",
+      size: 25
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-result-grid"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-result-score"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-ring"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 200 200",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "100",
+      cy: "100",
+      r: "80",
+      className: "tx-ring-track"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "100",
+      cy: "100",
+      r: "80",
+      className: "tx-ring-value",
+      strokeDasharray: circleCircumference,
+      strokeDashoffset: circleStrokeDashoffset,
+      style: {
+        '--ring-length': circleCircumference,
+        '--ring-end': circleStrokeDashoffset
+      }
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, resultPercent, "%"), /*#__PURE__*/React.createElement("span", null, "\u041F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u044B\u0445 \u043E\u0442\u0432\u0435\u0442\u043E\u0432"))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-result-metrics"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, testSession.score), /*#__PURE__*/React.createElement("span", null, "\u0412\u0435\u0440\u043D\u043E")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, testSession.answers.filter((a, i) => a !== null && a !== testSession.questions[i].correctIndex).length), /*#__PURE__*/React.createElement("span", null, "\u041E\u0448\u0438\u0431\u043A\u0438")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, testSession.answers.filter(a => a === null).length), /*#__PURE__*/React.createElement("span", null, "\u041F\u0440\u043E\u043F\u0443\u0441\u043A\u0438")))), /*#__PURE__*/React.createElement("div", {
+      className: "tx-result-next"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "tx-eyebrow"
+    }, "\u0421\u041B\u0415\u0414\u0423\u042E\u0429\u0418\u0419 \u0428\u0410\u0413"), /*#__PURE__*/React.createElement("h3", null, testSession.score === testSession.questions.length ? 'Так держать!' : 'Закрепим результат?'), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u0441\u043C\u043E\u0442\u0440\u0438 \u0440\u0430\u0437\u0431\u043E\u0440 \u043E\u0442\u0432\u0435\u0442\u043E\u0432 \u0438\u043B\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437 \u043F\u0440\u043E\u0439\u0434\u0438 \u0432\u043E\u043F\u0440\u043E\u0441\u044B, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0432\u044B\u0437\u0432\u0430\u043B\u0438 \u0442\u0440\u0443\u0434\u043D\u043E\u0441\u0442\u0438."), /*#__PURE__*/React.createElement("div", {
+      className: "tx-result-action-stack"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button primary tx-fx tx-fx-review",
+      onClick: () => setView('review')
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "list"
+    }), "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C \u043E\u0442\u0432\u0435\u0442\u044B"), testSession.score < testSession.questions.length && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button tx-fx tx-fx-repeat",
+      onClick: restartMistakes,
+      disabled: saving
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: "repeat"
+    }), "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u043E\u0448\u0438\u0431\u043A\u0438")))), /*#__PURE__*/React.createElement("footer", {
+      className: "tx-result-bottom"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx-autosave",
+      role: "status"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: saving ? 'tx-save-spinner' : ''
+    }, /*#__PURE__*/React.createElement(TestIcon, {
+      name: isResultSaved && !saving ? 'check' : 'save',
+      size: 20
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, saving ? 'Сохраняем автоматически…' : isResultSaved ? 'Прогресс сохранён' : 'Не удалось сохранить'), /*#__PURE__*/React.createElement("p", null, studentName && /*#__PURE__*/React.createElement("span", null, studentName, " \xB7 "), syncMessage), saveError && /*#__PURE__*/React.createElement("p", {
+      className: "tx-save-error"
+    }, saveError), saveError && !saving && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-link",
+      onClick: () => saveResult()
+    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u044E"))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "tx-button tx-fx tx-fx-back",
+      onClick: () => setView('menu'),
+      disabled: saving
+    }, "\u041A \u043D\u0430\u0431\u043E\u0440\u0430\u043C", /*#__PURE__*/React.createElement(TestIcon, {
+      name: "arrow",
+      size: 18
+    })))), view === 'review' && /*#__PURE__*/React.createElement(motion.div, {
+      key: "review",
+      initial: {
+        opacity: 0
+      },
+      animate: {
+        opacity: 1
+      },
+      exit: {
+        opacity: 0
+      }
+    }, /*#__PURE__*/React.createElement(ReviewView, {
+      questions: testSession.questions,
+      answers: testSession.answers,
+      onBack: () => setView('result')
+    }))));
+  };
+  Object.assign(window, {
+    TestsLMS,
+    TestQuestionCard,
+    ReviewView
+  });
 })();
