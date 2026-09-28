@@ -977,7 +977,7 @@
         error: true,
         text: 'Сначала импортируй вопросы в этот набор.'
       });
-      setCustomQCount(Math.min(25, tests.length).toString());
+      setCustomQCount(tests.length.toString());
       setCustomTime('20');
       setView('timer_setup');
     };
@@ -996,7 +996,7 @@
     const updateQCount = delta => {
       let val = parseInt(customQCount) || tests.length;
       val += delta;
-      const maxQ = Math.min(25, tests.length);
+      const maxQ = tests.length;
       if (val < 1 || val > maxQ) {
         setShakeQ(true);
         setTimeout(() => setShakeQ(false), 400);
@@ -1008,7 +1008,7 @@
     };
     const handleCancelSetup = () => {
       setCustomTime('20');
-      setCustomQCount(Math.min(25, tests.length).toString());
+      setCustomQCount(tests.length.toString());
       setView('set_menu');
     };
     const launchTestWithTimer = () => {
@@ -1017,7 +1017,7 @@
       try {
         const valid = normalizeTests(tests),
           mins = Math.max(5, Math.min(180, parseInt(customTime) || 20)),
-          count = Math.max(1, Math.min(25, valid.length, parseInt(customQCount) || 1));
+          count = Math.max(1, Math.min(valid.length, parseInt(customQCount) || 1));
         const qs = shuffled(valid).slice(0, count).map(shuffledQuestion);
         beginSession(qs, mins);
       } catch (e) {
@@ -1786,7 +1786,7 @@
       size: 24
     })), /*#__PURE__*/React.createElement("label", {
       htmlFor: "tx-count"
-    }, "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0434\u043E ", Math.min(25, tests.length), " \u0437\u0430 \u043F\u043E\u0434\u0445\u043E\u0434"), /*#__PURE__*/React.createElement("div", {
+    }, "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0434\u043E ", tests.length, " \u0437\u0430 \u043F\u043E\u0434\u0445\u043E\u0434"), /*#__PURE__*/React.createElement("div", {
       className: `tx-stepper tx-stepper-compact ${shakeQ ? 'shake' : ''}`
     }, /*#__PURE__*/React.createElement("button", {
       type: "button",
@@ -1796,10 +1796,10 @@
       id: "tx-count",
       type: "number",
       min: "1",
-      max: Math.min(25, tests.length),
+      max: tests.length,
       value: customQCount,
       onChange: e => setCustomQCount(e.target.value),
-      onBlur: () => setCustomQCount(String(Math.max(1, Math.min(25, tests.length, parseInt(customQCount) || 1))))
+      onBlur: () => setCustomQCount(String(Math.max(1, Math.min(tests.length, parseInt(customQCount) || 1))))
     }), /*#__PURE__*/React.createElement("span", null, "\u0448\u0442"), /*#__PURE__*/React.createElement("button", {
       type: "button",
       "aria-label": "\u0411\u043E\u043B\u044C\u0448\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432",
