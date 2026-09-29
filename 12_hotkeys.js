@@ -399,7 +399,7 @@
       next: 'Следующее',
       finish: 'К результатам',
       correct: 'Верно! Сочетание засчитано.',
-      wrong: 'Пока не совпало. Попробуй ещё раз.',
+      wrong: 'Неверно. Переходим к следующему.',
       ready: 'Выбери сочетание на клавиатуре ниже.',
       focus: 'Нажми здесь и выполни сочетание',
       pause: 'Пауза',
@@ -811,7 +811,7 @@
       const ok = ctrl && shift === hk.shift && key === hk.key;
       const records = s.records.map((r, i) => i === s.index ? {
         ...r,
-        status: ok ? 'solved' : 'pending',
+        status: ok ? 'solved' : 'failed',
         errors: r.errors + (ok ? 0 : 1)
       } : r);
       commit({
@@ -829,6 +829,28 @@
         if (alive.current) setPressed('');
       }, 250);
     }
+    async function saveResult(s) {
+  const uid = window.auth?.currentUser?.uid;
+  if (!uid || !window.db?.runTransaction) return; // гость — не сохраняем
+  const points = s.records.filter(r => r.status === 'solved').length;
+  try {
+    const ref = window.db.collection('users').doc(uid);
+    await window.db.runTransaction(async tr => {
+      const snap = await tr.get(ref);
+      const old = (snap.exists && snap.data().hotkeyProgress) || {};
+      tr.set(ref, {
+        hotkeyProgress: {
+          ...old,
+          totalScore: (Number(old.totalScore) || 0) + points,
+          maxScore: Math.max(Number(old.maxScore) || 0, points),
+          sessionsPlayed: (Number(old.sessionsPlayed) || 0) + 1
+        }
+      }, { merge: true });
+    });
+  } catch (e) {
+    console.error('Не удалось сохранить хоткеи', e);
+  }
+}
     function advance(skip = false) {
       const s = sref.current;
       if (!s || s.paused) return;
@@ -850,8 +872,9 @@
         shift: false
       });
       if (next.index >= next.tasks.length) {
-        setPhase('result');
-      }
+  setPhase('result');
+  saveResult(next);
+}
     }
     function keyboard(e) {
       if (e.key === 'Escape') {
@@ -877,10 +900,10 @@
       return () => window.removeEventListener('keydown', keyboard);
     }, [phase, session]);
     useEffect(() => {
-      if (phase !== 'practice' || session?.paused || session?.feedback !== 'correct') return;
-      const timer = setTimeout(() => advance(), 650);
-      return () => clearTimeout(timer);
-    }, [phase, session]);
+  if (phase !== 'practice' || session?.paused || !session?.feedback) return;
+  const timer = setTimeout(() => advance(), session.feedback === 'correct' ? 650 : 1200);
+  return () => clearTimeout(timer);
+}, [phase, session]);
     async function generate() {
       if (generating || !topic.trim()) return;
       const name = topic.trim().slice(0, 100),
