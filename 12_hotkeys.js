@@ -843,7 +843,8 @@
           ...old,
           totalScore: (Number(old.totalScore) || 0) + points,
           maxScore: Math.max(Number(old.maxScore) || 0, points),
-          sessionsPlayed: (Number(old.sessionsPlayed) || 0) + 1
+          sessionsPlayed: (Number(old.sessionsPlayed) || 0) + 1,
+          history: [...(Array.isArray(old.history) ? old.history : []), { date: Date.now(), score: points, total: s.tasks.length }].slice(-100)
         }
       }, { merge: true });
     });
