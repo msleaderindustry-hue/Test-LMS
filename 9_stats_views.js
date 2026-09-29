@@ -322,7 +322,7 @@
         }}><Icon name="trash" size={15} /></button> : <span />}</div>) : <Empty title={query || filter !== 'all' ? 'Ничего не найдено' : 'Пока нет попыток'} text={query || filter !== 'all' ? 'Измени поиск или фильтр результатов.' : 'Результаты пройденных тестов появятся здесь.'} icon="tests" />}{pages > 1 && <div className="usp-pagination"><span className="usp-caption">{current + 1} / {pages}</span><div><button type="button" className="usp-btn" disabled={current === 0} onClick={() => setPage(current - 1)}>Назад</button><button type="button" className="usp-btn" disabled={current === pages - 1} onClick={() => setPage(current + 1)}>Далее</button></div></div>}</div>;
   }
   function boardMetric(user, type) {
-    return type === 'tests' ? testSummary(user.testHistory).average : type === 'excel' ? num(user.excelProgress?.xp) : type === 'typing' ? num(user.typingProgress?.maxWpm) : num(user.hotkeyProgress?.maxScore);
+    return type === 'tests' ? testSummary(user.testHistory).average : type === 'excel' ? num(user.excelProgress?.xp) : type === 'typing' ? num(user.typingProgress?.maxWpm) : num(user.hotkeyProgress?.totalScore);
   }
   function userName(user) {
     return str(user.nickname || user.displayName) || str(user.email).split('@')[0] || 'Ученик';
@@ -565,7 +565,12 @@
         display: num(hot.sessionsPlayed),
         unit: 'сессий',
         ringNote: `Следующая отметка — ${(Math.floor(num(hot.sessionsPlayed) / 10) + 1) * 10} сессий.`,
-        metrics: [{
+       metrics: [{
+          label: 'Всего очков',
+          value: num(hot.totalScore),
+          note: 'Сумма за все подходы',
+          icon: 'spark'
+        }, {
           label: 'Лучший результат',
           value: num(hot.maxScore),
           note: 'Очков за сессию',
