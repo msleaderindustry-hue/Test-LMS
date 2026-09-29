@@ -1343,3 +1343,6 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
 .tx-tests .tx-hero h1 .tx-wand-text{width:100%;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;font-size:inherit!important;line-height:inherit!important}
 @media(max-width:720px){.tx-tests .tx-hero{grid-template-columns:minmax(0,1fr) 120px}.tx-tests .tx-hero h1{font-size:22px!important}.tx-tests .tx-hero h1 .tx-wand-stage{font-size:20px!important}}
 @media(max-width:450px){.tx-tests .tx-hero{grid-template-columns:minmax(0,1fr)}.tx-tests .tx-hero h1{font-size:21px!important}.tx-tests .tx-hero h1 .tx-wand-stage{font-size:19px!important}}
+.tx-tests .tx-sidebar > .primary{
+  margin-bottom:24px;
+}
