@@ -1900,7 +1900,7 @@
     }))), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "tx-button primary",
-      onClick: requestFinish
+      onClick: onBack
     }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0442\u0435\u0441\u0442"), confirmFinish && /*#__PURE__*/React.createElement(FinishConfirm, {
       remaining: testSession.answers.filter(a => a === null).length,
       onContinue: () => setConfirmFinish(false),
