@@ -1347,12 +1347,3 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
 .tx-tests .tx-sidebar > .primary{
   margin-bottom:24px;
 }
-.tx-tests .tx-running .tx-test-heading:after{
-  left:26px;
-  right:26px;
-  height:2px;
-  border-radius:2px;
-  background:linear-gradient(90deg,transparent,#a582e9 20%,#c9b3ff 50%,#a582e9 80%,transparent);
-  background-size:100% 100%;
-  animation:none;
-}
