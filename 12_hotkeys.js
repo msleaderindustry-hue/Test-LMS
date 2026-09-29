@@ -372,6 +372,8 @@
 /* Compact success notice after generating a set. */
 .hx .hx-unified .hx-notice{padding:6px 12px;min-height:36px;height:auto;line-height:1.4;gap:8px;margin-top:12px;border-radius:10px}
 .hx .hx-unified .hx-notice .hx-link{padding:3px 0;min-height:0;height:auto;margin:0;line-height:1.4}
+.hx .hx-unified .hx-set-info{margin-top:14px}
+.hx .hx-unified form>.hx-link{display:flex;width:fit-content;margin:8px 0 0 auto;padding:4px 6px}
 `;
   const EXTRA = {
     ru: {
