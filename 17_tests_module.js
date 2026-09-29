@@ -408,44 +408,53 @@
         stage.appendChild(s);
         s.addEventListener('animationend', () => s.remove());
       }
+      // Range измеряет сами буквы, а не растянутую CSS-сцену.
+      function textLines(element) {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const origin = stage.getBoundingClientRect();
+        return Array.from(range.getClientRects()).filter(r => r.width > 0 && r.height > 0).map(r => ({left:r.left-origin.left,right:r.right-origin.left,top:r.top-origin.top,bottom:r.bottom-origin.top,width:r.width}));
+      }
       function runWandTransition() {
         const nextIndex = (index + 1) % phrases.length;
         tagNew.textContent = phrases[nextIndex];
-        const oldWidth = tagOld.getBoundingClientRect().width;
-        const newWidth = tagNew.getBoundingClientRect().width;
-        const maxW = Math.max(oldWidth, newWidth);
-        stage.style.width = maxW + 'px';
-        const pad = 10;
-        const startX = -pad;
-        // палочка идёт ровно до конца НОВОЙ фразы: длинная — дальше, короткая — ближе
-        const pathLength = newWidth + pad * 2;
-        const midY = stage.getBoundingClientRect().height / 2;
-        const duration = 700 + pathLength * 1.2;
+        const initialLines = textLines(tagNew);
+        const total = initialLines.reduce((sum,line)=>sum+line.width,0);
+        const duration = 700 + total * 1.2;
         const start = performance.now();
         let lastSparkle = 0;
         function frame(now) {
           const t = Math.min(1, (now - start) / duration);
-          wand.style.opacity = t < 0.1 ? String(t * 10) : '1';
           const eased = easeInOutCubic(t);
-          const x = startX + pathLength * eased;
-          const y = midY + Math.sin(t * Math.PI * 2.4) * 8;
+          const lines = textLines(tagNew);
+          if (!lines.length) { scheduleNext(); return; }
+          let distance = lines.reduce((sum,line)=>sum+line.width,0) * eased;
+          let line = lines[lines.length-1];
+          for (const candidate of lines) {
+            line = candidate;
+            if (distance <= candidate.width) break;
+            distance -= candidate.width;
+          }
+          const x = t === 1 ? line.right : line.left + clamp(distance,0,line.width);
+          const y = (line.top + line.bottom) / 2;
+          wand.style.opacity = String(Math.min(1,t*10));
           wand.style.transform = `translate(${x - 12}px, ${y - 12}px) rotate(${t * 220}deg)`;
-          // слева от палочки — новая фраза, справа — ещё старая
-          tagNew.style.clipPath = `inset(0 ${newWidth - clamp(x, 0, newWidth)}px 0 0)`;
-          // старая фраза стирается в своём масштабе и исчезает полностью одновременно с приходом палочки в конец новой
-          tagOld.style.clipPath = `inset(0 0 0 ${clamp((oldWidth + pad * 2) * eased - pad, 0, oldWidth)}px)`;
-          if (now - lastSparkle > 28) {
-            spawnSparkle(x + (Math.random() * 8 - 4), y + (Math.random() * 8 - 4));
+          const width = stage.clientWidth;
+          const top = Math.max(0,line.top-3), bottom = line.bottom+3;
+          tagNew.style.clipPath = `polygon(0 0, ${width}px 0, ${width}px ${top}px, ${x}px ${top}px, ${x}px ${bottom}px, 0 ${bottom}px)`;
+          tagOld.style.opacity = String(1-eased);
+          if (now - lastSparkle > 45) {
+            spawnSparkle(x,y,0.65);
             lastSparkle = now;
           }
-          if (t < 1) {
-            rafId = requestAnimationFrame(frame);
-          } else {
+          if (t < 1) rafId = requestAnimationFrame(frame);
+          else {
             index = nextIndex;
             tagOld.textContent = phrases[index];
+            tagOld.style.opacity = '1';
             tagOld.style.clipPath = 'inset(0 0 0 0)';
             tagNew.style.clipPath = 'inset(0 100% 0 0)';
-            fadeOutWand(x, y);
+            fadeOutWand(x,y);
           }
         }
         rafId = requestAnimationFrame(frame);
@@ -470,8 +479,10 @@
         rafId = requestAnimationFrame(fadeFrame);
       }
       function ambientSparkle() {
-        const rect = stage.getBoundingClientRect();
-        spawnSparkle(Math.random() * rect.width, rect.height / 2 + (Math.random() * 14 - 7), 0.55 + Math.random() * 0.4);
+        const lines = textLines(tagOld);
+        if (!lines.length) return;
+        const line = lines[Math.floor(Math.random()*lines.length)];
+        spawnSparkle(line.left+Math.random()*line.width,(line.top+line.bottom)/2,0.55+Math.random()*0.4);
       }
       let firstRun = true;
       function scheduleNext() {
