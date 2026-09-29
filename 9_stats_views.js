@@ -571,9 +571,10 @@
           note: 'Сумма за все подходы',
           icon: 'spark'
         }, {
-          label: 'Лучший результат',
-          value: num(hot.maxScore),
-          note: 'Очков за сессию',
+          label: 'Средний за подход',
+          value: hot.sessionsPlayed ? Math.round(num(hot.totalScore) / num(hot.sessionsPlayed) * 10) / 10 : 0,
+          unit: '/ 10',
+          note: 'Очков в среднем',
           icon: 'cup'
         }, {
           label: 'Всего сессий',
