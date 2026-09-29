@@ -27,6 +27,9 @@
         inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
         shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
         lightbulb: <><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></>,
+        check: <polyline points="20 6 9 17 4 12" />,
+        download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+        trash: <><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6M9 6V4h6v2" /></>,
         sparkle: <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
     };
 
@@ -98,6 +101,89 @@
             return { question, questionImg, variants, correctIndex };
         });
     }
+const SUBJECTS = [
+    { id: 'tests', label: 'Тесты', icon: 'fileText' },
+    { id: 'hotkeys', label: 'Горячие клавиши', icon: 'zap' },
+    { id: 'typing', label: 'Печать', icon: 'keyboard' },
+    { id: 'excel', label: 'Excel', icon: 'barChart' }
+];
+const KEY_LABELS = { level: 'Уровень', xp: 'Опыт (XP)', completedLessons: 'Пройдено уроков', streak: 'Серия', maxWpm: 'Лучшая скорость (WPM)', maxCombo: 'Лучшее комбо', testsCompleted: 'Завершено тренировок', totalScore: 'Всего очков', maxScore: 'Лучший результат за подход', sessionsPlayed: 'Сессий', topic: 'Тема', student: 'Ученик', date: 'Дата', percent: 'Результат, %', score: 'Очков', total: 'Заданий', id: 'ID', title: 'Название', questions: 'Вопросов', history: 'История' };
+function cellValue(v) {
+    if (v == null) return '';
+    if (typeof v === 'number') return v > 1e12 && v < 1e14 ? new Date(v).toLocaleString('ru-RU') : v;
+    if (typeof v === 'boolean') return v ? 'Да' : 'Нет';
+    if (typeof v === 'string') return v;
+    if (typeof v.toMillis === 'function') return new Date(v.toMillis()).toLocaleString('ru-RU');
+    if (Number.isFinite(v.seconds)) return new Date(v.seconds * 1000).toLocaleString('ru-RU');
+    if (Array.isArray(v)) return v.map(cellValue).join(', ');
+    try { return JSON.stringify(v); } catch { return ''; }
+}
+function tableSheet(name, items) {
+    const list = array(items).filter(x => x && typeof x === 'object');
+    if (!list.length) return { name, rows: [['Данных пока нет']] };
+    const first = ['topic', 'student', 'date', 'percent'];
+    const keys = [...new Set(list.flatMap(x => Object.keys(x)))].sort((a, b) => { const i = first.indexOf(a), j = first.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+    return { name, rows: [['№', ...keys.map(k => KEY_LABELS[k] || k)], ...list.map((x, i) => [i + 1, ...keys.map(k => cellValue(x[k]))])] };
+}
+function objectSheets(label, obj) {
+    const rows = [['Параметр', 'Значение']], extra = [];
+    Object.entries(obj && typeof obj === 'object' ? obj : {}).forEach(([k, v]) => {
+        const name = KEY_LABELS[k] || k;
+        if (Array.isArray(v) && v.length && v.every(x => x && typeof x === 'object')) { extra.push(tableSheet(`${label} · ${name}`, v)); rows.push([name, `${v.length} записей`]); }
+        else rows.push([name, cellValue(v)]);
+    });
+    if (rows.length === 1) rows.push(['Данных пока нет', '']);
+    return [{ name: label, rows }, ...extra];
+}
+function colName(i) { let s = ''; for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; }
+function buildXlsx(sheets) {
+    const xml = v => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const used = new Set();
+    const named = sheets.map(s => { const base = (s.name.replace(/[\[\]:*?\/\\]/g, ' ').trim() || 'Лист').slice(0, 31); let n = base, k = 2; while (used.has(n.toLowerCase())) { const suf = ' ' + k++; n = base.slice(0, 31 - suf.length) + suf; } used.add(n.toLowerCase()); return { ...s, name: n }; });
+    const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    const sheetXml = s => {
+        const widths = [];
+        const rowsXml = s.rows.map((row, r) => `<row r="${r + 1}">${row.map((v, c) => {
+            const ref = colName(c) + (r + 1), style = r === 0 ? 1 : 0;
+            widths[c] = Math.min(60, Math.max(widths[c] || 10, String(v ?? '').length + 2));
+            return typeof v === 'number' && Number.isFinite(v) && r > 0 ? `<c r="${ref}" s="${style}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xml(String(v ?? '').slice(0, 32767))}</t></is></c>`;
+        }).join('')}</row>`).join('');
+        return `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="${ns}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${rowsXml}</sheetData></worksheet>`;
+    };
+    const files = {
+        '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${named.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`,
+        '_rels/.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${named.map((s, i) => `<sheet name="${xml(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
+        'xl/_rels/workbook.xml.rels': `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${named.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${named.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+        'xl/styles.xml': `<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="${ns}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF7048D1"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`
+    };
+    named.forEach((s, i) => { files[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(s); });
+    const encoder = new TextEncoder(), chunks = [], directory = []; let offset = 0;
+    const crc32 = bytes => { let crc = 0xffffffff; for (const b of bytes) { crc ^= b; for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0); } return (crc ^ 0xffffffff) >>> 0; };
+    for (const [name, content] of Object.entries(files)) {
+        const filename = encoder.encode(name), data = encoder.encode(content), crc = crc32(data);
+        const local = new Uint8Array(30 + filename.length), lv = new DataView(local.buffer);
+        lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x800, true); lv.setUint16(12, 33, true); lv.setUint32(14, crc, true); lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, filename.length, true); local.set(filename, 30);
+        const central = new Uint8Array(46 + filename.length), cv = new DataView(central.buffer);
+        cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x800, true); cv.setUint16(14, 33, true); cv.setUint32(16, crc, true); cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true); cv.setUint16(28, filename.length, true); cv.setUint32(42, offset, true); central.set(filename, 46);
+        chunks.push(local, data); directory.push(central); offset += local.length + data.length;
+    }
+    const end = new Uint8Array(22), ev = new DataView(end.buffer); ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, directory.length, true); ev.setUint16(10, directory.length, true); ev.setUint32(12, directory.reduce((s, x) => s + x.length, 0), true); ev.setUint32(16, offset, true);
+    return new Blob([...chunks, ...directory, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function exportUser(user, parts) {
+    const names = SUBJECTS.filter(s => parts.includes(s.id)).map(s => s.label);
+    const sheets = [{ name: 'Сводка', rows: [['Параметр', 'Значение'], ['Ученик', nameOf(user)], ['Email', str(user.email)], ['Роль', user.role === 'admin' ? 'Администратор' : 'Студент'], ['Выгружено', new Date().toLocaleString('ru-RU')], ['Разделы', names.join(', ')]] }];
+    if (parts.includes('tests')) sheets.push(tableSheet('Тесты · история', user.testHistory), tableSheet('Тесты · назначенные', testsOf(user).map(t => ({ id: String(t.id), title: t.title, questions: array(t.data).length }))));
+    if (parts.includes('hotkeys')) sheets.push(...objectSheets('Горячие клавиши', user.hotkeyProgress));
+    if (parts.includes('typing')) sheets.push(...objectSheets('Печать', user.typingProgress));
+    if (parts.includes('excel')) sheets.push(...objectSheets('Excel', user.excelProgress));
+    const url = URL.createObjectURL(buildXlsx(sheets)), link = document.createElement('a');
+    const who = nameOf(user).split('@')[0].replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40) || 'user';
+    link.href = url; link.download = `LMS_${who}_${parts.length === SUBJECTS.length ? 'все' : parts.join('-')}.xlsx`;
+    document.body.appendChild(link);
+    try { link.click(); } finally { link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+}
     const STYLES = `
     .adm-root{--ad-bg:var(--bg-body,#111620);--ad-panel:var(--bg-panel,#191f2d);--ad-text:var(--text-main,#edf1fa);--ad-muted:var(--text-sec,#a1abc0);--ad-line:var(--glass-border,#2d3546);--ad-accent:#a89aff;--ad-soft:rgba(154,132,255,.12);--ad-green:#55cfa3;--ad-red:#f2929e;--ad-shadow:0 22px 65px #0003;color:var(--ad-text);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:left;color-scheme:dark;width:100%;min-width:0}
     html.light .adm-root,body.light .adm-root,.theme-light .adm-root,[data-theme="light"] .adm-root{--ad-bg:#fff;--ad-panel:#f6f7fb;--ad-text:#232a3b;--ad-muted:#69758a;--ad-line:#e3e7f0;--ad-accent:#6c53ce;--ad-soft:#f0ecfc;--ad-green:#157653;--ad-red:#bd3e52;--ad-shadow:0 18px 60px #34415b12;color-scheme:light}
@@ -110,6 +196,8 @@
     .adm-section-label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.adm-section-label h3{font-size:13px;font-weight:650}.adm-section-label p{font-size:11px;color:var(--ad-muted);margin-top:3px}.adm-modules{display:grid;grid-template-columns:1fr 1fr;gap:9px}.adm-module{display:flex;align-items:center;gap:10px;padding:13px 12px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);color:var(--ad-text);text-align:left;min-width:0}.adm-module:hover{background:var(--ad-panel)}.adm-module>svg{color:var(--ad-muted)}.adm-module.on>svg{color:var(--ad-accent)}.adm-module-name{flex:1;min-width:0;font-size:12px;font-weight:550}.adm-module-name small{display:block;font-size:10px;font-weight:400;color:var(--ad-muted);margin-top:2px}.adm-switch{width:29px;height:17px;border-radius:12px;background:var(--ad-line);padding:3px;flex-shrink:0;transition:background .15s}.adm-switch:before{content:'';display:block;width:11px;height:11px;border-radius:50%;background:var(--ad-bg);box-shadow:0 1px 3px #0003;transition:transform .15s}.on .adm-switch{background:var(--ad-accent)}.on .adm-switch:before{transform:translateX(12px)}.adm-setting{margin-top:18px;padding:15px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-panel)}.adm-setting .adm-module{border:0;background:transparent;padding:0;width:100%}.adm-small{color:var(--ad-muted);font-size:11px;line-height:1.6}.adm-divider{height:1px;background:var(--ad-line);margin:22px 0}.adm-action-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 0;border-bottom:1px solid var(--ad-line)}.adm-action-row:last-child{border:0}.adm-action-row strong{display:block;font-size:12px;font-weight:600}.adm-action-row p{font-size:11px;color:var(--ad-muted);margin-top:3px}.adm-action-row .adm-btn{flex-shrink:0;max-width:45%}.adm-note{padding:12px;border:1px solid var(--ad-line);border-radius:10px;font-size:11px;color:var(--ad-muted);background:var(--ad-panel);display:flex;gap:8px;align-items:flex-start;margin-top:15px}
     .adm-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.adm-stat{background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:13px;padding:16px}.adm-stat-title{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ad-muted);margin-bottom:10px}.adm-stat-title svg{color:var(--ad-accent)}.adm-stat strong{font-size:25px;font-weight:650;letter-spacing:-.7px}.adm-stat strong small{font-size:12px;font-weight:400;color:var(--ad-muted);margin-left:4px}.adm-stat p{font-size:11px;color:var(--ad-muted);margin-top:5px}.adm-test-list{display:flex;flex-direction:column;gap:9px;margin-top:16px}.adm-test{display:flex;align-items:center;gap:10px;padding:13px;border:1px solid var(--ad-line);border-radius:11px}.adm-test>svg{color:var(--ad-accent)}.adm-test-text{min-width:0;flex:1}.adm-test strong{display:block;font-size:12px;overflow-wrap:anywhere;font-weight:600}.adm-test small{color:var(--ad-muted);font-size:10px}.adm-empty{padding:40px 18px;text-align:center;color:var(--ad-muted);font-size:12px}.adm-empty svg{margin:0 auto 12px;color:var(--ad-accent)}.adm-empty strong{display:block;font-size:14px;color:var(--ad-text);margin-bottom:5px}.adm-empty .adm-btn{margin-top:14px}.adm-empty.compact{padding:23px 10px}.adm-footer{display:flex;gap:10px;justify-content:space-between;padding:13px 30px;border-top:1px solid var(--ad-line);font-size:10px;color:var(--ad-muted)}.adm-banner{margin:0 30px 20px;padding:12px 14px;border:1px solid var(--ad-line);background:var(--ad-panel);border-radius:12px;display:flex;align-items:center;gap:12px;font-size:12px}.adm-banner span{flex:1}.adm-spinner{width:13px;height:13px;border:2px solid var(--ad-line);border-top-color:var(--ad-accent);display:inline-block;border-radius:50%;animation:adm-spin .7s linear infinite}.adm-saving{font-size:10px;color:var(--ad-muted);display:flex;align-items:center;gap:5px}
     .adm-overlay{position:fixed;inset:0;background:#10172788;backdrop-filter:blur(5px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:18px}.adm-dialog{width:100%;max-width:460px;max-height:90dvh;overflow:auto;background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:20px;padding:24px;box-shadow:var(--ad-shadow);animation:adm-enter .15s ease-out}.adm-dialog h3{font-size:19px;letter-spacing:-.4px;margin:10px 0}.adm-dialog p{font-size:13px;color:var(--ad-muted);line-height:1.6}.adm-dialog>svg{color:var(--ad-accent)}.adm-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.adm-dialog label{display:block;font-size:12px;margin:16px 0 7px}.adm-upload{display:block;width:100%;padding:22px 16px;border:1px dashed var(--ad-line);border-radius:12px;background:var(--ad-panel);color:var(--ad-text);text-align:center;margin-top:14px}.adm-upload svg{margin:0 auto 8px;color:var(--ad-accent)}.adm-upload small{display:block;color:var(--ad-muted);font-size:11px;margin-top:6px}.adm-error{font-size:12px!important;color:var(--ad-red)!important;margin-top:12px!important}.adm-preview{display:flex;align-items:center;gap:8px;background:var(--ad-soft);color:var(--ad-accent);padding:10px;border-radius:9px;font-size:11px;margin-top:12px;overflow-wrap:anywhere}.adm-toasts{position:fixed;right:20px;top:20px;z-index:10005;display:flex;flex-direction:column;gap:8px;max-width:min(360px,calc(100vw - 40px))}.adm-toast{display:flex;gap:9px;align-items:center;background:var(--ad-bg);color:var(--ad-text);border:1px solid var(--ad-line);box-shadow:var(--ad-shadow);border-radius:12px;padding:12px;font-size:12px;animation:adm-enter .2s ease-out}.adm-toast>svg{color:var(--ad-green)}.adm-toast.error>svg{color:var(--ad-red)}.adm-toast span{flex:1}.adm-hidden{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden;white-space:nowrap}.adm-skeleton{height:60px;border-radius:11px;background:var(--ad-panel);margin:8px 0;animation:adm-fade 1.2s infinite}
+    .adm-subjects{display:grid;grid-template-columns:1fr 1fr;gap:9px}.adm-subject{display:flex;align-items:center;gap:10px;padding:13px 12px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);color:var(--ad-text);text-align:left;min-width:0;transition:background .15s,border-color .15s}.adm-subject:hover{background:var(--ad-panel)}.adm-subject.on{border-color:var(--ad-accent);background:var(--ad-soft)}.adm-subject>svg{color:var(--ad-muted)}.adm-subject.on>svg{color:var(--ad-accent)}.adm-subject-all{grid-column:1 / -1}.adm-check{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--ad-line);display:grid;place-items:center;flex-shrink:0;color:transparent}.adm-subject.on .adm-check{background:var(--ad-accent);border-color:var(--ad-accent);color:var(--ad-bg)}.adm-export-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+    @media(max-width:420px){.adm-subjects{grid-template-columns:1fr}}
     @keyframes adm-spin{to{transform:rotate(360deg)}}@keyframes adm-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes adm-fade{50%{opacity:.4}}
     @media(max-width:850px){.adm-workspace{grid-template-columns:280px minmax(0,1fr)}.adm-detail{padding:20px 18px}.adm-tabs{gap:12px}.adm-head{padding:22px}.adm-summary{padding:0 22px 20px;gap:9px}.adm-modules{grid-template-columns:1fr}.adm-live{display:none}}
     @media(max-width:620px){.adm-shell{border-radius:18px;max-height:92dvh}.adm-head{padding:20px 16px}.adm-head h2{font-size:21px}.adm-head p{font-size:11px}.adm-summary{grid-template-columns:1fr 1fr;padding:0 16px 18px}.adm-summary-card{padding:12px}.adm-summary-card strong{font-size:23px}.adm-workspace{grid-template-columns:1fr}.adm-directory{border-right:0;border-bottom:1px solid var(--ad-line);padding:16px}.adm-users{max-height:255px;overflow:auto;scrollbar-width:thin}.adm-detail{padding:20px 16px}.adm-modules{grid-template-columns:1fr 1fr}.adm-module{padding:11px 8px;gap:6px}.adm-module-name{font-size:11px}.adm-module>svg{width:14px}.adm-action-row{align-items:flex-start}.adm-footer{padding:13px 16px;flex-wrap:wrap}.adm-banner{margin:0 16px 16px}.adm-profile h3{font-size:17px}.adm-input{font-size:16px!important}.adm-stat{padding:12px}.adm-dialog{padding:20px}.adm-saving{font-size:9px}}
@@ -181,8 +269,17 @@
             </form>
         </Dialog>;
     }
-    function UserDetails({ user, self, busy, onAction, onModule, onHints, onImport, onRemove }) {
+    function UserDetails({ user, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport }) {
         const [tab, setTab] = useState('access');
+        const [picked, setPicked] = useState([]);
+        const toggle = id => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+        const allPicked = picked.length === SUBJECTS.length;
+        const summaries = {
+            tests: `${array(user.testHistory).length} попыток`,
+            hotkeys: `${number((user.hotkeyProgress || {}).sessionsPlayed)} сессий`,
+            typing: `${number((user.typingProgress || {}).testsCompleted)} тренировок`,
+            excel: `${number((user.excelProgress || {}).level, 1)} уровень · ${number((user.excelProgress || {}).xp)} XP`
+        };
         const tests = testsOf(user), avg = average(user);
         const excel = user.excelProgress || {}, typing = user.typingProgress || {}, hotkeys = user.hotkeyProgress || {};
         const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['account', 'shield', 'Аккаунт']];
@@ -200,9 +297,18 @@
             {tab === 'stats' && <><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid">
                 <div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div>
                 <div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div>
-                <div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.maxScore)}<small>рекорд</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p></div>
+                <div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div>
                 <div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div>
-            </div><div className="adm-divider"/><div className="adm-action-row"><div><strong>Сброс прогресса</strong><p>Удалит статистику Excel, печати, горячих клавиш и историю тестов.</p></div><Btn variant="danger" disabled={busy} onClick={() => onAction('reset')}>Сбросить</Btn></div></>}
+            </div><div className="adm-divider"/>
+<div className="adm-section-label"><div><h3>Скачать или сбросить по предметам</h3><p>Отметьте предметы и выберите действие.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div>
+<div className="adm-subjects" role="group" aria-label="Предметы">
+    <button type="button" role="checkbox" aria-checked={allPicked} disabled={busy} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все предметы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>
+    {SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}
+</div>
+<div className="adm-export-actions">
+    <Btn disabled={busy || !picked.length} onClick={() => onExport(picked)}><AdminIcon name="download" size={14}/>Скачать Excel</Btn>
+    <Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить</Btn>
+</div></>}
             {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row"><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row"><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
             </div>
         </section>;
@@ -344,11 +450,13 @@
             if (!selected) return;
             mutate(selected.id, transform, message).catch(error => toast(errorText(error), 'error'));
         }
-        function ask(kind) {
-            if (!selected) return;
-            const user = selected;
+        function ask(kind, parts = []) {
+        if (!selected) return;
+        if (kind === 'reset' && !parts.length) return;
+        const user = selected;
+        const names = SUBJECTS.filter(s => parts.includes(s.id)).map(s => s.label).join(', ');
             if (kind !== 'reset' && user.id === actor.current) { toast('Собственные права и блокировку изменить нельзя.', 'error'); return; }
-            const config = kind === 'role' ? { title: user.role === 'admin' ? 'Снять права администратора?' : 'Выдать права администратора?', message: `${nameOf(user)} ${user.role === 'admin' ? 'потеряет' : 'получит'} доступ к панели управления.`, label: user.role === 'admin' ? 'Снять права' : 'Выдать права', danger: true, value: user.role !== 'admin', expected: user.role } : kind === 'ban' ? { title: user.isBanned ? 'Снять блокировку?' : 'Заблокировать пользователя?', message: `${nameOf(user)} ${user.isBanned ? 'снова получит доступ к платформе.' : 'будет заблокирован на платформе.'}`, label: user.isBanned ? 'Разблокировать' : 'Заблокировать', danger: !user.isBanned, value: !user.isBanned, expected: !!user.isBanned } : { title: 'Сбросить статистику?', message: `Прогресс Excel, печати, горячих клавиш и история тестов для ${nameOf(user)} будут удалены без возможности восстановления. Назначенные тесты останутся.`, label: 'Сбросить статистику', danger: true };
+            const config = kind === 'role' ? { title: user.role === 'admin' ? 'Снять права администратора?' : 'Выдать права администратора?', message: `${nameOf(user)} ${user.role === 'admin' ? 'потеряет' : 'получит'} доступ к панели управления.`, label: user.role === 'admin' ? 'Снять права' : 'Выдать права', danger: true, value: user.role !== 'admin', expected: user.role } : kind === 'ban' ? { title: user.isBanned ? 'Снять блокировку?' : 'Заблокировать пользователя?', message: `${nameOf(user)} ${user.isBanned ? 'снова получит доступ к платформе.' : 'будет заблокирован на платформе.'}`, label: user.isBanned ? 'Разблокировать' : 'Заблокировать', danger: !user.isBanned, value: !user.isBanned, expected: !!user.isBanned } : { title: 'Сбросить выбранное?', message: `У ${nameOf(user)} будет удалено без возможности восстановления: ${names}. Назначенные тесты останутся.`, label: 'Сбросить', danger: true, parts };
             setDialogError(''); setConfirm({ ...config, kind, uid: user.id });
         }
         async function confirmAction() {
@@ -369,7 +477,12 @@
                         if (current.assignedTests != null && !Array.isArray(current.assignedTests)) throw problem('Список тестов в профиле имеет неверный формат.');
                         return { assignedTests: array(current.assignedTests).filter(test => test?.id !== job.testId) };
                     }
-                    return { testHistory: [], excelProgress: { level: 1, xp: 0, completedLessons: 0, streak: 0 }, typingProgress: { maxWpm: 0, maxCombo: 0, testsCompleted: 0 }, hotkeyProgress: { maxScore: 0, sessionsPlayed: 0 } };
+                    const patch = {};
+                    if (job.parts.includes('tests')) patch.testHistory = [];
+                    if (job.parts.includes('excel')) patch.excelProgress = { level: 1, xp: 0, completedLessons: 0, streak: 0 };
+                    if (job.parts.includes('typing')) patch.typingProgress = { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
+                    if (job.parts.includes('hotkeys')) patch.hotkeyProgress = { maxScore: 0, totalScore: 0, sessionsPlayed: 0, history: [] };
+                    return patch;
                 }, job.kind === 'remove' ? 'Тест удалён' : job.kind === 'reset' ? 'Статистика сброшена' : 'Изменения сохранены');
                 if (alive.current) setConfirm(null);
             } catch (error) { if (alive.current) setDialogError(errorText(error)); }
@@ -405,7 +518,7 @@
                             <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map(user => <button type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
                             {list.length > PAGE_SIZE && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}</span><Btn disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>Далее</Btn></nav>}
                         </aside>
-                        {selected ? <UserDetails key={selected.id} user={selected} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты и статистика.</Empty>}
+                        {selected ? <UserDetails key={selected.id} user={selected} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={parts => { try { exportUser(selected, parts); toast('Файл скачан'); } catch { toast('Не удалось создать файл. Попробуйте ещё раз.', 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты и статистика.</Empty>}
                     </div>}
                 </>}
                 <footer className="adm-footer"><span>Ultimate LMS</span><span>Изменения сохраняются отдельно для каждого пользователя</span></footer>
