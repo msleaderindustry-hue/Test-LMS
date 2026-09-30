@@ -1850,7 +1850,7 @@
       className: "tx-counter"
     }, testSession.currentIdx + 1, /*#__PURE__*/React.createElement("small", null, " / ", testSession.questions.length))), /*#__PURE__*/React.createElement("div", {
       className: "tx-test-layout"
-    }, /*#__PURE__*/React.createElement("div", {
+   }, /*#__PURE__*/React.createElement("div", {
       className: "tx-main"
     }, /*#__PURE__*/React.createElement(TestQuestionCard, {
       key: testSession.currentIdx,
@@ -1860,6 +1860,9 @@
       locked: isAnimating,
       leaving: questionLeaving,
       onAnswer: handleAnswer
+    }), isNavOpen && /*#__PURE__*/React.createElement("div", {
+      className: "tx-question-decor",
+      "aria-hidden": "true"
     })), /*#__PURE__*/React.createElement("aside", {
       className: "tx-sidebar"
     }, /*#__PURE__*/React.createElement("div", {
