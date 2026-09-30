@@ -1370,7 +1370,13 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
 }
 
 .tx-tests .tx-running > .tx-test-layout > .tx-sidebar {
+  position: relative !important;
+
+  /* ВАЖНО: убираем старый top: 20px */
+  top: 0 !important;
+
   align-self: stretch !important;
+  margin: 0 !important;
 
   border: 0 !important;
   border-left: 1px solid var(--tx-line) !important;
