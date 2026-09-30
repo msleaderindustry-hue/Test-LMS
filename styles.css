@@ -1347,3 +1347,41 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
 .tx-tests .tx-sidebar > .primary{
   margin-bottom:24px;
 }
+/* =========================================
+   ФИНАЛЬНЫЙ ФИКС СТЫКА ШАПКИ И САЙДБАРА
+   ========================================= */
+
+.tx-tests .tx-running > .tx-test-heading {
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.tx-tests .tx-running > .tx-test-layout {
+  margin: 0 !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+}
+
+.tx-tests .tx-running > .tx-test-layout > .tx-main,
+.tx-tests .tx-running > .tx-test-layout > .tx-sidebar {
+  margin-top: 0 !important;
+}
+
+.tx-tests .tx-running > .tx-test-layout > .tx-sidebar {
+  align-self: stretch !important;
+
+  border: 0 !important;
+  border-left: 1px solid var(--tx-line) !important;
+
+  border-radius: 0 !important;
+}
+
+/* мобильная версия */
+@media (max-width: 720px) {
+  .tx-tests .tx-running > .tx-test-layout > .tx-sidebar {
+    border-left: 0 !important;
+    border-top: 1px solid var(--tx-line) !important;
+  }
+}
