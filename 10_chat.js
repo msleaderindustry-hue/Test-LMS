@@ -145,6 +145,7 @@
         const [messages, setMessages] = useState([]);
         const [msgText, setMsgText] = useState('');
         const [isDarkTheme, setIsDarkTheme] = useState(false);
+        const [contactPolicy, setContactPolicy] = useState({ mode: 'all', allowed: [] });
         const messagesEndRef = useRef(null);
 
         // === НОВОЕ: хелперы для дат ===
@@ -177,14 +178,37 @@
             return () => observer.disconnect();
         }, []);
 
+        // Персональная политика контактов из профиля текущего пользователя.
+        // Старые аккаунты без этих полей по умолчанию продолжают видеть всех.
         useEffect(() => {
-            if(!window.db) return;
+            if (!window.db || !user?.uid) return;
+            return window.db.collection('users').doc(user.uid).onSnapshot(doc => {
+                const data = doc.exists ? doc.data() : {};
+                const mode = ['all', 'teachers', 'selected'].includes(data?.chatContactMode) ? data.chatContactMode : 'all';
+                const allowed = Array.isArray(data?.chatAllowedUsers) ? [...new Set(data.chatAllowedUsers.map(String))] : [];
+                setContactPolicy({ mode, allowed });
+            });
+        }, [user?.uid]);
+
+        useEffect(() => {
+            if(!window.db || !user?.uid) return;
             const unsub = window.db.collection('users').onSnapshot(snap => {
-                const usersList = snap.docs.map(d => ({uid: d.id, ...d.data()})).filter(u => u.uid !== user.uid);
-                setChatUsers(usersList.map(u => ({ ...u, unreadCount: 0 })));
+                const usersList = snap.docs
+                    .map(d => ({uid: d.id, ...d.data()}))
+                    .filter(u => {
+                        if (u.uid === user.uid) return false;
+                        if (contactPolicy.mode === 'teachers') return u.role === 'admin';
+                        if (contactPolicy.mode === 'selected') return contactPolicy.allowed.includes(u.uid);
+                        return true;
+                    });
+                setChatUsers(prev => usersList.map(u => ({ ...u, unreadCount: prev.find(p => p.uid === u.uid)?.unreadCount || 0 })));
             });
             return () => unsub();
-        }, [user]);
+        }, [user?.uid, contactPolicy.mode, contactPolicy.allowed.join('|')]);
+
+        useEffect(() => {
+            if (activeChat && !chatUsers.some(u => u.uid === activeChat.uid)) setActiveChat(null);
+        }, [chatUsers, activeChat]);
 
         useEffect(() => {
             if (!window.db || chatUsers.length === 0) return;
@@ -199,7 +223,7 @@
             });
             return () => unsubs.forEach(fn => fn());
             // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [chatUsers.length, user.uid]);
+        }, [chatUsers.map(u => u.uid).join('|'), user.uid]);
 
         useEffect(() => {
             if(!activeChat || !window.db) return;
@@ -222,7 +246,7 @@
         }, [activeChat, user]);
 
         const sendMessage = async () => {
-            if(!msgText.trim()) return;
+            if(!msgText.trim() || !activeChat || !chatUsers.some(u => u.uid === activeChat.uid)) return;
             const text = msgText.trim();
             setMsgText('');
             const chatId = [user.uid, activeChat.uid].sort().join('_');
@@ -268,7 +292,7 @@
                                 </div>
                                 <div style={{flex: 1}}>
                                     <h3 style={{margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--chat-text-main)'}}>Контакты</h3>
-                                    <div style={{fontSize: '12px', color: '#10b981', fontWeight: 600}}>В сети</div>
+                                    <div style={{fontSize: '12px', color: 'var(--chat-text-muted)', fontWeight: 600}}>{chatUsers.length} контактов</div>
                                 </div>
                                 <button className="tg-icon-btn" onClick={onClose} title="Закрыть">
                                     <SvgIcon name="close" size={20} />
