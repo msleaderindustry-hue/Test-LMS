@@ -1391,3 +1391,198 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
     border-top: 1px solid var(--tx-line) !important;
   }
 }
+/* =========================================================
+   ДЕКОР ПОД ВОПРОСОМ
+   Появляется только когда открыта "Карта вопросов"
+   ========================================================= */
+
+/* Левая колонка теперь умеет отдавать свободное место декору */
+.tx-tests .tx-running .tx-main {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Сам вопрос не растягиваем */
+.tx-tests .tx-running .tx-question {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+
+/* Свободное место под вариантами */
+.tx-tests .tx-question-decor {
+  position: relative;
+
+  /* занимает ТОЛЬКО свободное место,
+     которое появилось из-за высокой карты справа */
+  flex: 1 1 0;
+  min-height: 0;
+
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+
+  animation: tx-question-decor-in .45s ease-out both;
+}
+
+
+/* Основной рисунок:
+   орбиты + точки + мягкое свечение */
+.tx-tests .tx-question-decor::before {
+  content: "";
+  position: absolute;
+  inset: 10px 20px 0 20px;
+  pointer-events: none;
+
+  background:
+
+    /* большие орбиты слева снизу */
+    radial-gradient(
+      circle at 13% 115%,
+      transparent 0 78px,
+      #a88ae527 79px 80px,
+      transparent 81px 118px,
+      #a88ae51c 119px 120px,
+      transparent 121px 158px,
+      #a88ae512 159px 160px,
+      transparent 161px
+    ),
+
+    /* мягкое фиолетовое свечение */
+    radial-gradient(
+      ellipse at 18% 100%,
+      #9b78df18,
+      transparent 58%
+    ),
+
+    /* голубоватое свечение справа */
+    radial-gradient(
+      ellipse at 82% 75%,
+      #76b9cf10,
+      transparent 55%
+    ),
+
+    /* точечная сетка */
+    radial-gradient(
+      circle,
+      #a78bd527 1px,
+      transparent 1.5px
+    );
+
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    19px 19px;
+
+  /* сверху почти незаметно,
+     книзу узор становится виднее */
+  -webkit-mask-image:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0,0,0,.35) 20%,
+      #000 55%,
+      #000 100%
+    );
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0,0,0,.35) 20%,
+      #000 55%,
+      #000 100%
+    );
+
+  animation: tx-question-pattern-breathe 7s ease-in-out infinite;
+}
+
+
+/* Дополнительное большое кольцо справа */
+.tx-tests .tx-question-decor::after {
+  content: "";
+  position: absolute;
+
+  width: 220px;
+  height: 220px;
+
+  right: 5%;
+  bottom: -150px;
+
+  border-radius: 50%;
+
+  border: 1px solid #8fb8df22;
+
+  box-shadow:
+    0 0 0 28px #987bd90b,
+    0 0 0 58px #987bd907;
+
+  pointer-events: none;
+
+  animation: tx-question-orbit 8s ease-in-out infinite;
+}
+
+
+/* Появление узора вместе с картой */
+@keyframes tx-question-decor-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Очень лёгкое "дыхание" */
+@keyframes tx-question-pattern-breathe {
+  0%,
+  100% {
+    opacity: .55;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: .9;
+    transform: translateY(-3px);
+  }
+}
+
+
+/* Кольцо медленно двигается */
+@keyframes tx-question-orbit {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+
+  50% {
+    transform: translateX(-24px) scale(1.08);
+  }
+}
+
+
+/* На телефоне лишний декор не нужен */
+@media (max-width: 720px) {
+  .tx-tests .tx-question-decor {
+    display: none;
+  }
+}
+
+
+/* Если пользователь отключил анимации */
+@media (prefers-reduced-motion: reduce) {
+  .tx-tests .tx-question-decor,
+  .tx-tests .tx-question-decor::before,
+  .tx-tests .tx-question-decor::after {
+    animation: none !important;
+  }
+}
