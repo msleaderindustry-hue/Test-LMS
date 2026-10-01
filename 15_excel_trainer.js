@@ -210,935 +210,52 @@ const UI_DICT = {
    3. CSS — СТИЛИ ИНТЕРФЕЙСА (МЯГКИЙ ТЕМНЫЙ СТИЛЬ - SOFT DARK SLATE)
    ========================================================================= */
 const ET_STYLES = `
-.et-shell{
-  --bg-main: var(--bg-body, #0f172a);
-  --bg-panel: var(--bg-panel, #162032);
-  --bg-card: var(--bg-card, #1c283d);
-  --bg-elevated: var(--bg-elevated, #223049);
-  --accent-purple: #8b5cf6;
-  --accent-blue: #3b82f6;
-  --accent-cyan: #22d3ee;
-  --accent-green: #22e68a;
-  --accent-red: #ef4444;
-  --text-main: var(--text-main, #f1f5f9);
-  --text-sec: var(--text-sec, #94a3b8);
-  --border: var(--glass-border, rgba(255, 255, 255, 0.09));
-  --radius-lg: 22px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
-  background: radial-gradient(120% 120% at 50% 0%, #162033 0%, var(--bg-main) 100%);
-  color: var(--text-main);
-  border-radius: 24px;
-  padding: 28px;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  font-family: inherit;
-  position: relative;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-}
+.et-shell{--et-bg:#0b1220;--et-panel:#111a2b;--et-panel2:#162238;--et-card:#121d30;--et-elev:#1a2941;--et-text:#f3f6fb;--et-muted:#8fa0ba;--et-line:rgba(255,255,255,.085);--et-purple:#8b5cf6;--et-blue:#3b82f6;--et-cyan:#22d3ee;--et-green:#22c983;--et-yellow:#f6b93b;--et-red:#ef6472;--et-shadow:0 26px 80px rgba(0,0,0,.34);width:min(1480px,calc(100vw - 28px));margin:14px auto;padding:0;border:1px solid var(--et-line);border-radius:28px;background:linear-gradient(145deg,rgba(17,26,43,.98),rgba(8,14,26,.985));color:var(--et-text);box-shadow:var(--et-shadow);overflow:hidden;position:relative;font-family:inherit}
+.et-shell.theme-light,html.light .et-shell,body.light .et-shell,[data-theme='light'] .et-shell,.light .et-shell{--et-bg:#f4f6fb;--et-panel:#fff;--et-panel2:#f6f8fc;--et-card:#fbfcff;--et-elev:#eef2f8;--et-text:#172033;--et-muted:#6d7a91;--et-line:rgba(20,32,53,.095);--et-shadow:0 24px 70px rgba(47,55,78,.12);background:linear-gradient(145deg,#fff,#f4f6fb)}
+.et-shell *{box-sizing:border-box}.et-shell button,.et-shell input{font:inherit}.et-shell button{cursor:pointer}.et-shell button:disabled{opacity:.48;cursor:not-allowed}.et-shell :is(button,input):focus-visible{outline:2px solid var(--et-cyan);outline-offset:2px}
 
-.et-shell.theme-light,
-html.light .et-shell,
-body.light .et-shell,
-[data-theme='light'] .et-shell,
-.light .et-shell {
-  --bg-main: var(--bg-body, #f4f6fb);
-  --bg-panel: var(--bg-panel, #ffffff);
-  --bg-card: var(--bg-card, #f8fafc);
-  --bg-elevated: var(--bg-elevated, #eef1fb);
-  --text-main: var(--text-main, #0f172a);
-  --text-sec: var(--text-sec, #64748b);
-  --border: var(--glass-border, rgba(15, 23, 42, 0.08));
-  background: var(--bg-main);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
+.et-header{min-height:82px;padding:16px 20px;display:grid;grid-template-columns:minmax(230px,auto) minmax(260px,1fr) auto;align-items:center;gap:18px;border-bottom:1px solid var(--et-line);background:rgba(255,255,255,.018);position:relative;z-index:120}
+.et-header-left{display:flex;align-items:center;gap:12px;min-width:0}.et-back-btn,.et-nav-toggle{width:40px;height:40px;border:1px solid var(--et-line);border-radius:12px;background:var(--et-card);color:var(--et-muted);display:grid;place-items:center;transition:.18s}.et-back-btn:hover,.et-nav-toggle:hover{color:var(--et-text);background:var(--et-elev);transform:translateY(-1px)}
+.et-logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(135deg,var(--et-green),#0ea5e9 60%,var(--et-purple));box-shadow:0 9px 24px rgba(34,201,131,.23)}
+.et-title{margin:0;color:var(--et-text);font-size:19px;font-weight:850;letter-spacing:-.35px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.et-subtitle{margin-top:2px;color:var(--et-muted);font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.et-header-center{min-width:0}.et-header-right{display:flex;align-items:center;gap:9px}.et-nav-toggle{display:none}
+.et-gsearch{position:relative;width:100%;z-index:130}.et-gsearch input{width:100%;height:44px;padding:0 42px 0 40px;border-radius:13px;border:1px solid var(--et-line);background:var(--et-card);color:var(--et-text);font-size:13px;outline:none;transition:.18s}.et-gsearch input:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.1);background:var(--et-panel)}.et-gsearch-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--et-muted);display:flex;pointer-events:none}
+.et-gsearch-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;max-height:330px;overflow:auto;padding:7px;border:1px solid var(--et-line);border-radius:15px;background:var(--et-panel);box-shadow:0 22px 55px rgba(0,0,0,.35);z-index:999}.et-gsearch-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border-radius:10px;color:var(--et-text);font-size:12.5px;font-weight:750;cursor:pointer;transition:.15s}.et-gsearch-item:hover{background:rgba(34,211,238,.085);color:var(--et-cyan)}.et-gsearch-cat{padding:3px 7px;border-radius:6px;background:var(--et-elev);color:var(--et-muted);font-size:9.5px;font-weight:700}
+.et-langswitch{display:flex;gap:3px;padding:4px;border:1px solid var(--et-line);border-radius:12px;background:var(--et-card)}.et-lang-btn{height:32px;min-width:38px;padding:0 9px;border:0;border-radius:8px;background:transparent;color:var(--et-muted);font-size:10.5px;font-weight:850;transition:.15s}.et-lang-btn.active{background:linear-gradient(135deg,var(--et-purple),var(--et-blue));color:#fff;box-shadow:0 5px 14px rgba(99,102,241,.24)}
 
-.et-header{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 18px;
-  margin-bottom: 22px;
-  position: relative;
-  z-index: 100;
-}
-.et-header-left{display:flex;align-items:center;gap:14px;min-width:0;}
-.et-logo{width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;
-  background:linear-gradient(135deg,var(--accent-cyan) 0%,var(--accent-green) 100%);box-shadow:0 6px 18px rgba(34,211,238,.25);}
-.et-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.3px;color:var(--text-main);}
-.et-subtitle{font-size:12.5px;color:var(--text-sec);font-weight:600;margin-top:2px;}
-.et-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.et-body{display:grid;grid-template-columns:286px minmax(0,1fr);min-height:700px}.et-sidebar{border-right:1px solid var(--et-line);padding:16px;background:rgba(255,255,255,.012);display:flex;flex-direction:column;gap:13px;min-width:0;position:relative;z-index:80}
+.et-ai-card{padding:15px;border:1px solid var(--et-line);border-radius:17px;background:linear-gradient(145deg,rgba(139,92,246,.09),rgba(34,211,238,.035));position:relative;overflow:hidden}.et-ai-card:before{content:"";position:absolute;width:130px;height:130px;right:-55px;top:-65px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.25),transparent 68%);pointer-events:none}.et-ai-title{display:flex;align-items:center;gap:7px;margin-bottom:10px;color:var(--et-text);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.65px;position:relative}.et-ai-input{width:100%;height:42px;padding:0 12px;border:1px solid var(--et-line);border-radius:11px;background:var(--et-bg);color:var(--et-text);outline:none;font-size:12.5px;position:relative}.et-ai-input:focus{border-color:rgba(139,92,246,.55);box-shadow:0 0 0 3px rgba(139,92,246,.09)}.et-generate-btn{width:100%;height:42px;margin-top:9px;border:0;border-radius:11px;color:#07150f;background:linear-gradient(135deg,#4ade80,#22d3ee);font-size:12px;font-weight:900;box-shadow:0 7px 18px rgba(34,201,131,.16);transition:.18s}.et-generate-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 24px rgba(34,201,131,.24)}
+.et-cat-list{flex:1;min-height:180px;max-height:470px;overflow:auto;padding-right:3px;scrollbar-width:thin}.et-cat-list::-webkit-scrollbar,.et-gsearch-drop::-webkit-scrollbar{width:5px}.et-cat-list::-webkit-scrollbar-thumb,.et-gsearch-drop::-webkit-scrollbar-thumb{background:var(--et-line);border-radius:8px}
+.et-cat{margin-bottom:7px;border:1px solid transparent;border-radius:13px;background:transparent;overflow:hidden;transition:.15s}.et-cat:hover{border-color:var(--et-line);background:rgba(255,255,255,.018)}.et-cat-head{min-height:43px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}.et-cat-head-left{display:flex;align-items:center;gap:9px;color:var(--et-muted);font-size:10.2px;font-weight:820;text-transform:uppercase;letter-spacing:.45px;min-width:0}.et-cat-icon{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;background:var(--et-card);flex:none}.et-cat-letters{font-size:10px;font-weight:900}.et-cat-chevron{color:var(--et-muted);font-size:11px;transition:.18s}.et-cat-chevron.open{transform:rotate(180deg)}
+.et-cat-body{padding:0 8px 9px;display:flex;flex-wrap:wrap;gap:6px}.et-fn-btn{min-height:30px;padding:5px 9px;border:1px solid var(--et-line);border-radius:9px;background:var(--et-card);color:var(--et-text);display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:750;transition:.15s}.et-fn-btn:hover:not(:disabled){border-color:rgba(34,211,238,.42);transform:translateY(-1px)}.et-fn-btn.active{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--et-purple),var(--et-blue));box-shadow:0 6px 15px rgba(99,102,241,.2)}.et-fn-dot{width:5px;height:5px;border-radius:50%;flex:none}.et-fn-dot.easy{background:var(--et-green)}.et-fn-dot.medium{background:var(--et-yellow)}.et-fn-dot.hard{background:var(--et-red)}
 
-.et-gsearch{position:relative;width:260px;max-width:40vw;z-index:101;}
-.et-gsearch input{
-  width: 100%;
-  padding: 10px 14px 10px 36px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-main);
-  font-size: 13px;
-  outline: none;
-  transition: all 0.2s;
-}
-.et-gsearch input:focus{
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(34,211,238,.18);
-  background: var(--bg-panel);
-}
-.et-gsearch-icon{
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  color: var(--text-sec);
-  pointer-events: none;
-}
+.et-progress-card{padding:13px;border:1px solid var(--et-line);border-radius:16px;background:var(--et-card);position:relative;overflow:hidden}.et-progress-card:after{content:"";position:absolute;width:100px;height:100px;right:-55px;bottom:-60px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.14),transparent 70%);pointer-events:none}.et-user-profile{display:flex;align-items:center;gap:10px;margin-bottom:11px;position:relative}.et-user-avatar{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,var(--et-purple),var(--et-cyan));color:#fff;font-size:14px;font-weight:900;box-shadow:0 6px 16px rgba(139,92,246,.22)}.et-user-meta{min-width:0;flex:1}.et-user-email{color:var(--et-text);font-size:11.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.et-user-rank{margin-top:2px;display:flex;align-items:center;gap:4px;color:var(--et-cyan);font-size:9.5px;font-weight:750}.et-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.et-stat-chip{padding:7px 4px;border:1px solid var(--et-line);border-radius:9px;background:rgba(255,255,255,.018);text-align:center}.et-stat-val{color:var(--et-text);font-size:11px;font-weight:900}.et-stat-lbl{margin-top:1px;color:var(--et-muted);font-size:8.5px;font-weight:650}.et-progress-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;color:var(--et-muted);font-size:9.5px;font-weight:700}.et-progress-bar-track{height:6px;border-radius:8px;background:var(--et-elev);overflow:hidden}.et-progress-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--et-purple),var(--et-cyan));position:relative}.et-progress-bar-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:et-shimmer-bar 2.3s linear infinite}
 
-.et-gsearch-drop{
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  min-width: 270px;
-  background: #152033;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  overflow: hidden;
-  z-index: 99999;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  max-height: 290px;
-  overflow-y: auto;
-  padding: 6px;
-}
-.et-shell.theme-light .et-gsearch-drop,
-html.light .et-shell .et-gsearch-drop,
-body.light .et-shell .et-gsearch-drop,
-[data-theme='light'] .et-shell .et-gsearch-drop,
-.light .et-shell .et-gsearch-drop {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(15, 23, 42, 0.06);
-}
-.et-gsearch-drop::-webkit-scrollbar{width:5px;}
-.et-gsearch-drop::-webkit-scrollbar-track{background:transparent;}
-.et-gsearch-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.et-main{min-width:0;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 35%)}.et-lesson-stack{display:flex;flex-direction:column;gap:15px}.et-lesson-hero{padding:20px 21px;border:1px solid var(--et-line);border-radius:20px;background:linear-gradient(120deg,rgba(139,92,246,.095),rgba(34,211,238,.035) 50%,rgba(34,201,131,.035));display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;overflow:hidden}.et-lesson-hero:after{content:"";position:absolute;width:240px;height:240px;right:-110px;top:-135px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.18),transparent 70%);pointer-events:none}.et-hero-main{min-width:0;position:relative}.et-hero-kicker{display:flex;align-items:center;gap:7px;margin-bottom:6px;color:var(--et-cyan);font-size:9.5px;font-weight:850;text-transform:uppercase;letter-spacing:.8px}.et-fn-name{margin:0;color:var(--et-text);font-size:clamp(30px,3.6vw,47px);font-weight:900;letter-spacing:-1.7px;line-height:1}.et-fn-en{margin-top:7px;color:var(--et-muted);font-size:12px;font-weight:650}.et-fn-en b{color:var(--et-green);font-weight:850}.et-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.et-badge{min-height:27px;padding:5px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}.et-badge-diff-easy,.et-badge-theory{background:rgba(34,201,131,.1);color:#4ade9a}.et-badge-diff-medium{background:rgba(246,185,59,.12);color:#f6c65d}.et-badge-diff-hard{background:rgba(239,100,114,.12);color:#fb8591}.et-badge-xp{background:rgba(139,92,246,.13);color:#c8b7ff}.et-hero-metrics{display:grid;grid-template-columns:repeat(2,minmax(90px,1fr));gap:8px;min-width:220px;position:relative}.et-hero-metric{padding:10px;border:1px solid var(--et-line);border-radius:12px;background:rgba(8,14,26,.22)}.theme-light .et-hero-metric{background:rgba(255,255,255,.62)}.et-hero-metric span{display:block;color:var(--et-muted);font-size:8.5px;font-weight:750;text-transform:uppercase;letter-spacing:.45px}.et-hero-metric strong{display:block;margin-top:3px;color:var(--et-text);font-size:14px;font-weight:900}
 
-.et-gsearch-item{
-  padding: 9px 12px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-main);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  transition: all 0.15s;
-}
-.et-gsearch-item:hover{
-  background: rgba(56, 189, 248, 0.16);
-  color: var(--accent-cyan);
-}
-.et-shell.theme-light .et-gsearch-item:hover,
-html.light .et-shell .et-gsearch-item:hover,
-body.light .et-shell .et-gsearch-item:hover,
-[data-theme='light'] .et-shell .et-gsearch-item:hover,
-.light .et-shell .et-gsearch-item:hover {
-  background: #f1f5f9;
-  color: #0284c7;
-}
+.et-workspace-grid{display:grid;grid-template-columns:minmax(340px,.78fr) minmax(520px,1.22fr);gap:15px;align-items:start}.et-theory-card,.et-practice-card,.et-skeleton-card,.et-error-card{border:1px solid var(--et-line);border-radius:20px;background:var(--et-panel);box-shadow:0 10px 32px rgba(0,0,0,.07)}.et-theory-card{padding:20px;position:sticky;top:14px}.et-practice-card{padding:20px}.et-section-head,.et-practice-top,.et-theory-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.et-section-title,.et-practice-title{display:flex;align-items:center;gap:8px;color:var(--et-text);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.65px}.et-theory-top{display:none}
+.et-def-box{padding:15px;border:1px solid var(--et-line);border-radius:14px;background:var(--et-card);margin-bottom:13px}.et-box-label{display:flex;align-items:center;gap:6px;color:var(--et-muted);font-size:9.5px;font-weight:850;text-transform:uppercase;letter-spacing:.55px}.et-def-text{margin-top:8px;color:var(--et-text);font-size:13px;line-height:1.68;font-weight:520;white-space:pre-line}
+.et-syntax-box{border:1px solid rgba(34,211,238,.13);border-radius:14px;background:#08111e;overflow:hidden}.et-syntax-header{min-height:42px;padding:8px 11px;border-bottom:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.025);display:flex;align-items:center;justify-content:space-between;gap:9px}.et-syntax-header-left,.et-syntax-title-wrap,.et-terminal-dots{display:flex;align-items:center}.et-syntax-header-left{gap:9px}.et-syntax-title-wrap{gap:6px}.et-terminal-dots{gap:5px}.et-terminal-dot{width:7px;height:7px;border-radius:50%}.et-dot-red{background:#ef6472}.et-dot-yellow{background:#f6b93b}.et-dot-green{background:#22c983}.et-syntax-badge{padding:2px 5px;border-radius:5px;background:rgba(34,211,238,.1);color:#38cfee;font-size:7.5px;font-weight:850;text-transform:uppercase}.et-copy-btn{height:29px;padding:0 8px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.04);color:#8fa0ba;display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800}.et-copy-btn:hover{color:#fff;background:rgba(34,211,238,.1)}.et-copy-btn.copied{color:#4ade9a;border-color:rgba(34,201,131,.25)}.et-syntax-content{padding:11px 12px;display:flex;flex-direction:column;gap:5px;overflow-x:auto}.et-syntax-line{display:flex;align-items:flex-start;gap:10px;font-family:'Fira Code','Cascadia Code',Consolas,monospace;font-size:11.5px;line-height:1.6}.et-line-num{width:18px;flex:none;text-align:right;color:#40516c;font-size:9.5px}.et-line-code{color:#dbe6f5;white-space:pre-wrap;word-break:break-word}.tok-fn{color:#38cfee;font-weight:750}.tok-range{color:#f6c65d;font-weight:650}.tok-str{color:#4ade9a}.tok-op{color:#90a0b8}.tok-paren{color:#c3a7ff;font-weight:700}.tok-num{color:#f48ac0}
 
-.et-gsearch-cat{
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--text-sec);
-  background: rgba(255, 255, 255, 0.08);
-  padding: 3px 7px;
-  border-radius: 6px;
-}
-.et-shell.theme-light .et-gsearch-cat,
-html.light .et-shell .et-gsearch-cat,
-body.light .et-shell .et-gsearch-cat,
-[data-theme='light'] .et-shell .et-gsearch-cat,
-.light .et-shell .et-gsearch-cat {
-  background: #f1f5f9;
-  color: #64748b;
-}
+.et-task-text{margin:0 0 14px;padding:13px 14px;border-left:3px solid var(--et-green);border-radius:0 11px 11px 0;background:rgba(34,201,131,.055);color:var(--et-text);font-size:13px;font-weight:610;line-height:1.6}.et-table-wrap{margin-bottom:14px;overflow:auto;border:1px solid var(--et-line);border-radius:13px;background:var(--et-card)}.et-table{width:100%;border-collapse:separate;border-spacing:0;text-align:center;color:var(--et-text);font-size:11.5px}.et-table th,.et-table td{min-width:72px;padding:9px 8px;border-right:1px solid var(--et-line);border-bottom:1px solid var(--et-line)}.et-table th{background:var(--et-elev);color:var(--et-muted);font-weight:800}.et-table td{background:var(--et-card);transition:.12s}.et-table td:not(.et-rownum):hover{background:rgba(59,130,246,.07)}.et-table .et-corner,.et-table td.et-rownum{min-width:36px;width:36px;background:var(--et-elev);color:var(--et-muted);font-weight:800}.et-table td.et-selected{background:rgba(59,130,246,.17)!important;box-shadow:inset 0 0 0 2px var(--et-blue)}
+.et-formula-bar{position:relative;margin-top:4px}.et-formula-bar .fx{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--et-green);font-size:15px;font-weight:950;font-style:italic;pointer-events:none}.et-formula-bar input{width:100%;height:52px;padding:0 15px 0 46px;border:1px solid var(--et-line);border-radius:13px;background:var(--et-bg);color:var(--et-text);font:700 14px/1 'Fira Code',Consolas,monospace;outline:none;transition:.18s}.et-formula-bar input:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.09)}.et-formula-bar.wrong input{border-color:rgba(239,100,114,.75);box-shadow:0 0 0 3px rgba(239,100,114,.08)}.et-formula-bar.correct input{border-color:rgba(34,201,131,.75);box-shadow:0 0 0 3px rgba(34,201,131,.08)}.et-formula-status{margin:7px 2px 0;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800}.et-formula-status.ok{color:#4ade9a}.et-formula-status.bad{color:#fb8591}
+.et-hint-box{margin-top:11px;padding:13px 14px;border:1px solid rgba(246,185,59,.24);border-radius:12px;background:rgba(246,185,59,.07);color:#f5cf76;font-size:11.5px;line-height:1.6}.et-hint-box code{padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.2);color:#f6c65d;font-family:'Fira Code',monospace;font-weight:750}.et-hint-actions{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}.et-hint-link{padding:5px 8px;border:0;border-radius:7px;background:rgba(246,185,59,.1);color:#f6c65d;font-size:10px;font-weight:850}
+.et-success-card{margin-top:11px;padding:13px 14px;border:1px solid rgba(34,201,131,.25);border-radius:13px;background:linear-gradient(135deg,rgba(34,201,131,.09),rgba(34,211,238,.04));display:flex;align-items:center;gap:10px;flex-wrap:wrap}.et-success-title{margin:0;color:#4ade9a;font-size:12px;font-weight:900}.et-success-sub{color:var(--et-muted);font-size:10.5px}.et-success-sub b{color:var(--et-text)}.et-success-xp{margin-left:auto;padding:6px 9px;border-radius:8px;background:rgba(139,92,246,.11);color:#c8b7ff;font-size:10.5px;font-weight:900}.et-mastery-banner{margin-top:2px;padding:8px 10px;border:1px solid rgba(34,201,131,.22);border-radius:9px;display:flex;justify-content:space-between;gap:10px;color:#4ade9a;font-size:9.5px;font-weight:800}
+.et-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.et-action-btn{min-height:42px;padding:8px 10px;border-radius:11px;border:1px solid var(--et-line);display:flex;align-items:center;justify-content:center;gap:7px;font-size:10.5px;font-weight:850;transition:.16s}.et-action-btn:hover:not(:disabled){transform:translateY(-1px)}.et-action-secondary{background:var(--et-card);color:var(--et-text)}.et-action-warning{background:rgba(246,185,59,.08);color:#f6c65d;border-color:rgba(246,185,59,.2)}.et-action-primary{border-color:transparent;background:linear-gradient(135deg,var(--et-green),#0ea5e9);color:#04120c;box-shadow:0 7px 18px rgba(34,201,131,.15)}
 
-.et-langswitch{display:flex;gap:4px;background:rgba(0,0,0,.15);padding:5px;border-radius:14px;border:1px solid var(--border);}
-.et-shell.theme-light .et-langswitch,
-html.light .et-shell .et-langswitch,
-body.light .et-shell .et-langswitch,
-[data-theme='light'] .et-shell .et-langswitch {
-  background:rgba(15,23,42,.05);
-}
-.et-lang-btn{padding:7px 13px;border-radius:10px;border:none;background:transparent;color:var(--text-sec);font-weight:800;font-size:12px;cursor:pointer;transition:.2s;}
-.et-lang-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.4);}
+.et-skeleton-card{padding:24px;min-height:500px}.et-skel-title{display:flex;align-items:center;gap:8px;margin-bottom:18px;color:var(--et-cyan);font-size:11px;font-weight:850;text-transform:uppercase}.et-skel-line{height:13px;margin-bottom:10px;border-radius:7px;background:linear-gradient(90deg,var(--et-card) 25%,var(--et-elev) 38%,var(--et-card) 62%);background-size:400% 100%;animation:et-shimmer 1.35s ease infinite}.et-error-card{min-height:380px;padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:9px}.et-error-title{color:var(--et-text);font-size:16px;font-weight:900}.et-error-sub{color:var(--et-muted);font-size:11.5px}.et-retry-btn{margin-top:7px;padding:9px 15px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--et-purple),var(--et-blue));color:#fff;font-size:11px;font-weight:850}
+.et-toast-wrap{position:fixed;top:18px;right:18px;z-index:100000;display:flex;flex-direction:column;gap:7px}.et-toast{max-width:330px;padding:10px 12px;border:1px solid var(--et-line);border-radius:11px;background:var(--et-panel);color:var(--et-text);box-shadow:0 16px 40px rgba(0,0,0,.25);font-size:11px;font-weight:750}
 
-.et-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
+.theme-light .et-syntax-box,html.light .et-shell .et-syntax-box,body.light .et-shell .et-syntax-box{background:#f7f9fc;border-color:#dce3ed}.theme-light .et-syntax-header,html.light .et-shell .et-syntax-header,body.light .et-shell .et-syntax-header{background:#eef2f7;border-color:#dce3ed}.theme-light .et-line-code,html.light .et-shell .et-line-code,body.light .et-shell .et-line-code{color:#263248}.theme-light .et-copy-btn,html.light .et-shell .et-copy-btn,body.light .et-shell .et-copy-btn{border-color:#dce3ed;background:#fff;color:#64748b}
+.et-nav-overlay{display:none}
+.et-icon-spin{animation:et-icon-spin 1.4s linear infinite}.et-icon-pulse{animation:et-icon-pulse 1.6s ease-in-out infinite}.et-icon-bounce{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}button:hover .et-icon-bounce{transform:translateY(-2px) rotate(-8deg)}.et-icon-rotate-hover{transition:transform .35s ease}button:hover .et-icon-rotate-hover{transform:rotate(180deg)}
+@keyframes et-icon-spin{to{transform:rotate(360deg)}}@keyframes et-icon-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}@keyframes et-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}@keyframes et-shimmer-bar{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 
-/* САЙДБАР */
-.et-sidebar{flex:1 1 290px;max-width:320px;display:flex;flex-direction:column;gap:14px;}
-
-.et-ai-card{background:var(--bg-panel);border:1px solid var(--border);padding:18px;border-radius:var(--radius-lg);position:relative;overflow:hidden;}
-.et-ai-card::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;
-  background:radial-gradient(circle,rgba(139,92,246,.35),transparent 70%);pointer-events:none;}
-.et-ai-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:13px;color:var(--text-main);}
-.et-ai-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);margin-bottom:12px;font-size:13.5px;outline:none;}
-.et-ai-input:focus{border-color:var(--accent-cyan);}
-
-.et-cat-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:6px;}
-.et-cat-list::-webkit-scrollbar{width:5px;}
-.et-cat-list::-webkit-scrollbar-track{background:transparent;}
-.et-cat-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-
-.et-cat{display:flex;flex-direction:column;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px;}
-.et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;}
-.et-cat-head-left{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-sec);}
-.et-cat-icon{
-  font-size:13px;
-  display:flex;
-  align-items:center;
-  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
-}
-.et-cat-head:hover .et-cat-icon{
-  transform: scale(1.18) rotate(-6deg);
-}
-.et-cat-letters{
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:-1px;
-}
-.et-cat-chevron{transition:transform .2s;color:var(--text-sec);font-size:11px;}
-.et-cat-chevron.open{transform:rotate(180deg);}
-.et-cat-body{display:flex;flex-wrap:wrap;gap:7px;padding:2px 10px 10px;}
-
-.et-fn-btn{padding:7px 12px;border-radius:18px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);
-  font-weight:700;font-size:12px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
-.et-fn-btn:hover{border-color:var(--accent-cyan);transform:translateY(-1px);}
-.et-fn-btn.active{background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));color:#fff;border:none;box-shadow:0 4px 14px rgba(59,130,246,.4);}
-.et-fn-dot{width:6px;height:6px;border-radius:50%;flex:none;}
-.et-fn-dot.easy{background:var(--accent-green);}
-.et-fn-dot.medium{background:#fbbf24;}
-.et-fn-dot.hard{background:var(--accent-red);}
-.et-fn-btn:disabled{opacity:.45;cursor:wait;}
-
-/* =========================================================================
-   МЯГКАЯ КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ УЧЕНИКА
-   ========================================================================= */
-.et-progress-card{
-  margin-top: 14px;
-  background: linear-gradient(145deg, rgba(26, 37, 58, 0.95), rgba(16, 23, 38, 0.98));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.et-progress-card::before{
-  content: "";
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 70%);
-  pointer-events: none;
-}
-
-.et-user-profile{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.et-user-avatar{
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 18px;
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
-  flex-shrink: 0;
-  text-transform: uppercase;
-  user-select: none;
-}
-.et-user-meta{min-width:0;flex:1;}
-.et-user-email{
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.et-user-rank{
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent-cyan);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 3px;
-}
-
-/* СЕТКА СТАТИСТИКИ */
-.et-stats-grid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.et-stat-chip{
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
-  padding: 8px 6px;
-  text-align: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-.et-stat-val{
-  font-size: 13px;
-  font-weight: 900;
-  color: var(--text-main);
-}
-.et-stat-lbl{
-  font-size: 10px;
-  color: var(--text-sec);
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-.et-progress-row{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--text-sec);margin-bottom:6px;}
-.et-progress-bar-track{height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;}
-.et-shell.theme-light .et-progress-bar-track,
-html.light .et-shell .et-progress-bar-track,
-body.light .et-shell .et-progress-bar-track,
-[data-theme='light'] .et-shell .et-progress-bar-track {
-  background:rgba(15,23,42,.08);
-}
-.et-progress-bar-fill{
-  height:100%;
-  border-radius:5px;
-  background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));
-  position: relative;
-  overflow: hidden;
-}
-.et-progress-bar-fill::after{
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-  animation: et-shimmer-bar 2.4s infinite;
-}
-@keyframes et-shimmer-bar{
-  0%{ transform: translateX(-100%); }
-  100%{ transform: translateX(100%); }
-}
-
-/* Светлая тема для профиля */
-.et-shell.theme-light .et-progress-card,
-html.light .et-shell .et-progress-card,
-body.light .et-shell .et-progress-card,
-[data-theme='light'] .et-shell .et-progress-card {
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-}
-.et-shell.theme-light .et-stat-chip {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-.et-shell.theme-light .et-stat-chip:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.et-main{flex:3 1 520px;display:flex;flex-direction:column;gap:18px;min-width:0;}
-
-.et-skeleton-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;min-height:480px;}
-.et-skel-line{height:16px;border-radius:8px;margin-bottom:12px;background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-elevated) 37%,var(--bg-card) 63%);
-  background-size:400% 100%;animation:et-shimmer 1.4s ease infinite;}
-@keyframes et-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
-.et-skel-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;color:var(--accent-cyan);text-transform:uppercase;letter-spacing:.5px;margin-bottom:20px;}
-
-.et-error-card{background:var(--bg-panel);border:1px solid rgba(239,68,68,.35);border-radius:var(--radius-lg);padding:28px;text-align:center;min-height:300px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
-.et-error-icon{font-size:34px;}
-.et-error-title{font-size:17px;font-weight:800;color:var(--text-main);}
-.et-error-sub{font-size:13px;color:var(--text-sec);}
-.et-retry-btn{margin-top:8px;padding:10px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));
-  color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
-
-.et-theory-card{background:var(--bg-panel);padding:28px;border-radius:var(--radius-lg);border:1px solid var(--border);}
-.et-theory-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
-.et-fn-name{margin:0 0 4px;font-size:32px;font-weight:900;color:var(--text-main);letter-spacing:-.5px;}
-.et-fn-en{color:var(--text-sec);font-size:14px;font-weight:600;}
-.et-fn-en b{color:var(--accent-green);font-weight:800;}
-.et-badges{display:flex;gap:8px;flex-wrap:wrap;}
-.et-badge{padding:7px 14px;border-radius:11px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
-.et-badge-theory{background:rgba(34,230,138,.12);color:var(--accent-green);}
-.et-badge-diff-easy{background:rgba(34,230,138,.12);color:var(--accent-green);}
-.et-badge-diff-medium{background:rgba(251,191,36,.14);color:#fbbf24;}
-.et-badge-diff-hard{background:rgba(239,68,68,.14);color:#f87171;}
-.et-badge-xp{background:rgba(139,92,246,.16);color:#c4b5fd;}
-
-.et-def-box{
-  background: var(--bg-card);
-  padding: 20px 22px;
-  border-radius: 14px;
-  border-left: 4px solid var(--accent-green);
-  margin-bottom: 18px;
-}
-.et-box-label{
-  font-size: 11.5px;
-  color: var(--text-sec);
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: .6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.et-def-text{
-  font-size: 15px;
-  color: var(--text-main);
-  line-height: 1.68;
-  margin-top: 10px;
-  white-space: pre-line;
-}
-
-/* БЛОК СИНТАКСИСА (SOFT TERMINAL STYLE) */
-.et-syntax-box {
-  background: radial-gradient(120% 120% at 50% 0%, #152136 0%, #0e1626 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-  position: relative;
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-
-.et-syntax-box:hover {
-  border-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45), 0 0 20px rgba(34, 211, 238, 0.08);
-}
-
-.et-syntax-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.et-syntax-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.et-terminal-dots {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.et-terminal-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.et-dot-red { background: #ef4444; opacity: 0.85; }
-.et-dot-yellow { background: #f59e0b; opacity: 0.85; }
-.et-dot-green { background: #10b981; opacity: 0.85; }
-
-.et-syntax-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.et-syntax-badge {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 2px 7px;
-  border-radius: 6px;
-  text-transform: uppercase;
-}
-
-.et-copy-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
-  padding: 6px 14px;
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.et-copy-btn:hover {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-  transform: translateY(-1px);
-}
-
-.et-copy-btn.copied {
-  background: rgba(34, 230, 138, 0.16);
-  border-color: rgba(34, 230, 138, 0.45);
-  color: #22e68a;
-  box-shadow: 0 2px 12px rgba(34, 230, 138, 0.25);
-}
-
-.et-syntax-content {
-  padding: 14px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-x: auto;
-}
-
-.et-syntax-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.et-line-num {
-  user-select: none;
-  color: #475569;
-  font-size: 12px;
-  width: 20px;
-  text-align: right;
-  flex-shrink: 0;
-  padding-top: 1px;
-}
-
-.et-line-code {
-  color: #e2e8f0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.tok-fn { color: #38bdf8; font-weight: 700; }
-.tok-range { color: #fbbf24; font-weight: 600; }
-.tok-str { color: #34d399; }
-.tok-op { color: #94a3b8; }
-.tok-paren { color: #c084fc; font-weight: 600; }
-.tok-num { color: #f472b6; }
-
-.et-shell.theme-light .et-syntax-box,
-html.light .et-shell .et-syntax-box,
-body.light .et-shell .et-syntax-box,
-[data-theme='light'] .et-shell .et-syntax-box {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
-}
-.et-shell.theme-light .et-syntax-header,
-html.light .et-shell .et-syntax-header,
-body.light .et-shell .et-syntax-header,
-[data-theme='light'] .et-shell .et-syntax-header {
-  background: #f1f5f9;
-  border-bottom: 1px solid #e2e8f0;
-}
-.et-shell.theme-light .et-line-code,
-html.light .et-shell .et-line-code,
-body.light .et-shell .et-line-code,
-[data-theme='light'] .et-shell .et-line-code {
-  color: #0f172a;
-}
-.et-shell.theme-light .tok-fn { color: #0284c7; }
-.et-shell.theme-light .tok-range { color: #d97706; }
-.et-shell.theme-light .tok-str { color: #059669; }
-.et-shell.theme-light .tok-op { color: #64748b; }
-.et-shell.theme-light .tok-paren { color: #7c3aed; }
-.et-shell.theme-light .tok-num { color: #db2777; }
-.et-shell.theme-light .et-copy-btn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-}
-.et-shell.theme-light .et-copy-btn:hover {
-  background: #f0f9ff;
-  border-color: #0284c7;
-  color: #0284c7;
-}
-
-.et-practice-card{background:var(--bg-card);padding:28px;border-radius:var(--radius-lg);border:2px dashed var(--border);}
-.et-practice-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
-.et-practice-title{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent-green);text-transform:uppercase;font-weight:900;letter-spacing:1px;}
-.et-task-text{margin:0 0 22px;color:var(--text-main);font-size:16.5px;font-weight:600;line-height:1.55;}
-
-/* ТАБЛИЦА EXCEL (МЯГКИЙ ТЕМНЫЙ ФОН) */
-.et-table-wrap{
-  overflow-x: auto;
-  background: #111a2c;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  margin-bottom: 26px;
-}
-.et-table{
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-  font-size: 14.5px;
-  font-family: sans-serif;
-  color: #f1f5f9;
-}
-.et-table thead tr{
-  background: #182338;
-  border-bottom: 3px solid var(--accent-green, #22e68a);
-}
-.et-table th{
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 11px 8px;
-  font-weight: 700;
-  color: #94a3b8;
-}
-.et-table th.et-corner{
-  width: 42px;
-  background: #131d30;
-  color: #64748b;
-}
-.et-table td{
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 10px 8px;
-  color: #e2e8f0;
-  background: #111a2c;
-  cursor: default;
-  transition: background .12s;
-}
-.et-table td.et-rownum{
-  background: #131d30;
-  font-weight: 700;
-  color: #64748b;
-  cursor: default;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-}
-.et-table tr{
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-.et-table td:not(.et-rownum):hover{
-  background: rgba(59, 130, 246, 0.16);
-}
-.et-table td.et-selected{
-  background: rgba(59, 130, 246, 0.28) !important;
-  outline: 2px solid #38bdf8;
-  outline-offset: -2px;
-}
-
-.et-shell.theme-light .et-table-wrap,
-html.light .et-shell .et-table-wrap,
-body.light .et-shell .et-table-wrap,
-[data-theme='light'] .et-shell .et-table-wrap,
-.light .et-shell .et-table-wrap {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-}
-.et-shell.theme-light .et-table,
-html.light .et-shell .et-table,
-body.light .et-shell .et-table,
-[data-theme='light'] .et-shell .et-table,
-.light .et-shell .et-table {
-  color: #1e293b;
-}
-.et-shell.theme-light .et-table thead tr,
-html.light .et-shell .et-table thead tr,
-body.light .et-shell .et-table thead tr,
-[data-theme='light'] .et-shell .et-table thead tr,
-.light .et-shell .et-table thead tr {
-  background: #f8fafc;
-  border-bottom: 3px solid #10b981;
-}
-.et-shell.theme-light .et-table th,
-html.light .et-shell .et-table th,
-body.light .et-shell .et-table th,
-[data-theme='light'] .et-shell .et-table th,
-.light .et-shell .et-table th {
-  border-right: 1px solid #e2e8f0;
-  color: #334155;
-}
-.et-shell.theme-light .et-table th.et-corner,
-html.light .et-shell .et-table th.et-corner,
-body.light .et-shell .et-table th.et-corner,
-[data-theme='light'] .et-shell .et-table th.et-corner,
-.light .et-shell .et-table th.et-corner {
-  background: #f1f5f9;
-  color: #94a3b8;
-}
-.et-shell.theme-light .et-table td,
-html.light .et-shell .et-table td,
-body.light .et-shell .et-table td,
-[data-theme='light'] .et-shell .et-table td,
-.light .et-shell .et-table td {
-  border-right: 1px solid #e2e8f0;
-  color: #1e293b;
-  background: #ffffff;
-}
-.et-shell.theme-light .et-table td.et-rownum,
-html.light .et-shell .et-table td.et-rownum,
-body.light .et-shell .et-table td.et-rownum,
-[data-theme='light'] .et-shell .et-table td.et-rownum,
-.light .et-shell .et-table td.et-rownum {
-  background: #f1f5f9;
-  color: #64748b;
-  border-right: 1px solid #e2e8f0;
-}
-.et-shell.theme-light .et-table tr,
-html.light .et-shell .et-table tr,
-body.light .et-shell .et-table tr,
-[data-theme='light'] .et-shell .et-table tr,
-.light .et-shell .et-table tr {
-  border-bottom: 1px solid #e2e8f0;
-}
-.et-shell.theme-light .et-table td:not(.et-rownum):hover,
-html.light .et-shell .et-table td:not(.et-rownum):hover,
-body.light .et-shell .et-table td:not(.et-rownum):hover,
-[data-theme='light'] .et-shell .et-table td:not(.et-rownum):hover,
-.light .et-shell .et-table td:not(.et-rownum):hover {
-  background: #eef2ff;
-}
-.et-shell.theme-light .et-table td.et-selected,
-html.light .et-shell .et-table td.et-selected,
-body.light .et-shell .et-table td.et-selected,
-[data-theme='light'] .et-shell .et-table td.et-selected,
-.light .et-shell .et-table td.et-selected {
-  background: #dbeafe !important;
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-}
-
-/* СТРОКА ФОРМУЛЫ */
-.et-formula-bar{position:relative;margin-bottom:8px;}
-.et-formula-bar .fx{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:900;color:var(--accent-green);font-size:18px;font-style:italic;pointer-events:none;}
-.et-formula-bar input{width:100%;padding:18px 18px 18px 52px;border-radius:15px;border:2px solid var(--border);background:var(--bg-panel);
-  color:var(--text-main);font-size:18px;font-weight:700;outline:none;font-family:'Fira Code',monospace;transition:.2s;}
-.et-formula-bar input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 4px rgba(34,211,238,.12);}
-.et-formula-bar.correct input{border-color:var(--accent-green);}
-.et-formula-bar.wrong input{border-color:var(--accent-red);}
-.et-formula-status{font-size:12.5px;font-weight:700;margin:8px 2px 4px;display:flex;align-items:center;gap:6px;}
-.et-formula-status.ok{color:var(--accent-green);}
-.et-formula-status.bad{color:#f87171;}
-
-/* ПОДСКАЗКИ */
-.et-hint-box{
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 14px;
-  padding: 16px 18px;
-  margin: 10px 0 20px;
-  font-size: 14px;
-  color: #fde68a;
-  line-height: 1.6;
-}
-.et-hint-box code{
-  background: rgba(0, 0, 0, 0.35);
-  color: #fbbf24;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-family: 'Fira Code', monospace;
-  font-weight: 700;
-}
-.et-hint-actions{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
-.et-hint-link{
-  background:none;border:none;color:#fbbf24;font-weight:800;font-size:13px;
-  cursor:pointer;text-decoration:underline;padding:0;transition:opacity .15s;
-}
-.et-hint-link:hover{opacity:0.8;}
-
-.et-shell.theme-light .et-hint-box,
-html.light .et-shell .et-hint-box,
-body.light .et-shell .et-hint-box,
-[data-theme='light'] .et-shell .et-hint-box,
-.light .et-shell .et-hint-box {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
-}
-.et-shell.theme-light .et-hint-box code,
-html.light .et-shell .et-hint-box code,
-body.light .et-shell .et-hint-box code,
-[data-theme='light'] .et-shell .et-hint-box code,
-.light .et-shell .et-hint-box code {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
-}
-.et-shell.theme-light .et-hint-link,
-html.light .et-shell .et-hint-link,
-body.light .et-shell .et-hint-link,
-[data-theme='light'] .et-shell .et-hint-link,
-.light .et-shell .et-hint-link {
-  color: #d97706;
-}
-.et-shell.theme-light .et-hint-link:hover,
-html.light .et-shell .et-hint-link:hover,
-body.light .et-shell .et-hint-link:hover,
-[data-theme='light'] .et-shell .et-hint-link:hover,
-.light .et-shell .et-hint-link:hover {
-  color: #b45309;
-}
-
-/* УСПЕХ И ЗАКРЕПЛЕНИЕ */
-.et-success-card{background:rgba(34,230,138,.08);border:2px solid var(--accent-green);padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;overflow:hidden;flex-wrap:wrap;margin-bottom:8px;}
-.et-success-title{margin:0 0 5px;color:var(--accent-green);font-size:18px;font-weight:800;}
-.et-success-sub{color:#6ee7b7;font-size:14.5px;font-weight:600;}
-.et-success-xp{font-weight:900;color:#c4b5fd;font-size:15px;}
-
-.et-mastery-banner{
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(139, 92, 246, 0.18));
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  padding: 12px 18px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--accent-cyan);
-  margin-top: 10px;
-}
-
-/* ПАНЕЛЬ КНОПОК */
-.et-actions{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-}
-.et-action-btn{
-  flex: 1 1 150px;
-  height: 48px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  font-weight: 800;
-  font-size: 13px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  user-select: none;
-}
-.et-action-btn:disabled{
-  opacity: .5;
-  cursor: not-allowed;
-}
-
-.et-action-secondary{
-  background: rgba(56, 189, 248, 0.14);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
-}
-.et-action-secondary:hover:not(:disabled){
-  background: rgba(56, 189, 248, 0.22);
-  border-color: #38bdf8;
-  transform: translateY(-1px);
-}
-
-.et-action-warning{
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.35);
-  color: #fbbf24;
-}
-.et-action-warning:hover:not(:disabled){
-  background: rgba(251, 191, 36, 0.2);
-  border-color: #fbbf24;
-  transform: translateY(-1px);
-}
-
-.et-action-primary{
-  background: linear-gradient(135deg, var(--accent-green), #059669);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-.et-action-primary:hover:not(:disabled){
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-  transform: translateY(-1px);
-}
-
-.et-shell.theme-light .et-action-secondary,
-html.light .et-shell .et-action-secondary,
-body.light .et-shell .et-action-secondary,
-[data-theme='light'] .et-shell .et-action-secondary,
-.light .et-shell .et-action-secondary {
-  background: rgba(2, 132, 199, 0.1);
-  border-color: rgba(2, 132, 199, 0.3);
-  color: #0284c7;
-}
-
-.et-shell.theme-light .et-action-warning,
-html.light .et-shell .et-action-warning,
-body.light .et-shell .et-action-warning,
-[data-theme='light'] .et-shell .et-action-warning,
-.light .et-shell .et-action-warning {
-  background: rgba(217, 119, 6, 0.1);
-  border-color: rgba(217, 119, 6, 0.3);
-  color: #b45309;
-}
-
-@media (max-width:760px){
-  .et-gsearch{display:none;}
-  .et-sidebar{max-width:100%;}
-  .et-cat-list{max-height:none;}
-}
-
-/* --- Иконки: анимации --- */
-.et-icon-spin{ animation: et-icon-spin 1.4s linear infinite; }
-@keyframes et-icon-spin{ from{transform:rotate(0);} to{transform:rotate(360deg);} }
-
-.et-icon-pulse{ animation: et-icon-pulse 1.6s ease-in-out infinite; }
-@keyframes et-icon-pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
-
-.et-icon-flame{ color: #f97316; animation: et-icon-flame 1.2s ease-in-out infinite; }
-@keyframes et-icon-flame{ 0%,100%{transform:scale(1) translateY(0);} 50%{transform:scale(1.12) translateY(-1px);} }
-
-.et-icon-bounce{ transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
-button:hover .et-icon-bounce{ transform: translateY(-2px) rotate(-8deg); }
-
-.et-icon-rotate-hover{ transition: transform .35s ease; }
-button:hover .et-icon-rotate-hover{ transform: rotate(180deg); }
+@media(max-width:1180px){.et-workspace-grid{grid-template-columns:1fr}.et-theory-card{position:relative;top:auto}.et-hero-metrics{min-width:200px}}
+@media(max-width:900px){.et-shell{width:calc(100vw - 16px);margin:8px auto;border-radius:20px}.et-header{grid-template-columns:1fr auto;padding:12px}.et-header-center{grid-column:1/-1;grid-row:2}.et-title{font-size:16px}.et-subtitle{font-size:10.5px}.et-nav-toggle{display:grid}.et-body{display:block;min-height:650px}.et-sidebar{position:fixed;left:8px;top:8px;bottom:8px;width:min(330px,calc(100vw - 46px));transform:translateX(calc(-100% - 24px));transition:transform .22s ease;border:1px solid var(--et-line);border-radius:18px;background:var(--et-panel);box-shadow:0 24px 70px rgba(0,0,0,.38);z-index:10020;overflow:auto}.et-sidebar.open{transform:none}.et-nav-overlay{display:block;position:fixed;inset:0;background:rgba(3,8,18,.58);backdrop-filter:blur(3px);z-index:10010}.et-cat-list{max-height:none}.et-main{padding:12px}.et-lesson-hero{padding:17px}.et-hero-metrics{min-width:180px}.et-workspace-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.et-header{gap:10px}.et-header-left{gap:8px}.et-back-btn,.et-nav-toggle{width:36px;height:36px}.et-logo{width:38px;height:38px;border-radius:11px}.et-header-right{gap:6px}.et-lang-btn{min-width:32px;padding:0 6px}.et-lesson-hero{display:block}.et-hero-metrics{margin-top:14px;grid-template-columns:repeat(4,1fr);min-width:0}.et-hero-metric{padding:8px 6px}.et-hero-metric strong{font-size:12px}.et-fn-name{font-size:32px}.et-theory-card,.et-practice-card{padding:15px;border-radius:16px}.et-actions{grid-template-columns:1fr}.et-table th,.et-table td{min-width:66px;padding:8px 7px}.et-toast-wrap{left:10px;right:10px;top:10px}.et-toast{max-width:none}}
+@media(max-width:420px){.et-subtitle{display:none}.et-header{padding:10px}.et-hero-metrics{grid-template-columns:repeat(2,1fr)}.et-progress-card{display:none}}
+@media(prefers-reduced-motion:reduce){.et-shell *{animation:none!important;transition:none!important}}
 `;
 
 function useInjectStyles() {
@@ -1482,83 +599,26 @@ function CategoryAccordion({ categories, openCats, toggleCat, activeFormulaName,
    ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
    ========================================================================= */
 function ProgressCard({ t, progress, userInfo }) {
-    const xpIntoLevel = progress.xp % 500;
-    const pct = Math.min(100, Math.round((xpIntoLevel / 500) * 100));
-    
-    // Получаем первую букву для аватара
+    const xpIntoLevel = progress.xp % 500, pct = Math.min(100, Math.round((xpIntoLevel / 500) * 100));
     const userInitial = (userInfo.displayName || userInfo.email || "U").charAt(0).toUpperCase();
-    
-    // Определение ранга по уровню
     const rankTitle = progress.level >= 5 ? t.rankMaster : progress.level >= 3 ? t.rankAnalyst : t.rankNovice;
 
     return (
-        <motion.div 
-            className="et-progress-card"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-        >
-            {/* Блок ученика */}
+        <motion.div className="et-progress-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="et-user-profile">
-                <motion.div 
-                    className="et-user-avatar"
-                    whileHover={{ scale: 1.08, rotate: 4 }}
-                    transition={{ type: "spring", stiffness: 350 }}
-                >
-                    {userInitial}
-                </motion.div>
+                <div className="et-user-avatar">{userInitial}</div>
                 <div className="et-user-meta">
-                    <div className="et-user-email" title={userInfo.email || userInfo.displayName}>
-                        {userInfo.displayName || userInfo.email || t.student}
-                    </div>
-                    <div className="et-user-rank">
-                        <motion.span animate={{ rotate: [0, 360] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }} style={{display:'flex', color:'#fbbf24'}}>
-    <Icon.Star />
-</motion.span>
-                        <span>{t.level} {progress.level} • {rankTitle}</span>
-                    </div>
+                    <div className="et-user-email" title={userInfo.email || userInfo.displayName}>{userInfo.displayName || userInfo.email || t.student}</div>
+                    <div className="et-user-rank"><Icon.Star style={{color:'#f6b93b'}}/><span>{t.level} {progress.level} · {rankTitle}</span></div>
                 </div>
             </div>
-
-            {/* Дашборд показателей с интерактивным наведением */}
-                        <div className="et-stats-grid">
-                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Icon.Bolt style={{color:'var(--accent-purple)'}}/> {progress.xp}</div>
-                    <div className="et-stat-lbl">{t.totalXp}</div>
-                </motion.div>
-                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Icon.Target style={{color:'#22d3ee'}}/> {progress.completedLessons}</div>
-                    <div className="et-stat-lbl">{t.solvedTasks}</div>
-                </motion.div>
-                <motion.div className="et-stat-chip" whileHover={{ y: -2, scale: 1.03 }}>
-                    <div className="et-stat-val" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-                        {progress.streak > 0 ? (
-                            <motion.span 
-                                style={{ display: 'flex' }}
-                                animate={{ scale: [1, 1.2, 1] }} 
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                            >
-                                <Icon.Flame style={{color:'#f97316'}}/>
-                            </motion.span>
-                        ) : <Icon.Flame style={{color:'var(--text-sec)'}}/>} {progress.streak || 0}
-                    </div>
-                    <div className="et-stat-lbl">{t.streak}</div>
-                </motion.div>
+            <div className="et-stats-grid">
+                <div className="et-stat-chip"><div className="et-stat-val">{progress.xp}</div><div className="et-stat-lbl">{t.totalXp}</div></div>
+                <div className="et-stat-chip"><div className="et-stat-val">{progress.completedLessons}</div><div className="et-stat-lbl">{t.solvedTasks}</div></div>
+                <div className="et-stat-chip"><div className="et-stat-val">{progress.streak || 0}</div><div className="et-stat-lbl">{t.streak}</div></div>
             </div>
-
-            {/* Прогресс-бар с анимацией заполнения */}
-            <div className="et-progress-row">
-                <span>{t.nextLvlGoal}</span>
-                <span>{xpIntoLevel} / 500 XP ({pct}%)</span>
-            </div>
-            <div className="et-progress-bar-track">
-                <motion.div 
-                    className="et-progress-bar-fill" 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-            </div>
+            <div className="et-progress-row"><span>{t.nextLvlGoal}</span><span>{xpIntoLevel}/500</span></div>
+            <div className="et-progress-bar-track"><motion.div className="et-progress-bar-fill" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: .7 }}/></div>
         </motion.div>
     );
 }
@@ -1755,6 +815,7 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const [copyState, setCopyState] = useState(false);
     const [toasts, setToasts] = useState([]);
     const [progress, setProgress] = useState({ level: 1, xp: 0, completedLessons: 0, streak: 0 });
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const t = UI_DICT[lang];
 
@@ -1947,21 +1008,13 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const handleCustomSearch = () => {
         if (!customSearch.trim()) return;
         const fName = customSearch.trim().toUpperCase();
-
-        if (fName === activeFormulaName) {
-            setInputValue("=");
-            setShowSuccess(false);
-            generateAIFormula(fName);
-        } else {
-            setActiveCategory("Поиск ИИ");
-            setActiveFormulaName(fName);
-        }
-        setCustomSearch("");
+        if (fName === activeFormulaName) { setInputValue("="); setShowSuccess(false); generateAIFormula(fName); }
+        else { setActiveCategory("Поиск ИИ"); setActiveFormulaName(fName); }
+        setCustomSearch(""); setMobileNavOpen(false);
     };
 
     const pickFromSidebarOrSearch = (category, fName) => {
-        setActiveCategory(category);
-        setActiveFormulaName(fName);
+        setActiveCategory(category); setActiveFormulaName(fName); setMobileNavOpen(false);
     };
 
     const checkAnswer = () => {
@@ -2048,226 +1101,116 @@ const ExcelTrainerLMS = ({ onBack, theme: propTheme }) => {
     const isMastered = masteryCount >= REQUIRED_MASTERY_STREAK;
 
     return (
-        <motion.div
-            className={`et-shell glass-panel theme-${theme}`}
-            initial={{ opacity: 0, y: 30 }}
-            animate={shake ? { x: [-10, 10, -10, 10, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }} 
-            transition={shake ? { duration: 0.3 } : { duration: 0.5 }}
-        >
+        <motion.div className={`et-shell theme-${theme}`} initial={{ opacity: 0, y: 20 }} animate={shake ? { x: [-8, 8, -8, 8, 0], opacity: 1, y: 0 } : { opacity: 1, y: 0 }} transition={shake ? { duration: .28 } : { duration: .4 }}>
             <ToastStack toasts={toasts} />
 
-            {/* ШАПКА */}
             <header className="et-header">
                 <div className="et-header-left">
+                    <button className="et-back-btn" onClick={onBack} title="Назад" aria-label="Назад">←</button>
                     <div className="et-logo"><Icon.Grid /></div>
-                    <div style={{ minWidth: 0 }}>
-                        <h2 className="et-title">{t.title}</h2>
-                        <div className="et-subtitle">{t.subtitle}</div>
-                    </div>
+                    <div style={{minWidth:0}}><h2 className="et-title">{t.title}</h2><div className="et-subtitle">{t.subtitle}</div></div>
                 </div>
-                <div className="et-header-right">
-                    <GlobalSearch t={t} onPick={pickFromSidebarOrSearch} />
-                    <LangSwitch lang={lang} setLang={setLang} />
-                </div>
+                <div className="et-header-center"><GlobalSearch t={t} onPick={pickFromSidebarOrSearch} /></div>
+                <div className="et-header-right"><LangSwitch lang={lang} setLang={setLang}/><button className="et-nav-toggle" onClick={() => setMobileNavOpen(true)} aria-label="Каталог функций"><Icon.Grid /></button></div>
             </header>
 
+            <AnimatePresence>{mobileNavOpen && <motion.div className="et-nav-overlay" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setMobileNavOpen(false)} />}</AnimatePresence>
+
             <div className="et-body">
-                {/* САЙДБАР */}
-                <div className="et-sidebar">
+                <aside className={`et-sidebar ${mobileNavOpen ? "open" : ""}`}>
                     <div className="et-ai-card">
-                        <div className="et-ai-title"><Icon.Sparkle className="et-icon-pulse" style={{color:'var(--accent-purple)'}} /> {t.magic}</div>
-                        <input
-                            className="et-ai-input"
-                            type="text"
-                            value={customSearch}
-                            onChange={(e) => setCustomSearch(e.target.value)}
-                            placeholder={t.search}
-                            onKeyDown={(e) => e.key === "Enter" && handleCustomSearch()}
-                        />
-                        <Button variant="green" onClick={handleCustomSearch} disabled={isGenerating} style={{ width: '100%', height: '44px', fontSize: '14px', borderRadius: '12px', fontWeight: 'bold' }}>
-                            {isGenerating ? t.genLoading : t.genBtn}
-                        </Button>
+                        <div className="et-ai-title"><Icon.Sparkle className="et-icon-pulse" style={{color:'var(--et-purple)'}}/>{t.magic}</div>
+                        <input className="et-ai-input" value={customSearch} onChange={(e) => setCustomSearch(e.target.value)} placeholder={t.search} onKeyDown={(e) => e.key === "Enter" && handleCustomSearch()}/>
+                        <button className="et-generate-btn" onClick={handleCustomSearch} disabled={isGenerating}>{isGenerating ? t.genLoading : t.genBtn}</button>
                     </div>
 
-                    {/* СПИСОК КАТЕГОРИЙ */}
-                    <div className="et-cat-list modern-scroll">
-                        <CategoryAccordion
-                            categories={categories}
-                            openCats={openCats}
-                            toggleCat={toggleCat}
-                            activeFormulaName={activeFormulaName}
-                            isGenerating={isGenerating}
-                            onPick={pickFromSidebarOrSearch}
-                        />
+                    <div className="et-cat-list">
+                        <CategoryAccordion categories={categories} openCats={openCats} toggleCat={toggleCat} activeFormulaName={activeFormulaName} isGenerating={isGenerating} onPick={pickFromSidebarOrSearch}/>
                     </div>
 
-                    {/* КАРТОЧКА ПРОФИЛЯ И СТАТИСТИКИ */}
-                    <ProgressCard t={t} progress={progress} userInfo={userInfo} />
-                </div>
+                    <ProgressCard t={t} progress={progress} userInfo={userInfo}/>
+                </aside>
 
-                {/* ОСНОВНОЙ КОНТЕНТ */}
-                <div className="et-main">
-                    {error ? (
-                        <ErrorCard t={t} onRetry={() => generateAIFormula(activeFormulaName)} />
-                    ) : isGenerating || !currentLesson ? (
-                        <LoadingSkeleton t={t} name={activeFormulaName} />
-                    ) : (
-                        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <main className="et-main">
+                    {error ? <ErrorCard t={t} onRetry={() => generateAIFormula(activeFormulaName)}/> :
+                    isGenerating || !currentLesson ? <LoadingSkeleton t={t} name={activeFormulaName}/> : (
+                        <motion.div className="et-lesson-stack" key={activeFormulaName} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.28}}>
+                            <section className="et-lesson-hero">
+                                <div className="et-hero-main">
+                                    <div className="et-hero-kicker"><Icon.Layers/>{activeCategory}</div>
+                                    <h1 className="et-fn-name">{currentLesson.name}</h1>
+                                    <div className="et-fn-en">{t.enVersion} <b>{currentLesson.enName}</b></div>
+                                    <div className="et-badges"><DifficultyBadge difficulty={difficulty} t={t}/><span className="et-badge et-badge-xp"><Icon.Bolt/> {xpForLesson} {t.xp}</span>{!hintsEnabled && <span className="et-badge et-badge-diff-hard"><Icon.Lock/> {t.btnExam}</span>}</div>
+                                </div>
+                                <div className="et-hero-metrics">
+                                    <div className="et-hero-metric"><span>{t.level}</span><strong>{progress.level}</strong></div>
+                                    <div className="et-hero-metric"><span>{t.totalXp}</span><strong>{progress.xp}</strong></div>
+                                    <div className="et-hero-metric"><span>{t.streak}</span><strong>{progress.streak || 0}</strong></div>
+                                    <div className="et-hero-metric"><span>{t.streakStatus}</span><strong>{masteryCount}/{REQUIRED_MASTERY_STREAK}</strong></div>
+                                </div>
+                            </section>
 
-                            {/* ТЕОРИЯ */}
-                            <div className="et-theory-card">
-                                <div className="et-theory-top">
-                                    <div>
-                                        <h1 className="et-fn-name">{currentLesson.name}</h1>
-                                        <div className="et-fn-en">{t.enVersion} <b>{currentLesson.enName}</b></div>
+                            <div className="et-workspace-grid">
+                                <section className="et-theory-card">
+                                    <div className="et-section-head"><div className="et-section-title"><Icon.Book style={{color:'var(--et-green)'}}/>{t.theory}</div><span className="et-badge et-badge-theory">{t.defTitle}</span></div>
+                                    <div className="et-def-box"><div className="et-box-label"><Icon.Info/>{t.defTitle}</div><div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div></div>
+                                    <SyntaxBlock syntax={currentLesson.syntax} t={t} onCopy={handleCopySyntax} copied={copyState}/>
+                                </section>
+
+                                <section className="et-practice-card">
+                                    <div className="et-practice-top"><div className="et-practice-title"><Icon.Target style={{color:'var(--et-green)'}}/>{t.practice}</div><span className="et-badge et-badge-xp">{t.attempts}: {attempts}</span></div>
+                                    <p className="et-task-text">{getTranslatedText(currentLesson.taskDesc, lang)}</p>
+                                    <ExcelTable table={currentLesson.table} selected={selectedCell} onSelectCell={setSelectedCell}/>
+
+                                    <div className={`et-formula-bar ${answerStatus === "wrong" ? "wrong" : ""} ${showSuccess ? "correct" : ""}`}>
+                                        <div className="fx">fx</div>
+                                        <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value === "" ? "=" : e.target.value.toUpperCase())} disabled={showSuccess} onKeyDown={(e) => e.key === "Enter" && !showSuccess && checkAnswer()}/>
                                     </div>
-                                    <div className="et-badges">
-                                        <DifficultyBadge difficulty={difficulty} t={t} />
-                                        <span className="et-badge et-badge-xp"><Icon.Bolt style={{color:'#c4b5fd'}}/> {xpForLesson} {t.xp}</span>
-                                        <span className="et-badge et-badge-theory"><Icon.Book style={{color:'var(--accent-green)'}}/> {t.theory}</span>
-                                    </div>
-                                </div>
 
-                                <div className="et-def-box">
-                                    <div className="et-box-label"><Icon.Book style={{color:'var(--accent-green)'}}/> {t.defTitle}</div>
-                                    <div className="et-def-text">{getTranslatedText(currentLesson.def, lang)}</div>
-                                </div>
+                                    {answerStatus === "wrong" && !showSuccess && <div className="et-formula-status bad"><Icon.Warning/>{t.formulaBad}</div>}
+                                    {showSuccess && <div className="et-formula-status ok"><Icon.Check/>{t.formulaOk}</div>}
 
-                                {/* СИНТАКСИС */}
-                                <SyntaxBlock
-                                    syntax={currentLesson.syntax}
-                                    t={t}
-                                    onCopy={handleCopySyntax}
-                                    copied={copyState}
-                                />
-                            </div>
-
-                            {/* ПРАКТИКА */}
-                            <div className="et-practice-card">
-                                <div className="et-practice-top">
-                                    <div className="et-practice-title"><Icon.Target style={{color:'var(--accent-green)'}}/> {t.practice}</div>
-                                  {!hintsEnabled && (
-                                        <span className="et-badge et-badge-diff-hard"><Icon.Lock/> {t.btnExam}</span>
-                                    )}
-                                </div>
-
-                                <p className="et-task-text">{getTranslatedText(currentLesson.taskDesc, lang)}</p>
-
-                                <ExcelTable table={currentLesson.table} selected={selectedCell} onSelectCell={setSelectedCell} />
-
-                                <div className={`et-formula-bar ${answerStatus === "wrong" ? "wrong" : ""} ${showSuccess ? "correct" : ""}`}>
-                                    <div className="fx">fx</div>
-                                    <input
-                                        type="text"
-                                        value={inputValue}
-                                        onChange={(e) => { if (e.target.value === "") setInputValue("="); else setInputValue(e.target.value.toUpperCase()); }}
-                                        disabled={showSuccess}
-                                        onKeyDown={(e) => e.key === 'Enter' && !showSuccess && checkAnswer()}
-                                    />
-                                </div>
-                                  {answerStatus === "wrong" && !showSuccess && (
-                                    <div className="et-formula-status bad"><Icon.Warning width="14" height="14"/> {t.formulaBad}</div>
-                                )}
-                                {showSuccess && (
-                                    <div className="et-formula-status ok"><Icon.Check/> {t.formulaOk}</div>
-                                )}
-                                {/* ПОДСКАЗКИ */}
-                                {!showSuccess && hintsEnabled && hintLevel > 0 && (
-                                    <div className="et-hint-box">
-                                        {hintLevel >= 1 && <div style={{display:'flex',alignItems:'center',gap:8}}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel1}</div>}
-                                        {hintLevel >= 2 && <div style={{ marginTop: 6, display:'flex',alignItems:'center',gap:8 }}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
-                                        {hintLevel >= 3 && <div style={{ marginTop: 6, display:'flex',alignItems:'center',gap:8 }}><Icon.Bulb className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.hintLevel3} <code>{hintStep3}</code></div>}
-                                        <div className="et-hint-actions">
-                                            {hintLevel < 3 && <button className="et-hint-link" onClick={handleHintClick}>{t.hintOf} {hintLevel + 1}/3</button>}
-                                            {hintLevel === 3 && (
-                                                <button className="et-hint-link" onClick={() => setInputValue(currentLesson.expected[0])}>
-                                                    {t.showSolution}
-                                                </button>
-                                            )}
+                                    {!showSuccess && hintsEnabled && hintLevel > 0 && (
+                                        <div className="et-hint-box">
+                                            {hintLevel >= 1 && <div style={{display:'flex',alignItems:'center',gap:7}}><Icon.Bulb/>{t.hintLevel1}</div>}
+                                            {hintLevel >= 2 && <div style={{marginTop:5,display:'flex',alignItems:'center',gap:7}}><Icon.Bulb/>{t.hintLevel2}{currentLesson.hint ? ` — ${getTranslatedText(currentLesson.hint, lang)}` : ""}</div>}
+                                            {hintLevel >= 3 && <div style={{marginTop:5,display:'flex',alignItems:'center',gap:7}}><Icon.Bulb/>{t.hintLevel3} <code>{hintStep3}</code></div>}
+                                            <div className="et-hint-actions">{hintLevel < 3 ? <button className="et-hint-link" onClick={handleHintClick}>{t.hintOf} {hintLevel + 1}/3</button> : <button className="et-hint-link" onClick={() => setInputValue(currentLesson.expected[0])}>{t.showSolution}</button>}</div>
                                         </div>
+                                    )}
+
+                                    <AnimatePresence>
+                                        {showSuccess && (
+                                            <motion.div className="et-success-card" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} exit={{opacity:0}}>
+                                                <div style={{flex:'1 1 220px'}}><h4 className="et-success-title"><Icon.Star/>{t.successMsg}</h4><span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span></div>
+                                                <div className="et-success-xp">+{xpForLesson} XP</div>
+                                                <div className="et-mastery-banner" style={!isMastered ? {borderColor:'rgba(246,185,59,.28)',color:'#f6c65d'} : undefined}>
+                                                    <span style={{display:'flex',alignItems:'center',gap:5}}>{isMastered ? <Icon.Trophy/> : <Icon.Target/>}{isMastered ? t.masteryTitle : t.streakStatus}</span>
+                                                    <span>{masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    <div className="et-actions">
+                                        {!showSuccess ? (
+                                            <>
+                                                <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}><Icon.Refresh className="et-icon-rotate-hover"/>{t.btnAnother}</button>
+                                                {hintsEnabled && <button className="et-action-btn et-action-warning" onClick={handleHintClick} disabled={hintLevel >= 3}><Icon.Eye className="et-icon-bounce"/>{t.btnHint}{hintLevel > 0 && ` (${hintLevel}/3)`}</button>}
+                                                <button className="et-action-btn et-action-primary" onClick={checkAnswer}>{t.btnCheck}</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button className="et-action-btn et-action-secondary" onClick={handleNextTask}><Icon.Refresh/>{isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}</button>
+                                                {isMastered && <motion.button initial={{opacity:0,scale:.96}} animate={{opacity:1,scale:1}} className="et-action-btn et-action-primary" onClick={handleNextFunction}>{t.nextFunction} →</motion.button>}
+                                            </>
+                                        )}
                                     </div>
-                                )}
-
-                                {/* УСПЕХ И ПЛАШКА ОСВОЕНИЯ */}
-                                <AnimatePresence>
-                                    {showSuccess && (
-                                        <motion.div className="et-success-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                                   <div style={{ flex: '1 1 100%' }}>
-                                                <h4 className="et-success-title" style={{display:'flex',alignItems:'center',gap:8}}><Icon.Star className="et-icon-pulse" style={{color:'#fbbf24'}}/> {t.successMsg}</h4>
-                                                <span className="et-success-sub">{t.resultMsg} <b>{currentLesson.result}</b></span>
-                                            </div>
-                                            <div className="et-success-xp" style={{display:'flex',alignItems:'center',gap:6}}>+{xpForLesson} XP <Icon.Sparkle className="et-icon-pulse" style={{color:'#c4b5fd'}}/></div>
-
-                                            {/* Индикатор освоения */}
-                                            {isMastered ? (
-                                                <div className="et-mastery-banner" style={{ width: '100%' }}>
-                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Trophy style={{color:'#fbbf24'}}/> {t.masteryTitle}</span>
-                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Check style={{color:'var(--accent-green)'}}/> {masteryCount}/{REQUIRED_MASTERY_STREAK}</span>
-                                                </div>
-                                            ) : (
-                                                <div className="et-mastery-banner" style={{ width: '100%', borderColor: 'rgba(251, 191, 36, 0.35)', color: '#fbbf24' }}>
-                                                    <span style={{display:'flex',alignItems:'center',gap:6}}><Icon.Target style={{color:'#fbbf24'}}/> {t.streakStatus}</span>
-                                                    <span>{masteryCount} из {REQUIRED_MASTERY_STREAK} задач</span>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* КНОПКИ ДЕЙСТВИЙ */}
-                                <div className="et-actions">
-                                    {!showSuccess ? (
-                                        <>
-                                          <button className="et-action-btn et-action-secondary" onClick={() => generateAIFormula(activeFormulaName)} disabled={isGenerating}>
-                                                <Icon.Refresh className="et-icon-rotate-hover"/> {t.btnAnother}
-                                            </button>
-
-                                            <AnimatePresence>
-                                                {hintsEnabled && (
-                                                    <motion.button
-                                                        key="hint-btn"
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.9 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="et-action-btn et-action-warning"
-                                                        onClick={handleHintClick}
-                                                        disabled={hintLevel >= 3}
-                                                    >
-                                                   <Icon.Eye className="et-icon-bounce"/> {t.btnHint} {hintLevel > 0 && `(${hintLevel}/3)`}
-                                                    </motion.button>
-                                                )}
-                                            </AnimatePresence>
-
-                                            <button className="et-action-btn et-action-primary" onClick={checkAnswer}>
-                                                {t.btnCheck}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {/* Кнопка следующей задачи */}
-                                             <button className="et-action-btn et-action-secondary" onClick={handleNextTask}>
-                                                <Icon.Refresh className="et-icon-rotate-hover"/> {isMastered ? t.btnAnother : `${t.btnReinforce} (${masteryCount}/${REQUIRED_MASTERY_STREAK})`}
-                                            </button>
-
-                                            {/* Кнопка "Следующая функция" появляется ТОЛЬКО когда навык освоен (>= 2 решенных задач) */}
-                                            {isMastered && (
-                                                <motion.button 
-                                                    initial={{ opacity: 0, scale: 0.9 }} 
-                                                    animate={{ opacity: 1, scale: 1 }} 
-                                                    className="et-action-btn et-action-primary" 
-                                                    onClick={handleNextFunction}
-                                                >
-                                                    {t.nextFunction} →
-                                                </motion.button>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
+                                </section>
                             </div>
                         </motion.div>
                     )}
-                </div>
+                </main>
             </div>
         </motion.div>
     );
