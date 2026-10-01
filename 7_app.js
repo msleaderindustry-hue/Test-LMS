@@ -172,252 +172,998 @@ const LowPolyBackground = ({ theme }) => {
 
 // --- APP ---
 function App() {
-  const [view, setView] = useState('loading'); 
+  const DEFAULT_MODULES = [
+    'chat',
+    'ai_chat',
+    'typing',
+    'hotkeys',
+    'code',
+    'flashcards',
+    'excel',
+    'stats'
+  ];
+
+  const [view, setView] = useState('loading');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  
+
   const [sets, setSets] = useState([]);
   const [currentSet, setCurrentSet] = useState(null);
   const [tests, setTests] = useState([]);
   const [history, setHistory] = useState([]);
   const [fp, setFp] = useState('');
 
+  // ВАЖНО:
+  // user становится не null только ПОСЛЕ того,
+  // как профиль Firestore подтверждён и загружен.
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState('student');
-  const [userNickname, setUserNickname] = useState(''); 
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [teacherTests, setTeacherTests] = useState([]); 
+  const [userNickname, setUserNickname] = useState('');
   const [userData, setUserData] = useState(null);
-  
-  const [allowedModules, setAllowedModules] = useState([]);
+
+  // null = Firebase ещё не подтвердил эти данные.
+  const [teacherTests, setTeacherTests] = useState(null);
+  const [allowedModules, setAllowedModules] = useState(null);
+
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const isAdmin = userRole === 'admin';
+  const appReady =
+    !isAuthLoading &&
+    !!user &&
+    !!userData &&
+    Array.isArray(teacherTests) &&
+    Array.isArray(allowedModules);
+
+  // -----------------------------------------------------------------------
+  // ЛОКАЛЬНЫЕ ДАННЫЕ
+  // -----------------------------------------------------------------------
+
+  const loadData = () => {
+    try {
+      const raw = localStorage.getItem('test_sets_list');
+      setSets(raw ? JSON.parse(raw) : []);
+
+      if (!raw) {
+        localStorage.setItem('test_sets_list', JSON.stringify([]));
+      }
+
+      setHistory(
+        JSON.parse(localStorage.getItem('test_history_v1') || '[]')
+      );
+    } catch (error) {
+      console.error('[Ultimate LMS Local Data]', error);
+      setSets([]);
+      setHistory([]);
+    }
+  };
+
+  // -----------------------------------------------------------------------
+  // ПРИМЕНЕНИЕ ПОДТВЕРЖДЁННОГО ПРОФИЛЯ
+  // -----------------------------------------------------------------------
+
+  const applyProfile = (currentUser, data) => {
+    const modules =
+      data?.allowedModules == null
+        ? DEFAULT_MODULES
+        : Array.isArray(data.allowedModules)
+          ? data.allowedModules
+          : [];
+
+    const assigned =
+      Array.isArray(data?.assignedTests)
+        ? data.assignedTests
+        : [];
+
+    setUserData({
+      uid: currentUser.uid,
+      ...data
+    });
+
+    setUserRole(data?.role || 'student');
+    setUserNickname(data?.nickname || '');
+    setTeacherTests(assigned);
+    setAllowedModules(modules);
+
+    // Только здесь пользователь считается полностью готовым.
+    setUser(currentUser);
+  };
+
+  // -----------------------------------------------------------------------
+  // FIREBASE AUTH + ПРОФИЛЬ FIRESTORE
+  //
+  // Главное исправление:
+  // интерфейс НЕ показывается между onAuthStateChanged и загрузкой профиля.
+  // -----------------------------------------------------------------------
 
   useEffect(() => {
-      if (!window.auth) {
-          setIsAuthLoading(false);
-          return;
+    if (!window.auth || !window.db) {
+      setAuthError('Firebase не подключён. Проверьте инициализацию Auth и Firestore.');
+      setIsAuthLoading(false);
+      return;
+    }
+
+    let active = true;
+    let profileUnsubscribe = null;
+    let authSequence = 0;
+
+    const clearProfileListener = () => {
+      if (typeof profileUnsubscribe === 'function') {
+        profileUnsubscribe();
       }
-      const unsubscribeAuth = window.auth.onAuthStateChanged((currentUser) => {
-          setUser(currentUser);
-          
-          if (currentUser && window.db) {
-              const unsubscribeBan = window.db.collection('users').doc(currentUser.uid)
-                  .onSnapshot((doc) => {
-                      if (doc.exists) {
-                          const data = doc.data();
-                          setUserData(data);
-                          if (data.isBanned === true) {
-                              alert("Доступ закрыт! Вы были исключены администратором.");
-                              window.auth.signOut();
-                              window.location.reload();
-                          }
-                          setUserRole(data.role || 'student');
-                          setUserNickname(data.nickname || ''); 
-                          setTeacherTests(data.assignedTests || []);
-                          setAllowedModules(data.allowedModules || ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats']);
-                      }
-                      setIsAuthLoading(false);
-                  });
-              return () => unsubscribeBan();
+      profileUnsubscribe = null;
+    };
+
+    const resetProfile = () => {
+      setUser(null);
+      setUserData(null);
+      setUserRole('student');
+      setUserNickname('');
+      setTeacherTests(null);
+      setAllowedModules(null);
+      setIsSidebarOpen(false);
+      setIsChatOpen(false);
+    };
+
+    const unsubscribeAuth = window.auth.onAuthStateChanged(async (currentUser) => {
+      const sequence = ++authSequence;
+
+      clearProfileListener();
+      setAuthError('');
+      setIsAuthLoading(true);
+      resetProfile();
+
+      // Пользователь не вошёл.
+      if (!currentUser) {
+        if (!active || sequence !== authSequence) return;
+
+        setView('menu');
+        setIsAuthLoading(false);
+        return;
+      }
+
+      const profileRef = window.db
+        .collection('users')
+        .doc(currentUser.uid);
+
+      try {
+        // Новый 3_auth.js экспортирует ensureLmsUserProfile().
+        // Транзакция проверяет профиль на сервере, создаёт его при первом входе,
+        // проверяет блокировку и не перезаписывает админские настройки.
+        let initialData = null;
+
+        if (typeof window.ensureLmsUserProfile === 'function') {
+          initialData = await window.ensureLmsUserProfile(currentUser);
+        } else {
+          // Запасной путь, если старый auth-файл ещё не заменён.
+          const serverSnapshot = await profileRef.get({ source: 'server' });
+
+          if (!serverSnapshot.exists) {
+            const serverTimestamp =
+              window.firebase.firestore.FieldValue.serverTimestamp();
+
+            const newProfile = {
+              email: currentUser.email || '',
+              nickname:
+                currentUser.displayName ||
+                currentUser.email?.split('@')[0] ||
+                'Студент',
+              displayName: currentUser.displayName || '',
+              photoURL: currentUser.photoURL || '',
+              role: 'student',
+              isBanned: false,
+              allowedModules: DEFAULT_MODULES,
+              excelHintsEnabled: true,
+              chatContactMode: 'all',
+              chatAllowedUsers: [],
+              registeredAt: serverTimestamp,
+              lastLoginAt: serverTimestamp,
+              lastSeenAt: serverTimestamp,
+              loginCount: 1,
+              profileVersion: 2
+            };
+
+            await profileRef.set(newProfile);
+            initialData = newProfile;
           } else {
-              setUserRole('student');
-              setIsAuthLoading(false);
+            initialData = serverSnapshot.data() || {};
           }
-      });
-      return () => unsubscribeAuth();
+        }
+
+        if (!active || sequence !== authSequence) return;
+
+        if (initialData?.isBanned === true) {
+          const error = new Error('Аккаунт заблокирован');
+          error.code = 'lms/account-banned';
+          throw error;
+        }
+
+        // Первый показ LMS происходит только после этой строки.
+        applyProfile(currentUser, initialData);
+        setView('menu');
+        setIsAuthLoading(false);
+
+        // После первичной серверной проверки оставляем realtime-обновления.
+        profileUnsubscribe = profileRef.onSnapshot(
+          { includeMetadataChanges: true },
+          async (snapshot) => {
+            if (!active || sequence !== authSequence) return;
+            if (!snapshot.exists) return;
+
+            // Не разрешаем старому кешу откатить уже проверенные права.
+            if (snapshot.metadata?.fromCache) return;
+
+            const data = snapshot.data() || {};
+
+            if (data.isBanned === true) {
+              setIsSidebarOpen(false);
+              setIsChatOpen(false);
+              resetProfile();
+
+              try {
+                await window.auth.signOut();
+              } catch (signOutError) {
+                console.error('[Ultimate LMS SignOut]', signOutError);
+              }
+
+              alert('Доступ закрыт! Вы были исключены администратором.');
+              return;
+            }
+
+            applyProfile(currentUser, data);
+          },
+          (error) => {
+            console.error('[Ultimate LMS Profile Snapshot]', error);
+
+            // Если первоначальная загрузка уже прошла,
+            // не выкидываем ученика из интерфейса из-за временного сбоя listener.
+          }
+        );
+      } catch (error) {
+        console.error('[Ultimate LMS Profile Bootstrap]', error);
+
+        if (!active || sequence !== authSequence) return;
+
+        resetProfile();
+
+        if (error?.code === 'lms/account-banned') {
+          setAuthError('Ваш аккаунт заблокирован. Обратитесь к преподавателю.');
+
+          try {
+            await window.auth.signOut();
+          } catch (_) {}
+        } else if (
+          String(error?.code || '').includes('unavailable') ||
+          String(error?.code || '').includes('network')
+        ) {
+          setAuthError(
+            'Не удалось получить актуальные данные с Firebase. Проверьте интернет и повторите.'
+          );
+        } else if (String(error?.code || '').includes('permission-denied')) {
+          setAuthError(
+            'Нет доступа к профилю пользователя. Проверьте правила Firestore.'
+          );
+        } else {
+          setAuthError(
+            'Не удалось загрузить профиль пользователя. Попробуйте обновить страницу.'
+          );
+        }
+
+        setIsAuthLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+      authSequence++;
+      clearProfileListener();
+      unsubscribeAuth?.();
+    };
   }, []);
 
-  // Запрет F12
+  // -----------------------------------------------------------------------
+  // ЕСЛИ АДМИН ОТКЛЮЧИЛ МОДУЛЬ, ПОКА УЧЕНИК НАХОДИТСЯ В НЁМ
+  // -----------------------------------------------------------------------
+
   useEffect(() => {
-    async function check() {
-      document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false; };
-      const f = await computeFingerprint(); setFp(f);
-      loadData(); 
+    if (!appReady) return;
+
+    const viewModule = {
+      stats: 'stats',
+      typing: 'typing',
+      hotkeys: 'hotkeys',
+      code: 'code',
+      flashcards: 'flashcards',
+      excel: 'excel'
+    };
+
+    const requiredModule = viewModule[view];
+
+    if (
+      requiredModule &&
+      !allowedModules.includes(requiredModule)
+    ) {
       setView('menu');
     }
-    check();
+
+    if (view === 'admin' && !isAdmin) {
+      setView('menu');
+    }
+
+    if (
+      isChatOpen &&
+      !allowedModules.includes('chat')
+    ) {
+      setIsChatOpen(false);
+    }
+  }, [
+    appReady,
+    view,
+    allowedModules,
+    isAdmin,
+    isChatOpen
+  ]);
+
+  // -----------------------------------------------------------------------
+  // УСТРОЙСТВО + ЛОКАЛЬНАЯ ИСТОРИЯ
+  // Не переключаем view здесь — Firebase управляет моментом показа LMS.
+  // -----------------------------------------------------------------------
+
+  useEffect(() => {
+    let alive = true;
+
+    document.onkeydown = function (e) {
+      if (e.keyCode === 123) return false;
+
+      if (
+        e.ctrlKey &&
+        e.shiftKey &&
+        (
+          e.keyCode === 'I'.charCodeAt(0) ||
+          e.keyCode === 'C'.charCodeAt(0)
+        )
+      ) {
+        return false;
+      }
+    };
+
+    loadData();
+
+    async function prepareDevice() {
+      try {
+        if (typeof computeFingerprint === 'function') {
+          const fingerprint = await computeFingerprint();
+
+          if (alive) {
+            setFp(fingerprint);
+          }
+        }
+      } catch (error) {
+        console.warn('[Ultimate LMS Fingerprint]', error);
+      }
+    }
+
+    prepareDevice();
+
+    return () => {
+      alive = false;
+      document.onkeydown = null;
+    };
   }, []);
 
-  useEffect(() => { 
-      if (typeof logVisitor === 'function') logVisitor(); 
-  }, []);
+  // Логируем посетителя только после того,
+  // как Firebase определил состояние входа.
+  // Если пользователь уже был авторизован, Discord получит также email/имя.
+  useEffect(() => {
+    if (isAuthLoading) return;
 
-  useEffect(() => { document.body.className = theme; localStorage.setItem('theme', theme); }, [theme]);
-  
-  const loadData = () => {
-    const raw = localStorage.getItem('test_sets_list'); 
-    setSets(raw ? JSON.parse(raw) : []); 
-    if(!raw) localStorage.setItem('test_sets_list', JSON.stringify([]));        
-    setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
+    if (typeof logVisitor === 'function') {
+      logVisitor().catch?.((error) => {
+        console.warn('[Ultimate LMS Visitor]', error);
+      });
+    }
+  }, [isAuthLoading, user?.uid]);
+
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // -----------------------------------------------------------------------
+  // ЛОКАЛЬНЫЕ НАБОРЫ ТЕСТОВ
+  // -----------------------------------------------------------------------
+
+  const addSet = (name) => {
+    if (!name) return;
+    if (sets.includes(name)) return alert('Уже есть!');
+
+    const newSets = [...sets, name];
+    setSets(newSets);
+
+    localStorage.setItem(
+      'test_sets_list',
+      JSON.stringify(newSets)
+    );
+
+    localStorage.setItem(
+      'tests_' + name,
+      JSON.stringify([])
+    );
   };
 
-  const addSet = (name) => { if(!name) return; if(sets.includes(name)) return alert('Уже есть!'); const newSets = [...sets, name]; setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.setItem('tests_' + name, JSON.stringify([])); };
-  const deleteSet = (name) => { const newSets = sets.filter(s => s !== name); setSets(newSets); localStorage.setItem('test_sets_list', JSON.stringify(newSets)); localStorage.removeItem('tests_' + name); };
-  
-  const openSet = (name) => { setCurrentSet(name); setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []); setView('set_menu'); };
+  const deleteSet = (name) => {
+    const newSets = sets.filter(s => s !== name);
+
+    setSets(newSets);
+
+    localStorage.setItem(
+      'test_sets_list',
+      JSON.stringify(newSets)
+    );
+
+    localStorage.removeItem('tests_' + name);
+  };
+
+  const openSet = (name) => {
+    setCurrentSet(name);
+
+    setTests(
+      JSON.parse(
+        localStorage.getItem('tests_' + name)
+      ) || []
+    );
+
+    setView('set_menu');
+  };
 
   const openTeacherAssignedTest = (testInfo) => {
-      setView('loading');
-      setTimeout(() => {
-          setCurrentSet(testInfo.title);
-          setTests(testInfo.data); 
-          setView('set_menu');
-      }, 300);
+    // Искусственная задержка больше не нужна.
+    setCurrentSet(testInfo.title);
+    setTests(
+      Array.isArray(testInfo.data)
+        ? testInfo.data
+        : []
+    );
+    setView('set_menu');
   };
 
-const removeTeacherTestStudent = async (testId, testTitle) => {
+  const removeTeacherTestStudent = async (testId, testTitle) => {
+    if (!user?.uid || !Array.isArray(teacherTests)) return;
+
     try {
-        const updatedTests = teacherTests.filter(t => t.id !== testId);
-        await window.db.collection('users').doc(user.uid).update({ assignedTests: updatedTests });
-    } catch(e) { alert("Ошибка при удалении теста"); }
-};
+      const updatedTests =
+        teacherTests.filter(t => t.id !== testId);
+
+      await window.db
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          assignedTests: updatedTests
+        });
+
+      // Realtime listener сам синхронизирует teacherTests.
+    } catch (error) {
+      console.error(
+        '[Ultimate LMS Remove Assigned Test]',
+        error
+      );
+
+      alert('Ошибка при удалении теста');
+    }
+  };
 
   const changeNickname = async () => {
-      const newNick = prompt("Введите ваш новый никнейм (будет виден в чате):", userNickname || "");
-      if (newNick && newNick.trim() !== "") {
-          try { await window.db.collection('users').doc(user.uid).update({ nickname: newNick.trim() }); } 
-          catch (e) { alert("Ошибка при сохранении никнейма!"); }
-      }
+    if (!user?.uid) return;
+
+    const newNick = prompt(
+      'Введите ваш новый никнейм (будет виден в чате):',
+      userNickname || ''
+    );
+
+    if (!newNick || !newNick.trim()) return;
+
+    try {
+      await window.db
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          nickname: newNick.trim()
+        });
+
+      // Ник обновится через realtime listener.
+    } catch (error) {
+      console.error('[Ultimate LMS Nickname]', error);
+      alert('Ошибка при сохранении никнейма!');
+    }
   };
+
+  // -----------------------------------------------------------------------
+  // GOOGLE LOGIN
+  //
+  // Создание/проверка users/{uid} теперь выполняется в общем Firebase gate.
+  // Поэтому здесь больше нет второй копии логики регистрации.
+  // -----------------------------------------------------------------------
 
   const handleDirectLogin = async () => {
-      try {
-          const provider = new window.firebase.auth.GoogleAuthProvider();
-          const result = await window.auth.signInWithPopup(provider);
-          const loggedInUser = result.user;
-          const userDoc = await window.db.collection('users').doc(loggedInUser.uid).get();
+    try {
+      setAuthError('');
 
-          if (!userDoc.exists) {
-              await window.db.collection('users').doc(loggedInUser.uid).set({
-                  email: loggedInUser.email, role: 'student', isBanned: false, registeredAt: new Date().toISOString(),
-                  allowedModules: ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'],
-                  excelHintsEnabled: true
-              });
-          }
-      } catch (err) {
-          console.error("Ошибка Firebase Auth:", err);
-          const ignoredErrors = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/popup-blocked'];
-          if (!ignoredErrors.includes(err.code)) { alert("Произошла ошибка при входе. Попробуйте обновить страницу."); }
+      if (typeof window.lmsGoogleSignIn === 'function') {
+        await window.lmsGoogleSignIn();
+        return;
       }
+
+      // Запасной вариант на случай, если 3_auth.js ещё не обновлён.
+      const provider =
+        new window.firebase.auth.GoogleAuthProvider();
+
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      await window.auth.signInWithPopup(provider);
+    } catch (error) {
+      console.error('[Ultimate LMS Google Auth]', error);
+
+      const ignoredErrors = [
+        'auth/popup-closed-by-user',
+        'auth/cancelled-popup-request'
+      ];
+
+      if (ignoredErrors.includes(error?.code)) {
+        return;
+      }
+
+      if (error?.code === 'auth/popup-blocked') {
+        alert(
+          'Браузер заблокировал окно Google. Разрешите всплывающие окна для этого сайта.'
+        );
+        return;
+      }
+
+      if (error?.code === 'auth/network-request-failed') {
+        alert(
+          'Ошибка сети. Проверьте интернет-соединение.'
+        );
+        return;
+      }
+
+      alert(
+        'Произошла ошибка при входе. Попробуйте ещё раз.'
+      );
+    }
   };
+
+  // -----------------------------------------------------------------------
+  // UI
+  // -----------------------------------------------------------------------
 
   return (
     <>
       <LowPolyBackground theme={theme} />
 
-      {!isAuthLoading && user && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && (
-          <div className="mobile-burger-fixed">
-              <Button variant="muted" onClick={() => setIsSidebarOpen(true)} style={{width: 54, height: 54, padding: 0, borderRadius: '16px', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}>☰</Button>
-          </div>
+      {appReady && (
+        view === 'menu' ||
+        view === 'stats' ||
+        view === 'typing' ||
+        view === 'hotkeys' ||
+        view === 'code' ||
+        view === 'flashcards' ||
+        view === 'excel' ||
+        view === 'admin'
+      ) && (
+        <div className="mobile-burger-fixed">
+          <Button
+            variant="muted"
+            onClick={() => setIsSidebarOpen(true)}
+            style={{
+              width: 54,
+              height: 54,
+              padding: 0,
+              borderRadius: '16px',
+              fontSize: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+            }}
+          >
+            ☰
+          </Button>
+        </div>
       )}
 
-      <SidebarMenu 
-          isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} theme={theme} setTheme={setTheme} 
-          user={user} userNickname={userNickname} changeNickname={changeNickname} 
-          allowedModules={allowedModules} isAdmin={isAdmin} view={view} setView={setView} setIsChatOpen={setIsChatOpen} 
-      />
+      {/* Sidebar вообще не создаётся, пока профиль не подтверждён. */}
+      {appReady && (
+        <SidebarMenu
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          theme={theme}
+          setTheme={setTheme}
+          user={user}
+          userNickname={userNickname}
+          changeNickname={changeNickname}
+          allowedModules={allowedModules}
+          isAdmin={isAdmin}
+          view={view}
+          setView={setView}
+          setIsChatOpen={setIsChatOpen}
+        />
+      )}
 
       <AnimatePresence>
-          {isChatOpen && (
-              <>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsChatOpen(false)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:2000}} />
-                  <ChatPanel user={user} onClose={() => setIsChatOpen(false)} />
-              </>
+        {appReady &&
+          isChatOpen &&
+          allowedModules.includes('chat') && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsChatOpen(false)}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.4)',
+                  backdropFilter: 'blur(5px)',
+                  zIndex: 2000
+                }}
+              />
+
+              <ChatPanel
+                user={user}
+                onClose={() => setIsChatOpen(false)}
+              />
+            </>
           )}
       </AnimatePresence>
 
-      <div style={{minHeight: '100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 10px'}}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px 10px'
+        }}
+      >
         <AnimatePresence mode="wait">
-          
+
+          {/* -------------------------------------------------- */}
+          {/* FIREBASE / ПРОФИЛЬ ЕЩЁ НЕ ГОТОВЫ                    */}
+          {/* -------------------------------------------------- */}
+
           {isAuthLoading && (
-              <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="glass-panel" style={{textAlign:'center', width: '100%', maxWidth: '400px', padding: '40px 20px'}}>
-                  <h2 style={{marginBottom: 20}}>Загрузка системы</h2>
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ background: 'var(--text-sec)', height: '20px', width: '80%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} style={{ background: 'var(--text-sec)', height: '20px', width: '60%', margin: '0 auto 15px auto', borderRadius: '10px' }} />
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} style={{ background: 'var(--text-sec)', height: '45px', width: '100%', margin: '0 auto', borderRadius: '14px' }} />
-              </motion.div>
-          )}
-
-          {!isAuthLoading && !user && (
-              <div key="landing-wrapper" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 5000, background: '#050308' }}>
-                  <LandingView onLogin={handleDirectLogin} />
-              </div>
-          )}
-
-          {!isAuthLoading && user && view === 'admin' && isAdmin && (
-              <AdminPanel />
-          )}
-
-          {/* ИСПРАВЛЕНО: 'menu' добавлено в вызов TestsLMS, чтобы меню рендерилось там */}
-          {!isAuthLoading && user && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && (
-              <TestsLMS 
-                  view={view} 
-                  setView={setView} 
-                  currentSet={currentSet} 
-                  tests={tests} 
-                  setTests={setTests} 
-                  user={user} 
-                  history={history} 
-                  setHistory={setHistory} 
-                  fp={fp} 
-                  sets={sets}
-                  addSet={addSet}
-                  deleteSet={deleteSet}
-                  openSet={openSet}
-                  teacherTests={teacherTests}
-                  openTeacherAssignedTest={openTeacherAssignedTest}
-                  removeTeacherTestStudent={removeTeacherTestStudent}
+            <motion.div
+              key="loading"
+              initial={{
+                opacity: 0,
+                y: 10,
+                scale: 0.98
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.985
+              }}
+              className="glass-panel"
+              style={{
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '400px',
+                padding: '42px 26px',
+                borderRadius: '26px'
+              }}
+            >
+              <motion.div
+                animate={{
+                  rotate: 360
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: 'linear'
+                }}
+                style={{
+                  width: 44,
+                  height: 44,
+                  margin: '0 auto 20px',
+                  borderRadius: '50%',
+                  border: '4px solid rgba(139,92,246,.16)',
+                  borderTopColor: '#8b5cf6'
+                }}
               />
+
+              <h2
+                style={{
+                  margin: '0 0 8px',
+                  color: 'var(--text-main)'
+                }}
+              >
+                Ultimate LMS
+              </h2>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: 'var(--text-sec)',
+                  fontSize: '13px',
+                  lineHeight: 1.6
+                }}
+              >
+                Проверяем аккаунт и загружаем актуальные настройки…
+              </p>
+            </motion.div>
           )}
 
-          {!isAuthLoading && user && view === 'stats' && allowedModules.includes('stats') && (
-             <StatsView history={history} setHistory={setHistory} userData={userData} />
+          {/* -------------------------------------------------- */}
+          {/* FIREBASE ОШИБКА                                    */}
+          {/* -------------------------------------------------- */}
+
+          {!isAuthLoading && authError && (
+            <motion.div
+              key="auth-error"
+              initial={{
+                opacity: 0,
+                y: 12
+              }}
+              animate={{
+                opacity: 1,
+                y: 0
+              }}
+              exit={{
+                opacity: 0
+              }}
+              className="glass-panel"
+              style={{
+                width: '100%',
+                maxWidth: 430,
+                padding: '34px 28px',
+                textAlign: 'center',
+                borderRadius: 24
+              }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 15,
+                  margin: '0 auto 16px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'rgba(239,68,68,.1)',
+                  color: '#ef4444',
+                  fontSize: 23
+                }}
+              >
+                !
+              </div>
+
+              <h3
+                style={{
+                  margin: '0 0 8px',
+                  color: 'var(--text-main)'
+                }}
+              >
+                Не удалось открыть профиль
+              </h3>
+
+              <p
+                style={{
+                  margin: '0 0 20px',
+                  color: 'var(--text-sec)',
+                  fontSize: 13,
+                  lineHeight: 1.6
+                }}
+              >
+                {authError}
+              </p>
+
+              <Button
+                onClick={() => window.location.reload()}
+                style={{
+                  minHeight: 48
+                }}
+              >
+                Повторить
+              </Button>
+            </motion.div>
           )}
 
-          {!isAuthLoading && user && view === 'typing' && allowedModules.includes('typing') && (
-              <motion.div key="typing_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1100px'}}>
-                  <TypingTest />
+          {/* -------------------------------------------------- */}
+          {/* НЕ АВТОРИЗОВАН                                     */}
+          {/* -------------------------------------------------- */}
+
+          {!isAuthLoading && !authError && !user && (
+            <div
+              key="landing-wrapper"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                overflowY: 'auto',
+                zIndex: 5000,
+                background: '#050308'
+              }}
+            >
+              <LandingView
+                onLogin={handleDirectLogin}
+              />
+            </div>
+          )}
+
+          {/* -------------------------------------------------- */}
+          {/* ADMIN                                              */}
+          {/* -------------------------------------------------- */}
+
+          {appReady &&
+            view === 'admin' &&
+            isAdmin && (
+              <AdminPanel />
+            )}
+
+          {/* -------------------------------------------------- */}
+          {/* TESTS                                              */}
+          {/* teacherTests здесь уже гарантированно загружен.    */}
+          {/* -------------------------------------------------- */}
+
+          {appReady &&
+            [
+              'menu',
+              'set_menu',
+              'timer_setup',
+              'test',
+              'result',
+              'review'
+            ].includes(view) && (
+              <TestsLMS
+                view={view}
+                setView={setView}
+                currentSet={currentSet}
+                tests={tests}
+                setTests={setTests}
+                user={user}
+                history={history}
+                setHistory={setHistory}
+                fp={fp}
+                sets={sets}
+                addSet={addSet}
+                deleteSet={deleteSet}
+                openSet={openSet}
+                teacherTests={teacherTests}
+                openTeacherAssignedTest={openTeacherAssignedTest}
+                removeTeacherTestStudent={removeTeacherTestStudent}
+              />
+            )}
+
+          {/* -------------------------------------------------- */}
+          {/* MODULES                                            */}
+          {/* -------------------------------------------------- */}
+
+          {appReady &&
+            view === 'stats' &&
+            allowedModules.includes('stats') && (
+              <StatsView
+                history={history}
+                setHistory={setHistory}
+                userData={userData}
+              />
+            )}
+
+          {appReady &&
+            view === 'typing' &&
+            allowedModules.includes('typing') && (
+              <motion.div
+                key="typing_test"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  width: '100%',
+                  maxWidth: '1100px'
+                }}
+              >
+                <TypingTest />
               </motion.div>
-          )}
+            )}
 
-          {!isAuthLoading && user && view === 'hotkeys' && allowedModules.includes('hotkeys') && (
-              <motion.div key="hotkey_trainer" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '700px'}}>
-                  <HotkeyTrainer />
+          {appReady &&
+            view === 'hotkeys' &&
+            allowedModules.includes('hotkeys') && (
+              <motion.div
+                key="hotkey_trainer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  width: '100%',
+                  maxWidth: '700px'
+                }}
+              >
+                <HotkeyTrainer />
               </motion.div>
-          )}
+            )}
 
-          {!isAuthLoading && user && view === 'code' && allowedModules.includes('code') && (
-              <motion.div key="code_playground" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1200px'}}>
-                  <CodePlayground />
+          {appReady &&
+            view === 'code' &&
+            allowedModules.includes('code') && (
+              <motion.div
+                key="code_playground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  width: '100%',
+                  maxWidth: '1200px'
+                }}
+              >
+                <CodePlayground />
               </motion.div>
-          )}
+            )}
 
-          {!isAuthLoading && user && view === 'flashcards' && allowedModules.includes('flashcards') && (
-              <motion.div key="flashcards_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
-                  <FlashcardsLMS onBack={() => setView('menu')} />
+          {appReady &&
+            view === 'flashcards' &&
+            allowedModules.includes('flashcards') && (
+              <motion.div
+                key="flashcards_view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  width: '100%',
+                  maxWidth: '1000px'
+                }}
+              >
+                <FlashcardsLMS
+                  onBack={() => setView('menu')}
+                />
               </motion.div>
-          )}
+            )}
 
-          {!isAuthLoading && user && view === 'excel' && allowedModules.includes('excel') && (
-              <motion.div key="excel_view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{width: '100%', maxWidth: '1000px'}}>
-                  <ExcelTrainerLMS onBack={() => setView('menu')} />
+          {appReady &&
+            view === 'excel' &&
+            allowedModules.includes('excel') && (
+              <motion.div
+                key="excel_view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  width: '100%',
+                  maxWidth: '1000px'
+                }}
+              >
+                <ExcelTrainerLMS
+                  onBack={() => setView('menu')}
+                />
               </motion.div>
-          )}
+            )}
 
         </AnimatePresence>
 
         {/* ПЛАВАЮЩИЙ ИИ-АССИСТЕНТ */}
-        {!isAuthLoading && user && allowedModules.includes('ai_chat') && window.AIChatWidget && (
+        {appReady &&
+          allowedModules.includes('ai_chat') &&
+          window.AIChatWidget && (
             <window.AIChatWidget />
-        )}
+          )}
 
       </div>
     </>
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(
+  document.getElementById('root')
+);
+
 root.render(<App />);
