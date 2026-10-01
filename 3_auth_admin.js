@@ -1,11 +1,26 @@
 // --- 3_auth.js ---
-// Ultimate LMS — улучшенная авторизация через Google
-// Требует: React, Framer Motion (window.Motion), Firebase compat,
-// window.auth и window.db должны быть инициализированы ДО этого файла.
+// Ultimate LMS — Google Auth + единая подготовка профиля
+// Требует Firebase compat, window.auth, window.db, React и window.Motion.
+//
+// ВАЖНО:
+// Главный App должен ждать ensureLmsUserProfile() до показа LMS.
 
 (function () {
+    'use strict';
+
     const { useState, useRef } = React;
     const { motion, AnimatePresence } = window.Motion;
+
+    const DEFAULT_MODULES = [
+        'chat',
+        'ai_chat',
+        'typing',
+        'hotkeys',
+        'code',
+        'flashcards',
+        'excel',
+        'stats'
+    ];
 
     const AuthIcon = ({ name, size = 22 }) => {
         const icons = {
@@ -44,10 +59,8 @@
         );
     };
 
-    const getAuthErrorMessage = (error) => {
-        const code = error?.code || '';
-
-        switch (code) {
+    function getAuthErrorMessage(error) {
+        switch (error?.code || '') {
             case 'auth/popup-closed-by-user':
                 return 'Окно входа было закрыто. Попробуйте ещё раз.';
             case 'auth/popup-blocked':
@@ -57,46 +70,57 @@
             case 'auth/network-request-failed':
                 return 'Не удалось связаться с сервером. Проверьте интернет-соединение.';
             case 'auth/operation-not-allowed':
-                return 'Вход через Google не включён в настройках Firebase.';
+                return 'Вход через Google не включён в Firebase.';
             case 'auth/unauthorized-domain':
-                return 'Этот домен не разрешён для авторизации Firebase.';
+                return 'Этот домен не разрешён для Firebase Authentication.';
             case 'auth/account-exists-with-different-credential':
                 return 'Для этого email уже существует аккаунт с другим способом входа.';
             case 'permission-denied':
             case 'firestore/permission-denied':
-                return 'Нет доступа к профилю пользователя. Проверьте правила Firestore.';
+                return 'Нет доступа к профилю пользователя. Проверьте Firestore Rules.';
             case 'unavailable':
             case 'firestore/unavailable':
-                return 'База данных временно недоступна. Попробуйте немного позже.';
+                return 'Firebase временно недоступен. Проверьте интернет и попробуйте ещё раз.';
             case 'lms/account-banned':
                 return 'Ваш аккаунт заблокирован. Обратитесь к преподавателю.';
             default:
                 return 'Не удалось выполнить вход. Попробуйте ещё раз.';
         }
-    };
+    }
 
-    const prepareUserProfile = async (authUser) => {
-        if (!window.firebase) {
-            const error = new Error('Firebase не подключён.');
-            error.code = 'lms/firebase-missing';
+    // ---------------------------------------------------------------------
+    // ЕДИНАЯ ПОДГОТОВКА users/{uid}
+    //
+    // Именно эту функцию главный App вызывает перед тем,
+    // как вообще разрешить отрисовку LMS.
+    // ---------------------------------------------------------------------
+
+    async function ensureLmsUserProfile(authUser) {
+        if (!authUser?.uid) {
+            const error = new Error('Firebase не вернул пользователя.');
+            error.code = 'lms/user-missing';
             throw error;
         }
 
-        if (!window.db?.runTransaction) {
+        if (!window.firebase || !window.db?.runTransaction) {
             const error = new Error('Firestore не подключён.');
             error.code = 'firestore/unavailable';
             throw error;
         }
 
-        const db = window.db;
-        const userRef = db.collection('users').doc(authUser.uid);
-        const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp();
+        const ref = window.db
+            .collection('users')
+            .doc(authUser.uid);
 
-        return db.runTransaction(async (transaction) => {
-            const snapshot = await transaction.get(userRef);
+        const serverTimestamp =
+            window.firebase.firestore.FieldValue.serverTimestamp();
 
+        return window.db.runTransaction(async transaction => {
+            const snapshot = await transaction.get(ref);
+
+            // Новый пользователь.
             if (!snapshot.exists) {
-                const newProfile = {
+                const profile = {
                     email: authUser.email || '',
                     nickname:
                         authUser.displayName ||
@@ -104,31 +128,32 @@
                         'Студент',
                     displayName: authUser.displayName || '',
                     photoURL: authUser.photoURL || '',
+
                     role: 'student',
                     isBanned: false,
-                    allowedModules: [
-                        'chat',
-                        'typing',
-                        'hotkeys',
-                        'code',
-                        'flashcards',
-                        'excel'
-                    ],
+
+                    allowedModules: DEFAULT_MODULES,
+
                     excelHintsEnabled: true,
+
                     chatContactMode: 'all',
                     chatAllowedUsers: [],
+
+                    assignedTests: [],
+
                     registeredAt: serverTimestamp,
                     lastLoginAt: serverTimestamp,
                     lastSeenAt: serverTimestamp,
                     loginCount: 1,
-                    profileVersion: 2
+
+                    profileVersion: 3
                 };
 
-                transaction.set(userRef, newProfile);
+                transaction.set(ref, profile);
 
                 return {
+                    ...profile,
                     uid: authUser.uid,
-                    ...newProfile,
                     isNewUser: true
                 };
             }
@@ -141,16 +166,33 @@
                 throw error;
             }
 
+            // ВАЖНО:
+            // здесь нет role, isBanned, allowedModules,
+            // assignedTests, chatAllowedUsers, excelHintsEnabled.
+            // Настройки администратора не перезаписываются.
             const patch = {
-                email: authUser.email || current.email || '',
-                displayName: authUser.displayName || current.displayName || '',
-                photoURL: authUser.photoURL || current.photoURL || '',
-                lastLoginAt: serverTimestamp,
-                lastSeenAt: serverTimestamp,
-                loginCount: (Number(current.loginCount) || 0) + 1,
-                profileVersion: 2
+                email:
+                    authUser.email ||
+                    current.email ||
+                    '',
+                displayName:
+                    authUser.displayName ||
+                    current.displayName ||
+                    '',
+                photoURL:
+                    authUser.photoURL ||
+                    current.photoURL ||
+                    '',
+                lastLoginAt:
+                    serverTimestamp,
+                lastSeenAt:
+                    serverTimestamp,
+                loginCount:
+                    (Number(current.loginCount) || 0) + 1,
+                profileVersion: 3
             };
 
+            // Мягкая миграция старых аккаунтов.
             if (!current.nickname) {
                 patch.nickname =
                     authUser.displayName ||
@@ -166,7 +208,7 @@
                 patch.chatAllowedUsers = [];
             }
 
-            transaction.update(userRef, patch);
+            transaction.update(ref, patch);
 
             return {
                 uid: authUser.uid,
@@ -175,7 +217,27 @@
                 isNewUser: false
             };
         });
-    };
+    }
+
+    // Только Google popup.
+    // Профиль намеренно НЕ создаётся здесь:
+    // этим занимается главный App через ensureLmsUserProfile().
+    async function lmsGoogleSignIn() {
+        if (!window.firebase || !window.auth) {
+            const error = new Error('Firebase Auth не подключён.');
+            error.code = 'lms/auth-missing';
+            throw error;
+        }
+
+        const provider =
+            new window.firebase.auth.GoogleAuthProvider();
+
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        return window.auth.signInWithPopup(provider);
+    }
 
     const AuthScreen = React.memo(() => {
         const [error, setError] = useState('');
@@ -190,84 +252,18 @@
             setIsLoading(true);
 
             try {
-                if (!window.firebase) {
-                    const e = new Error('Firebase не подключён.');
-                    e.code = 'lms/firebase-missing';
-                    throw e;
-                }
+                await lmsGoogleSignIn();
 
-                if (!window.auth) {
-                    const e = new Error('Firebase Auth не подключён.');
-                    e.code = 'lms/auth-missing';
-                    throw e;
-                }
-
-                if (!window.db) {
-                    const e = new Error('Firestore не подключён.');
-                    e.code = 'firestore/unavailable';
-                    throw e;
-                }
-
-                const provider = new window.firebase.auth.GoogleAuthProvider();
-                provider.setCustomParameters({
-                    prompt: 'select_account'
-                });
-
-                const result = await window.auth.signInWithPopup(provider);
-                const authUser = result?.user;
-
-                if (!authUser?.uid) {
-                    const e = new Error('Firebase не вернул пользователя.');
-                    e.code = 'lms/user-missing';
-                    throw e;
-                }
-
-                const profile = await prepareUserProfile(authUser);
-
-                window.currentLmsUser = {
-                    ...profile,
-                    uid: authUser.uid
-                };
-
-                if (typeof window.trackLmsActivity === 'function') {
-                    try {
-                        await window.trackLmsActivity(
-                            'auth',
-                            'platform',
-                            {
-                                action: 'login',
-                                label: 'Вход в систему',
-                                details: {
-                                    provider: 'google',
-                                    newUser: profile.isNewUser === true
-                                }
-                            }
-                        );
-                    } catch (trackerError) {
-                        console.warn('[Ultimate LMS Tracker]', trackerError);
-                    }
-                }
+                // Ничего больше не делаем:
+                // onAuthStateChanged в главном App теперь сам
+                // проверит серверный профиль и только после этого откроет LMS.
             } catch (err) {
                 console.error('[Ultimate LMS Auth]', err);
 
-                try {
-                    if (window.auth?.currentUser) {
-                        await window.auth.signOut();
-                    }
-                } catch (signOutError) {
-                    console.warn(
-                        '[Ultimate LMS Auth] Не удалось очистить сессию:',
-                        signOutError
-                    );
-                }
-
                 if (
-                    err?.code === 'lms/firebase-missing' ||
-                    err?.code === 'lms/auth-missing' ||
-                    err?.code === 'lms/user-missing'
+                    err?.code !== 'auth/popup-closed-by-user' &&
+                    err?.code !== 'auth/cancelled-popup-request'
                 ) {
-                    setError('Система авторизации временно недоступна. Перезагрузите страницу.');
-                } else {
                     setError(getAuthErrorMessage(err));
                 }
             } finally {
@@ -351,7 +347,10 @@
                             '0 12px 30px -9px rgba(99,102,241,.55)'
                     }}
                 >
-                    <AuthIcon name="lock" size={29} />
+                    <AuthIcon
+                        name="lock"
+                        size={29}
+                    />
                 </motion.div>
 
                 <h2
@@ -383,7 +382,11 @@
                     {error && (
                         <motion.div
                             role="alert"
-                            initial={{ opacity: 0, height: 0, y: -6 }}
+                            initial={{
+                                opacity: 0,
+                                height: 0,
+                                y: -6
+                            }}
                             animate={{
                                 opacity: 1,
                                 height: 'auto',
@@ -412,7 +415,10 @@
                                 fontWeight: 600
                             }}
                         >
-                            <AuthIcon name="alert" size={17} />
+                            <AuthIcon
+                                name="alert"
+                                size={17}
+                            />
                             <span>{error}</span>
                         </motion.div>
                     )}
@@ -420,8 +426,16 @@
 
                 <motion.button
                     type="button"
-                    whileHover={!isLoading ? { y: -2, scale: 1.008 } : {}}
-                    whileTap={!isLoading ? { scale: 0.985 } : {}}
+                    whileHover={
+                        !isLoading
+                            ? { y: -2, scale: 1.008 }
+                            : {}
+                    }
+                    whileTap={
+                        !isLoading
+                            ? { scale: 0.985 }
+                            : {}
+                    }
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
                     aria-busy={isLoading}
@@ -470,7 +484,9 @@
                     )}
 
                     <span>
-                        {isLoading ? 'Проверяем аккаунт…' : 'Продолжить с Google'}
+                        {isLoading
+                            ? 'Открываем Google…'
+                            : 'Продолжить с Google'}
                     </span>
                 </motion.button>
 
@@ -487,12 +503,21 @@
                         fontWeight: 550
                     }}
                 >
-                    <AuthIcon name="shield" size={13} />
+                    <AuthIcon
+                        name="shield"
+                        size={13}
+                    />
                     Защищённый вход через Google
                 </div>
             </motion.div>
         );
     });
 
-    Object.assign(window, { AuthScreen });
+    Object.assign(window, {
+        AuthScreen,
+        DEFAULT_LMS_MODULES: DEFAULT_MODULES,
+        ensureLmsUserProfile,
+        lmsGoogleSignIn,
+        getAuthErrorMessage
+    });
 })();
