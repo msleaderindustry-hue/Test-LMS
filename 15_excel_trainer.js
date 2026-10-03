@@ -4863,7 +4863,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 @keyframes ex3-correct{0%{box-shadow:0 0 0 0 #10b98160}100%{box-shadow:0 0 0 7px #10b98100}}
 @keyframes ex3-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 /* Layout V3 — new hierarchy, full-width library, two-column workbench. */
-.et-shell{padding:0;background:var(--bg-main);border-radius:28px;overflow:visible;max-width:1420px}
+.et-shell{padding:0;background:var(--bg-main);border-radius:28px;overflow:visible;max-width:none;min-width:0}
 .ex3-hero{position:relative;border-radius:28px 28px 0 0;overflow:hidden;background:radial-gradient(ellipse at 74% 90%,#13b99c13,transparent 50%),radial-gradient(ellipse at 100% 0%,#7651dc22,transparent 50%),var(--bg-panel)}
 .ex3-brand{display:flex;align-items:center;gap:12px;padding:22px 30px;border-bottom:1px solid var(--border);font-size:13px;letter-spacing:2px;font-weight:850}
 .ex3-brand b{color:var(--accent-green)}
@@ -5057,12 +5057,23 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 /* Reduced motion: no floating/orbit/sway/particles, but keep the calm part (typing, fades, selection box). */
 @media(prefers-reduced-motion:reduce){.et-shell .ex5-scene .ex5-formulas code{animation:ex5-fade 12s var(--d,0s) infinite,ex5-typing 12s var(--d,0s) steps(var(--n,12),end) infinite!important}.et-shell .ex5-scene .ex5-results>b{animation:ex5-fade-late 12s var(--d,0s) infinite!important}.et-shell .ex5-scene .ex5-sheet-grid>.ex5-select{animation:ex5-select 12s ease-in-out infinite!important}}
 
+
+/* Layout correction: viewport notifications, aligned SVG arrows, full available width. */
+.et-shell{width:100%;max-width:none;min-width:0;flex:1 1 auto;align-self:stretch}
+.et-shell .ex3-chevron{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px;line-height:0;vertical-align:middle}
+.et-shell .ex3-chevron svg{display:block;width:18px;height:18px;margin:0}
+.et-shell .ex3-catalog-toggle{align-items:center}
+.et-toast-wrap{--bg-panel:#172334;--border:#a0b9db25;color:#eef5ff;font-family:inherit;line-height:1.5;position:fixed;inset:auto max(22px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) auto;width:max-content;max-width:calc(100vw - 32px);z-index:1600;pointer-events:none}
+.et-toast-wrap.theme-light{--bg-panel:#fff;--border:#cedaea;color:#182a40}
+.et-toast-wrap,.et-toast-wrap *{box-sizing:border-box}
+.et-toast-wrap .et-toast{overflow-wrap:anywhere;max-width:min(380px,calc(100vw - 32px))}
+@media(max-width:500px){.et-toast-wrap{right:16px;bottom:max(16px,env(safe-area-inset-bottom))}}
 `;
   function useInjectStyles() {
     useEffect(() => {
-      if (!document.getElementById("et-styles-v6")) {
+      if (!document.getElementById("et-styles-layout-v7")) {
         const tag = document.createElement("style");
-        tag.id = "et-styles-v6";
+        tag.id = "et-styles-layout-v7";
         tag.textContent = ET_STYLES;
         document.head.appendChild(tag);
       }
@@ -6037,10 +6048,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, t.retry));
   }
   function ToastStack({
-    toasts
+    toasts, theme
   }) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "et-toast-wrap",
+    return ReactDOM.createPortal(React.createElement("div", {
+      className: `et-toast-wrap theme-${theme}`,
       role: "status",
       "aria-live": "polite"
     }, /*#__PURE__*/React.createElement(AnimatePresence, null, toasts.map(tItem => /*#__PURE__*/React.createElement(motion.div, {
@@ -6069,7 +6080,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         stiffness: 400,
         damping: 28
       }
-    }, tItem.text))));
+    }, tItem.text)))), document.body);
   }
   function ExcelTable({
     table,
@@ -6614,7 +6625,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const hintStep3 = getFormulaStart(currentLesson, activeFormulaName);
     const isMastered = masteryCount >= REQUIRED_MASTERY_STREAK;
     return /*#__PURE__*/React.createElement(motion.div, {
-      className: `et-shell glass-panel theme-${theme}`,
+      className: `et-shell theme-${theme}`,
       initial: {
         opacity: 0,
         y: 30
@@ -6627,7 +6638,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         duration: 0.4
       }
     }, /*#__PURE__*/React.createElement(ToastStack, {
-      toasts: toasts
+      toasts: toasts, theme: theme
     }), /*#__PURE__*/React.createElement("header", {
       className: "ex3-hero"
     }, /*#__PURE__*/React.createElement("div", {
@@ -6717,7 +6728,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       style: {
         transform: catalogOpen ? 'rotate(180deg)' : undefined
       }
-    }, "\u2304")), /*#__PURE__*/React.createElement(GlobalSearch, {
+    }, React.createElement("svg", {width:18,height:18,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2.2,strokeLinecap:"round",strokeLinejoin:"round","aria-hidden":true}, React.createElement("path",{d:"m5 9 7 7 7-7"})))), /*#__PURE__*/React.createElement(GlobalSearch, {
       t: t,
       onPick: pickFromSidebarOrSearch,
       onCustom: name => {
@@ -6872,7 +6883,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       style: {
         transform: theoryOpen ? 'rotate(180deg)' : undefined
       }
-    }, "\u2304")), /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("svg", {width:18,height:18,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2.2,strokeLinecap:"round",strokeLinejoin:"round","aria-hidden":true}, React.createElement("path",{d:"m5 9 7 7 7-7"})))), /*#__PURE__*/React.createElement("div", {
       className: "ex3-theory-reveal"
     }, /*#__PURE__*/React.createElement("div", {
       className: "ex3-theory-inner",
