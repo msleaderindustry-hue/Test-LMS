@@ -20,19 +20,4383 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
      ========================================================================= */
   const EXCEL_DATABASE = {
-    "Математические": ["СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ОКРУГЛТ", "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "СЛМЕЖДУ", "ЦЕЛОЕ", "ОТБР", "ЧАСТНОЕ", "СУММПРОИЗВ", "АБС", "ЗНАК", "ЧЁТН", "НЕЧЁТ", "ФАКТР", "ПИ", "РИМСКОЕ", "АРАБСКОЕ"],
-    "Динамические массивы": ["ПРОСМОТРX", "ФИЛЬТР", "УНИК", "СОРТ", "СОРТПО", "ПОСЛЕДОВ", "СЛМАССИВ", "ТЕКСТДО", "ТЕКСТПОСЛЕ", "ТЕКСТРАЗДЕЛ", "ВСТРОКУ", "ВСТОЛБЕЦ", "ВЫБОРСТОЛБЦОВ", "ВЫБОРСТРОК"],
-    "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "ПОИСКПОЗX", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТРОКИ", "СТОЛБЕЦ", "СТОЛБЦЫ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП", "АДРЕС", "ГИПЕРССЫЛКА", "ФОРМУЛАТЕКСТ"],
+    "Математические": ["СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ОКРУГЛТ", "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "СЛМЕЖДУ", "ЦЕЛОЕ", "ОТБР", "ЧАСТНОЕ", "СУММПРОИЗВ", "АБС", "ЗНАК", "ЧЁТН", "НЕЧЁТ", "ФАКТР", "ПИ", "РИМСКОЕ", "АРАБСКОЕ", "ACOS", "ACOSH", "ACOT", "ACOTH", "AGGREGATE", "ASIN", "ASINH", "ATAN", "ATAN2", "ATANH", "BASE", "CEILING", "CEILING.MATH", "CEILING.PRECISE", "COMBIN", "COMBINA", "COS", "COSH", "COT", "COTH", "CSC", "CSCH", "DECIMAL", "DEGREES", "EXP", "FACTDOUBLE", "FLOOR.MATH", "FLOOR.PRECISE", "GCD", "ISO.CEILING", "LCM", "LN", "LOG", "LOG10", "MDETERM", "MINVERSE", "MMULT", "MULTINOMIAL", "MUNIT", "PERCENTOF", "RADIANS", "SEC", "SECH", "SERIESSUM", "SIN", "SINH", "SQRTPI", "SUBTOTAL", "SUMSQ", "SUMX2MY2", "SUMX2PY2", "SUMXMY2", "TAN", "TANH"],
+    "Динамические массивы": ["ПРОСМОТРX", "ФИЛЬТР", "УНИК", "СОРТ", "СОРТПО", "ПОСЛЕДОВ", "СЛМАССИВ", "ТЕКСТДО", "ТЕКСТПОСЛЕ", "TEXTSPLIT", "TOROW", "TOCOL", "CHOOSECOLS", "ВЫБОРСТРОК", "BYCOL", "BYROW", "LAMBDA", "LET", "MAKEARRAY", "MAP", "REDUCE", "SCAN", "DROP", "EXPAND", "GROUPBY", "HSTACK", "PIVOTBY", "TAKE", "TRIMRANGE", "VSTACK", "WRAPCOLS", "WRAPROWS"],
+    "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "ПОИСКПОЗX", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТРОКИ", "СТОЛБЕЦ", "СТОЛБЦЫ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП", "АДРЕС", "ГИПЕРССЫЛКА", "ФОРМУЛАТЕКСТ", "AREAS", "GETPIVOTDATA", "IMAGE", "RTD"],
     "Логические": ["ЕСЛИ", "И", "ИЛИ", "ЕСЛИОШИБКА", "ЕСНД", "НЕ", "ИСТИНА", "ЛОЖЬ", "ЕСЛИМН", "ПЕРЕКЛЮЧ", "ИСКЛИЛИ"],
-    "Текстовые": ["СЦЕПИТЬ", "СЦЕП", "ОБЪЕДИНИТЬ", "ЛЕВСИМВ", "ПРАВСИМВ", "ПСТР", "ДЛСТР", "НАЙТИ", "ПОИСК", "ЗАМЕНИТЬ", "ПОДСТАВИТЬ", "ПРОПИСН", "СТРОЧН", "ПРОПНАЧ", "СЖПРОБЕЛЫ", "ТЕКСТ", "ЗНАЧЕН", "СОВПАД", "ПОВТОР", "СИМВОЛ", "КОДСИМВ", "ПЕЧСИМВ"],
-    "Дата и время": ["СЕГОДНЯ", "ТДАТА", "ДЕНЬ", "МЕСЯЦ", "ГОД", "ДАТА", "ДЕНЬНЕД", "ЧАС", "МИНУТЫ", "СЕКУНДЫ", "ВРЕМЯ", "РАБДЕНЬ", "РАБДЕНЬ.МЕЖД", "ЧИСТРАБДНИ", "ЧИСТРАБДНИ.МЕЖД", "ДОЛЯГОДА", "НОМНЕДЕЛИ", "НОМНЕДЕЛИ.ISO", "ДАТАМЕС", "КОНМЕСЯЦ", "РАЗНДАТ", "ДАТАЗНАЧ", "ВРЕМЗНАЧ"],
-    "Статистические": ["СРЗНАЧ", "СРЗНАЧЕСЛИ", "СРЗНАЧЕСЛИМН", "МАКС", "МИН", "МАКСЕСЛИ", "МИНЕСЛИ", "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "СЧИТАТЬПУСТОТЫ", "МЕДИАНА", "МОДА", "МОДА.ОДН", "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "РАНГ", "РАНГ.РВ", "СРГЕОМ", "СРГАРМ", "ДИСП", "СТАНДОТКЛОН", "КВАРТИЛЬ", "ПЕРСЕНТИЛЬ", "КОРРЕЛ"],
-    "Финансовые": ["ПЛТ", "БС", "КПЕР", "СТАВКА", "ПРПЛТ", "ОСПЛТ", "ЧПС", "ВНДОХ", "ЭФФЕКТ", "НОМИНАЛ", "АМОРТИЗ"],
-    "Базы данных": ["БДСУММ", "БДСРЗНАЧ", "БДМАКС", "БДМИН", "БДСЧЁТ", "БДСЧЁТА", "БДПРОИЗВЕД", "БДИЗВЛЕЧЬ"],
-    "Информационные": ["ЕПУСТО", "ЕЧИСЛО", "ЕТЕКСТ", "ЕНЕТЕКСТ", "ЕЛОГИЧ", "ЕОШИБКА", "ЕОШ", "ЕНД", "ТИП", "ТИП.ОШИБКИ", "ЯЧЕЙКА", "ЛИСТ", "ЛИСТЫ", "Ч"],
-    "Инженерные": ["ДЕС.В.ДВ", "ДЕС.В.ШЕСТН", "ДЕС.В.ВОСЬМ", "ДВ.В.ДЕС", "ДВ.В.ШЕСТН", "ШЕСТН.В.ДЕС", "ШЕСТН.В.ДВ", "ПРЕОБР", "ДЕЛЬТА", "ПОРОГ"]
+    "Текстовые": ["СЦЕПИТЬ", "СЦЕП", "ОБЪЕДИНИТЬ", "ЛЕВСИМВ", "ПРАВСИМВ", "ПСТР", "ДЛСТР", "НАЙТИ", "ПОИСК", "ЗАМЕНИТЬ", "ПОДСТАВИТЬ", "ПРОПИСН", "СТРОЧН", "ПРОПНАЧ", "СЖПРОБЕЛЫ", "ТЕКСТ", "ЗНАЧЕН", "СОВПАД", "ПОВТОР", "СИМВОЛ", "КОДСИМВ", "ПЕЧСИМВ", "ASC", "ARRAYTOTEXT", "BAHTTEXT", "DBCS", "DETECTLANGUAGE", "DOLLAR", "FINDB", "FIXED", "LEFTB", "LENB", "MIDB", "NUMBERVALUE", "PHONETIC", "REGEXEXTRACT", "REGEXREPLACE", "REGEXTEST", "REPLACEB", "RIGHTB", "SEARCHB", "T", "TRANSLATE", "UNICHAR", "UNICODE", "VALUETOTEXT"],
+    "Дата и время": ["СЕГОДНЯ", "ТДАТА", "ДЕНЬ", "МЕСЯЦ", "ГОД", "ДАТА", "ДЕНЬНЕД", "ЧАС", "МИНУТЫ", "СЕКУНДЫ", "ВРЕМЯ", "РАБДЕНЬ", "РАБДЕНЬ.МЕЖД", "ЧИСТРАБДНИ", "ЧИСТРАБДНИ.МЕЖД", "ДОЛЯГОДА", "НОМНЕДЕЛИ", "НОМНЕДЕЛИ.ISO", "ДАТАМЕС", "КОНМЕСЯЦ", "РАЗНДАТ", "ДАТАЗНАЧ", "ВРЕМЗНАЧ", "DAYS", "DAYS360"],
+    "Статистические": ["СРЗНАЧ", "СРЗНАЧЕСЛИ", "СРЗНАЧЕСЛИМН", "МАКС", "МИН", "МАКСЕСЛИМН", "МИНЕСЛИМН", "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "СЧИТАТЬПУСТОТЫ", "МЕДИАНА", "МОДА", "МОДА.ОДН", "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "РАНГ", "РАНГ.РВ", "СРГЕОМ", "СРГАРМ", "ДИСП", "СТАНДОТКЛОН", "КВАРТИЛЬ", "ПЕРСЕНТИЛЬ", "КОРРЕЛ", "AVEDEV", "AVERAGEA", "BETA.DIST", "BETA.INV", "BINOM.DIST", "BINOM.DIST.RANGE", "BINOM.INV", "CHISQ.DIST", "CHISQ.DIST.RT", "CHISQ.INV", "CHISQ.INV.RT", "CHISQ.TEST", "CONFIDENCE.NORM", "CONFIDENCE.T", "COVARIANCE.P", "COVARIANCE.S", "DEVSQ", "EXPON.DIST", "F.DIST", "F.DIST.RT", "F.INV", "F.INV.RT", "F.TEST", "FISHER", "FISHERINV", "FORECAST.ETS", "FORECAST.ETS.CONFINT", "FORECAST.ETS.SEASONALITY", "FORECAST.ETS.STAT", "FORECAST.LINEAR", "FREQUENCY", "GAMMA", "GAMMA.DIST", "GAMMA.INV", "GAMMALN", "GAMMALN.PRECISE", "GAUSS", "GROWTH", "HYPGEOM.DIST", "INTERCEPT", "KURT", "LINEST", "LOGEST", "LOGNORM.DIST", "LOGNORM.INV", "MAXA", "MINA", "MODE.MULT", "NEGBINOM.DIST", "NORM.DIST", "NORM.INV", "NORM.S.DIST", "NORM.S.INV", "PEARSON", "PERCENTILE.EXC", "PERCENTILE.INC", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERMUT", "PERMUTATIONA", "PHI", "POISSON.DIST", "PROB", "QUARTILE.EXC", "QUARTILE.INC", "RANK.AVG", "RSQ", "SKEW", "SKEW.P", "SLOPE", "STANDARDIZE", "STDEV.P", "STDEV.S", "STDEVA", "STDEVPA", "STEYX", "T.DIST", "T.DIST.2T", "T.DIST.RT", "T.INV", "T.INV.2T", "T.TEST", "TREND", "TRIMMEAN", "VAR.P", "VAR.S", "VARA", "VARPA", "WEIBULL.DIST", "Z.TEST"],
+    "Финансовые": ["ПЛТ", "БС", "КПЕР", "СТАВКА", "ПРПЛТ", "ОСПЛТ", "ЧПС", "ВНДОХ", "ЭФФЕКТ", "НОМИНАЛ", "АПЛ", "ACCRINT", "ACCRINTM", "AMORDEGRC", "AMORLINC", "COUPDAYBS", "COUPDAYS", "COUPDAYSNC", "COUPNCD", "COUPNUM", "COUPPCD", "CUMIPMT", "CUMPRINC", "DB", "DDB", "DISC", "DOLLARDE", "DOLLARFR", "DURATION", "FVSCHEDULE", "INTRATE", "ISPMT", "MDURATION", "MIRR", "ODDFPRICE", "ODDFYIELD", "ODDLPRICE", "ODDLYIELD", "PDURATION", "PRICE", "PRICEDISC", "PRICEMAT", "PV", "RECEIVED", "RRI", "SYD", "TBILLEQ", "TBILLPRICE", "TBILLYIELD", "VDB", "XIRR", "XNPV", "YIELD", "YIELDDISC", "YIELDMAT"],
+    "Базы данных": ["БДСУММ", "ДСРЗНАЧ", "ДМАКС", "ДМИН", "БСЧЁТ", "БСЧЁТА", "БДПРОИЗВЕД", "БИЗВЛЕЧЬ", "DSTDEV", "DSTDEVP", "DVAR", "DVARP"],
+    "Информационные": ["ЕПУСТО", "ЕЧИСЛО", "ЕТЕКСТ", "ЕНЕТЕКСТ", "ЕЛОГИЧ", "ЕОШИБКА", "ЕОШ", "ЕНД", "ТИП", "ТИП.ОШИБКИ", "ЯЧЕЙКА", "ЛИСТ", "ЛИСТЫ", "Ч", "INFO", "ISEVEN", "ISFORMULA", "ISODD", "ISOMITTED", "ISREF", "NA", "STOCKHISTORY"],
+    "Инженерные": ["ДЕС.В.ДВ", "ДЕС.В.ШЕСТН", "ДЕС.В.ВОСЬМ", "ДВ.В.ДЕС", "ДВ.В.ШЕСТН", "ШЕСТН.В.ДЕС", "ШЕСТН.В.ДВ", "ПРЕОБР", "ДЕЛЬТА", "ПОРОГ", "BESSELI", "BESSELJ", "BESSELK", "BESSELY", "BIN2OCT", "BITAND", "BITLSHIFT", "BITOR", "BITRSHIFT", "BITXOR", "COMPLEX", "ERF", "ERF.PRECISE", "ERFC", "ERFC.PRECISE", "HEX2OCT", "IMABS", "IMAGINARY", "IMARGUMENT", "IMCONJUGATE", "IMCOS", "IMCOSH", "IMCOT", "IMCSC", "IMCSCH", "IMDIV", "IMEXP", "IMLN", "IMLOG10", "IMLOG2", "IMPOWER", "IMPRODUCT", "IMREAL", "IMSEC", "IMSECH", "IMSIN", "IMSINH", "IMSQRT", "IMSUB", "IMSUM", "IMTAN", "OCT2BIN", "OCT2DEC", "OCT2HEX"],
+    "Совместимость": ["BETADIST", "BETAINV", "BINOMDIST", "CHIDIST", "CHIINV", "CHITEST", "CONFIDENCE", "COVAR", "CRITBINOM", "EXPONDIST", "FDIST", "FINV", "FLOOR", "FORECAST", "FTEST", "GAMMADIST", "GAMMAINV", "HYPGEOMDIST", "LOGINV", "LOGNORMDIST", "NEGBINOMDIST", "NORMDIST", "NORMINV", "NORMSDIST", "NORMSINV", "PERCENTRANK", "POISSON", "STDEVP", "TDIST", "TINV", "TTEST", "VARP", "WEIBULL", "ZTEST"],
+    "Кубы": ["CUBEKPIMEMBER", "CUBEMEMBER", "CUBEMEMBERPROPERTY", "CUBERANKEDMEMBER", "CUBESET", "CUBESETCOUNT", "CUBEVALUE"],
+    "Надстройки": ["CALL", "EUROCONVERT", "REGISTER.ID"],
+    "Веб-функции": ["ENCODEURL", "FILTERXML", "WEBSERVICE"]
   };
+  const FUNCTION_META = {
+    "BETADIST": {
+      "en": "BETADIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BETADIST",
+      "reference": false
+    },
+    "BETAINV": {
+      "en": "BETAINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BETAINV",
+      "reference": false
+    },
+    "BINOMDIST": {
+      "en": "BINOMDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BINOMDIST",
+      "reference": false
+    },
+    "CHIDIST": {
+      "en": "CHIDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CHIDIST",
+      "reference": false
+    },
+    "CHIINV": {
+      "en": "CHIINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CHIINV",
+      "reference": false
+    },
+    "CHITEST": {
+      "en": "CHITEST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CHITEST",
+      "reference": false
+    },
+    "СЦЕПИТЬ": {
+      "en": "CONCATENATE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЦЕПИТЬ",
+      "aliases": ["СЦЕПИТЬ", "CONCATENATE"],
+      "reference": false
+    },
+    "CONFIDENCE": {
+      "en": "CONFIDENCE",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CONFIDENCE",
+      "reference": false
+    },
+    "COVAR": {
+      "en": "COVAR",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COVAR",
+      "reference": false
+    },
+    "CRITBINOM": {
+      "en": "CRITBINOM",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CRITBINOM",
+      "reference": false
+    },
+    "EXPONDIST": {
+      "en": "EXPONDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "EXPONDIST",
+      "reference": false
+    },
+    "FDIST": {
+      "en": "FDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FDIST",
+      "reference": false
+    },
+    "FINV": {
+      "en": "FINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FINV",
+      "reference": false
+    },
+    "FLOOR": {
+      "en": "FLOOR",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FLOOR",
+      "reference": false
+    },
+    "FORECAST": {
+      "en": "FORECAST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FORECAST",
+      "reference": false
+    },
+    "FTEST": {
+      "en": "FTEST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FTEST",
+      "reference": false
+    },
+    "GAMMADIST": {
+      "en": "GAMMADIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GAMMADIST",
+      "reference": false
+    },
+    "GAMMAINV": {
+      "en": "GAMMAINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GAMMAINV",
+      "reference": false
+    },
+    "HYPGEOMDIST": {
+      "en": "HYPGEOMDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "HYPGEOMDIST",
+      "reference": false
+    },
+    "LOGINV": {
+      "en": "LOGINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOGINV",
+      "reference": false
+    },
+    "LOGNORMDIST": {
+      "en": "LOGNORMDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOGNORMDIST",
+      "reference": false
+    },
+    "МОДА": {
+      "en": "MODE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МОДА",
+      "aliases": ["МОДА", "MODE"],
+      "reference": false
+    },
+    "NEGBINOMDIST": {
+      "en": "NEGBINOMDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NEGBINOMDIST",
+      "reference": false
+    },
+    "NORMDIST": {
+      "en": "NORMDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NORMDIST",
+      "reference": false
+    },
+    "NORMINV": {
+      "en": "NORMINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NORMINV",
+      "reference": false
+    },
+    "NORMSDIST": {
+      "en": "NORMSDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NORMSDIST",
+      "reference": false
+    },
+    "NORMSINV": {
+      "en": "NORMSINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NORMSINV",
+      "reference": false
+    },
+    "ПЕРСЕНТИЛЬ": {
+      "en": "PERCENTILE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПЕРСЕНТИЛЬ",
+      "aliases": ["ПЕРСЕНТИЛЬ", "PERCENTILE"],
+      "reference": false
+    },
+    "PERCENTRANK": {
+      "en": "PERCENTRANK",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PERCENTRANK",
+      "reference": false
+    },
+    "POISSON": {
+      "en": "POISSON",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "POISSON",
+      "reference": false
+    },
+    "КВАРТИЛЬ": {
+      "en": "QUARTILE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КВАРТИЛЬ",
+      "aliases": ["КВАРТИЛЬ", "QUARTILE"],
+      "reference": false
+    },
+    "РАНГ": {
+      "en": "RANK",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РАНГ",
+      "aliases": ["РАНГ", "RANK"],
+      "reference": false
+    },
+    "СТАНДОТКЛОН": {
+      "en": "STDEV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТАНДОТКЛОН",
+      "aliases": ["СТАНДОТКЛОН", "STDEV"],
+      "reference": false
+    },
+    "STDEVP": {
+      "en": "STDEVP",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STDEVP",
+      "reference": false
+    },
+    "TDIST": {
+      "en": "TDIST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TDIST",
+      "reference": false
+    },
+    "TINV": {
+      "en": "TINV",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TINV",
+      "reference": false
+    },
+    "TTEST": {
+      "en": "TTEST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TTEST",
+      "reference": false
+    },
+    "ДИСП": {
+      "en": "VAR",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДИСП",
+      "aliases": ["ДИСП", "VAR"],
+      "reference": false
+    },
+    "VARP": {
+      "en": "VARP",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VARP",
+      "reference": false
+    },
+    "WEIBULL": {
+      "en": "WEIBULL",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "WEIBULL",
+      "reference": false
+    },
+    "ZTEST": {
+      "en": "ZTEST",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ZTEST",
+      "reference": false
+    },
+    "CUBEKPIMEMBER": {
+      "en": "CUBEKPIMEMBER",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEKPIMEMBER",
+      "reference": true
+    },
+    "CUBEMEMBER": {
+      "en": "CUBEMEMBER",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEMEMBER",
+      "reference": true
+    },
+    "CUBEMEMBERPROPERTY": {
+      "en": "CUBEMEMBERPROPERTY",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEMEMBERPROPERTY",
+      "reference": true
+    },
+    "CUBERANKEDMEMBER": {
+      "en": "CUBERANKEDMEMBER",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBERANKEDMEMBER",
+      "reference": true
+    },
+    "CUBESET": {
+      "en": "CUBESET",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBESET",
+      "reference": true
+    },
+    "CUBESETCOUNT": {
+      "en": "CUBESETCOUNT",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBESETCOUNT",
+      "reference": true
+    },
+    "CUBEVALUE": {
+      "en": "CUBEVALUE",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEVALUE",
+      "reference": true
+    },
+    "ДСРЗНАЧ": {
+      "en": "DAVERAGE",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДСРЗНАЧ",
+      "aliases": ["БДСРЗНАЧ", "DAVERAGE"],
+      "reference": false
+    },
+    "БСЧЁТ": {
+      "en": "DCOUNT",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БСЧЁТ",
+      "aliases": ["БДСЧЁТ", "DCOUNT"],
+      "reference": false
+    },
+    "БСЧЁТА": {
+      "en": "DCOUNTA",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БСЧЁТА",
+      "aliases": ["БДСЧЁТА", "DCOUNTA"],
+      "reference": false
+    },
+    "БИЗВЛЕЧЬ": {
+      "en": "DGET",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БИЗВЛЕЧЬ",
+      "aliases": ["БДИЗВЛЕЧЬ", "DGET"],
+      "reference": false
+    },
+    "ДМАКС": {
+      "en": "DMAX",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДМАКС",
+      "aliases": ["БДМАКС", "DMAX"],
+      "reference": false
+    },
+    "ДМИН": {
+      "en": "DMIN",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДМИН",
+      "aliases": ["БДМИН", "DMIN"],
+      "reference": false
+    },
+    "БДПРОИЗВЕД": {
+      "en": "DPRODUCT",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БДПРОИЗВЕД",
+      "aliases": ["БДПРОИЗВЕД", "DPRODUCT"],
+      "reference": false
+    },
+    "DSTDEV": {
+      "en": "DSTDEV",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DSTDEV",
+      "reference": false
+    },
+    "DSTDEVP": {
+      "en": "DSTDEVP",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DSTDEVP",
+      "reference": false
+    },
+    "БДСУММ": {
+      "en": "DSUM",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БДСУММ",
+      "aliases": ["БДСУММ", "DSUM"],
+      "reference": false
+    },
+    "DVAR": {
+      "en": "DVAR",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DVAR",
+      "reference": false
+    },
+    "DVARP": {
+      "en": "DVARP",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DVARP",
+      "reference": false
+    },
+    "ДАТА": {
+      "en": "DATE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДАТА",
+      "aliases": ["ДАТА", "DATE"],
+      "reference": false
+    },
+    "РАЗНДАТ": {
+      "en": "DATEDIF",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РАЗНДАТ",
+      "aliases": ["РАЗНДАТ", "DATEDIF"],
+      "reference": false
+    },
+    "ДАТАЗНАЧ": {
+      "en": "DATEVALUE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДАТАЗНАЧ",
+      "aliases": ["ДАТАЗНАЧ", "DATEVALUE"],
+      "reference": false
+    },
+    "ДЕНЬ": {
+      "en": "DAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕНЬ",
+      "aliases": ["ДЕНЬ", "DAY"],
+      "reference": false
+    },
+    "DAYS": {
+      "en": "DAYS",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "DAYS",
+      "reference": false
+    },
+    "DAYS360": {
+      "en": "DAYS360",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DAYS360",
+      "reference": false
+    },
+    "ДАТАМЕС": {
+      "en": "EDATE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДАТАМЕС",
+      "aliases": ["ДАТАМЕС", "EDATE"],
+      "reference": false
+    },
+    "КОНМЕСЯЦ": {
+      "en": "EOMONTH",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОНМЕСЯЦ",
+      "aliases": ["КОНМЕСЯЦ", "EOMONTH"],
+      "reference": false
+    },
+    "ЧАС": {
+      "en": "HOUR",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧАС",
+      "aliases": ["ЧАС", "HOUR"],
+      "reference": false
+    },
+    "НОМНЕДЕЛИ.ISO": {
+      "en": "ISOWEEKNUM",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "НОМНЕДЕЛИ.ISO",
+      "aliases": ["НОМНЕДЕЛИ.ISO", "ISOWEEKNUM"],
+      "reference": false
+    },
+    "МИНУТЫ": {
+      "en": "MINUTE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МИНУТЫ",
+      "aliases": ["МИНУТЫ", "MINUTE"],
+      "reference": false
+    },
+    "МЕСЯЦ": {
+      "en": "MONTH",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МЕСЯЦ",
+      "aliases": ["МЕСЯЦ", "MONTH"],
+      "reference": false
+    },
+    "ЧИСТРАБДНИ": {
+      "en": "NETWORKDAYS",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧИСТРАБДНИ",
+      "aliases": ["ЧИСТРАБДНИ", "NETWORKDAYS"],
+      "reference": false
+    },
+    "ЧИСТРАБДНИ.МЕЖД": {
+      "en": "NETWORKDAYS.INTL",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ЧИСТРАБДНИ.МЕЖД",
+      "aliases": ["ЧИСТРАБДНИ.МЕЖД", "NETWORKDAYS.INTL"],
+      "reference": false
+    },
+    "ТДАТА": {
+      "en": "NOW",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТДАТА",
+      "aliases": ["ТДАТА", "NOW"],
+      "reference": false
+    },
+    "СЕКУНДЫ": {
+      "en": "SECOND",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЕКУНДЫ",
+      "aliases": ["СЕКУНДЫ", "SECOND"],
+      "reference": false
+    },
+    "ВРЕМЯ": {
+      "en": "TIME",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВРЕМЯ",
+      "aliases": ["ВРЕМЯ", "TIME"],
+      "reference": false
+    },
+    "ВРЕМЗНАЧ": {
+      "en": "TIMEVALUE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВРЕМЗНАЧ",
+      "aliases": ["ВРЕМЗНАЧ", "TIMEVALUE"],
+      "reference": false
+    },
+    "СЕГОДНЯ": {
+      "en": "TODAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЕГОДНЯ",
+      "aliases": ["СЕГОДНЯ", "TODAY"],
+      "reference": false
+    },
+    "ДЕНЬНЕД": {
+      "en": "WEEKDAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕНЬНЕД",
+      "aliases": ["ДЕНЬНЕД", "WEEKDAY"],
+      "reference": false
+    },
+    "НОМНЕДЕЛИ": {
+      "en": "WEEKNUM",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НОМНЕДЕЛИ",
+      "aliases": ["НОМНЕДЕЛИ", "WEEKNUM"],
+      "reference": false
+    },
+    "РАБДЕНЬ": {
+      "en": "WORKDAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РАБДЕНЬ",
+      "aliases": ["РАБДЕНЬ", "WORKDAY"],
+      "reference": false
+    },
+    "РАБДЕНЬ.МЕЖД": {
+      "en": "WORKDAY.INTL",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "РАБДЕНЬ.МЕЖД",
+      "aliases": ["РАБДЕНЬ.МЕЖД", "WORKDAY.INTL"],
+      "reference": false
+    },
+    "ГОД": {
+      "en": "YEAR",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГОД",
+      "aliases": ["ГОД", "YEAR"],
+      "reference": false
+    },
+    "ДОЛЯГОДА": {
+      "en": "YEARFRAC",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДОЛЯГОДА",
+      "aliases": ["ДОЛЯГОДА", "YEARFRAC"],
+      "reference": false
+    },
+    "BESSELI": {
+      "en": "BESSELI",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BESSELI",
+      "reference": false
+    },
+    "BESSELJ": {
+      "en": "BESSELJ",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BESSELJ",
+      "reference": false
+    },
+    "BESSELK": {
+      "en": "BESSELK",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BESSELK",
+      "reference": false
+    },
+    "BESSELY": {
+      "en": "BESSELY",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BESSELY",
+      "reference": false
+    },
+    "ДВ.В.ДЕС": {
+      "en": "BIN2DEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДВ.В.ДЕС",
+      "aliases": ["ДВ.В.ДЕС", "BIN2DEC"],
+      "reference": false
+    },
+    "ДВ.В.ШЕСТН": {
+      "en": "BIN2HEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДВ.В.ШЕСТН",
+      "aliases": ["ДВ.В.ШЕСТН", "BIN2HEX"],
+      "reference": false
+    },
+    "BIN2OCT": {
+      "en": "BIN2OCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BIN2OCT",
+      "reference": false
+    },
+    "BITAND": {
+      "en": "BITAND",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITAND",
+      "reference": false
+    },
+    "BITLSHIFT": {
+      "en": "BITLSHIFT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITLSHIFT",
+      "reference": false
+    },
+    "BITOR": {
+      "en": "BITOR",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITOR",
+      "reference": false
+    },
+    "BITRSHIFT": {
+      "en": "BITRSHIFT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITRSHIFT",
+      "reference": false
+    },
+    "BITXOR": {
+      "en": "BITXOR",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITXOR",
+      "reference": false
+    },
+    "COMPLEX": {
+      "en": "COMPLEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COMPLEX",
+      "reference": false
+    },
+    "ПРЕОБР": {
+      "en": "CONVERT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРЕОБР",
+      "aliases": ["ПРЕОБР", "CONVERT"],
+      "reference": false
+    },
+    "ДЕС.В.ДВ": {
+      "en": "DEC2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ДВ",
+      "aliases": ["ДЕС.В.ДВ", "DEC2BIN"],
+      "reference": false
+    },
+    "ДЕС.В.ШЕСТН": {
+      "en": "DEC2HEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ШЕСТН",
+      "aliases": ["ДЕС.В.ШЕСТН", "DEC2HEX"],
+      "reference": false
+    },
+    "ДЕС.В.ВОСЬМ": {
+      "en": "DEC2OCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ВОСЬМ",
+      "aliases": ["ДЕС.В.ВОСЬМ", "DEC2OCT"],
+      "reference": false
+    },
+    "ДЕЛЬТА": {
+      "en": "DELTA",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕЛЬТА",
+      "aliases": ["ДЕЛЬТА", "DELTA"],
+      "reference": false
+    },
+    "ERF": {
+      "en": "ERF",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ERF",
+      "reference": false
+    },
+    "ERF.PRECISE": {
+      "en": "ERF.PRECISE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ERF.PRECISE",
+      "reference": false
+    },
+    "ERFC": {
+      "en": "ERFC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ERFC",
+      "reference": false
+    },
+    "ERFC.PRECISE": {
+      "en": "ERFC.PRECISE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ERFC.PRECISE",
+      "reference": false
+    },
+    "ПОРОГ": {
+      "en": "GESTEP",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОРОГ",
+      "aliases": ["ПОРОГ", "GESTEP"],
+      "reference": false
+    },
+    "ШЕСТН.В.ДВ": {
+      "en": "HEX2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ШЕСТН.В.ДВ",
+      "aliases": ["ШЕСТН.В.ДВ", "HEX2BIN"],
+      "reference": false
+    },
+    "ШЕСТН.В.ДЕС": {
+      "en": "HEX2DEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ШЕСТН.В.ДЕС",
+      "aliases": ["ШЕСТН.В.ДЕС", "HEX2DEC"],
+      "reference": false
+    },
+    "HEX2OCT": {
+      "en": "HEX2OCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "HEX2OCT",
+      "reference": false
+    },
+    "IMABS": {
+      "en": "IMABS",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMABS",
+      "reference": false
+    },
+    "IMAGINARY": {
+      "en": "IMAGINARY",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMAGINARY",
+      "reference": false
+    },
+    "IMARGUMENT": {
+      "en": "IMARGUMENT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMARGUMENT",
+      "reference": false
+    },
+    "IMCONJUGATE": {
+      "en": "IMCONJUGATE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMCONJUGATE",
+      "reference": false
+    },
+    "IMCOS": {
+      "en": "IMCOS",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMCOS",
+      "reference": false
+    },
+    "IMCOSH": {
+      "en": "IMCOSH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCOSH",
+      "reference": false
+    },
+    "IMCOT": {
+      "en": "IMCOT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCOT",
+      "reference": false
+    },
+    "IMCSC": {
+      "en": "IMCSC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCSC",
+      "reference": false
+    },
+    "IMCSCH": {
+      "en": "IMCSCH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCSCH",
+      "reference": false
+    },
+    "IMDIV": {
+      "en": "IMDIV",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMDIV",
+      "reference": false
+    },
+    "IMEXP": {
+      "en": "IMEXP",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMEXP",
+      "reference": false
+    },
+    "IMLN": {
+      "en": "IMLN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLN",
+      "reference": false
+    },
+    "IMLOG10": {
+      "en": "IMLOG10",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLOG10",
+      "reference": false
+    },
+    "IMLOG2": {
+      "en": "IMLOG2",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLOG2",
+      "reference": false
+    },
+    "IMPOWER": {
+      "en": "IMPOWER",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMPOWER",
+      "reference": false
+    },
+    "IMPRODUCT": {
+      "en": "IMPRODUCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMPRODUCT",
+      "reference": false
+    },
+    "IMREAL": {
+      "en": "IMREAL",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMREAL",
+      "reference": false
+    },
+    "IMSEC": {
+      "en": "IMSEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSEC",
+      "reference": false
+    },
+    "IMSECH": {
+      "en": "IMSECH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSECH",
+      "reference": false
+    },
+    "IMSIN": {
+      "en": "IMSIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSIN",
+      "reference": false
+    },
+    "IMSINH": {
+      "en": "IMSINH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSINH",
+      "reference": false
+    },
+    "IMSQRT": {
+      "en": "IMSQRT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSQRT",
+      "reference": false
+    },
+    "IMSUB": {
+      "en": "IMSUB",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSUB",
+      "reference": false
+    },
+    "IMSUM": {
+      "en": "IMSUM",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSUM",
+      "reference": false
+    },
+    "IMTAN": {
+      "en": "IMTAN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMTAN",
+      "reference": false
+    },
+    "OCT2BIN": {
+      "en": "OCT2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2BIN",
+      "reference": false
+    },
+    "OCT2DEC": {
+      "en": "OCT2DEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2DEC",
+      "reference": false
+    },
+    "OCT2HEX": {
+      "en": "OCT2HEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2HEX",
+      "reference": false
+    },
+    "ACCRINT": {
+      "en": "ACCRINT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACCRINT",
+      "reference": false
+    },
+    "ACCRINTM": {
+      "en": "ACCRINTM",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACCRINTM",
+      "reference": false
+    },
+    "AMORDEGRC": {
+      "en": "AMORDEGRC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AMORDEGRC",
+      "reference": false
+    },
+    "AMORLINC": {
+      "en": "AMORLINC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AMORLINC",
+      "reference": false
+    },
+    "COUPDAYBS": {
+      "en": "COUPDAYBS",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYBS",
+      "reference": false
+    },
+    "COUPDAYS": {
+      "en": "COUPDAYS",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYS",
+      "reference": false
+    },
+    "COUPDAYSNC": {
+      "en": "COUPDAYSNC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYSNC",
+      "reference": false
+    },
+    "COUPNCD": {
+      "en": "COUPNCD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPNCD",
+      "reference": false
+    },
+    "COUPNUM": {
+      "en": "COUPNUM",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPNUM",
+      "reference": false
+    },
+    "COUPPCD": {
+      "en": "COUPPCD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPPCD",
+      "reference": false
+    },
+    "CUMIPMT": {
+      "en": "CUMIPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUMIPMT",
+      "reference": false
+    },
+    "CUMPRINC": {
+      "en": "CUMPRINC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUMPRINC",
+      "reference": false
+    },
+    "DB": {
+      "en": "DB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DB",
+      "reference": false
+    },
+    "DDB": {
+      "en": "DDB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DDB",
+      "reference": false
+    },
+    "DISC": {
+      "en": "DISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DISC",
+      "reference": false
+    },
+    "DOLLARDE": {
+      "en": "DOLLARDE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLARDE",
+      "reference": false
+    },
+    "DOLLARFR": {
+      "en": "DOLLARFR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLARFR",
+      "reference": false
+    },
+    "DURATION": {
+      "en": "DURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DURATION",
+      "reference": false
+    },
+    "ЭФФЕКТ": {
+      "en": "EFFECT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЭФФЕКТ",
+      "aliases": ["ЭФФЕКТ", "EFFECT"],
+      "reference": false
+    },
+    "БС": {
+      "en": "FV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БС",
+      "aliases": ["БС", "FV"],
+      "reference": false
+    },
+    "FVSCHEDULE": {
+      "en": "FVSCHEDULE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FVSCHEDULE",
+      "reference": false
+    },
+    "INTRATE": {
+      "en": "INTRATE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INTRATE",
+      "reference": false
+    },
+    "ПРПЛТ": {
+      "en": "IPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРПЛТ",
+      "aliases": ["ПРПЛТ", "IPMT"],
+      "reference": false
+    },
+    "ВНДОХ": {
+      "en": "IRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВНДОХ",
+      "aliases": ["ВНДОХ", "IRR"],
+      "reference": false
+    },
+    "ISPMT": {
+      "en": "ISPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISPMT",
+      "reference": false
+    },
+    "MDURATION": {
+      "en": "MDURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MDURATION",
+      "reference": false
+    },
+    "MIRR": {
+      "en": "MIRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MIRR",
+      "reference": false
+    },
+    "НОМИНАЛ": {
+      "en": "NOMINAL",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НОМИНАЛ",
+      "aliases": ["НОМИНАЛ", "NOMINAL"],
+      "reference": false
+    },
+    "КПЕР": {
+      "en": "NPER",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КПЕР",
+      "aliases": ["КПЕР", "NPER"],
+      "reference": false
+    },
+    "ЧПС": {
+      "en": "NPV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧПС",
+      "aliases": ["ЧПС", "NPV"],
+      "reference": false
+    },
+    "ODDFPRICE": {
+      "en": "ODDFPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDFPRICE",
+      "reference": false
+    },
+    "ODDFYIELD": {
+      "en": "ODDFYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDFYIELD",
+      "reference": false
+    },
+    "ODDLPRICE": {
+      "en": "ODDLPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDLPRICE",
+      "reference": false
+    },
+    "ODDLYIELD": {
+      "en": "ODDLYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDLYIELD",
+      "reference": false
+    },
+    "PDURATION": {
+      "en": "PDURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PDURATION",
+      "reference": false
+    },
+    "ПЛТ": {
+      "en": "PMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПЛТ",
+      "aliases": ["ПЛТ", "PMT"],
+      "reference": false
+    },
+    "ОСПЛТ": {
+      "en": "PPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОСПЛТ",
+      "aliases": ["ОСПЛТ", "PPMT"],
+      "reference": false
+    },
+    "PRICE": {
+      "en": "PRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICE",
+      "reference": false
+    },
+    "PRICEDISC": {
+      "en": "PRICEDISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICEDISC",
+      "reference": false
+    },
+    "PRICEMAT": {
+      "en": "PRICEMAT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICEMAT",
+      "reference": false
+    },
+    "PV": {
+      "en": "PV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PV",
+      "reference": false
+    },
+    "СТАВКА": {
+      "en": "RATE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТАВКА",
+      "aliases": ["СТАВКА", "RATE"],
+      "reference": false
+    },
+    "RECEIVED": {
+      "en": "RECEIVED",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RECEIVED",
+      "reference": false
+    },
+    "RRI": {
+      "en": "RRI",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "RRI",
+      "reference": false
+    },
+    "АПЛ": {
+      "en": "SLN",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АПЛ",
+      "aliases": ["АМОРТИЗ", "SLN"],
+      "reference": false
+    },
+    "SYD": {
+      "en": "SYD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SYD",
+      "reference": false
+    },
+    "TBILLEQ": {
+      "en": "TBILLEQ",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLEQ",
+      "reference": false
+    },
+    "TBILLPRICE": {
+      "en": "TBILLPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLPRICE",
+      "reference": false
+    },
+    "TBILLYIELD": {
+      "en": "TBILLYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLYIELD",
+      "reference": false
+    },
+    "VDB": {
+      "en": "VDB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VDB",
+      "reference": false
+    },
+    "XIRR": {
+      "en": "XIRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "XIRR",
+      "reference": false
+    },
+    "XNPV": {
+      "en": "XNPV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "XNPV",
+      "reference": false
+    },
+    "YIELD": {
+      "en": "YIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELD",
+      "reference": false
+    },
+    "YIELDDISC": {
+      "en": "YIELDDISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELDDISC",
+      "reference": false
+    },
+    "YIELDMAT": {
+      "en": "YIELDMAT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELDMAT",
+      "reference": false
+    },
+    "ЯЧЕЙКА": {
+      "en": "CELL",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЯЧЕЙКА",
+      "aliases": ["ЯЧЕЙКА", "CELL"],
+      "reference": false
+    },
+    "ТИП.ОШИБКИ": {
+      "en": "ERROR.TYPE",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТИП.ОШИБКИ",
+      "aliases": ["ТИП.ОШИБКИ", "ERROR.TYPE"],
+      "reference": false
+    },
+    "INFO": {
+      "en": "INFO",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INFO",
+      "reference": false
+    },
+    "ЕПУСТО": {
+      "en": "ISBLANK",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕПУСТО",
+      "aliases": ["ЕПУСТО", "ISBLANK"],
+      "reference": false
+    },
+    "ЕОШ": {
+      "en": "ISERR",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕОШ",
+      "aliases": ["ЕОШ", "ISERR"],
+      "reference": false
+    },
+    "ЕОШИБКА": {
+      "en": "ISERROR",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕОШИБКА",
+      "aliases": ["ЕОШИБКА", "ISERROR"],
+      "reference": false
+    },
+    "ISEVEN": {
+      "en": "ISEVEN",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISEVEN",
+      "reference": false
+    },
+    "ISFORMULA": {
+      "en": "ISFORMULA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ISFORMULA",
+      "reference": false
+    },
+    "ЕЛОГИЧ": {
+      "en": "ISLOGICAL",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕЛОГИЧ",
+      "aliases": ["ЕЛОГИЧ", "ISLOGICAL"],
+      "reference": false
+    },
+    "ЕНД": {
+      "en": "ISNA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕНД",
+      "aliases": ["ЕНД", "ISNA"],
+      "reference": false
+    },
+    "ЕНЕТЕКСТ": {
+      "en": "ISNONTEXT",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕНЕТЕКСТ",
+      "aliases": ["ЕНЕТЕКСТ", "ISNONTEXT"],
+      "reference": false
+    },
+    "ЕЧИСЛО": {
+      "en": "ISNUMBER",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕЧИСЛО",
+      "aliases": ["ЕЧИСЛО", "ISNUMBER"],
+      "reference": false
+    },
+    "ISODD": {
+      "en": "ISODD",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISODD",
+      "reference": false
+    },
+    "ISOMITTED": {
+      "en": "ISOMITTED",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ISOMITTED",
+      "reference": false
+    },
+    "ISREF": {
+      "en": "ISREF",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISREF",
+      "reference": false
+    },
+    "ЕТЕКСТ": {
+      "en": "ISTEXT",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕТЕКСТ",
+      "aliases": ["ЕТЕКСТ", "ISTEXT"],
+      "reference": false
+    },
+    "Ч": {
+      "en": "N",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "Ч",
+      "aliases": ["Ч", "N"],
+      "reference": false
+    },
+    "NA": {
+      "en": "NA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NA",
+      "reference": false
+    },
+    "ЛИСТ": {
+      "en": "SHEET",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЛИСТ",
+      "aliases": ["ЛИСТ", "SHEET"],
+      "reference": false
+    },
+    "ЛИСТЫ": {
+      "en": "SHEETS",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЛИСТЫ",
+      "aliases": ["ЛИСТЫ", "SHEETS"],
+      "reference": false
+    },
+    "STOCKHISTORY": {
+      "en": "STOCKHISTORY",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "STOCKHISTORY",
+      "reference": true
+    },
+    "ТИП": {
+      "en": "TYPE",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТИП",
+      "aliases": ["ТИП", "TYPE"],
+      "reference": false
+    },
+    "И": {
+      "en": "AND",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "И",
+      "aliases": ["И", "AND"],
+      "reference": false
+    },
+    "BYCOL": {
+      "en": "BYCOL",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "BYCOL",
+      "reference": false
+    },
+    "BYROW": {
+      "en": "BYROW",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "BYROW",
+      "reference": false
+    },
+    "ЛОЖЬ": {
+      "en": "FALSE",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЛОЖЬ",
+      "aliases": ["ЛОЖЬ", "FALSE"],
+      "reference": false
+    },
+    "ЕСЛИ": {
+      "en": "IF",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕСЛИ",
+      "aliases": ["ЕСЛИ", "IF"],
+      "reference": false
+    },
+    "ЕСЛИОШИБКА": {
+      "en": "IFERROR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕСЛИОШИБКА",
+      "aliases": ["ЕСЛИОШИБКА", "IFERROR"],
+      "reference": false
+    },
+    "ЕСНД": {
+      "en": "IFNA",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЕСНД",
+      "aliases": ["ЕСНД", "IFNA"],
+      "reference": false
+    },
+    "ЕСЛИМН": {
+      "en": "IFS",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "ЕСЛИМН",
+      "aliases": ["ЕСЛИМН", "IFS"],
+      "reference": false
+    },
+    "LAMBDA": {
+      "en": "LAMBDA",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "LAMBDA",
+      "reference": false
+    },
+    "LET": {
+      "en": "LET",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "LET",
+      "reference": false
+    },
+    "MAKEARRAY": {
+      "en": "MAKEARRAY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "MAKEARRAY",
+      "reference": false
+    },
+    "MAP": {
+      "en": "MAP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "MAP",
+      "reference": false
+    },
+    "НЕ": {
+      "en": "NOT",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НЕ",
+      "aliases": ["НЕ", "NOT"],
+      "reference": false
+    },
+    "ИЛИ": {
+      "en": "OR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИЛИ",
+      "aliases": ["ИЛИ", "OR"],
+      "reference": false
+    },
+    "REDUCE": {
+      "en": "REDUCE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "REDUCE",
+      "reference": false
+    },
+    "SCAN": {
+      "en": "SCAN",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "SCAN",
+      "reference": false
+    },
+    "ПЕРЕКЛЮЧ": {
+      "en": "SWITCH",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "ПЕРЕКЛЮЧ",
+      "aliases": ["ПЕРЕКЛЮЧ", "SWITCH"],
+      "reference": false
+    },
+    "ИСТИНА": {
+      "en": "TRUE",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИСТИНА",
+      "aliases": ["ИСТИНА", "TRUE"],
+      "reference": false
+    },
+    "ИСКЛИЛИ": {
+      "en": "XOR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ИСКЛИЛИ",
+      "aliases": ["ИСКЛИЛИ", "XOR"],
+      "reference": false
+    },
+    "АДРЕС": {
+      "en": "ADDRESS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АДРЕС",
+      "aliases": ["АДРЕС", "ADDRESS"],
+      "reference": false
+    },
+    "AREAS": {
+      "en": "AREAS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AREAS",
+      "reference": false
+    },
+    "ВЫБОР": {
+      "en": "CHOOSE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВЫБОР",
+      "aliases": ["ВЫБОР", "CHOOSE"],
+      "reference": false
+    },
+    "CHOOSECOLS": {
+      "en": "CHOOSECOLS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "CHOOSECOLS",
+      "aliases": ["ВЫБОРСТОЛБЦОВ", "CHOOSECOLS"],
+      "reference": false
+    },
+    "ВЫБОРСТРОК": {
+      "en": "CHOOSEROWS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ВЫБОРСТРОК",
+      "aliases": ["ВЫБОРСТРОК", "CHOOSEROWS"],
+      "reference": false
+    },
+    "СТОЛБЕЦ": {
+      "en": "COLUMN",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТОЛБЕЦ",
+      "aliases": ["СТОЛБЕЦ", "COLUMN"],
+      "reference": false
+    },
+    "СТОЛБЦЫ": {
+      "en": "COLUMNS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТОЛБЦЫ",
+      "aliases": ["СТОЛБЦЫ", "COLUMNS"],
+      "reference": false
+    },
+    "DROP": {
+      "en": "DROP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "DROP",
+      "reference": false
+    },
+    "EXPAND": {
+      "en": "EXPAND",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "EXPAND",
+      "reference": false
+    },
+    "ФИЛЬТР": {
+      "en": "FILTER",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ФИЛЬТР",
+      "aliases": ["ФИЛЬТР", "FILTER"],
+      "reference": false
+    },
+    "ФОРМУЛАТЕКСТ": {
+      "en": "FORMULATEXT",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ФОРМУЛАТЕКСТ",
+      "aliases": ["ФОРМУЛАТЕКСТ", "FORMULATEXT"],
+      "reference": false
+    },
+    "GETPIVOTDATA": {
+      "en": "GETPIVOTDATA",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GETPIVOTDATA",
+      "reference": true
+    },
+    "GROUPBY": {
+      "en": "GROUPBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "GROUPBY",
+      "reference": false
+    },
+    "ГПР": {
+      "en": "HLOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГПР",
+      "aliases": ["ГПР", "HLOOKUP"],
+      "reference": false
+    },
+    "HSTACK": {
+      "en": "HSTACK",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "HSTACK",
+      "reference": false
+    },
+    "ГИПЕРССЫЛКА": {
+      "en": "HYPERLINK",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГИПЕРССЫЛКА",
+      "aliases": ["ГИПЕРССЫЛКА", "HYPERLINK"],
+      "reference": false
+    },
+    "IMAGE": {
+      "en": "IMAGE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "IMAGE",
+      "reference": true
+    },
+    "ИНДЕКС": {
+      "en": "INDEX",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИНДЕКС",
+      "aliases": ["ИНДЕКС", "INDEX"],
+      "reference": false
+    },
+    "ДВССЫЛ": {
+      "en": "INDIRECT",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДВССЫЛ",
+      "aliases": ["ДВССЫЛ", "INDIRECT"],
+      "reference": false
+    },
+    "ПРОСМОТР": {
+      "en": "LOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОСМОТР",
+      "aliases": ["ПРОСМОТР", "LOOKUP"],
+      "reference": false
+    },
+    "ПОИСКПОЗ": {
+      "en": "MATCH",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОИСКПОЗ",
+      "aliases": ["ПОИСКПОЗ", "MATCH"],
+      "reference": false
+    },
+    "СМЕЩ": {
+      "en": "OFFSET",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СМЕЩ",
+      "aliases": ["СМЕЩ", "OFFSET"],
+      "reference": false
+    },
+    "PIVOTBY": {
+      "en": "PIVOTBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "PIVOTBY",
+      "reference": false
+    },
+    "СТРОКА": {
+      "en": "ROW",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОКА",
+      "aliases": ["СТРОКА", "ROW"],
+      "reference": false
+    },
+    "СТРОКИ": {
+      "en": "ROWS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОКИ",
+      "aliases": ["СТРОКИ", "ROWS"],
+      "reference": false
+    },
+    "RTD": {
+      "en": "RTD",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RTD",
+      "reference": true
+    },
+    "СОРТ": {
+      "en": "SORT",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СОРТ",
+      "aliases": ["СОРТ", "SORT"],
+      "reference": false
+    },
+    "СОРТПО": {
+      "en": "SORTBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СОРТПО",
+      "aliases": ["СОРТПО", "SORTBY"],
+      "reference": false
+    },
+    "TAKE": {
+      "en": "TAKE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TAKE",
+      "reference": false
+    },
+    "TOCOL": {
+      "en": "TOCOL",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TOCOL",
+      "aliases": ["ВСТОЛБЕЦ", "TOCOL"],
+      "reference": false
+    },
+    "TOROW": {
+      "en": "TOROW",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TOROW",
+      "aliases": ["ВСТРОКУ", "TOROW"],
+      "reference": false
+    },
+    "ТРАНСП": {
+      "en": "TRANSPOSE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТРАНСП",
+      "aliases": ["ТРАНСП", "TRANSPOSE"],
+      "reference": false
+    },
+    "TRIMRANGE": {
+      "en": "TRIMRANGE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "TRIMRANGE",
+      "reference": false
+    },
+    "УНИК": {
+      "en": "UNIQUE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "УНИК",
+      "aliases": ["УНИК", "UNIQUE"],
+      "reference": false
+    },
+    "ВПР": {
+      "en": "VLOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВПР",
+      "aliases": ["ВПР", "VLOOKUP"],
+      "reference": false
+    },
+    "VSTACK": {
+      "en": "VSTACK",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "VSTACK",
+      "reference": false
+    },
+    "WRAPCOLS": {
+      "en": "WRAPCOLS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "WRAPCOLS",
+      "reference": false
+    },
+    "WRAPROWS": {
+      "en": "WRAPROWS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "WRAPROWS",
+      "reference": false
+    },
+    "ПРОСМОТРX": {
+      "en": "XLOOKUP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПРОСМОТРX",
+      "aliases": ["ПРОСМОТРX", "XLOOKUP"],
+      "reference": false
+    },
+    "ПОИСКПОЗX": {
+      "en": "XMATCH",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПОИСКПОЗX",
+      "aliases": ["ПОИСКПОЗX", "XMATCH"],
+      "reference": false
+    },
+    "АБС": {
+      "en": "ABS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АБС",
+      "aliases": ["АБС", "ABS"],
+      "reference": false
+    },
+    "ACOS": {
+      "en": "ACOS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACOS",
+      "reference": false
+    },
+    "ACOSH": {
+      "en": "ACOSH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACOSH",
+      "reference": false
+    },
+    "ACOT": {
+      "en": "ACOT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ACOT",
+      "reference": false
+    },
+    "ACOTH": {
+      "en": "ACOTH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ACOTH",
+      "reference": false
+    },
+    "AGGREGATE": {
+      "en": "AGGREGATE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AGGREGATE",
+      "reference": false
+    },
+    "АРАБСКОЕ": {
+      "en": "ARABIC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АРАБСКОЕ",
+      "aliases": ["АРАБСКОЕ", "ARABIC"],
+      "reference": false
+    },
+    "ASIN": {
+      "en": "ASIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASIN",
+      "reference": false
+    },
+    "ASINH": {
+      "en": "ASINH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASINH",
+      "reference": false
+    },
+    "ATAN": {
+      "en": "ATAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATAN",
+      "reference": false
+    },
+    "ATAN2": {
+      "en": "ATAN2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATAN2",
+      "reference": false
+    },
+    "ATANH": {
+      "en": "ATANH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATANH",
+      "reference": false
+    },
+    "BASE": {
+      "en": "BASE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BASE",
+      "reference": false
+    },
+    "CEILING": {
+      "en": "CEILING",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CEILING",
+      "reference": false
+    },
+    "CEILING.MATH": {
+      "en": "CEILING.MATH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CEILING.MATH",
+      "reference": false
+    },
+    "CEILING.PRECISE": {
+      "en": "CEILING.PRECISE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CEILING.PRECISE",
+      "reference": false
+    },
+    "COMBIN": {
+      "en": "COMBIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COMBIN",
+      "reference": false
+    },
+    "COMBINA": {
+      "en": "COMBINA",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COMBINA",
+      "reference": false
+    },
+    "COS": {
+      "en": "COS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COS",
+      "reference": false
+    },
+    "COSH": {
+      "en": "COSH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COSH",
+      "reference": false
+    },
+    "COT": {
+      "en": "COT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COT",
+      "reference": false
+    },
+    "COTH": {
+      "en": "COTH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COTH",
+      "reference": false
+    },
+    "CSC": {
+      "en": "CSC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CSC",
+      "reference": false
+    },
+    "CSCH": {
+      "en": "CSCH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CSCH",
+      "reference": false
+    },
+    "DECIMAL": {
+      "en": "DECIMAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "DECIMAL",
+      "reference": false
+    },
+    "DEGREES": {
+      "en": "DEGREES",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DEGREES",
+      "reference": false
+    },
+    "ЧЁТН": {
+      "en": "EVEN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧЁТН",
+      "aliases": ["ЧЁТН", "EVEN"],
+      "reference": false
+    },
+    "EXP": {
+      "en": "EXP",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "EXP",
+      "reference": false
+    },
+    "ФАКТР": {
+      "en": "FACT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ФАКТР",
+      "aliases": ["ФАКТР", "FACT"],
+      "reference": false
+    },
+    "FACTDOUBLE": {
+      "en": "FACTDOUBLE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FACTDOUBLE",
+      "reference": false
+    },
+    "FLOOR.MATH": {
+      "en": "FLOOR.MATH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "FLOOR.MATH",
+      "reference": false
+    },
+    "FLOOR.PRECISE": {
+      "en": "FLOOR.PRECISE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FLOOR.PRECISE",
+      "reference": false
+    },
+    "GCD": {
+      "en": "GCD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GCD",
+      "reference": false
+    },
+    "ЦЕЛОЕ": {
+      "en": "INT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЦЕЛОЕ",
+      "aliases": ["ЦЕЛОЕ", "INT"],
+      "reference": false
+    },
+    "ISO.CEILING": {
+      "en": "ISO.CEILING",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ISO.CEILING",
+      "reference": false
+    },
+    "LCM": {
+      "en": "LCM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LCM",
+      "reference": false
+    },
+    "LN": {
+      "en": "LN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LN",
+      "reference": false
+    },
+    "LOG": {
+      "en": "LOG",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOG",
+      "reference": false
+    },
+    "LOG10": {
+      "en": "LOG10",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOG10",
+      "reference": false
+    },
+    "MDETERM": {
+      "en": "MDETERM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MDETERM",
+      "reference": false
+    },
+    "MINVERSE": {
+      "en": "MINVERSE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MINVERSE",
+      "reference": false
+    },
+    "MMULT": {
+      "en": "MMULT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MMULT",
+      "reference": false
+    },
+    "ОСТАТ": {
+      "en": "MOD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОСТАТ",
+      "aliases": ["ОСТАТ", "MOD"],
+      "reference": false
+    },
+    "ОКРУГЛТ": {
+      "en": "MROUND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛТ",
+      "aliases": ["ОКРУГЛТ", "MROUND"],
+      "reference": false
+    },
+    "MULTINOMIAL": {
+      "en": "MULTINOMIAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MULTINOMIAL",
+      "reference": false
+    },
+    "MUNIT": {
+      "en": "MUNIT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "MUNIT",
+      "reference": false
+    },
+    "НЕЧЁТ": {
+      "en": "ODD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НЕЧЁТ",
+      "aliases": ["НЕЧЁТ", "ODD"],
+      "reference": false
+    },
+    "PERCENTOF": {
+      "en": "PERCENTOF",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "PERCENTOF",
+      "reference": false
+    },
+    "ПИ": {
+      "en": "PI",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПИ",
+      "aliases": ["ПИ", "PI"],
+      "reference": false
+    },
+    "СТЕПЕНЬ": {
+      "en": "POWER",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТЕПЕНЬ",
+      "aliases": ["СТЕПЕНЬ", "POWER"],
+      "reference": false
+    },
+    "ПРОИЗВЕД": {
+      "en": "PRODUCT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОИЗВЕД",
+      "aliases": ["ПРОИЗВЕД", "PRODUCT"],
+      "reference": false
+    },
+    "ЧАСТНОЕ": {
+      "en": "QUOTIENT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧАСТНОЕ",
+      "aliases": ["ЧАСТНОЕ", "QUOTIENT"],
+      "reference": false
+    },
+    "RADIANS": {
+      "en": "RADIANS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RADIANS",
+      "reference": false
+    },
+    "СЛЧИС": {
+      "en": "RAND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЛЧИС",
+      "aliases": ["СЛЧИС", "RAND"],
+      "reference": false
+    },
+    "СЛМАССИВ": {
+      "en": "RANDARRAY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СЛМАССИВ",
+      "aliases": ["СЛМАССИВ", "RANDARRAY"],
+      "reference": false
+    },
+    "СЛМЕЖДУ": {
+      "en": "RANDBETWEEN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЛМЕЖДУ",
+      "aliases": ["СЛМЕЖДУ", "RANDBETWEEN"],
+      "reference": false
+    },
+    "РИМСКОЕ": {
+      "en": "ROMAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РИМСКОЕ",
+      "aliases": ["РИМСКОЕ", "ROMAN"],
+      "reference": false
+    },
+    "ОКРУГЛ": {
+      "en": "ROUND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛ",
+      "aliases": ["ОКРУГЛ", "ROUND"],
+      "reference": false
+    },
+    "ОКРУГЛВНИЗ": {
+      "en": "ROUNDDOWN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛВНИЗ",
+      "aliases": ["ОКРУГЛВНИЗ", "ROUNDDOWN"],
+      "reference": false
+    },
+    "ОКРУГЛВВЕРХ": {
+      "en": "ROUNDUP",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛВВЕРХ",
+      "aliases": ["ОКРУГЛВВЕРХ", "ROUNDUP"],
+      "reference": false
+    },
+    "SEC": {
+      "en": "SEC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SEC",
+      "reference": false
+    },
+    "SECH": {
+      "en": "SECH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SECH",
+      "reference": false
+    },
+    "SERIESSUM": {
+      "en": "SERIESSUM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SERIESSUM",
+      "reference": false
+    },
+    "ПОСЛЕДОВ": {
+      "en": "SEQUENCE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПОСЛЕДОВ",
+      "aliases": ["ПОСЛЕДОВ", "SEQUENCE"],
+      "reference": false
+    },
+    "ЗНАК": {
+      "en": "SIGN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗНАК",
+      "aliases": ["ЗНАК", "SIGN"],
+      "reference": false
+    },
+    "SIN": {
+      "en": "SIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SIN",
+      "reference": false
+    },
+    "SINH": {
+      "en": "SINH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SINH",
+      "reference": false
+    },
+    "КОРЕНЬ": {
+      "en": "SQRT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОРЕНЬ",
+      "aliases": ["КОРЕНЬ", "SQRT"],
+      "reference": false
+    },
+    "SQRTPI": {
+      "en": "SQRTPI",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SQRTPI",
+      "reference": false
+    },
+    "SUBTOTAL": {
+      "en": "SUBTOTAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUBTOTAL",
+      "reference": false
+    },
+    "СУММ": {
+      "en": "SUM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММ",
+      "aliases": ["СУММ", "SUM"],
+      "reference": false
+    },
+    "СУММЕСЛИ": {
+      "en": "SUMIF",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММЕСЛИ",
+      "aliases": ["СУММЕСЛИ", "SUMIF"],
+      "reference": false
+    },
+    "СУММЕСЛИМН": {
+      "en": "SUMIFS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СУММЕСЛИМН",
+      "aliases": ["СУММЕСЛИМН", "SUMIFS"],
+      "reference": false
+    },
+    "СУММПРОИЗВ": {
+      "en": "SUMPRODUCT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММПРОИЗВ",
+      "aliases": ["СУММПРОИЗВ", "SUMPRODUCT"],
+      "reference": false
+    },
+    "SUMSQ": {
+      "en": "SUMSQ",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMSQ",
+      "reference": false
+    },
+    "SUMX2MY2": {
+      "en": "SUMX2MY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMX2MY2",
+      "reference": false
+    },
+    "SUMX2PY2": {
+      "en": "SUMX2PY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMX2PY2",
+      "reference": false
+    },
+    "SUMXMY2": {
+      "en": "SUMXMY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMXMY2",
+      "reference": false
+    },
+    "TAN": {
+      "en": "TAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TAN",
+      "reference": false
+    },
+    "TANH": {
+      "en": "TANH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TANH",
+      "reference": false
+    },
+    "ОТБР": {
+      "en": "TRUNC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОТБР",
+      "aliases": ["ОТБР", "TRUNC"],
+      "reference": false
+    },
+    "AVEDEV": {
+      "en": "AVEDEV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AVEDEV",
+      "reference": false
+    },
+    "СРЗНАЧ": {
+      "en": "AVERAGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРЗНАЧ",
+      "aliases": ["СРЗНАЧ", "AVERAGE"],
+      "reference": false
+    },
+    "AVERAGEA": {
+      "en": "AVERAGEA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AVERAGEA",
+      "reference": false
+    },
+    "СРЗНАЧЕСЛИ": {
+      "en": "AVERAGEIF",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРЗНАЧЕСЛИ",
+      "aliases": ["СРЗНАЧЕСЛИ", "AVERAGEIF"],
+      "reference": false
+    },
+    "СРЗНАЧЕСЛИМН": {
+      "en": "AVERAGEIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СРЗНАЧЕСЛИМН",
+      "aliases": ["СРЗНАЧЕСЛИМН", "AVERAGEIFS"],
+      "reference": false
+    },
+    "BETA.DIST": {
+      "en": "BETA.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BETA.DIST",
+      "reference": false
+    },
+    "BETA.INV": {
+      "en": "BETA.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BETA.INV",
+      "reference": false
+    },
+    "BINOM.DIST": {
+      "en": "BINOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BINOM.DIST",
+      "reference": false
+    },
+    "BINOM.DIST.RANGE": {
+      "en": "BINOM.DIST.RANGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BINOM.DIST.RANGE",
+      "reference": false
+    },
+    "BINOM.INV": {
+      "en": "BINOM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BINOM.INV",
+      "reference": false
+    },
+    "CHISQ.DIST": {
+      "en": "CHISQ.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.DIST",
+      "reference": false
+    },
+    "CHISQ.DIST.RT": {
+      "en": "CHISQ.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.DIST.RT",
+      "reference": false
+    },
+    "CHISQ.INV": {
+      "en": "CHISQ.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.INV",
+      "reference": false
+    },
+    "CHISQ.INV.RT": {
+      "en": "CHISQ.INV.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.INV.RT",
+      "reference": false
+    },
+    "CHISQ.TEST": {
+      "en": "CHISQ.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.TEST",
+      "reference": false
+    },
+    "CONFIDENCE.NORM": {
+      "en": "CONFIDENCE.NORM",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CONFIDENCE.NORM",
+      "reference": false
+    },
+    "CONFIDENCE.T": {
+      "en": "CONFIDENCE.T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CONFIDENCE.T",
+      "reference": false
+    },
+    "КОРРЕЛ": {
+      "en": "CORREL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОРРЕЛ",
+      "aliases": ["КОРРЕЛ", "CORREL"],
+      "reference": false
+    },
+    "СЧЁТ": {
+      "en": "COUNT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТ",
+      "aliases": ["СЧЁТ", "COUNT"],
+      "reference": false
+    },
+    "СЧЁТЗ": {
+      "en": "COUNTA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТЗ",
+      "aliases": ["СЧЁТЗ", "COUNTA"],
+      "reference": false
+    },
+    "СЧИТАТЬПУСТОТЫ": {
+      "en": "COUNTBLANK",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧИТАТЬПУСТОТЫ",
+      "aliases": ["СЧИТАТЬПУСТОТЫ", "COUNTBLANK"],
+      "reference": false
+    },
+    "СЧЁТЕСЛИ": {
+      "en": "COUNTIF",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТЕСЛИ",
+      "aliases": ["СЧЁТЕСЛИ", "COUNTIF"],
+      "reference": false
+    },
+    "СЧЁТЕСЛИМН": {
+      "en": "COUNTIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СЧЁТЕСЛИМН",
+      "aliases": ["СЧЁТЕСЛИМН", "COUNTIFS"],
+      "reference": false
+    },
+    "COVARIANCE.P": {
+      "en": "COVARIANCE.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "COVARIANCE.P",
+      "reference": false
+    },
+    "COVARIANCE.S": {
+      "en": "COVARIANCE.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "COVARIANCE.S",
+      "reference": false
+    },
+    "DEVSQ": {
+      "en": "DEVSQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DEVSQ",
+      "reference": false
+    },
+    "EXPON.DIST": {
+      "en": "EXPON.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "EXPON.DIST",
+      "reference": false
+    },
+    "F.DIST": {
+      "en": "F.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.DIST",
+      "reference": false
+    },
+    "F.DIST.RT": {
+      "en": "F.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.DIST.RT",
+      "reference": false
+    },
+    "F.INV": {
+      "en": "F.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.INV",
+      "reference": false
+    },
+    "F.INV.RT": {
+      "en": "F.INV.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.INV.RT",
+      "reference": false
+    },
+    "F.TEST": {
+      "en": "F.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.TEST",
+      "reference": false
+    },
+    "FISHER": {
+      "en": "FISHER",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FISHER",
+      "reference": false
+    },
+    "FISHERINV": {
+      "en": "FISHERINV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FISHERINV",
+      "reference": false
+    },
+    "FORECAST.ETS": {
+      "en": "FORECAST.ETS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS",
+      "reference": false
+    },
+    "FORECAST.ETS.CONFINT": {
+      "en": "FORECAST.ETS.CONFINT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.CONFINT",
+      "reference": false
+    },
+    "FORECAST.ETS.SEASONALITY": {
+      "en": "FORECAST.ETS.SEASONALITY",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.SEASONALITY",
+      "reference": false
+    },
+    "FORECAST.ETS.STAT": {
+      "en": "FORECAST.ETS.STAT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.STAT",
+      "reference": false
+    },
+    "FORECAST.LINEAR": {
+      "en": "FORECAST.LINEAR",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.LINEAR",
+      "reference": false
+    },
+    "FREQUENCY": {
+      "en": "FREQUENCY",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FREQUENCY",
+      "reference": false
+    },
+    "GAMMA": {
+      "en": "GAMMA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "GAMMA",
+      "reference": false
+    },
+    "GAMMA.DIST": {
+      "en": "GAMMA.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMA.DIST",
+      "reference": false
+    },
+    "GAMMA.INV": {
+      "en": "GAMMA.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMA.INV",
+      "reference": false
+    },
+    "GAMMALN": {
+      "en": "GAMMALN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GAMMALN",
+      "reference": false
+    },
+    "GAMMALN.PRECISE": {
+      "en": "GAMMALN.PRECISE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMALN.PRECISE",
+      "reference": false
+    },
+    "GAUSS": {
+      "en": "GAUSS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "GAUSS",
+      "reference": false
+    },
+    "СРГЕОМ": {
+      "en": "GEOMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРГЕОМ",
+      "aliases": ["СРГЕОМ", "GEOMEAN"],
+      "reference": false
+    },
+    "GROWTH": {
+      "en": "GROWTH",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GROWTH",
+      "reference": false
+    },
+    "СРГАРМ": {
+      "en": "HARMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРГАРМ",
+      "aliases": ["СРГАРМ", "HARMEAN"],
+      "reference": false
+    },
+    "HYPGEOM.DIST": {
+      "en": "HYPGEOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "HYPGEOM.DIST",
+      "reference": false
+    },
+    "INTERCEPT": {
+      "en": "INTERCEPT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INTERCEPT",
+      "reference": false
+    },
+    "KURT": {
+      "en": "KURT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "KURT",
+      "reference": false
+    },
+    "НАИБОЛЬШИЙ": {
+      "en": "LARGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НАИБОЛЬШИЙ",
+      "aliases": ["НАИБОЛЬШИЙ", "LARGE"],
+      "reference": false
+    },
+    "LINEST": {
+      "en": "LINEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LINEST",
+      "reference": false
+    },
+    "LOGEST": {
+      "en": "LOGEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOGEST",
+      "reference": false
+    },
+    "LOGNORM.DIST": {
+      "en": "LOGNORM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "LOGNORM.DIST",
+      "reference": false
+    },
+    "LOGNORM.INV": {
+      "en": "LOGNORM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "LOGNORM.INV",
+      "reference": false
+    },
+    "МАКС": {
+      "en": "MAX",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МАКС",
+      "aliases": ["МАКС", "MAX"],
+      "reference": false
+    },
+    "MAXA": {
+      "en": "MAXA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MAXA",
+      "reference": false
+    },
+    "МАКСЕСЛИМН": {
+      "en": "MAXIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "МАКСЕСЛИМН",
+      "aliases": ["МАКСЕСЛИ", "MAXIFS"],
+      "reference": false
+    },
+    "МЕДИАНА": {
+      "en": "MEDIAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МЕДИАНА",
+      "aliases": ["МЕДИАНА", "MEDIAN"],
+      "reference": false
+    },
+    "МИН": {
+      "en": "MIN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МИН",
+      "aliases": ["МИН", "MIN"],
+      "reference": false
+    },
+    "MINA": {
+      "en": "MINA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MINA",
+      "reference": false
+    },
+    "МИНЕСЛИМН": {
+      "en": "MINIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "МИНЕСЛИМН",
+      "aliases": ["МИНЕСЛИ", "MINIFS"],
+      "reference": false
+    },
+    "MODE.MULT": {
+      "en": "MODE.MULT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "MODE.MULT",
+      "reference": false
+    },
+    "МОДА.ОДН": {
+      "en": "MODE.SNGL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "МОДА.ОДН",
+      "aliases": ["МОДА.ОДН", "MODE.SNGL"],
+      "reference": false
+    },
+    "NEGBINOM.DIST": {
+      "en": "NEGBINOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NEGBINOM.DIST",
+      "reference": false
+    },
+    "NORM.DIST": {
+      "en": "NORM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.DIST",
+      "reference": false
+    },
+    "NORM.INV": {
+      "en": "NORM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.INV",
+      "reference": false
+    },
+    "NORM.S.DIST": {
+      "en": "NORM.S.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.S.DIST",
+      "reference": false
+    },
+    "NORM.S.INV": {
+      "en": "NORM.S.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.S.INV",
+      "reference": false
+    },
+    "PEARSON": {
+      "en": "PEARSON",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PEARSON",
+      "reference": false
+    },
+    "PERCENTILE.EXC": {
+      "en": "PERCENTILE.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTILE.EXC",
+      "reference": false
+    },
+    "PERCENTILE.INC": {
+      "en": "PERCENTILE.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTILE.INC",
+      "reference": false
+    },
+    "PERCENTRANK.EXC": {
+      "en": "PERCENTRANK.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTRANK.EXC",
+      "reference": false
+    },
+    "PERCENTRANK.INC": {
+      "en": "PERCENTRANK.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTRANK.INC",
+      "reference": false
+    },
+    "PERMUT": {
+      "en": "PERMUT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PERMUT",
+      "reference": false
+    },
+    "PERMUTATIONA": {
+      "en": "PERMUTATIONA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PERMUTATIONA",
+      "reference": false
+    },
+    "PHI": {
+      "en": "PHI",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PHI",
+      "reference": false
+    },
+    "POISSON.DIST": {
+      "en": "POISSON.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "POISSON.DIST",
+      "reference": false
+    },
+    "PROB": {
+      "en": "PROB",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PROB",
+      "reference": false
+    },
+    "QUARTILE.EXC": {
+      "en": "QUARTILE.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "QUARTILE.EXC",
+      "reference": false
+    },
+    "QUARTILE.INC": {
+      "en": "QUARTILE.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "QUARTILE.INC",
+      "reference": false
+    },
+    "RANK.AVG": {
+      "en": "RANK.AVG",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "RANK.AVG",
+      "reference": false
+    },
+    "РАНГ.РВ": {
+      "en": "RANK.EQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "РАНГ.РВ",
+      "aliases": ["РАНГ.РВ", "RANK.EQ"],
+      "reference": false
+    },
+    "RSQ": {
+      "en": "RSQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RSQ",
+      "reference": false
+    },
+    "SKEW": {
+      "en": "SKEW",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SKEW",
+      "reference": false
+    },
+    "SKEW.P": {
+      "en": "SKEW.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SKEW.P",
+      "reference": false
+    },
+    "SLOPE": {
+      "en": "SLOPE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SLOPE",
+      "reference": false
+    },
+    "НАИМЕНЬШИЙ": {
+      "en": "SMALL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НАИМЕНЬШИЙ",
+      "aliases": ["НАИМЕНЬШИЙ", "SMALL"],
+      "reference": false
+    },
+    "STANDARDIZE": {
+      "en": "STANDARDIZE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STANDARDIZE",
+      "reference": false
+    },
+    "STDEV.P": {
+      "en": "STDEV.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "STDEV.P",
+      "reference": false
+    },
+    "STDEV.S": {
+      "en": "STDEV.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "STDEV.S",
+      "reference": false
+    },
+    "STDEVA": {
+      "en": "STDEVA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STDEVA",
+      "reference": false
+    },
+    "STDEVPA": {
+      "en": "STDEVPA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STDEVPA",
+      "reference": false
+    },
+    "STEYX": {
+      "en": "STEYX",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STEYX",
+      "reference": false
+    },
+    "T.DIST": {
+      "en": "T.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST",
+      "reference": false
+    },
+    "T.DIST.2T": {
+      "en": "T.DIST.2T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST.2T",
+      "reference": false
+    },
+    "T.DIST.RT": {
+      "en": "T.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST.RT",
+      "reference": false
+    },
+    "T.INV": {
+      "en": "T.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.INV",
+      "reference": false
+    },
+    "T.INV.2T": {
+      "en": "T.INV.2T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.INV.2T",
+      "reference": false
+    },
+    "T.TEST": {
+      "en": "T.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.TEST",
+      "reference": false
+    },
+    "TREND": {
+      "en": "TREND",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TREND",
+      "reference": false
+    },
+    "TRIMMEAN": {
+      "en": "TRIMMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TRIMMEAN",
+      "reference": false
+    },
+    "VAR.P": {
+      "en": "VAR.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "VAR.P",
+      "reference": false
+    },
+    "VAR.S": {
+      "en": "VAR.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "VAR.S",
+      "reference": false
+    },
+    "VARA": {
+      "en": "VARA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VARA",
+      "reference": false
+    },
+    "VARPA": {
+      "en": "VARPA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VARPA",
+      "reference": false
+    },
+    "WEIBULL.DIST": {
+      "en": "WEIBULL.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "WEIBULL.DIST",
+      "reference": false
+    },
+    "Z.TEST": {
+      "en": "Z.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "Z.TEST",
+      "reference": false
+    },
+    "ASC": {
+      "en": "ASC",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASC",
+      "reference": false
+    },
+    "ARRAYTOTEXT": {
+      "en": "ARRAYTOTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ARRAYTOTEXT",
+      "reference": false
+    },
+    "BAHTTEXT": {
+      "en": "BAHTTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BAHTTEXT",
+      "reference": false
+    },
+    "СИМВОЛ": {
+      "en": "CHAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СИМВОЛ",
+      "aliases": ["СИМВОЛ", "CHAR"],
+      "reference": false
+    },
+    "ПЕЧСИМВ": {
+      "en": "CLEAN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПЕЧСИМВ",
+      "aliases": ["ПЕЧСИМВ", "CLEAN"],
+      "reference": false
+    },
+    "КОДСИМВ": {
+      "en": "CODE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОДСИМВ",
+      "aliases": ["КОДСИМВ", "CODE"],
+      "reference": false
+    },
+    "СЦЕП": {
+      "en": "CONCAT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СЦЕП",
+      "aliases": ["СЦЕП", "CONCAT"],
+      "reference": false
+    },
+    "DBCS": {
+      "en": "DBCS",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "DBCS",
+      "reference": false
+    },
+    "DETECTLANGUAGE": {
+      "en": "DETECTLANGUAGE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "DETECTLANGUAGE",
+      "reference": true
+    },
+    "DOLLAR": {
+      "en": "DOLLAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLAR",
+      "reference": false
+    },
+    "СОВПАД": {
+      "en": "EXACT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СОВПАД",
+      "aliases": ["СОВПАД", "EXACT"],
+      "reference": false
+    },
+    "НАЙТИ": {
+      "en": "FIND",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
+      "version": "",
+      "name": "НАЙТИ",
+      "aliases": ["НАЙТИ", "FIND"],
+      "reference": false
+    },
+    "FINDB": {
+      "en": "FINDB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
+      "version": "",
+      "name": "FINDB",
+      "reference": false
+    },
+    "FIXED": {
+      "en": "FIXED",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FIXED",
+      "reference": false
+    },
+    "ЛЕВСИМВ": {
+      "en": "LEFT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЛЕВСИМВ",
+      "aliases": ["ЛЕВСИМВ", "LEFT"],
+      "reference": false
+    },
+    "LEFTB": {
+      "en": "LEFTB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LEFTB",
+      "reference": false
+    },
+    "ДЛСТР": {
+      "en": "LEN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЛСТР",
+      "aliases": ["ДЛСТР", "LEN"],
+      "reference": false
+    },
+    "LENB": {
+      "en": "LENB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LENB",
+      "reference": false
+    },
+    "СТРОЧН": {
+      "en": "LOWER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОЧН",
+      "aliases": ["СТРОЧН", "LOWER"],
+      "reference": false
+    },
+    "ПСТР": {
+      "en": "MID",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПСТР",
+      "aliases": ["ПСТР", "MID"],
+      "reference": false
+    },
+    "MIDB": {
+      "en": "MIDB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MIDB",
+      "reference": false
+    },
+    "NUMBERVALUE": {
+      "en": "NUMBERVALUE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "NUMBERVALUE",
+      "reference": false
+    },
+    "PHONETIC": {
+      "en": "PHONETIC",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PHONETIC",
+      "reference": false
+    },
+    "ПРОПНАЧ": {
+      "en": "PROPER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОПНАЧ",
+      "aliases": ["ПРОПНАЧ", "PROPER"],
+      "reference": false
+    },
+    "REGEXEXTRACT": {
+      "en": "REGEXEXTRACT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXEXTRACT",
+      "reference": false
+    },
+    "REGEXREPLACE": {
+      "en": "REGEXREPLACE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXREPLACE",
+      "reference": false
+    },
+    "REGEXTEST": {
+      "en": "REGEXTEST",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXTEST",
+      "reference": false
+    },
+    "ЗАМЕНИТЬ": {
+      "en": "REPLACE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗАМЕНИТЬ",
+      "aliases": ["ЗАМЕНИТЬ", "REPLACE"],
+      "reference": false
+    },
+    "REPLACEB": {
+      "en": "REPLACEB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "REPLACEB",
+      "reference": false
+    },
+    "ПОВТОР": {
+      "en": "REPT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОВТОР",
+      "aliases": ["ПОВТОР", "REPT"],
+      "reference": false
+    },
+    "ПРАВСИМВ": {
+      "en": "RIGHT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРАВСИМВ",
+      "aliases": ["ПРАВСИМВ", "RIGHT"],
+      "reference": false
+    },
+    "RIGHTB": {
+      "en": "RIGHTB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RIGHTB",
+      "reference": false
+    },
+    "ПОИСК": {
+      "en": "SEARCH",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОИСК",
+      "aliases": ["ПОИСК", "SEARCH"],
+      "reference": false
+    },
+    "SEARCHB": {
+      "en": "SEARCHB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SEARCHB",
+      "reference": false
+    },
+    "ПОДСТАВИТЬ": {
+      "en": "SUBSTITUTE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОДСТАВИТЬ",
+      "aliases": ["ПОДСТАВИТЬ", "SUBSTITUTE"],
+      "reference": false
+    },
+    "T": {
+      "en": "T",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "T",
+      "reference": false
+    },
+    "ТЕКСТ": {
+      "en": "TEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТЕКСТ",
+      "aliases": ["ТЕКСТ", "TEXT"],
+      "reference": false
+    },
+    "ТЕКСТПОСЛЕ": {
+      "en": "TEXTAFTER",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ТЕКСТПОСЛЕ",
+      "aliases": ["ТЕКСТПОСЛЕ", "TEXTAFTER"],
+      "reference": false
+    },
+    "ТЕКСТДО": {
+      "en": "TEXTBEFORE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ТЕКСТДО",
+      "aliases": ["ТЕКСТДО", "TEXTBEFORE"],
+      "reference": false
+    },
+    "ОБЪЕДИНИТЬ": {
+      "en": "TEXTJOIN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "ОБЪЕДИНИТЬ",
+      "aliases": ["ОБЪЕДИНИТЬ", "TEXTJOIN"],
+      "reference": false
+    },
+    "TEXTSPLIT": {
+      "en": "TEXTSPLIT",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TEXTSPLIT",
+      "aliases": ["ТЕКСТРАЗДЕЛ", "TEXTSPLIT"],
+      "reference": false
+    },
+    "TRANSLATE": {
+      "en": "TRANSLATE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "TRANSLATE",
+      "reference": true
+    },
+    "СЖПРОБЕЛЫ": {
+      "en": "TRIM",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЖПРОБЕЛЫ",
+      "aliases": ["СЖПРОБЕЛЫ", "TRIM"],
+      "reference": false
+    },
+    "UNICHAR": {
+      "en": "UNICHAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "UNICHAR",
+      "reference": false
+    },
+    "UNICODE": {
+      "en": "UNICODE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "UNICODE",
+      "reference": false
+    },
+    "ПРОПИСН": {
+      "en": "UPPER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОПИСН",
+      "aliases": ["ПРОПИСН", "UPPER"],
+      "reference": false
+    },
+    "ЗНАЧЕН": {
+      "en": "VALUE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗНАЧЕН",
+      "aliases": ["ЗНАЧЕН", "VALUE"],
+      "reference": false
+    },
+    "VALUETOTEXT": {
+      "en": "VALUETOTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "VALUETOTEXT",
+      "reference": false
+    },
+    "CALL": {
+      "en": "CALL",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CALL",
+      "reference": true
+    },
+    "EUROCONVERT": {
+      "en": "EUROCONVERT",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "EUROCONVERT",
+      "reference": true
+    },
+    "REGISTER.ID": {
+      "en": "REGISTER.ID",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "REGISTER.ID",
+      "reference": true
+    },
+    "ENCODEURL": {
+      "en": "ENCODEURL",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ENCODEURL",
+      "reference": true
+    },
+    "FILTERXML": {
+      "en": "FILTERXML",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "FILTERXML",
+      "reference": true
+    },
+    "WEBSERVICE": {
+      "en": "WEBSERVICE",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "WEBSERVICE",
+      "reference": true
+    }
+  };
+  const functionSearchKey = value => String(value).toUpperCase().replace(/Ё/g, "Е").replace(/\s+/g, "");
   const CATEGORY_ICONS_SVG = {
+    "Совместимость": {
+      iconName: "Refresh",
+      color: "#a78bfa"
+    },
+    "Кубы": {
+      iconName: "Layers",
+      color: "#f472b6"
+    },
+    "Надстройки": {
+      iconName: "Wrench",
+      color: "#fbbf24"
+    },
+    "Веб-функции": {
+      iconName: "Grid",
+      color: "#22d3ee"
+    },
     "Математические": {
       iconName: "Bolt",
       color: "#f59e0b"
@@ -471,7 +4835,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 .et-shell.theme-light{--bg-main:#edf2f8;--bg-panel:#fff;--bg-card:#f1f5fb;--bg-elevated:#e5edf7;--text-main:#182a40;--text-sec:#566b84;--border:#cedaea;--accent-green:#07865a;--accent-cyan:#097f9d;--accent-purple:#8050ca;--accent-red:#b92f45}
 .et-shell,.et-shell *,.et-shell *::before,.et-shell *::after{box-sizing:border-box}
 .et-shell button,.et-shell input{font-family:inherit}.et-shell button{cursor:pointer}.et-shell button:disabled{opacity:.45;cursor:not-allowed}.et-shell button:focus-visible,.et-shell [tabindex]:focus-visible{outline:3px solid var(--accent-cyan);outline-offset:3px}.et-shell svg{flex-shrink:0}.et-shell input{color:var(--text-main);outline:0;min-width:0}.et-shell input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 3px #22d3ee15}.et-shell button:active:not(:disabled){transform:scale(.98)}
-.et-langswitch{display:flex;gap:3px;background:#00000012;padding:4px;border:1px solid var(--border);border-radius:13px}.et-lang-btn{border:0;background:none;color:var(--text-sec);padding:8px 11px;min-height:34px;font-size:11px;font-weight:750;border-radius:9px;transition:background .2s,box-shadow .2s}.et-lang-btn.active{background:linear-gradient(135deg,#8657e0,#526fe8);color:#fff;box-shadow:0 3px 10px #7450dd35}
+.et-langswitch{display:flex;gap:3px;background:#10b9810c;padding:4px;border:1px solid #10b98130;border-radius:13px}.et-lang-btn{border:0;background:none;color:var(--text-sec);padding:8px 11px;min-height:34px;font-size:11px;font-weight:750;border-radius:9px;transition:background .2s,box-shadow .2s,transform .2s}.et-lang-btn:hover{background:#10b98118}.et-lang-btn:active{transform:scale(.95)}.et-lang-btn:focus-visible{outline:2px solid #10b981;outline-offset:2px}.et-lang-btn.active{background:linear-gradient(135deg,#087f5b,#087f8c);color:#fff;box-shadow:0 3px 12px #05966935}
 .et-gsearch{position:relative;min-width:0}.et-gsearch input{width:100%;padding:12px 12px 12px 38px;border:1px solid var(--border);border-radius:12px}.et-gsearch-icon{position:absolute;top:50%;left:12px;transform:translateY(-50%);display:flex;color:var(--text-sec);pointer-events:none}.et-gsearch-icon svg{width:16px;height:16px}.et-gsearch-drop{position:absolute;top:calc(100% + 7px);left:0;right:0;max-height:310px;overflow-y:auto;padding:6px;background:var(--bg-panel);border:1px solid var(--border);border-radius:13px;box-shadow:0 15px 40px #0003;z-index:200;animation:ex3-enter .2s ease-out}.et-gsearch-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 10px;border-radius:8px;font-size:12px;cursor:pointer;min-height:42px}.et-gsearch-item:hover{background:#8b5cf618}.et-gsearch-cat{font-size:9px;color:var(--text-sec);text-align:right}.et-fn-dot{width:5px;height:5px;border-radius:50%;flex:none}.et-fn-dot.easy{background:var(--accent-green)}.et-fn-dot.medium{background:#eeb85b}.et-fn-dot.hard{background:var(--accent-red)}
 .et-ai-card{border:1px solid var(--border);border-radius:15px;background:radial-gradient(ellipse at 100% 0%,#8b5cf61b,transparent 70%),var(--bg-main)}.et-ai-title{display:flex;align-items:center;gap:8px;color:var(--accent-purple);font-size:12px;font-weight:750;margin-bottom:15px}.et-ai-input{background:var(--bg-panel);padding:12px;border:1px solid var(--border);border-radius:10px;font-size:13px}.et-ai-card .et-action-primary{background:linear-gradient(120deg,#8251d1,#526dcc)}
 .et-cat-list{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}.et-cat{border:1px solid var(--border);border-radius:12px;min-width:0}.et-cat-head{display:flex;align-items:center;justify-content:space-between;padding:12px;cursor:pointer;gap:8px}.et-cat-head-left{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:650;min-width:0}.et-cat-icon{display:flex}.et-cat-icon svg{height:15px;width:15px}.et-cat-chevron{color:var(--text-sec);font-size:12px;transition:transform .2s}.et-cat-chevron.open{transform:rotate(180deg)}.et-cat-body{display:flex;flex-wrap:wrap;gap:5px;padding:0 10px 12px}.et-fn-btn{border:1px solid var(--border);background:var(--bg-panel);color:var(--text-main);display:flex;align-items:center;gap:5px;border-radius:8px;padding:7px 8px;font-size:10px;font-weight:600;min-height:32px;transition:background .2s,border-color .2s}.et-fn-btn:hover{border-color:var(--accent-purple)}.et-fn-btn.active{background:#7955c8;color:white;border-color:transparent}
@@ -587,12 +4951,118 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
 
 .et-lesson.theory-collapsed{grid-template-columns:1fr}.theory-collapsed .et-theory-card{border-bottom:1px solid var(--border)}.theory-collapsed .et-practice-card{border-left:0}
+/* V4: a single active category eliminates uneven accordion grid rows. */
+.ex3-hero{background:radial-gradient(ellipse at 10% 70%,#10b9810b,transparent 45%),radial-gradient(ellipse at 100% 5%,#8b5cf61a,transparent 55%),var(--bg-panel)}
+.ex3-hero-content{grid-template-columns:1fr minmax(350px,.85fr);padding:30px 40px 34px;gap:60px}
+.ex3-hero h2{font-size:clamp(32px,3.3vw,49px);letter-spacing:-1.5px;line-height:1.12;margin:18px 0 16px}.ex3-hero p{font-size:13px;line-height:1.8;max-width:420px}
+.ex3-hero-right{position:relative;display:block;padding:10px 25px 22px;isolation:isolate;min-width:0;max-width:490px;width:100%;justify-self:end}
+.ex4-hero-grid{position:absolute;inset:-20px -35px;z-index:-1;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse,#0008,transparent 72%);transform:rotate(-7deg);pointer-events:none}
+.ex4-hero-panel{border:1px solid var(--border);border-radius:21px;background:linear-gradient(135deg,#ffffff04,transparent),var(--bg-main);box-shadow:0 15px 30px #00000015;padding:18px 20px;position:relative}
+.ex4-hero-panel-top{display:flex;align-items:center;gap:7px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-sec);margin-bottom:15px}.ex4-hero-panel-top>svg{margin-left:auto;width:14px;height:14px;color:var(--accent-purple)}.ex4-live-dot{width:5px;height:5px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 0 4px #10b98112;animation:ex3-pulse 3s infinite}
+.ex4-hero-panel .ex3-profile-toggle{max-width:none;width:100%;padding:0;background:transparent;border:0;border-radius:0;flex-wrap:nowrap;gap:12px;box-shadow:none}.ex4-hero-panel .ex3-profile-toggle:hover{transform:none}.ex4-hero-panel .ex3-profile-toggle>span:nth-child(2){display:block;text-align:left}.ex4-hero-panel .ex3-profile-toggle b{font-size:15px;max-width:100%;line-height:1.4}.ex4-hero-panel .ex3-profile-toggle small{margin:3px 0 0;font-size:11px}.ex4-hero-panel .ex3-user-avatar{width:40px;height:40px;border-radius:13px;font-size:17px}.ex4-profile-arrow{color:var(--text-sec);font-size:20px;transition:transform .2s}.ex3-profile-toggle:hover .ex4-profile-arrow{transform:translate(2px,-2px);color:var(--accent-purple)}
+.ex4-hero-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0 14px}.ex4-hero-metrics>div{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:3px 6px;background:var(--bg-panel);border:1px solid var(--border);border-radius:11px;padding:10px}.ex4-hero-metrics svg{width:13px;height:13px;color:var(--accent-cyan)}.ex4-hero-metrics>div:first-child svg{color:var(--accent-purple)}.ex4-hero-metrics>div:last-child svg{color:#edab60}.ex4-hero-metrics b{font-size:18px;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}.ex4-hero-metrics>div>span{grid-column:1/-1;font-size:9px;color:var(--text-sec)}
+.ex4-next-level{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--text-sec);margin-bottom:7px}.ex4-next-level b{font-weight:650}.ex4-level-track{height:4px;background:var(--border);border-radius:5px;overflow:hidden}.ex4-level-track>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan));transition:width .7s}
+.ex4-hero-formula{position:absolute;right:0;bottom:0;max-width:88%;display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #10b98135;border-radius:12px;background:var(--bg-panel);box-shadow:0 6px 20px #0002;animation:ex3-float 6s ease-in-out infinite;pointer-events:none}.ex4-hero-formula>span{font:italic 700 23px Georgia;color:var(--accent-green)}.ex4-hero-formula code{font-size:11px;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ex4-hero-formula svg{width:14px;color:var(--accent-green)}
+.ex3-catalog-inner{display:block;padding:22px 26px}.ex3-catalog .et-ai-card{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:14px 16px;background:linear-gradient(110deg,#8b5cf60d,transparent),var(--bg-main)}.ex3-catalog .et-ai-title{margin:0;white-space:nowrap;font-size:12px;flex:0 0 auto}.ex3-catalog .et-ai-input{margin:0;flex:1;width:auto;min-height:43px}.ex3-catalog .et-ai-card .et-action-btn{width:auto!important;flex:0 0 auto;font-size:12px!important;padding:12px 16px;min-height:43px}
+.ex4-browser{display:grid;grid-template-columns:230px minmax(0,1fr);border:1px solid var(--border);border-radius:17px;background:var(--bg-main);overflow:hidden;min-width:0}
+.ex4-categories{display:flex;flex-direction:column;gap:4px;max-height:510px;overflow-y:auto;padding:10px;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.ex4-category{display:flex;align-items:center;gap:9px;text-align:left;width:100%;border:1px solid transparent;background:transparent;color:var(--text-sec);padding:11px 10px;border-radius:10px;min-height:44px;flex:none;transition:background .18s,border-color .18s,color .18s}
+.ex4-category>span:nth-child(2){font-size:11px;font-weight:600;flex:1;line-height:1.4;min-width:0}.ex4-category-icon{display:flex;color:var(--category-color)}.ex4-category-icon svg{width:15px;height:15px}.ex4-category-icon>span{font-size:12px}.ex4-category>b{font-size:10px;font-weight:550;font-variant-numeric:tabular-nums;color:var(--text-sec);background:var(--bg-panel);padding:2px 5px;border-radius:5px}.ex4-category:hover{background:var(--bg-panel);color:var(--text-main)}.ex4-category.active{background:var(--bg-panel);border-color:var(--border);color:var(--text-main);box-shadow:inset 3px 0 0 var(--category-color)}
+.ex4-function-panel{min-width:0;background:var(--bg-panel);padding:20px;display:flex;flex-direction:column;max-height:510px}.ex4-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.ex4-panel-heading h3{font-size:18px;letter-spacing:-.4px;margin:5px 0 0;line-height:1.35;color:var(--text-main)}.ex4-count{font-size:11px;color:var(--text-sec);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ex4-filter{display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg-main);border-radius:10px;padding:0 11px;margin-bottom:16px;flex:none}.ex4-filter:focus-within{border-color:var(--accent-cyan);box-shadow:0 0 0 3px #22d3ee0b}.ex4-filter>svg{height:15px;width:15px;color:var(--text-sec)}.ex4-filter input{width:100%;font-size:12px;min-height:40px;background:transparent;border:0;box-shadow:none!important;padding:10px 0}.ex4-filter button{border:0;background:none;color:var(--text-sec);padding:6px;font-size:21px}
+.ex4-function-scroll{min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding:1px 5px 4px 1px;flex:1}.ex4-function-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-content:start;animation:ex3-enter .24s ease-out}
+.ex4-function{display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:75px;min-width:0;padding:13px 12px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-main);border-radius:11px;text-decoration:none;text-align:left;position:relative;transition:background .2s,border-color .2s,box-shadow .2s;overflow:hidden}
+.ex4-function:hover{background:var(--bg-card);border-color:var(--accent-purple);box-shadow:0 3px 10px #00000010}.ex4-function.active{background:linear-gradient(130deg,#8b5cf61c,#6366f113);border-color:#9a75df80;box-shadow:inset 3px 0 0 var(--accent-purple)}
+.ex4-function-name{font-size:12px;font-weight:650;line-height:1.4;overflow-wrap:anywhere;word-break:normal;padding-right:8px}.ex4-function-detail{display:flex;align-items:center;justify-content:space-between;gap:5px;color:var(--text-sec);font-size:9px;line-height:1.3;min-width:0}.ex4-function-detail>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ex4-version{font-size:8px;white-space:nowrap;color:var(--text-sec);background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 4px}.ex4-selected{position:absolute;right:6px;top:6px;color:var(--accent-purple);display:flex}.ex4-selected svg{width:11px;height:11px}.ex4-catalog-note{display:flex;align-items:flex-start;gap:6px;border-top:1px solid var(--border);margin-top:12px;padding-top:10px;font-size:10px;line-height:1.5;color:var(--text-sec);flex:none}.ex4-catalog-note svg{width:13px;height:13px;flex:none;margin-top:1px}.ex4-empty{text-align:center;font-size:13px;padding:35px 20px;color:var(--text-sec)}
+.et-gsearch-item{text-decoration:none;color:var(--text-main)}.ex4-search-alias{display:block;font-size:9px;color:var(--text-sec);margin-top:3px}.ex3-workbar .et-gsearch-drop{max-height:380px}
+.et-shell.theme-light .ex4-hero-panel{background:#ffffffdd;box-shadow:0 12px 28px #52668512}.et-shell.theme-light .ex4-hero-metrics>div{background:#f1f5fb}.et-shell.theme-light .ex4-category.active{background:#fff}.et-shell.theme-light .ex4-function{background:#fff}.et-shell.theme-light .ex4-function.active{background:#f2ecfd}.et-shell.theme-light .ex4-function:hover{background:#f5f1fe}
+@media(max-width:1100px){.ex3-hero-content{gap:24px;padding:28px;grid-template-columns:1fr minmax(310px,.85fr)}.ex3-hero-right{padding:5px 15px 22px}.ex4-hero-panel{padding:16px}.ex4-browser{grid-template-columns:205px minmax(0,1fr)}.ex4-function-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ex3-catalog-inner{padding:18px}.ex4-function-panel{padding:16px}}
+@media(max-width:760px){.ex3-hero-content{grid-template-columns:1fr;gap:22px;padding:24px}.ex3-hero h2 br{display:none}.ex3-hero h2 em::before{content:' '}.ex3-hero h2{font-size:36px;margin:13px 0}.ex3-hero-right{max-width:none;padding:0 0 18px}.ex4-hero-grid{inset:-5px}.ex4-hero-panel{padding:16px 18px}.ex4-hero-metrics{margin:14px 0}.ex4-hero-formula{padding:6px 11px;right:14px;bottom:0}.ex4-hero-formula>span{font-size:18px}.ex4-browser{display:block}.ex4-categories{display:flex;flex-direction:row;overflow-x:auto;overflow-y:hidden;max-height:none;gap:7px;border-right:0;border-bottom:1px solid var(--border);padding:10px}.ex4-category{width:auto;flex:none;min-height:39px;padding:9px 11px}.ex4-category>span:nth-child(2){white-space:nowrap}.ex4-category.active{box-shadow:inset 0 -2px 0 var(--category-color)}.ex4-function-panel{max-height:470px;padding:16px}.ex4-function-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ex3-catalog .et-ai-card{display:grid;grid-template-columns:1fr auto;gap:10px}.ex3-catalog .et-ai-title{grid-column:1 / -1}.ex3-catalog .et-ai-input{width:100%}.ex4-function-name{font-size:11px}}
+@media(max-width:500px){.ex3-hero-content{display:block;padding:20px 17px 22px}.ex3-hero h2{font-size:32px;letter-spacing:-1px;line-height:1.15}.ex3-hero p{font-size:12px;max-width:none;line-height:1.65}.ex3-hero-right{margin-top:22px;padding:0 0 20px}.ex4-hero-panel{padding:14px;border-radius:16px}.ex4-hero-panel-top{font-size:8px;letter-spacing:.6px;margin-bottom:12px}.ex4-hero-panel .ex3-profile-toggle b{font-size:13px}.ex4-hero-metrics{gap:7px;margin:13px 0 11px}.ex4-hero-metrics>div{padding:9px 8px}.ex4-hero-metrics b{font-size:17px}.ex4-hero-panel .ex3-user-avatar{width:34px;height:34px;border-radius:10px;font-size:14px}.ex4-hero-formula{right:10px;max-width:85%}.ex3-catalog-inner{padding:12px}.ex3-catalog .et-ai-card{padding:12px;grid-template-columns:1fr;margin-bottom:12px}.ex3-catalog .et-ai-card .et-action-btn{width:100%!important}.ex4-function-panel{padding:13px;max-height:480px}.ex4-panel-heading h3{font-size:16px}.ex4-function-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ex4-function{min-height:78px;padding:11px 9px;gap:8px}.ex4-function-name{font-size:10px}.ex4-function-detail{font-size:8px;flex-wrap:wrap}.ex4-filter input{font-size:11px}.ex4-catalog-note{font-size:9px}.ex4-categories{padding:8px}.ex4-category>span:nth-child(2){font-size:10px}.ex4-panel-heading .ex3-eyebrow{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.et-shell *,.et-shell *::before,.et-shell *::after{animation:none!important;transition:none!important}}
+
+/* Animated hero scene. One 12s loop = 3 formulas x 4s: type formula -> data flows into result -> result pops.
+   Everything moves with transform/opacity, so it stays smooth. */
+.ex5-scene{position:relative;width:100%;max-width:480px;height:270px;justify-self:end;isolation:isolate;pointer-events:none;user-select:none;animation:ex5-sway 14s ease-in-out infinite}
+.ex5-halo{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 45%,#14b88b2a,transparent 65%),radial-gradient(ellipse at 25% 75%,#8b5cf630,transparent 55%);filter:blur(10px);animation:ex5-halo 9s ease-in-out infinite}
+.ex5-orbit{position:absolute;width:255px;height:255px;left:22%;top:4px;border:1px dashed var(--border);border-radius:50%;animation:ex5-orbit 26s linear infinite}
+.ex5-orbit::before,.ex5-orbit::after{content:"";position:absolute;border-radius:50%}
+.ex5-orbit::before{top:-4px;left:50%;width:8px;height:8px;margin-left:-4px;background:var(--accent-cyan);box-shadow:0 0 14px 3px #48cce766}
+.ex5-orbit::after{bottom:-3px;left:50%;width:6px;height:6px;margin-left:-3px;background:var(--accent-purple);box-shadow:0 0 12px 3px #ac85ff66}
+.ex5-sheet{position:absolute;top:27px;left:18%;width:66%;border:1px solid var(--border);border-radius:17px;overflow:hidden;background:var(--bg-panel);box-shadow:0 18px 36px #00000024;transform:rotate(-5deg);animation:ex5-sheet-float 7s ease-in-out -2s infinite}
+.ex5-sheet::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,#ffffff10 47%,#ffffff22 50%,#ffffff10 53%,transparent 62%);transform:translateX(-130%);animation:ex5-glint 6s ease-in-out infinite}
+.ex5-sheet-title{display:flex;align-items:center;gap:8px;padding:13px 15px;border-bottom:1px solid var(--border);background:var(--bg-card);font-size:9px;letter-spacing:1px;font-weight:700;color:var(--text-sec)}.ex5-sheet-title>svg{color:var(--accent-green);width:15px;height:15px}.ex5-sheet-title>span{flex:1}.ex5-sheet-title>i{width:4px;height:4px;border-radius:50%;background:var(--text-sec);opacity:.3;animation:ex5-dot 1.8s ease-in-out infinite}.ex5-sheet-title>i:nth-of-type(2){animation-delay:.25s}.ex5-sheet-title>i:nth-of-type(3){animation-delay:.5s}
+.ex5-sheet-grid{position:relative;--r:31px;--cw:calc((100% - 25px) / 3);display:grid;grid-template-columns:25px repeat(3,1fr);font:12px ui-monospace,Consolas,monospace}
+.ex5-sheet-grid>*{display:grid;place-items:center;height:var(--r);border-bottom:1px solid var(--border);border-right:1px solid var(--border);color:var(--text-sec);font-weight:500}
+.ex5-sheet-grid>b,.ex5-sheet-grid>small{background:var(--bg-main);font-size:10px}
+.ex5-sheet-grid>b{animation:ex5-hdr 12s infinite}.ex5-sheet-grid>b:nth-of-type(1){animation-delay:4s}.ex5-sheet-grid>b:nth-of-type(2){animation-delay:8s}.ex5-sheet-grid>b:nth-of-type(3){animation-delay:0s}
+.ex5-sheet-grid>.ex5-cell{color:var(--accent-green);background:#10b9810c}
+.ex5-sheet-grid>.total{font-weight:800;background:#10b98120;color:var(--accent-green)}
+.ex5-sheet-grid>.ex5-select{position:absolute;display:block;top:var(--r);left:calc(25px + var(--cw) * 2);width:var(--cw);height:calc(var(--r) * 3);padding:0;border:2px solid var(--accent-green);border-radius:3px;background:#27dfa012;box-shadow:0 0 8px #27dfa022;overflow:hidden;opacity:0;z-index:2;animation:ex5-select 12s cubic-bezier(.65,0,.35,1) infinite,ex5-run 4s ease-out infinite}
+.ex5-select::after{content:"";position:absolute;right:0;bottom:0;width:6px;height:6px;background:var(--accent-green)}
+.ex5-select-sweep{position:absolute;inset:0;background:linear-gradient(180deg,transparent 0%,#27dfa066 50%,transparent 100%);transform:translateY(-100%);animation:ex5-sweep 4s ease-in-out infinite}
+.ex5-formula-card{position:absolute;top:2px;left:2%;width:80%;height:52px;display:flex;align-items:center;gap:13px;padding:12px 16px;border:1px solid #8b5cf64d;border-radius:13px;background:var(--bg-main);box-shadow:0 8px 24px #0002;transform:rotate(2deg);animation:ex5-formula-float 6s ease-in-out -1s infinite}
+.ex5-formula-card::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid #ac85ffaa;box-shadow:0 0 22px 2px #ac85ff55;opacity:0;animation:ex5-card-glow 4s ease-out infinite}
+.ex5-fx{font:italic 700 27px Georgia;color:var(--accent-purple);animation:ex5-fx 4s ease-out infinite}
+.ex5-formulas{position:relative;height:21px;flex:1;min-width:0;overflow:hidden}
+.ex5-formulas code{position:absolute;left:0;top:0;box-sizing:content-box;height:21px;width:calc(var(--n,12) * 1ch);overflow:hidden;white-space:pre;border-right:2px solid var(--accent-purple);font:12px/21px ui-monospace,Consolas,monospace;color:var(--text-main);opacity:0;animation:ex5-line 12s var(--d,0s) infinite,ex5-typing 12s var(--d,0s) steps(var(--n,12),end) infinite,ex5-caret 1s steps(1) infinite}
+.ex5-formulas code b{font-weight:650;color:var(--accent-cyan)}
+.ex5-formulas code:nth-child(1){--n:12;--d:0s}.ex5-formulas code:nth-child(2){--n:16;--d:4s}.ex5-formulas code:nth-child(3){--n:14;--d:8s}
+.ex5-caret{display:none}
+.ex5-result-card{position:absolute;bottom:9px;right:0;display:flex;align-items:center;gap:12px;width:185px;padding:13px 15px;background:var(--bg-panel);border:1px solid #10b98150;border-radius:15px;box-shadow:0 12px 24px #0002;animation:ex5-result-float 5.5s ease-in-out -3s infinite}
+.ex5-result-card::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:2px solid var(--accent-green);opacity:0;animation:ex5-ring 4s ease-out infinite}
+.ex5-result-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#10b98118;color:var(--accent-green);animation:ex5-check 4s ease-out infinite}.ex5-result-icon svg{width:17px;height:17px}.ex5-result-card>div{flex:1}.ex5-result-card small{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-sec)}
+.ex5-results{position:relative;height:25px;overflow:hidden;margin-right:-10px;padding-right:10px}
+.ex5-results>b{position:absolute;inset:0;font-size:21px;line-height:25px;color:var(--text-main);font-variant-numeric:tabular-nums;transform-origin:left center;opacity:0;animation:ex5-pop 12s var(--d,0s) infinite}
+.ex5-results>b:nth-child(2){--d:4s}.ex5-results>b:nth-child(3){--d:8s}
+.ex5-result-spark{color:var(--accent-purple);animation:ex5-spark 4s ease-in-out infinite}.ex5-result-spark svg{width:15px;height:15px}
+.ex5-mini-card{position:absolute;bottom:22px;left:6%;display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg-panel);padding:10px 13px;border-radius:11px;font:11px ui-monospace,monospace;color:var(--text-sec);transform:rotate(-7deg);animation:ex5-mini-float 8s ease-in-out -4s infinite}.ex5-mini-card svg{height:15px;width:15px;color:var(--accent-cyan)}
+.ex5-particle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);box-shadow:0 0 0 5px #22d3ee0b,0 0 12px #22d3ee55;animation:ex5-particle 5s ease-in-out infinite}
+.ex5-particle.p1{right:3%;top:66px;--dx:-8px;--dy:-16px}.ex5-particle.p2{left:4%;top:130px;background:var(--accent-purple);box-shadow:0 0 0 5px #ac85ff0d,0 0 12px #ac85ff55;--dx:10px;--dy:-12px;animation-duration:6.5s;animation-delay:-1s}.ex5-particle.p3{left:43%;bottom:0;width:4px;height:4px;background:var(--accent-green);--dx:14px;--dy:-10px;animation-duration:4.5s;animation-delay:-2s}
+.ex5-particle.p4{right:-1%;top:158px;width:4px;height:4px;background:var(--accent-purple);--dx:-9px;--dy:-18px;animation-duration:7s;animation-delay:-2.5s}.ex5-particle.p5{left:28%;top:-2px;width:5px;height:5px;--dx:12px;--dy:10px;animation-duration:5.5s;animation-delay:-3s}
+.ex5-bit{position:absolute;top:15%;width:5px;height:5px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 10px 2px #27dfa070;opacity:0;animation:ex5-bit 4s ease-in infinite}
+.ex5-bit::before{content:"";position:absolute;left:1.5px;bottom:4px;width:2px;height:22px;background:linear-gradient(to top,#27dfa0aa,transparent)}
+.ex5-bit.b1{right:13%}.ex5-bit.b2{right:9.5%;animation-delay:.12s}.ex5-bit.b3{right:16.5%;animation-delay:.24s}
+.ex5-progress-button{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 13px;min-height:43px;border:1px solid var(--border);border-radius:11px;background:var(--bg-panel);color:var(--text-main);font-family:inherit;font-size:12px;font-weight:600;white-space:nowrap;flex:none;transition:background .2s,border-color .2s}.ex5-progress-button svg{height:16px;width:16px;color:var(--accent-purple)}.ex5-progress-button:hover,.ex5-progress-button.active{border-color:#8b5cf666;background:#8b5cf60c}.ex3-library-count{margin-left:auto}.ex3-workbar{gap:12px}
+@keyframes ex5-sway{0%,100%{transform:perspective(1100px) rotateY(-4deg) rotateX(2deg)}50%{transform:perspective(1100px) rotateY(4deg) rotateX(-2deg)}}
+@keyframes ex5-halo{0%,100%{opacity:.7;transform:scale(1) translate3d(0,0,0)}50%{opacity:1;transform:scale(1.08) translate3d(10px,-6px,0)}}
+@keyframes ex5-orbit{to{transform:rotate(360deg)}}
+@keyframes ex5-sheet-float{0%,100%{transform:translate3d(-4px,6px,0) rotate(-6.5deg)}50%{transform:translate3d(6px,-12px,0) rotate(-2.5deg)}}
+@keyframes ex5-formula-float{0%,100%{transform:translate3d(0,6px,0) rotate(3deg)}50%{transform:translate3d(9px,-10px,0) rotate(-1deg)}}
+@keyframes ex5-result-float{0%,100%{transform:translate3d(-2px,4px,0) rotate(3deg)}50%{transform:translate3d(-10px,-13px,0) rotate(-2deg)}}
+@keyframes ex5-mini-float{0%,100%{transform:translate3d(0,6px,0) rotate(-8deg)}50%{transform:translate3d(8px,-11px,0) rotate(-2deg)}}
+@keyframes ex5-particle{0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.45}50%{transform:translate3d(var(--dx,6px),var(--dy,-14px),0) scale(1.5);opacity:1}}
+@keyframes ex5-glint{0%,55%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+@keyframes ex5-dot{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.6);background:var(--accent-green)}}
+@keyframes ex5-hdr{0%{color:var(--text-sec);background:var(--bg-main);box-shadow:inset 0 0 0 0 var(--accent-green)}3%,28%{color:var(--accent-green);background:#27dfa01c;box-shadow:inset 0 -2px 0 var(--accent-green)}32%,100%{color:var(--text-sec);background:var(--bg-main);box-shadow:inset 0 0 0 0 var(--accent-green)}}
+@keyframes ex5-select{0%{opacity:0;left:calc(25px + var(--cw) * 2);height:calc(var(--r) * 3)}2.5%,28%{opacity:1;left:calc(25px + var(--cw) * 2);height:calc(var(--r) * 3)}33%,61%{opacity:1;left:25px;height:var(--r)}66%,95%{opacity:1;left:calc(25px + var(--cw));height:calc(var(--r) * 3)}99%,100%{opacity:0;left:calc(25px + var(--cw));height:calc(var(--r) * 3)}}
+@keyframes ex5-run{0%,34%{background:#27dfa012;box-shadow:0 0 8px #27dfa022}40%{background:#27dfa035;box-shadow:0 0 20px 3px #27dfa070}58%,100%{background:#27dfa012;box-shadow:0 0 8px #27dfa022}}
+@keyframes ex5-sweep{0%,34%{transform:translateY(-100%)}46%,100%{transform:translateY(100%)}}
+@keyframes ex5-card-glow{0%,30%{opacity:0}38%{opacity:1}62%,100%{opacity:0}}
+@keyframes ex5-fx{0%,32%{transform:scale(1);text-shadow:0 0 0 #ac85ff00}38%{transform:scale(1.14);text-shadow:0 0 16px #ac85ffcc}58%,100%{transform:scale(1);text-shadow:0 0 0 #ac85ff00}}
+@keyframes ex5-line{0%{opacity:0;transform:translateY(8px)}1.5%,29%{opacity:1;transform:translateY(0)}32.5%,100%{opacity:0;transform:translateY(-8px)}}
+@keyframes ex5-typing{0%,1.5%{width:0}11.5%,100%{width:calc(var(--n,12) * 1ch)}}
+@keyframes ex5-caret{50%{border-right-color:transparent}}
+@keyframes ex5-pop{0%,16%{opacity:0;transform:translateY(12px) scale(.7);filter:blur(5px)}19.5%{opacity:1;transform:translateY(0) scale(1.07);filter:blur(0)}23%,29%{opacity:1;transform:scale(1);filter:blur(0)}32.5%,100%{opacity:0;transform:translateY(-10px) scale(.95);filter:blur(3px)}}
+@keyframes ex5-ring{0%,46%{opacity:0;transform:scale(1)}50%{opacity:.85;transform:scale(1)}72%,100%{opacity:0;transform:scale(1.12,1.45)}}
+@keyframes ex5-check{0%,46%{transform:scale(1) rotate(0)}52%{transform:scale(1.28) rotate(-8deg)}60%,100%{transform:scale(1) rotate(0)}}
+@keyframes ex5-spark{0%,46%,66%,100%{transform:scale(1) rotate(0)}54%{transform:scale(1.4) rotate(35deg)}}
+@keyframes ex5-bit{0%,34%{opacity:0;top:15%}38%{opacity:1}47%{opacity:1;top:74%}50%,100%{opacity:0;top:76%}}
+@keyframes ex5-fade{0%,1.5%{opacity:0}3%,29%{opacity:1}32.5%,100%{opacity:0}}
+@keyframes ex5-fade-late{0%,16%{opacity:0}18%,29%{opacity:1}32.5%,100%{opacity:0}}
+.et-shell.theme-light .ex5-sheet,.et-shell.theme-light .ex5-result-card,.et-shell.theme-light .ex5-mini-card{background:#fff;box-shadow:0 10px 25px #546b8918}.et-shell.theme-light .ex5-formula-card{background:#fff;box-shadow:0 8px 22px #71589e14}
+@media(max-width:1100px){.ex3-library-count{display:none}.ex3-workbar .et-gsearch{max-width:none}.ex5-scene{height:250px}.ex5-sheet{width:72%;left:14%}.ex5-formula-card{width:92%;left:0}.ex5-formulas code{font-size:11px}.ex5-mini-card{left:0;bottom:14px}.ex5-result-card{width:170px}}
+@media(max-width:760px){.ex5-scene{max-width:390px;height:245px;justify-self:center;width:100%;margin:5px auto 0}.ex3-hero-content{gap:12px}.ex5-progress-button{font-size:11px;padding:10px}.ex3-workbar{flex-wrap:wrap}.ex3-workbar .et-gsearch{min-width:180px}}
+@media(max-width:500px){.ex5-scene{height:224px;margin-top:24px}.ex5-sheet{top:25px;left:10%;width:78%}.ex5-sheet-grid{--r:27px}.ex5-sheet-grid>*{font-size:10px}.ex5-sheet-title{padding:10px 12px}.ex5-formula-card{height:43px;padding:9px 11px;gap:9px;left:0;width:98%}.ex5-fx{font-size:23px}.ex5-formulas code{font-size:10px}.ex5-result-card{bottom:0;width:146px;padding:10px;gap:8px}.ex5-results>b{font-size:18px}.ex5-result-card small{font-size:8px}.ex5-mini-card{bottom:8px;padding:8px 10px;font-size:9px}.ex5-orbit{width:200px;height:200px;left:17%;top:8px}.ex3-workbar{grid-template-columns:minmax(0,1fr) auto;gap:8px}.ex3-catalog-toggle{grid-column:1;min-width:0;font-size:11px}.ex3-catalog-toggle>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ex5-progress-button{grid-column:2;grid-row:1;min-height:44px;font-size:10px;padding:10px 8px;gap:6px}.ex3-workbar .et-gsearch{grid-column:1/-1;grid-row:2;min-width:0}.ex5-progress-button svg{width:14px;height:14px}}
+/* Reduced motion: no floating/orbit/sway/particles, but keep the calm part (typing, fades, selection box). */
+@media(prefers-reduced-motion:reduce){.et-shell .ex5-scene .ex5-formulas code{animation:ex5-fade 12s var(--d,0s) infinite,ex5-typing 12s var(--d,0s) steps(var(--n,12),end) infinite!important}.et-shell .ex5-scene .ex5-results>b{animation:ex5-fade-late 12s var(--d,0s) infinite!important}.et-shell .ex5-scene .ex5-sheet-grid>.ex5-select{animation:ex5-select 12s ease-in-out infinite!important}}
+
 `;
   function useInjectStyles() {
     useEffect(() => {
-      if (!document.getElementById("et-styles-v3")) {
+      if (!document.getElementById("et-styles-v6")) {
         const tag = document.createElement("style");
-        tag.id = "et-styles-v3";
+        tag.id = "et-styles-v6";
         tag.textContent = ET_STYLES;
         document.head.appendChild(tag);
       }
@@ -1148,9 +5618,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [open, setOpen] = useState(false);
     const allFns = Object.entries(EXCEL_DATABASE).flatMap(([cat, fns]) => fns.map(f => ({
       f,
-      cat
+      cat,
+      meta: FUNCTION_META[f]
     })));
-    const matches = q.trim() ? allFns.filter(x => x.f.toUpperCase().includes(q.trim().toUpperCase())).slice(0, 10) : [];
+    const matches = q.trim() ? allFns.filter(x => functionSearchKey([x.f, x.meta?.en, ...(x.meta?.aliases || [])].join(' ')).includes(functionSearchKey(q))).slice(0, 16) : [];
     return /*#__PURE__*/React.createElement("div", {
       className: "et-gsearch",
       onBlur: e => {
@@ -1191,6 +5662,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "et-gsearch-drop"
     }, matches.map(m => {
       const diff = DIFFICULTY_MAP[m.f] || "medium";
+      if (m.meta?.reference) return /*#__PURE__*/React.createElement("a", {
+        className: "et-gsearch-item",
+        key: m.f,
+        href: m.meta.url,
+        target: "_blank",
+        rel: "noopener noreferrer"
+      }, /*#__PURE__*/React.createElement("span", null, m.f), /*#__PURE__*/React.createElement("span", {
+        className: "et-gsearch-cat"
+      }, m.cat, " \u2197"));
       return /*#__PURE__*/React.createElement("div", {
         key: m.f,
         className: "et-gsearch-item",
@@ -1217,7 +5697,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         }
       }, /*#__PURE__*/React.createElement("span", {
         className: `et-fn-dot ${diff}`
-      }), /*#__PURE__*/React.createElement("span", null, m.f)), /*#__PURE__*/React.createElement("span", {
+      }), /*#__PURE__*/React.createElement("span", null, m.f, /*#__PURE__*/React.createElement("small", {
+        className: "ex4-search-alias"
+      }, m.meta?.en !== m.f ? m.meta?.en : ""))), /*#__PURE__*/React.createElement("span", {
         className: "et-gsearch-cat"
       }, m.cat));
     })));
@@ -1231,82 +5713,105 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: `et-badge et-badge-diff-${difficulty}`
     }, "\u2605 ", label);
   }
-  function CategoryAccordion({
+  function FunctionCatalog({
     categories,
-    openCats,
-    toggleCat,
+    activeCategory,
     activeFormulaName,
     isGenerating,
-    onPick
+    onPick,
+    lang
   }) {
-    return /*#__PURE__*/React.createElement(React.Fragment, null, categories.map(category => {
-      const isOpen = openCats.has(category);
-      return /*#__PURE__*/React.createElement("div", {
-        className: "et-cat",
-        key: category
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "et-cat-head",
-        role: "button",
-        tabIndex: 0,
-        "aria-expanded": isOpen,
-        onKeyDown: e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleCat(category);
-          }
+    const initialCategory = EXCEL_DATABASE[activeCategory] ? activeCategory : categories[0];
+    const [selected, setSelected] = useState(initialCategory);
+    const [query, setQuery] = useState('');
+    const scrollRef = useRef(null);
+    const label = (ru, en, uz) => lang === 'en' ? en : lang === 'uz' ? uz : ru;
+    const functions = EXCEL_DATABASE[selected] || [];
+    const visible = functions.filter(name => functionSearchKey([name, FUNCTION_META[name]?.en, ...(FUNCTION_META[name]?.aliases || [])].join(' ')).includes(functionSearchKey(query)));
+    useEffect(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    }, [selected, query]);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "ex4-browser"
+    }, /*#__PURE__*/React.createElement("nav", {
+      className: "ex4-categories",
+      "aria-label": label('Категории функций', 'Function categories', 'Функция тоифалари')
+    }, categories.map(category => {
+      const icon = CATEGORY_ICONS_SVG[category];
+      return /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        key: category,
+        className: `ex4-category ${selected === category ? 'active' : ''}`,
+        "aria-pressed": selected === category,
+        onClick: () => {
+          setSelected(category);
+          setQuery('');
         },
-        onClick: () => toggleCat(category)
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "et-cat-head-left"
+        style: {
+          '--category-color': icon?.color || '#8b5cf6'
+        }
       }, /*#__PURE__*/React.createElement("span", {
-        className: "et-cat-icon",
-        style: {
-          color: CATEGORY_ICONS_SVG[category]?.color
-        }
-      }, CATEGORY_ICONS_SVG[category]?.iconName ? React.createElement(Icon[CATEGORY_ICONS_SVG[category].iconName]) : /*#__PURE__*/React.createElement("span", {
-        className: "et-cat-letters"
-      }, "Aa")), category), /*#__PURE__*/React.createElement("span", {
-        className: `et-cat-chevron ${isOpen ? "open" : ""}`
-      }, "\u25BE")), /*#__PURE__*/React.createElement(AnimatePresence, {
-        initial: false
-      }, isOpen && /*#__PURE__*/React.createElement(motion.div, {
-        className: "et-cat-body",
-        initial: {
-          height: 0,
-          opacity: 0
-        },
-        animate: {
-          height: "auto",
-          opacity: 1
-        },
-        exit: {
-          height: 0,
-          opacity: 0
-        },
-        transition: {
-          duration: 0.22
-        },
-        style: {
-          overflow: "hidden"
-        }
-      }, EXCEL_DATABASE[category].map(fName => {
-        const isActive = activeFormulaName === fName;
-        const diff = DIFFICULTY_MAP[fName] || "medium";
-        return /*#__PURE__*/React.createElement("button", {
-          key: fName,
-          disabled: isGenerating,
-          className: `et-fn-btn ${isActive ? "active" : ""}`,
-          onClick: () => onPick(category, fName)
-        }, !isActive && /*#__PURE__*/React.createElement("span", {
-          className: `et-fn-dot ${diff}`
-        }), fName);
-      }))));
-    }));
+        className: "ex4-category-icon"
+      }, icon?.iconName ? React.createElement(Icon[icon.iconName]) : /*#__PURE__*/React.createElement("span", null, "Aa")), /*#__PURE__*/React.createElement("span", null, category), /*#__PURE__*/React.createElement("b", null, EXCEL_DATABASE[category].length));
+    })), /*#__PURE__*/React.createElement("section", {
+      className: "ex4-function-panel"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ex4-panel-heading"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "ex3-eyebrow"
+    }, label('Библиотека Excel', 'Excel library', 'Excel кутубхонаси')), /*#__PURE__*/React.createElement("h3", null, selected)), /*#__PURE__*/React.createElement("span", {
+      className: "ex4-count"
+    }, visible.length, " / ", functions.length)), /*#__PURE__*/React.createElement("div", {
+      className: "ex4-filter"
+    }, /*#__PURE__*/React.createElement(Icon.Search, null), /*#__PURE__*/React.createElement("input", {
+      "aria-label": label('Поиск в категории', 'Search category', 'Тоифада қидириш'),
+      placeholder: label('Найти по названию RU / EN…', 'Find by RU / EN name…', 'RU / EN номи бўйича қидириш…'),
+      value: query,
+      onChange: e => setQuery(e.target.value)
+    }), query && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": label('Очистить поиск', 'Clear search', 'Қидирувни тозалаш'),
+      onClick: () => setQuery('')
+    }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+      className: "ex4-function-scroll",
+      ref: scrollRef
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ex4-function-grid",
+      key: selected
+    }, visible.map(name => {
+      const entry = FUNCTION_META[name];
+      const active = name === activeFormulaName;
+      const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+        className: "ex4-function-name"
+      }, name), /*#__PURE__*/React.createElement("span", {
+        className: "ex4-function-detail"
+      }, /*#__PURE__*/React.createElement("span", null, entry?.en !== name ? entry?.en : 'Excel'), entry?.reference ? /*#__PURE__*/React.createElement("span", {
+        className: "ex4-version"
+      }, label('Справка ↗', 'Reference ↗', 'Маълумот ↗')) : entry?.version && /*#__PURE__*/React.createElement("span", {
+        className: "ex4-version"
+      }, entry.version)), active && /*#__PURE__*/React.createElement("span", {
+        className: "ex4-selected"
+      }, /*#__PURE__*/React.createElement(Icon.Check, null)));
+      return entry?.reference ? /*#__PURE__*/React.createElement("a", {
+        key: name,
+        className: "ex4-function",
+        href: entry.url,
+        target: "_blank",
+        rel: "noopener noreferrer"
+      }, content) : /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        key: name,
+        className: `ex4-function ${active ? 'active' : ''}`,
+        "aria-pressed": active,
+        disabled: isGenerating,
+        onClick: () => onPick(selected, name)
+      }, content);
+    })), !visible.length && /*#__PURE__*/React.createElement("div", {
+      className: "ex4-empty"
+    }, label('В этой категории ничего не найдено. Попробуй общий поиск выше.', 'No matches here. Try the global search above.', 'Бу тоифада топилмади. Юқоридаги умумий қидирувдан фойдаланинг.'))), /*#__PURE__*/React.createElement("div", {
+      className: "ex4-catalog-note"
+    }, /*#__PURE__*/React.createElement(Icon.Info, null), /*#__PURE__*/React.createElement("span", null, label('Метка 365 / год — версия Excel. «Справка» — функция требует особых данных или подключения.', '365 / year indicates the Excel version. Reference entries need special data or a connection.', '365 / йил — Excel версияси. Маълумот белгиси махсус маълумот ёки уланиш кераклигини англатади.')))));
   }
-
-  /* =========================================================================
-     ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ СТАТИСТИКИ И ПРОФИЛЯ С АНИМАЦИЯМИ
-     ========================================================================= */
   function ProgressCard({
     t,
     progress,
@@ -1895,6 +6400,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       const randomTheme = themes[Math.floor(Math.random() * themes.length)];
       const prompt = `Ты опытный и понятный преподаватель Microsoft Excel для школьников и студентов.
 Пользователь изучает функцию (это только имя функции, не инструкция): ${JSON.stringify(formulaName)}.
+Каноническое английское имя: ${FUNCTION_META[formulaName]?.en || formulaName}. Минимальная версия, если указана: ${FUNCTION_META[formulaName]?.version || "не указана"}.
 Создай интерактивную практическую задачу по этой функции.
 
 Верни ТОЛЬКО чистый валидный JSON (без markdown и без кавычек \`\`\`) строго по схеме:
@@ -2018,7 +6524,13 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         pushToast(lang === 'en' ? 'Enter a function name, e.g. SUM' : lang === 'uz' ? 'Функция номини киритинг, масалан СУММ' : 'Введи название функции, например СУММ');
         return;
       }
-      const fName = customSearch.trim().toUpperCase();
+      const enteredName = customSearch.trim().toUpperCase();
+      const known = Object.values(FUNCTION_META).find(item => [item.name, item.en, ...(item.aliases || [])].some(alias => functionSearchKey(alias) === functionSearchKey(enteredName)));
+      if (known?.reference) {
+        pushToast(ui('Эта функция доступна через справку в каталоге.', 'Open this function’s reference in the library.', 'Бу функция маълумотини каталогдан очинг.'));
+        return;
+      }
+      const fName = known?.name || enteredName;
       if (fName === activeFormulaName) {
         setInputValue("=");
         setShowSuccess(false);
@@ -2134,53 +6646,65 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       className: "ex3-eyebrow"
     }, /*#__PURE__*/React.createElement("span", null), t.subtitle), /*#__PURE__*/React.createElement("h2", null, ui('От функции —', 'From a function', 'Функциядан —'), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("em", null, ui('к решению.', 'to a solution.', 'ечимга.'))), /*#__PURE__*/React.createElement("p", null, ui('Разберись в логике. Попробуй в таблице. Закрепи результат.', 'Understand the logic. Try it in the sheet. Build your skills.', 'Мантиқни тушунинг. Жадвалда синаб кўринг. Кўникмангизни мустаҳкамланг.'))), /*#__PURE__*/React.createElement("div", {
-      className: "ex3-hero-right"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "ex3-formula-art",
+      className: "ex5-scene",
       "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ex5-halo"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-orbit"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-sheet"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ex5-sheet-title"
+    }, /*#__PURE__*/React.createElement(Icon.Grid, null), /*#__PURE__*/React.createElement("span", null, "EXCEL LAB"), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-sheet-grid"
+    }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("b", null, "A"), /*#__PURE__*/React.createElement("b", null, "B"), /*#__PURE__*/React.createElement("b", null, "C"), /*#__PURE__*/React.createElement("small", null, "1"), /*#__PURE__*/React.createElement("span", null, "12"), /*#__PURE__*/React.createElement("span", null, "24"), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-cell one"
+    }, "36"), /*#__PURE__*/React.createElement("small", null, "2"), /*#__PURE__*/React.createElement("span", null, "18"), /*#__PURE__*/React.createElement("span", null, "32"), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-cell two"
+    }, "50"), /*#__PURE__*/React.createElement("small", null, "3"), /*#__PURE__*/React.createElement("span", null, "30"), /*#__PURE__*/React.createElement("span", null, "14"), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-cell three"
+    }, "44"), /*#__PURE__*/React.createElement("small", null, "4"), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-cell total"
+    }, "130"), /*#__PURE__*/React.createElement("i", {
+      className: "ex5-select"
+    }, /*#__PURE__*/React.createElement("em", {
+      className: "ex5-select-sweep"
+    })))), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-formula-card"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "ex3-orbit"
+      className: "ex5-fx"
+    }, "fx"), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-formulas"
+    }, /*#__PURE__*/React.createElement("code", null, "=", /*#__PURE__*/React.createElement("b", null, "\u0421\u0423\u041C\u041C"), "(C1:C3)"), /*#__PURE__*/React.createElement("code", null, "=", /*#__PURE__*/React.createElement("b", null, "\u0415\u0421\u041B\u0418"), "(A1>10;1;0)"), /*#__PURE__*/React.createElement("code", null, "=", /*#__PURE__*/React.createElement("b", null, "\u0421\u0420\u0417\u041D\u0410\u0427"), "(B1:B3)")), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-caret"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-result-card"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ex5-result-icon"
+    }, /*#__PURE__*/React.createElement(Icon.Check, null)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, ui('Результат', 'Result', 'Натижа')), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-results"
+    }, /*#__PURE__*/React.createElement("b", null, "130"), /*#__PURE__*/React.createElement("b", null, "1"), /*#__PURE__*/React.createElement("b", null, "23,33\u2026"))), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-result-spark"
+    }, /*#__PURE__*/React.createElement(Icon.Sparkle, null))), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-mini-card"
+    }, /*#__PURE__*/React.createElement(Icon.Layers, null), /*#__PURE__*/React.createElement("span", null, "\u04101:C3")), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-particle p1"
     }), /*#__PURE__*/React.createElement("span", {
-      className: "ex3-orbit second"
+      className: "ex5-particle p2"
     }), /*#__PURE__*/React.createElement("span", {
-      className: "ex3-art-code"
-    }, "fx"), /*#__PURE__*/React.createElement("span", {
-      className: "ex3-art-pill"
-    }, "= ", activeFormulaName, "(\u2026)"), /*#__PURE__*/React.createElement("span", {
-      className: "ex3-art-dot"
-    })), /*#__PURE__*/React.createElement("button", {
-      className: "ex3-profile-toggle",
-      "aria-expanded": profileOpen,
-      onClick: () => setProfileOpen(v => !v)
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ex3-user-avatar"
-    }, (userInfo.displayName || userInfo.email || 'U').charAt(0).toUpperCase()), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, userInfo.displayName || userInfo.email || t.student), /*#__PURE__*/React.createElement("small", null, t.level, " ", progress.level, " \xB7 ", progress.xp, " XP")), /*#__PURE__*/React.createElement(Icon.Chart, null)))), /*#__PURE__*/React.createElement("div", {
-      className: "ex3-progress-rail"
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: `${progress.xp % 500 / 5}%`
-      }
-    }))), /*#__PURE__*/React.createElement(AnimatePresence, {
-      initial: false
-    }, profileOpen && /*#__PURE__*/React.createElement(motion.div, {
-      className: "ex3-profile-panel",
-      initial: {
-        height: 0,
-        opacity: 0
-      },
-      animate: {
-        height: 'auto',
-        opacity: 1
-      },
-      exit: {
-        height: 0,
-        opacity: 0
-      }
-    }, /*#__PURE__*/React.createElement(ProgressCard, {
-      t: t,
-      progress: progress,
-      userInfo: userInfo
-    }))), /*#__PURE__*/React.createElement("div", {
+      className: "ex5-particle p3"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-particle p4"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-particle p5"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-bit b1"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-bit b2"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ex5-bit b3"
+    })))), /*#__PURE__*/React.createElement("div", {
       className: "ex3-workbar"
     }, /*#__PURE__*/React.createElement("button", {
       ref: catalogButtonRef,
@@ -2203,7 +6727,34 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }), /*#__PURE__*/React.createElement("span", {
       className: "ex3-library-count"
-    }, Object.values(EXCEL_DATABASE).flat().length, " ", ui('функций для практики', 'functions to explore', 'амалий функция'))), /*#__PURE__*/React.createElement(AnimatePresence, {
+    }, Object.values(EXCEL_DATABASE).flat().length, " ", ui('функций в каталоге', 'functions in the library', 'каталогдаги функция')), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: `ex5-progress-button ${profileOpen ? 'active' : ''}`,
+      "aria-expanded": profileOpen,
+      "aria-controls": "ex5-progress",
+      onClick: () => setProfileOpen(value => !value)
+    }, /*#__PURE__*/React.createElement(Icon.Chart, null), /*#__PURE__*/React.createElement("span", null, ui('Мой прогресс', 'My progress', 'Менинг натижаларим')))), /*#__PURE__*/React.createElement(AnimatePresence, {
+      initial: false
+    }, profileOpen && /*#__PURE__*/React.createElement(motion.div, {
+      id: "ex5-progress",
+      className: "ex3-profile-panel",
+      initial: {
+        height: 0,
+        opacity: 0
+      },
+      animate: {
+        height: 'auto',
+        opacity: 1
+      },
+      exit: {
+        height: 0,
+        opacity: 0
+      }
+    }, /*#__PURE__*/React.createElement(ProgressCard, {
+      t: t,
+      progress: progress,
+      userInfo: userInfo
+    }))), /*#__PURE__*/React.createElement(AnimatePresence, {
       initial: false
     }, catalogOpen && /*#__PURE__*/React.createElement(motion.div, {
       id: "ex3-catalog",
@@ -2251,16 +6802,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       disabled: isGenerating || !customSearch.trim()
     }, /*#__PURE__*/React.createElement(Icon.Sparkle, {
       className: isGenerating ? 'et-icon-spin' : ''
-    }), isGenerating ? t.genLoading : t.genBtn)), /*#__PURE__*/React.createElement("div", {
-      className: "et-cat-list"
-    }, /*#__PURE__*/React.createElement(CategoryAccordion, {
+    }), isGenerating ? t.genLoading : t.genBtn)), /*#__PURE__*/React.createElement(FunctionCatalog, {
       categories: categories,
-      openCats: openCats,
-      toggleCat: toggleCat,
+      activeCategory: activeCategory,
       activeFormulaName: activeFormulaName,
       isGenerating: isGenerating,
-      onPick: pickFromSidebarOrSearch
-    }))))), /*#__PURE__*/React.createElement("div", {
+      onPick: pickFromSidebarOrSearch,
+      lang: lang
+    })))), /*#__PURE__*/React.createElement("div", {
       className: "et-body"
     }, /*#__PURE__*/React.createElement("div", {
       className: "et-main",
