@@ -560,7 +560,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 .ulms-menu button:focus-visible{outline:2px solid var(--sm-accent);outline-offset:3px}
 .ulms-menu button:disabled{cursor:wait;opacity:.6}
 
-.ulms-menu-backdrop{backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);animation:sm-blur .35s ease-out backwards}
+.ulms-menu-backdrop{will-change:opacity,backdrop-filter}
 
 .ulms-menu-header{display:flex;align-items:center;justify-content:space-between;padding:24px 23px 18px;gap:12px;flex-shrink:0;border-bottom:1px solid transparent;transition:border-color .25s,box-shadow .25s;animation:sm-fade .45s ease .05s backwards}
 .ulms-menu-header[data-scrolled=true]{border-bottom-color:var(--sm-border);box-shadow:0 12px 24px -20px #000c}
@@ -732,6 +732,26 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       closeRef = useRef(onClose),
       busy = useRef(false);
     closeRef.current = onClose;
+    const scrollLock = useRef(null);
+    const lockScroll = () => {
+      if (scrollLock.current) return;
+      const b = document.body,
+        sw = window.innerWidth - document.documentElement.clientWidth;
+      scrollLock.current = {
+        overflow: b.style.overflow,
+        paddingRight: b.style.paddingRight
+      };
+      if (sw > 0) b.style.paddingRight = `${(parseFloat(getComputedStyle(b).paddingRight) || 0) + sw}px`;
+      b.style.overflow = 'hidden';
+    };
+    const unlockScroll = () => {
+      const s = scrollLock.current;
+      if (!s) return;
+      scrollLock.current = null;
+      document.body.style.overflow = s.overflow;
+      document.body.style.paddingRight = s.paddingRight;
+    };
+    useEffect(() => unlockScroll, []);
     const [signingOut, setSigningOut] = useState(false),
       [error, setError] = useState('');
     const [scrolled, setScrolled] = useState(false);
@@ -804,8 +824,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       setError('');
       setScrolled(false);
       const previous = document.activeElement;
-      const overflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       const frame = requestAnimationFrame(() => panel.current?.querySelector('[data-close]')?.focus());
       const onKey = e => {
         if (e.key === 'Escape') {
@@ -833,7 +852,6 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       document.addEventListener('keydown', onKey);
       return () => {
         cancelAnimationFrame(frame);
-        document.body.style.overflow = overflow;
         document.removeEventListener('keydown', onKey);
         if (previous?.isConnected) previous.focus();
       };
@@ -867,21 +885,34 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       active: view === item.id,
       onClick: () => go(item.id)
     }));
-    return /*#__PURE__*/React.createElement(AnimatePresence, null, isOpen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(motion.div, {
+    return /*#__PURE__*/React.createElement(AnimatePresence, {
+      onExitComplete: unlockScroll
+    }, isOpen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(motion.div, {
       key: "menu-backdrop",
       className: "ulms-menu-backdrop",
       "aria-hidden": "true",
       initial: {
-        opacity: 0
+        opacity: 0,
+        backdropFilter: 'blur(0px)',
+        WebkitBackdropFilter: 'blur(0px)'
       },
       animate: {
-        opacity: 1
+        opacity: 1,
+        backdropFilter: 'blur(7px)',
+        WebkitBackdropFilter: 'blur(7px)',
+        transition: {
+          duration: reduced ? 0 : .45,
+          ease: [.22, 1, .36, 1]
+        }
       },
       exit: {
-        opacity: 0
-      },
-      transition: {
-        duration: reduced ? 0 : .22
+        opacity: 0,
+        backdropFilter: 'blur(0px)',
+        WebkitBackdropFilter: 'blur(0px)',
+        transition: {
+          duration: reduced ? 0 : .38,
+          ease: [.65, 0, .35, 1]
+        }
       },
       onClick: onClose,
       style: {
@@ -914,16 +945,19 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           duration: 0
         } : {
           type: 'tween',
-          duration: .24,
-          ease: [.32, 0, .67, 0]
+          duration: .38,
+          ease: [.65, 0, .35, 1]
         }
       },
       transition: reduced ? {
         duration: 0
       } : {
-        type: 'spring',
-        stiffness: 330,
-        damping: 34
+        type: 'tween',
+        duration: .5,
+        ease: [.22, 1, .36, 1]
+      },
+      style: {
+        willChange: 'transform'
       }
     }, /*#__PURE__*/React.createElement("header", {
       className: "ulms-menu-header",
