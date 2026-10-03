@@ -1,4 +1,5 @@
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
+// SidebarMenu.js должен загружаться ДО этого файла. Кнопка-бургер находится ниже, в этом же файле.
 const { 
   useState, useEffect, useRef, motion, AnimatePresence,
   computeFingerprint, 
@@ -11,10 +12,67 @@ const {
 } = window;
 
 // =========================================================================
-// 3D LOW-POLY ФОН
+// КНОПКА-БУРГЕР (открывает SidebarMenu)
 // =========================================================================
-const LowPolyBackground = ({ theme }) => {
+const BURGER_CSS = `
+.ulms-burger{--bg:#ffffffb8;--bd:#25324a1c;--fg:#1b2b42;--ac:#8b5cf6;position:fixed;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:1500;width:52px;height:52px;padding:0;border-radius:18px;border:1px solid var(--bd);background:var(--bg);color:var(--fg);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);box-shadow:0 10px 28px -12px #1b2b4255,inset 0 1px 0 #ffffff55;transition:border-color .3s,box-shadow .35s,background-color .4s,color .4s}
+body.dark .ulms-burger{--bg:#141c2bb8;--bd:#ffffff1a;--fg:#eef3fc;box-shadow:0 10px 28px -12px #000a,inset 0 1px 0 #ffffff10}
+.ulms-burger::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--ac),#38bdf8 60%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s;pointer-events:none}
+.ulms-burger:hover::before,.ulms-burger:focus-visible::before{opacity:.9}
+.ulms-burger:hover{box-shadow:0 14px 32px -12px color-mix(in srgb,var(--ac) 55%,transparent),inset 0 1px 0 #ffffff33}
+.ulms-burger:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+.ulms-burger-icon{display:flex;flex-direction:column;gap:5px;width:20px}
+.ulms-burger-icon i{display:block;height:2px;border-radius:2px;background:currentColor;transition:width .4s cubic-bezier(.32,.72,0,1)}
+.ulms-burger-icon i:nth-child(1){width:20px}
+.ulms-burger-icon i:nth-child(2){width:13px}
+.ulms-burger-icon i:nth-child(3){width:17px}
+.ulms-burger:hover .ulms-burger-icon i{width:20px}
+@media(prefers-reduced-motion:reduce){.ulms-burger,.ulms-burger *{transition:none!important}}
+`;
+
+const SidebarBurger = ({ visible = true, onClick }) => {
+    useEffect(() => {
+        if (document.getElementById('ulms-burger-v1')) return;
+        const el = document.createElement('style');
+        el.id = 'ulms-burger-v1';
+        el.textContent = BURGER_CSS;
+        document.head.appendChild(el);
+    }, []);
+
+    return (
+        <AnimatePresence>
+            {visible && (
+                <motion.button
+                    key="burger"
+                    type="button"
+                    className="ulms-burger"
+                    aria-label="Открыть меню"
+                    aria-haspopup="dialog"
+                    onClick={onClick}
+                    initial={{ opacity: 0, x: -28, scale: 0.8 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -28, scale: 0.8, transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] } }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+                >
+                    <span className="ulms-burger-icon" aria-hidden="true">
+                        <i /><i /><i />
+                    </span>
+                </motion.button>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// =========================================================================
+// 3D LOW-POLY ФОН
+// paused = true  -> анимация сетки замирает (пока открыто меню),
+// но цвета при смене темы всё равно плавно перетекают.
+// =========================================================================
+const LowPolyBackground = ({ theme, paused }) => {
     const canvasRef = useRef(null);
+    const pausedRef = useRef(false);
+    pausedRef.current = !!paused;
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -44,6 +102,11 @@ const LowPolyBackground = ({ theme }) => {
         };
 
         let animationId;
+
+        // «Виртуальное» время: не идёт, пока фон на паузе,
+        // поэтому после паузы сетка продолжает движение без рывка.
+        let virtualTime = 0;
+        let lastNow = performance.now();
 
         const initMesh = () => {
             width = canvas.width = window.innerWidth;
@@ -86,17 +149,34 @@ const LowPolyBackground = ({ theme }) => {
 
         const lerp = (a, b, t) => a + (b - a) * t;
 
-        const animateMesh = (time) => {
+        const animateMesh = (now) => {
+            if (!pausedRef.current) {
+                virtualTime += Math.max(0, now - lastNow);
+            }
+            lastNow = now;
+
             const targetThemeMode = canvas.dataset.theme || 'light';
             const target = themes[targetThemeMode];
-            
+
+            let delta = 0;
             for (let i = 0; i < 3; i++) {
                 currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.05);
                 currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.05);
+                delta = Math.max(
+                    delta,
+                    Math.abs(target.base[i] - currentColor.base[i]),
+                    Math.abs(target.light[i] - currentColor.light[i])
+                );
+            }
+
+            // На паузе и без смены цвета ничего не перерисовываем.
+            if (pausedRef.current && delta < 0.5) {
+                animationId = requestAnimationFrame(animateMesh);
+                return;
             }
 
             points.forEach(p => {
-                const t = time * config.speed * p.speed;
+                const t = virtualTime * config.speed * p.speed;
                 p.x = p.bx + Math.sin(t + p.phaseX) * config.xyWander;
                 p.y = p.by + Math.cos(t + p.phaseY) * config.xyWander;
                 p.z = Math.sin(t + p.phaseZ) * config.zDepth;
@@ -741,40 +821,31 @@ function App() {
   // UI
   // -----------------------------------------------------------------------
 
+  const burgerViews = [
+    'menu',
+    'stats',
+    'typing',
+    'hotkeys',
+    'code',
+    'flashcards',
+    'excel',
+    'admin'
+  ];
+
   return (
     <>
-      <LowPolyBackground theme={theme} />
+      {/* Пока открыто меню, фон замирает — анимация меню идёт плавно. */}
+      <LowPolyBackground theme={theme} paused={isSidebarOpen} />
 
-      {appReady && (
-        view === 'menu' ||
-        view === 'stats' ||
-        view === 'typing' ||
-        view === 'hotkeys' ||
-        view === 'code' ||
-        view === 'flashcards' ||
-        view === 'excel' ||
-        view === 'admin'
-      ) && (
-        <div className="mobile-burger-fixed">
-          <Button
-            variant="muted"
-            onClick={() => setIsSidebarOpen(true)}
-            style={{
-              width: 54,
-              height: 54,
-              padding: 0,
-              borderRadius: '16px',
-              fontSize: 24,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-            }}
-          >
-            ☰
-          </Button>
-        </div>
-      )}
+      {/* Современная кнопка меню (компонент выше, в этом же файле) */}
+      <SidebarBurger
+        visible={
+          appReady &&
+          !isSidebarOpen &&
+          burgerViews.includes(view)
+        }
+        onClick={() => setIsSidebarOpen(true)}
+      />
 
       {/* Sidebar вообще не создаётся, пока профиль не подтверждён. */}
       {appReady && (
