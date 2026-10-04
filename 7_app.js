@@ -1,271 +1,251 @@
 // --- ВАЖНО: ИМПОРТЫ ИЗ ПРЕДЫДУЩИХ ФАЙЛОВ ---
-// SidebarMenu.js должен загружаться ДО этого файла. Кнопка-бургер находится ниже, в этом же файле.
-const { 
-  useState, useEffect, useRef, motion, AnimatePresence,
-  computeFingerprint, 
-  GooeyText, Button, Input,
-  AdminPanel, ChatPanel,
+const {
+  useState,
+  useEffect,
+  useRef,
+  motion,
+  AnimatePresence,
+  computeFingerprint,
+  GooeyText,
+  Button,
+  Input,
+  AdminPanel,
+  ChatPanel,
   StatsView,
-  TypingTest, HotkeyTrainer, CodePlayground, FlashcardsLMS, ExcelTrainerLMS, LandingView,
-  SidebarMenu, TestsLMS,
+  TypingTest,
+  HotkeyTrainer,
+  CodePlayground,
+  FlashcardsLMS,
+  ExcelTrainerLMS,
+  LandingView,
+  SidebarMenu,
+  TestsLMS,
   logVisitor
 } = window;
 
 // =========================================================================
-// КНОПКА-БУРГЕР (открывает SidebarMenu)
-// =========================================================================
-const BURGER_CSS = `
-.ulms-burger{--bg:#ffffffb8;--bd:#25324a1c;--fg:#1b2b42;--ac:#8b5cf6;position:fixed;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:1500;width:52px;height:52px;padding:0;border-radius:18px;border:1px solid var(--bd);background:var(--bg);color:var(--fg);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);box-shadow:0 10px 28px -12px #1b2b4255,inset 0 1px 0 #ffffff55;transition:border-color .3s,box-shadow .35s,background-color .4s,color .4s}
-body.dark .ulms-burger{--bg:#141c2bb8;--bd:#ffffff1a;--fg:#eef3fc;box-shadow:0 10px 28px -12px #000a,inset 0 1px 0 #ffffff10}
-.ulms-burger::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--ac),#38bdf8 60%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s;pointer-events:none}
-.ulms-burger:hover::before,.ulms-burger:focus-visible::before{opacity:.9}
-.ulms-burger:hover{box-shadow:0 14px 32px -12px color-mix(in srgb,var(--ac) 55%,transparent),inset 0 1px 0 #ffffff33}
-.ulms-burger:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
-.ulms-burger-icon{display:flex;flex-direction:column;gap:5px;width:20px}
-.ulms-burger-icon i{display:block;height:2px;border-radius:2px;background:currentColor;transition:width .4s cubic-bezier(.32,.72,0,1)}
-.ulms-burger-icon i:nth-child(1){width:20px}
-.ulms-burger-icon i:nth-child(2){width:13px}
-.ulms-burger-icon i:nth-child(3){width:17px}
-.ulms-burger:hover .ulms-burger-icon i{width:20px}
-@media(prefers-reduced-motion:reduce){.ulms-burger,.ulms-burger *{transition:none!important}}
-`;
-
-const SidebarBurger = ({ visible = true, onClick }) => {
-    useEffect(() => {
-        if (document.getElementById('ulms-burger-v1')) return;
-        const el = document.createElement('style');
-        el.id = 'ulms-burger-v1';
-        el.textContent = BURGER_CSS;
-        document.head.appendChild(el);
-    }, []);
-
-    return (
-        <AnimatePresence>
-            {visible && (
-                <motion.button
-                    key="burger"
-                    type="button"
-                    className="ulms-burger"
-                    aria-label="Открыть меню"
-                    aria-haspopup="dialog"
-                    onClick={onClick}
-                    initial={{ opacity: 0, x: -28, scale: 0.8 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -28, scale: 0.8, transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] } }}
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-                >
-                    <span className="ulms-burger-icon" aria-hidden="true">
-                        <i /><i /><i />
-                    </span>
-                </motion.button>
-            )}
-        </AnimatePresence>
-    );
-};
-
-// =========================================================================
 // 3D LOW-POLY ФОН
-// paused = true  -> анимация сетки замирает (пока открыто меню),
-// но цвета при смене темы всё равно плавно перетекают.
 // =========================================================================
-const LowPolyBackground = ({ theme, paused }) => {
-    const canvasRef = useRef(null);
-    const pausedRef = useRef(false);
-    pausedRef.current = !!paused;
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
-        const config = {
-            gridSize: 150,
-            xyWander: 40,
-            zDepth: 70,
-            speed: 0.0005
-        };
-
-        const lightVector = { x: -0.4, y: -0.6, z: 0.6 };
-
-        const themes = {
-            light: { base: [224, 195, 252], light: [255, 241, 235] },
-            dark: { base: [8, 12, 18], light: [38, 48, 65] } 
-        };
-
-        let width, height;
-        let points = [], triangles = [];
-        
-        const initialTheme = canvas.dataset.theme || 'light';
-        let currentColor = { 
-            base: [...themes[initialTheme].base], 
-            light: [...themes[initialTheme].light] 
-        };
-
-        let animationId;
-
-        // «Виртуальное» время: не идёт, пока фон на паузе,
-        // поэтому после паузы сетка продолжает движение без рывка.
-        let virtualTime = 0;
-        let lastNow = performance.now();
-
-        const initMesh = () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            points = [];
-            triangles = [];
-
-            const cols = Math.ceil(width / config.gridSize) + 4;
-            const rows = Math.ceil(height / config.gridSize) + 4;
-            const startX = -config.gridSize * 2;
-            const startY = -config.gridSize * 2;
-
-            for (let i = 0; i < rows; i++) {
-                for (let j = 0; j < cols; j++) {
-                    points.push({
-                        bx: startX + j * config.gridSize,
-                        by: startY + i * config.gridSize,
-                        x: 0, y: 0, z: 0,
-                        phaseX: Math.random() * Math.PI * 2,
-                        phaseY: Math.random() * Math.PI * 2,
-                        phaseZ: Math.random() * Math.PI * 2,
-                        speed: 0.3 + Math.random() * 0.7
-                    });
-                }
-            }
-
-            for (let i = 0; i < rows - 1; i++) {
-                for (let j = 0; j < cols - 1; j++) {
-                    const p1 = i * cols + j, p2 = p1 + 1, p3 = (i + 1) * cols + j, p4 = p3 + 1;
-                    if (Math.random() > 0.5) {
-                        triangles.push([points[p1], points[p2], points[p3]]);
-                        triangles.push([points[p4], points[p3], points[p2]]);
-                    } else {
-                        triangles.push([points[p1], points[p4], points[p3]]);
-                        triangles.push([points[p1], points[p2], points[p4]]);
-                    }
-                }
-            }
-        };
-
-        const lerp = (a, b, t) => a + (b - a) * t;
-
-        const animateMesh = (now) => {
-            if (!pausedRef.current) {
-                virtualTime += Math.max(0, now - lastNow);
-            }
-            lastNow = now;
-
-            const targetThemeMode = canvas.dataset.theme || 'light';
-            const target = themes[targetThemeMode];
-
-            let delta = 0;
-            for (let i = 0; i < 3; i++) {
-                currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.05);
-                currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.05);
-                delta = Math.max(
-                    delta,
-                    Math.abs(target.base[i] - currentColor.base[i]),
-                    Math.abs(target.light[i] - currentColor.light[i])
-                );
-            }
-
-            // На паузе и без смены цвета ничего не перерисовываем.
-            if (pausedRef.current && delta < 0.5) {
-                animationId = requestAnimationFrame(animateMesh);
-                return;
-            }
-
-            points.forEach(p => {
-                const t = virtualTime * config.speed * p.speed;
-                p.x = p.bx + Math.sin(t + p.phaseX) * config.xyWander;
-                p.y = p.by + Math.cos(t + p.phaseY) * config.xyWander;
-                p.z = Math.sin(t + p.phaseZ) * config.zDepth;
-            });
-
-            ctx.clearRect(0, 0, width, height);
-
-            triangles.forEach(t => {
-                const p1 = t[0], p2 = t[1], p3 = t[2];
-                const dx1 = p2.x - p1.x, dy1 = p2.y - p1.y, dz1 = p2.z - p1.z;
-                const dx2 = p3.x - p1.x, dy2 = p3.y - p1.y, dz2 = p3.z - p1.z;
-
-                let nx = dy1 * dz2 - dz1 * dy2;
-                let ny = dz1 * dx2 - dx1 * dz2;
-                let nz = dx1 * dy2 - dy1 * dx2;
-
-                if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
-
-                const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
-                let light = 0;
-                if (len > 0) {
-                    const dot = (nx * lightVector.x + ny * lightVector.y + nz * lightVector.z) / len;
-                    light = (dot + 1) / 2;
-                }
-
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);
-                ctx.lineTo(p2.x, p2.y);
-                ctx.lineTo(p3.x, p3.y);
-                ctx.closePath();
-
-                const l = Math.pow(light, 1.2);
-                const r = Math.floor(currentColor.base[0] + (currentColor.light[0] - currentColor.base[0]) * l);
-                const g = Math.floor(currentColor.base[1] + (currentColor.light[1] - currentColor.base[1]) * l);
-                const b = Math.floor(currentColor.base[2] + (currentColor.light[2] - currentColor.base[2]) * l);
-                const color = `rgb(${r}, ${g}, ${b})`;
-
-                ctx.fillStyle = color;
-                ctx.strokeStyle = color; 
-                ctx.lineWidth = 1;
-                
-                ctx.fill();
-                ctx.stroke();
-            });
-
-            animationId = requestAnimationFrame(animateMesh);
-        };
-
-        initMesh();
-        animationId = requestAnimationFrame(animateMesh);
-
-        let resizeTimeout;
-        const handleResize = () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(initMesh, 200);
-        };
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            cancelAnimationFrame(animationId);
-        };
-    }, []);
-
-    return (
-        <canvas 
-            ref={canvasRef} 
-            data-theme={theme} 
-            style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }} 
-        />
-    );
+const SidebarLauncher = ({
+  isOpen,
+  onClick,
+  theme
+}) => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, `
+.lms-menu-launcher{position:relative;isolation:isolate;display:grid;place-items:center;width:54px;height:54px;padding:0;border:1px solid #8396ca50;border-radius:17px;background:linear-gradient(145deg,#26344d,#18243a);color:#d6e0ff;box-shadow:0 7px 22px #0c173331,inset 0 1px 0 #ffffff12;cursor:pointer;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;animation:lms-launcher-in .5s cubic-bezier(.2,.7,.3,1) both}
+.lms-menu-launcher[data-theme=light]{background:linear-gradient(145deg,#fff,#eaf0fc);color:#435bcc;border-color:#a9b8e2;box-shadow:0 6px 20px #40588c22,inset 0 1px 0 #fff}
+.lms-menu-launcher::after{content:'';position:absolute;inset:-50%;background:linear-gradient(110deg,transparent 38%,#a9baff28 49%,transparent 60%);transform:translateX(-100%);animation:lms-launcher-shine 7s ease-in-out infinite;pointer-events:none;z-index:-1}
+.lms-menu-launcher:hover{transform:translateY(-3px);border-color:#899bf4;box-shadow:0 10px 26px #546bca35}
+.lms-menu-launcher:active{transform:translateY(0) scale(.91)}
+.lms-menu-launcher:focus-visible{outline:3px solid #8a9cf0;outline-offset:4px}
+.lms-menu-launcher svg{display:block;overflow:visible}.lms-menu-launcher line{transform-box:fill-box;transform-origin:center;transition:transform .32s cubic-bezier(.2,.7,.3,1),opacity .2s}
+.lms-menu-launcher:hover .lms-menu-line-a{transform:translateX(3px)}.lms-menu-launcher:hover .lms-menu-line-c{transform:translateX(-3px)}
+.lms-menu-launcher[aria-expanded=true] .lms-menu-line-a{transform:translate(2px,6px) rotate(45deg)}.lms-menu-launcher[aria-expanded=true] .lms-menu-line-b{transform:scaleX(0);opacity:0}.lms-menu-launcher[aria-expanded=true] .lms-menu-line-c{transform:translate(-2px,-6px) rotate(-45deg)}
+@keyframes lms-launcher-in{from{opacity:0;transform:translateY(-8px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lms-launcher-shine{0%,65%{transform:translateX(-100%)}90%,100%{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.lms-menu-launcher,.lms-menu-launcher::after,.lms-menu-launcher line{animation:none;transition:none}}
+`), /*#__PURE__*/React.createElement("button", {
+  type: "button",
+  className: "lms-menu-launcher",
+  "data-theme": theme,
+  "aria-label": isOpen ? 'Закрыть меню' : 'Открыть меню',
+  "aria-expanded": isOpen,
+  onClick: onClick,
+  title: "\u041C\u0435\u043D\u044E"
+}, /*#__PURE__*/React.createElement("svg", {
+  width: "26",
+  height: "26",
+  viewBox: "0 0 26 26",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2.2",
+  strokeLinecap: "round",
+  "aria-hidden": "true"
+}, /*#__PURE__*/React.createElement("line", {
+  className: "lms-menu-line-a",
+  x1: "4",
+  y1: "7",
+  x2: "18",
+  y2: "7"
+}), /*#__PURE__*/React.createElement("line", {
+  className: "lms-menu-line-b",
+  x1: "4",
+  y1: "13",
+  x2: "22",
+  y2: "13"
+}), /*#__PURE__*/React.createElement("line", {
+  className: "lms-menu-line-c",
+  x1: "8",
+  y1: "19",
+  x2: "22",
+  y2: "19"
+}))));
+const LowPolyBackground = ({
+  theme
+}) => {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const config = {
+      gridSize: 150,
+      xyWander: 40,
+      zDepth: 70,
+      speed: 0.0005
+    };
+    const lightVector = {
+      x: -0.4,
+      y: -0.6,
+      z: 0.6
+    };
+    const themes = {
+      light: {
+        base: [224, 195, 252],
+        light: [255, 241, 235]
+      },
+      dark: {
+        base: [8, 12, 18],
+        light: [38, 48, 65]
+      }
+    };
+    let width, height;
+    let points = [],
+      triangles = [];
+    const initialTheme = canvas.dataset.theme || 'light';
+    let currentColor = {
+      base: [...themes[initialTheme].base],
+      light: [...themes[initialTheme].light]
+    };
+    let animationId;
+    const initMesh = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      points = [];
+      triangles = [];
+      const cols = Math.ceil(width / config.gridSize) + 4;
+      const rows = Math.ceil(height / config.gridSize) + 4;
+      const startX = -config.gridSize * 2;
+      const startY = -config.gridSize * 2;
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          points.push({
+            bx: startX + j * config.gridSize,
+            by: startY + i * config.gridSize,
+            x: 0,
+            y: 0,
+            z: 0,
+            phaseX: Math.random() * Math.PI * 2,
+            phaseY: Math.random() * Math.PI * 2,
+            phaseZ: Math.random() * Math.PI * 2,
+            speed: 0.3 + Math.random() * 0.7
+          });
+        }
+      }
+      for (let i = 0; i < rows - 1; i++) {
+        for (let j = 0; j < cols - 1; j++) {
+          const p1 = i * cols + j,
+            p2 = p1 + 1,
+            p3 = (i + 1) * cols + j,
+            p4 = p3 + 1;
+          if (Math.random() > 0.5) {
+            triangles.push([points[p1], points[p2], points[p3]]);
+            triangles.push([points[p4], points[p3], points[p2]]);
+          } else {
+            triangles.push([points[p1], points[p4], points[p3]]);
+            triangles.push([points[p1], points[p2], points[p4]]);
+          }
+        }
+      }
+    };
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const animateMesh = time => {
+      const targetThemeMode = canvas.dataset.theme || 'light';
+      const target = themes[targetThemeMode];
+      for (let i = 0; i < 3; i++) {
+        currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.05);
+        currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.05);
+      }
+      points.forEach(p => {
+        const t = time * config.speed * p.speed;
+        p.x = p.bx + Math.sin(t + p.phaseX) * config.xyWander;
+        p.y = p.by + Math.cos(t + p.phaseY) * config.xyWander;
+        p.z = Math.sin(t + p.phaseZ) * config.zDepth;
+      });
+      ctx.clearRect(0, 0, width, height);
+      triangles.forEach(t => {
+        const p1 = t[0],
+          p2 = t[1],
+          p3 = t[2];
+        const dx1 = p2.x - p1.x,
+          dy1 = p2.y - p1.y,
+          dz1 = p2.z - p1.z;
+        const dx2 = p3.x - p1.x,
+          dy2 = p3.y - p1.y,
+          dz2 = p3.z - p1.z;
+        let nx = dy1 * dz2 - dz1 * dy2;
+        let ny = dz1 * dx2 - dx1 * dz2;
+        let nz = dx1 * dy2 - dy1 * dx2;
+        if (nz < 0) {
+          nx = -nx;
+          ny = -ny;
+          nz = -nz;
+        }
+        const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+        let light = 0;
+        if (len > 0) {
+          const dot = (nx * lightVector.x + ny * lightVector.y + nz * lightVector.z) / len;
+          light = (dot + 1) / 2;
+        }
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.closePath();
+        const l = Math.pow(light, 1.2);
+        const r = Math.floor(currentColor.base[0] + (currentColor.light[0] - currentColor.base[0]) * l);
+        const g = Math.floor(currentColor.base[1] + (currentColor.light[1] - currentColor.base[1]) * l);
+        const b = Math.floor(currentColor.base[2] + (currentColor.light[2] - currentColor.base[2]) * l);
+        const color = `rgb(${r}, ${g}, ${b})`;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+      });
+      animationId = requestAnimationFrame(animateMesh);
+    };
+    initMesh();
+    animationId = requestAnimationFrame(animateMesh);
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(initMesh, 200);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+  return /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef,
+    "data-theme": theme,
+    style: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      zIndex: -1,
+      pointerEvents: 'none'
+    }
+  });
 };
 
 // --- APP ---
 function App() {
-  const DEFAULT_MODULES = [
-    'chat',
-    'ai_chat',
-    'typing',
-    'hotkeys',
-    'code',
-    'flashcards',
-    'excel',
-    'stats'
-  ];
-
+  const DEFAULT_MODULES = ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'];
   const [view, setView] = useState('loading');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-
   const [sets, setSets] = useState([]);
   const [currentSet, setCurrentSet] = useState(null);
   const [tests, setTests] = useState([]);
@@ -283,20 +263,12 @@ function App() {
   // null = Firebase ещё не подтвердил эти данные.
   const [teacherTests, setTeacherTests] = useState(null);
   const [allowedModules, setAllowedModules] = useState(null);
-
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authError, setAuthError] = useState('');
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-
   const isAdmin = userRole === 'admin';
-  const appReady =
-    !isAuthLoading &&
-    !!user &&
-    !!userData &&
-    Array.isArray(teacherTests) &&
-    Array.isArray(allowedModules);
+  const appReady = !isAuthLoading && !!user && !!userData && Array.isArray(teacherTests) && Array.isArray(allowedModules);
 
   // -----------------------------------------------------------------------
   // ЛОКАЛЬНЫЕ ДАННЫЕ
@@ -306,14 +278,10 @@ function App() {
     try {
       const raw = localStorage.getItem('test_sets_list');
       setSets(raw ? JSON.parse(raw) : []);
-
       if (!raw) {
         localStorage.setItem('test_sets_list', JSON.stringify([]));
       }
-
-      setHistory(
-        JSON.parse(localStorage.getItem('test_history_v1') || '[]')
-      );
+      setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
     } catch (error) {
       console.error('[Ultimate LMS Local Data]', error);
       setSets([]);
@@ -326,23 +294,12 @@ function App() {
   // -----------------------------------------------------------------------
 
   const applyProfile = (currentUser, data) => {
-    const modules =
-      data?.allowedModules == null
-        ? DEFAULT_MODULES
-        : Array.isArray(data.allowedModules)
-          ? data.allowedModules
-          : [];
-
-    const assigned =
-      Array.isArray(data?.assignedTests)
-        ? data.assignedTests
-        : [];
-
+    const modules = data?.allowedModules == null ? DEFAULT_MODULES : Array.isArray(data.allowedModules) ? data.allowedModules : [];
+    const assigned = Array.isArray(data?.assignedTests) ? data.assignedTests : [];
     setUserData({
       uid: currentUser.uid,
       ...data
     });
-
     setUserRole(data?.role || 'student');
     setUserNickname(data?.nickname || '');
     setTeacherTests(assigned);
@@ -365,18 +322,15 @@ function App() {
       setIsAuthLoading(false);
       return;
     }
-
     let active = true;
     let profileUnsubscribe = null;
     let authSequence = 0;
-
     const clearProfileListener = () => {
       if (typeof profileUnsubscribe === 'function') {
         profileUnsubscribe();
       }
       profileUnsubscribe = null;
     };
-
     const resetProfile = () => {
       setUser(null);
       setUserData(null);
@@ -387,10 +341,8 @@ function App() {
       setIsSidebarOpen(false);
       setIsChatOpen(false);
     };
-
-    const unsubscribeAuth = window.auth.onAuthStateChanged(async (currentUser) => {
+    const unsubscribeAuth = window.auth.onAuthStateChanged(async currentUser => {
       const sequence = ++authSequence;
-
       clearProfileListener();
       setAuthError('');
       setIsAuthLoading(true);
@@ -399,38 +351,28 @@ function App() {
       // Пользователь не вошёл.
       if (!currentUser) {
         if (!active || sequence !== authSequence) return;
-
         setView('menu');
         setIsAuthLoading(false);
         return;
       }
-
-      const profileRef = window.db
-        .collection('users')
-        .doc(currentUser.uid);
-
+      const profileRef = window.db.collection('users').doc(currentUser.uid);
       try {
         // Новый 3_auth.js экспортирует ensureLmsUserProfile().
         // Транзакция проверяет профиль на сервере, создаёт его при первом входе,
         // проверяет блокировку и не перезаписывает админские настройки.
         let initialData = null;
-
         if (typeof window.ensureLmsUserProfile === 'function') {
           initialData = await window.ensureLmsUserProfile(currentUser);
         } else {
           // Запасной путь, если старый auth-файл ещё не заменён.
-          const serverSnapshot = await profileRef.get({ source: 'server' });
-
+          const serverSnapshot = await profileRef.get({
+            source: 'server'
+          });
           if (!serverSnapshot.exists) {
-            const serverTimestamp =
-              window.firebase.firestore.FieldValue.serverTimestamp();
-
+            const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp();
             const newProfile = {
               email: currentUser.email || '',
-              nickname:
-                currentUser.displayName ||
-                currentUser.email?.split('@')[0] ||
-                'Студент',
+              nickname: currentUser.displayName || currentUser.email?.split('@')[0] || 'Студент',
               displayName: currentUser.displayName || '',
               photoURL: currentUser.photoURL || '',
               role: 'student',
@@ -445,16 +387,13 @@ function App() {
               loginCount: 1,
               profileVersion: 2
             };
-
             await profileRef.set(newProfile);
             initialData = newProfile;
           } else {
             initialData = serverSnapshot.data() || {};
           }
         }
-
         if (!active || sequence !== authSequence) return;
-
         if (initialData?.isBanned === true) {
           const error = new Error('Аккаунт заблокирован');
           error.code = 'lms/account-banned';
@@ -467,75 +406,53 @@ function App() {
         setIsAuthLoading(false);
 
         // После первичной серверной проверки оставляем realtime-обновления.
-        profileUnsubscribe = profileRef.onSnapshot(
-          { includeMetadataChanges: true },
-          async (snapshot) => {
-            if (!active || sequence !== authSequence) return;
-            if (!snapshot.exists) return;
+        profileUnsubscribe = profileRef.onSnapshot({
+          includeMetadataChanges: true
+        }, async snapshot => {
+          if (!active || sequence !== authSequence) return;
+          if (!snapshot.exists) return;
 
-            // Не разрешаем старому кешу откатить уже проверенные права.
-            if (snapshot.metadata?.fromCache) return;
-
-            const data = snapshot.data() || {};
-
-            if (data.isBanned === true) {
-              setIsSidebarOpen(false);
-              setIsChatOpen(false);
-              resetProfile();
-
-              try {
-                await window.auth.signOut();
-              } catch (signOutError) {
-                console.error('[Ultimate LMS SignOut]', signOutError);
-              }
-
-              alert('Доступ закрыт! Вы были исключены администратором.');
-              return;
+          // Не разрешаем старому кешу откатить уже проверенные права.
+          if (snapshot.metadata?.fromCache) return;
+          const data = snapshot.data() || {};
+          if (data.isBanned === true) {
+            setIsSidebarOpen(false);
+            setIsChatOpen(false);
+            resetProfile();
+            try {
+              await window.auth.signOut();
+            } catch (signOutError) {
+              console.error('[Ultimate LMS SignOut]', signOutError);
             }
-
-            applyProfile(currentUser, data);
-          },
-          (error) => {
-            console.error('[Ultimate LMS Profile Snapshot]', error);
-
-            // Если первоначальная загрузка уже прошла,
-            // не выкидываем ученика из интерфейса из-за временного сбоя listener.
+            alert('Доступ закрыт! Вы были исключены администратором.');
+            return;
           }
-        );
+          applyProfile(currentUser, data);
+        }, error => {
+          console.error('[Ultimate LMS Profile Snapshot]', error);
+
+          // Если первоначальная загрузка уже прошла,
+          // не выкидываем ученика из интерфейса из-за временного сбоя listener.
+        });
       } catch (error) {
         console.error('[Ultimate LMS Profile Bootstrap]', error);
-
         if (!active || sequence !== authSequence) return;
-
         resetProfile();
-
         if (error?.code === 'lms/account-banned') {
           setAuthError('Ваш аккаунт заблокирован. Обратитесь к преподавателю.');
-
           try {
             await window.auth.signOut();
           } catch (_) {}
-        } else if (
-          String(error?.code || '').includes('unavailable') ||
-          String(error?.code || '').includes('network')
-        ) {
-          setAuthError(
-            'Не удалось получить актуальные данные с Firebase. Проверьте интернет и повторите.'
-          );
+        } else if (String(error?.code || '').includes('unavailable') || String(error?.code || '').includes('network')) {
+          setAuthError('Не удалось получить актуальные данные с Firebase. Проверьте интернет и повторите.');
         } else if (String(error?.code || '').includes('permission-denied')) {
-          setAuthError(
-            'Нет доступа к профилю пользователя. Проверьте правила Firestore.'
-          );
+          setAuthError('Нет доступа к профилю пользователя. Проверьте правила Firestore.');
         } else {
-          setAuthError(
-            'Не удалось загрузить профиль пользователя. Попробуйте обновить страницу.'
-          );
+          setAuthError('Не удалось загрузить профиль пользователя. Попробуйте обновить страницу.');
         }
-
         setIsAuthLoading(false);
       }
     });
-
     return () => {
       active = false;
       authSequence++;
@@ -550,7 +467,6 @@ function App() {
 
   useEffect(() => {
     if (!appReady) return;
-
     const viewModule = {
       stats: 'stats',
       typing: 'typing',
@@ -559,33 +475,17 @@ function App() {
       flashcards: 'flashcards',
       excel: 'excel'
     };
-
     const requiredModule = viewModule[view];
-
-    if (
-      requiredModule &&
-      !allowedModules.includes(requiredModule)
-    ) {
+    if (requiredModule && !allowedModules.includes(requiredModule)) {
       setView('menu');
     }
-
     if (view === 'admin' && !isAdmin) {
       setView('menu');
     }
-
-    if (
-      isChatOpen &&
-      !allowedModules.includes('chat')
-    ) {
+    if (isChatOpen && !allowedModules.includes('chat')) {
       setIsChatOpen(false);
     }
-  }, [
-    appReady,
-    view,
-    allowedModules,
-    isAdmin,
-    isChatOpen
-  ]);
+  }, [appReady, view, allowedModules, isAdmin, isChatOpen]);
 
   // -----------------------------------------------------------------------
   // УСТРОЙСТВО + ЛОКАЛЬНАЯ ИСТОРИЯ
@@ -594,29 +494,17 @@ function App() {
 
   useEffect(() => {
     let alive = true;
-
     document.onkeydown = function (e) {
       if (e.keyCode === 123) return false;
-
-      if (
-        e.ctrlKey &&
-        e.shiftKey &&
-        (
-          e.keyCode === 'I'.charCodeAt(0) ||
-          e.keyCode === 'C'.charCodeAt(0)
-        )
-      ) {
+      if (e.ctrlKey && e.shiftKey && (e.keyCode === 'I'.charCodeAt(0) || e.keyCode === 'C'.charCodeAt(0))) {
         return false;
       }
     };
-
     loadData();
-
     async function prepareDevice() {
       try {
         if (typeof computeFingerprint === 'function') {
           const fingerprint = await computeFingerprint();
-
           if (alive) {
             setFp(fingerprint);
           }
@@ -625,9 +513,7 @@ function App() {
         console.warn('[Ultimate LMS Fingerprint]', error);
       }
     }
-
     prepareDevice();
-
     return () => {
       alive = false;
       document.onkeydown = null;
@@ -639,14 +525,12 @@ function App() {
   // Если пользователь уже был авторизован, Discord получит также email/имя.
   useEffect(() => {
     if (isAuthLoading) return;
-
     if (typeof logVisitor === 'function') {
-      logVisitor().catch?.((error) => {
+      logVisitor().catch?.(error => {
         console.warn('[Ultimate LMS Visitor]', error);
       });
     }
   }, [isAuthLoading, user?.uid]);
-
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem('theme', theme);
@@ -656,102 +540,53 @@ function App() {
   // ЛОКАЛЬНЫЕ НАБОРЫ ТЕСТОВ
   // -----------------------------------------------------------------------
 
-  const addSet = (name) => {
+  const addSet = name => {
     if (!name) return;
     if (sets.includes(name)) return alert('Уже есть!');
-
     const newSets = [...sets, name];
     setSets(newSets);
-
-    localStorage.setItem(
-      'test_sets_list',
-      JSON.stringify(newSets)
-    );
-
-    localStorage.setItem(
-      'tests_' + name,
-      JSON.stringify([])
-    );
+    localStorage.setItem('test_sets_list', JSON.stringify(newSets));
+    localStorage.setItem('tests_' + name, JSON.stringify([]));
   };
-
-  const deleteSet = (name) => {
+  const deleteSet = name => {
     const newSets = sets.filter(s => s !== name);
-
     setSets(newSets);
-
-    localStorage.setItem(
-      'test_sets_list',
-      JSON.stringify(newSets)
-    );
-
+    localStorage.setItem('test_sets_list', JSON.stringify(newSets));
     localStorage.removeItem('tests_' + name);
   };
-
-  const openSet = (name) => {
+  const openSet = name => {
     setCurrentSet(name);
-
-    setTests(
-      JSON.parse(
-        localStorage.getItem('tests_' + name)
-      ) || []
-    );
-
+    setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []);
     setView('set_menu');
   };
-
-  const openTeacherAssignedTest = (testInfo) => {
+  const openTeacherAssignedTest = testInfo => {
     // Искусственная задержка больше не нужна.
     setCurrentSet(testInfo.title);
-    setTests(
-      Array.isArray(testInfo.data)
-        ? testInfo.data
-        : []
-    );
+    setTests(Array.isArray(testInfo.data) ? testInfo.data : []);
     setView('set_menu');
   };
-
   const removeTeacherTestStudent = async (testId, testTitle) => {
     if (!user?.uid || !Array.isArray(teacherTests)) return;
-
     try {
-      const updatedTests =
-        teacherTests.filter(t => t.id !== testId);
-
-      await window.db
-        .collection('users')
-        .doc(user.uid)
-        .update({
-          assignedTests: updatedTests
-        });
+      const updatedTests = teacherTests.filter(t => t.id !== testId);
+      await window.db.collection('users').doc(user.uid).update({
+        assignedTests: updatedTests
+      });
 
       // Realtime listener сам синхронизирует teacherTests.
     } catch (error) {
-      console.error(
-        '[Ultimate LMS Remove Assigned Test]',
-        error
-      );
-
+      console.error('[Ultimate LMS Remove Assigned Test]', error);
       alert('Ошибка при удалении теста');
     }
   };
-
   const changeNickname = async () => {
     if (!user?.uid) return;
-
-    const newNick = prompt(
-      'Введите ваш новый никнейм (будет виден в чате):',
-      userNickname || ''
-    );
-
+    const newNick = prompt('Введите ваш новый никнейм (будет виден в чате):', userNickname || '');
     if (!newNick || !newNick.trim()) return;
-
     try {
-      await window.db
-        .collection('users')
-        .doc(user.uid)
-        .update({
-          nickname: newNick.trim()
-        });
+      await window.db.collection('users').doc(user.uid).update({
+        nickname: newNick.trim()
+      });
 
       // Ник обновится через realtime listener.
     } catch (error) {
@@ -770,50 +605,32 @@ function App() {
   const handleDirectLogin = async () => {
     try {
       setAuthError('');
-
       if (typeof window.lmsGoogleSignIn === 'function') {
         await window.lmsGoogleSignIn();
         return;
       }
 
       // Запасной вариант на случай, если 3_auth.js ещё не обновлён.
-      const provider =
-        new window.firebase.auth.GoogleAuthProvider();
-
+      const provider = new window.firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: 'select_account'
       });
-
       await window.auth.signInWithPopup(provider);
     } catch (error) {
       console.error('[Ultimate LMS Google Auth]', error);
-
-      const ignoredErrors = [
-        'auth/popup-closed-by-user',
-        'auth/cancelled-popup-request'
-      ];
-
+      const ignoredErrors = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
       if (ignoredErrors.includes(error?.code)) {
         return;
       }
-
       if (error?.code === 'auth/popup-blocked') {
-        alert(
-          'Браузер заблокировал окно Google. Разрешите всплывающие окна для этого сайта.'
-        );
+        alert('Браузер заблокировал окно Google. Разрешите всплывающие окна для этого сайта.');
         return;
       }
-
       if (error?.code === 'auth/network-request-failed') {
-        alert(
-          'Ошибка сети. Проверьте интернет-соединение.'
-        );
+        alert('Ошибка сети. Проверьте интернет-соединение.');
         return;
       }
-
-      alert(
-        'Произошла ошибка при входе. Попробуйте ещё раз.'
-      );
+      alert('Произошла ошибка при входе. Попробуйте ещё раз.');
     }
   };
 
@@ -821,420 +638,276 @@ function App() {
   // UI
   // -----------------------------------------------------------------------
 
-  const burgerViews = [
-    'menu',
-    'stats',
-    'typing',
-    'hotkeys',
-    'code',
-    'flashcards',
-    'excel',
-    'admin'
-  ];
-
-  return (
-    <>
-      {/* Пока открыто меню, фон замирает — анимация меню идёт плавно. */}
-      <LowPolyBackground theme={theme} paused={isSidebarOpen} />
-
-      {/* Современная кнопка меню (компонент выше, в этом же файле) */}
-      <SidebarBurger
-        visible={
-          appReady &&
-          !isSidebarOpen &&
-          burgerViews.includes(view)
-        }
-        onClick={() => setIsSidebarOpen(true)}
-      />
-
-      {/* Sidebar вообще не создаётся, пока профиль не подтверждён. */}
-      {appReady && (
-        <SidebarMenu
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          theme={theme}
-          setTheme={setTheme}
-          user={user}
-          userNickname={userNickname}
-          changeNickname={changeNickname}
-          allowedModules={allowedModules}
-          isAdmin={isAdmin}
-          view={view}
-          setView={setView}
-          setIsChatOpen={setIsChatOpen}
-        />
-      )}
-
-      <AnimatePresence>
-        {appReady &&
-          isChatOpen &&
-          allowedModules.includes('chat') && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsChatOpen(false)}
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.4)',
-                  backdropFilter: 'blur(5px)',
-                  zIndex: 2000
-                }}
-              />
-
-              <ChatPanel
-                user={user}
-                onClose={() => setIsChatOpen(false)}
-              />
-            </>
-          )}
-      </AnimatePresence>
-
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px 10px'
-        }}
-      >
-        <AnimatePresence mode="wait">
-
-          {/* -------------------------------------------------- */}
-          {/* FIREBASE / ПРОФИЛЬ ЕЩЁ НЕ ГОТОВЫ                    */}
-          {/* -------------------------------------------------- */}
-
-          {isAuthLoading && (
-            <motion.div
-              key="loading"
-              initial={{
-                opacity: 0,
-                y: 10,
-                scale: 0.98
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.985
-              }}
-              className="glass-panel"
-              style={{
-                textAlign: 'center',
-                width: '100%',
-                maxWidth: '400px',
-                padding: '42px 26px',
-                borderRadius: '26px'
-              }}
-            >
-              <motion.div
-                animate={{
-                  rotate: 360
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: 'linear'
-                }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  margin: '0 auto 20px',
-                  borderRadius: '50%',
-                  border: '4px solid rgba(139,92,246,.16)',
-                  borderTopColor: '#8b5cf6'
-                }}
-              />
-
-              <h2
-                style={{
-                  margin: '0 0 8px',
-                  color: 'var(--text-main)'
-                }}
-              >
-                Ultimate LMS
-              </h2>
-
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--text-sec)',
-                  fontSize: '13px',
-                  lineHeight: 1.6
-                }}
-              >
-                Проверяем аккаунт и загружаем актуальные настройки…
-              </p>
-            </motion.div>
-          )}
-
-          {/* -------------------------------------------------- */}
-          {/* FIREBASE ОШИБКА                                    */}
-          {/* -------------------------------------------------- */}
-
-          {!isAuthLoading && authError && (
-            <motion.div
-              key="auth-error"
-              initial={{
-                opacity: 0,
-                y: 12
-              }}
-              animate={{
-                opacity: 1,
-                y: 0
-              }}
-              exit={{
-                opacity: 0
-              }}
-              className="glass-panel"
-              style={{
-                width: '100%',
-                maxWidth: 430,
-                padding: '34px 28px',
-                textAlign: 'center',
-                borderRadius: 24
-              }}
-            >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 15,
-                  margin: '0 auto 16px',
-                  display: 'grid',
-                  placeItems: 'center',
-                  background: 'rgba(239,68,68,.1)',
-                  color: '#ef4444',
-                  fontSize: 23
-                }}
-              >
-                !
-              </div>
-
-              <h3
-                style={{
-                  margin: '0 0 8px',
-                  color: 'var(--text-main)'
-                }}
-              >
-                Не удалось открыть профиль
-              </h3>
-
-              <p
-                style={{
-                  margin: '0 0 20px',
-                  color: 'var(--text-sec)',
-                  fontSize: 13,
-                  lineHeight: 1.6
-                }}
-              >
-                {authError}
-              </p>
-
-              <Button
-                onClick={() => window.location.reload()}
-                style={{
-                  minHeight: 48
-                }}
-              >
-                Повторить
-              </Button>
-            </motion.div>
-          )}
-
-          {/* -------------------------------------------------- */}
-          {/* НЕ АВТОРИЗОВАН                                     */}
-          {/* -------------------------------------------------- */}
-
-          {!isAuthLoading && !authError && !user && (
-            <div
-              key="landing-wrapper"
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                overflowY: 'auto',
-                zIndex: 5000,
-                background: '#050308'
-              }}
-            >
-              <LandingView
-                onLogin={handleDirectLogin}
-              />
-            </div>
-          )}
-
-          {/* -------------------------------------------------- */}
-          {/* ADMIN                                              */}
-          {/* -------------------------------------------------- */}
-
-          {appReady &&
-            view === 'admin' &&
-            isAdmin && (
-              <AdminPanel />
-            )}
-
-          {/* -------------------------------------------------- */}
-          {/* TESTS                                              */}
-          {/* teacherTests здесь уже гарантированно загружен.    */}
-          {/* -------------------------------------------------- */}
-
-          {appReady &&
-            [
-              'menu',
-              'set_menu',
-              'timer_setup',
-              'test',
-              'result',
-              'review'
-            ].includes(view) && (
-              <TestsLMS
-                view={view}
-                setView={setView}
-                currentSet={currentSet}
-                tests={tests}
-                setTests={setTests}
-                user={user}
-                history={history}
-                setHistory={setHistory}
-                fp={fp}
-                sets={sets}
-                addSet={addSet}
-                deleteSet={deleteSet}
-                openSet={openSet}
-                teacherTests={teacherTests}
-                openTeacherAssignedTest={openTeacherAssignedTest}
-                removeTeacherTestStudent={removeTeacherTestStudent}
-              />
-            )}
-
-          {/* -------------------------------------------------- */}
-          {/* MODULES                                            */}
-          {/* -------------------------------------------------- */}
-
-          {appReady &&
-            view === 'stats' &&
-            allowedModules.includes('stats') && (
-              <StatsView
-                history={history}
-                setHistory={setHistory}
-                userData={userData}
-              />
-            )}
-
-          {appReady &&
-            view === 'typing' &&
-            allowedModules.includes('typing') && (
-              <motion.div
-                key="typing_test"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{
-                  width: '100%',
-                  maxWidth: '1100px'
-                }}
-              >
-                <TypingTest />
-              </motion.div>
-            )}
-
-          {appReady &&
-            view === 'hotkeys' &&
-            allowedModules.includes('hotkeys') && (
-              <motion.div
-                key="hotkey_trainer"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{
-                  width: '100%',
-                  maxWidth: '700px'
-                }}
-              >
-                <HotkeyTrainer />
-              </motion.div>
-            )}
-
-          {appReady &&
-            view === 'code' &&
-            allowedModules.includes('code') && (
-              <motion.div
-                key="code_playground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{
-                  width: '100%',
-                  maxWidth: '1200px'
-                }}
-              >
-                <CodePlayground />
-              </motion.div>
-            )}
-
-          {appReady &&
-            view === 'flashcards' &&
-            allowedModules.includes('flashcards') && (
-              <motion.div
-                key="flashcards_view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{
-                  width: '100%',
-                  maxWidth: '1000px'
-                }}
-              >
-                <FlashcardsLMS
-                  onBack={() => setView('menu')}
-                />
-              </motion.div>
-            )}
-
-          {appReady &&
-            view === 'excel' &&
-            allowedModules.includes('excel') && (
-              <motion.div
-                key="excel_view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{
-                  width: '100%',
-                  maxWidth: '1000px'
-                }}
-              >
-                <ExcelTrainerLMS
-                  onBack={() => setView('menu')}
-                />
-              </motion.div>
-            )}
-
-        </AnimatePresence>
-
-        {/* ПЛАВАЮЩИЙ ИИ-АССИСТЕНТ */}
-        {appReady &&
-          allowedModules.includes('ai_chat') &&
-          window.AIChatWidget && (
-            <window.AIChatWidget />
-          )}
-
-      </div>
-    </>
-  );
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
+    theme: theme
+  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && /*#__PURE__*/React.createElement("div", {
+    className: "mobile-burger-fixed"
+  }, /*#__PURE__*/React.createElement(SidebarLauncher, {
+    isOpen: isSidebarOpen,
+    theme: theme,
+    onClick: () => setIsSidebarOpen(v => !v)
+  })), appReady && /*#__PURE__*/React.createElement(SidebarMenu, {
+    isOpen: isSidebarOpen,
+    onClose: () => setIsSidebarOpen(false),
+    theme: theme,
+    setTheme: setTheme,
+    user: user,
+    userNickname: userNickname,
+    changeNickname: changeNickname,
+    allowedModules: allowedModules,
+    isAdmin: isAdmin,
+    view: view,
+    setView: setView,
+    setIsChatOpen: setIsChatOpen
+  }), /*#__PURE__*/React.createElement(AnimatePresence, null, appReady && isChatOpen && allowedModules.includes('chat') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    onClick: () => setIsChatOpen(false),
+    style: {
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(5px)',
+      zIndex: 2000
+    }
+  }), /*#__PURE__*/React.createElement(ChatPanel, {
+    user: user,
+    onClose: () => setIsChatOpen(false)
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px 10px'
+    }
+  }, /*#__PURE__*/React.createElement(AnimatePresence, {
+    mode: "wait"
+  }, isAuthLoading && /*#__PURE__*/React.createElement(motion.div, {
+    key: "loading",
+    initial: {
+      opacity: 0,
+      y: 10,
+      scale: 0.98
+    },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.985
+    },
+    className: "glass-panel",
+    style: {
+      textAlign: 'center',
+      width: '100%',
+      maxWidth: '400px',
+      padding: '42px 26px',
+      borderRadius: '26px'
+    }
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    animate: {
+      rotate: 360
+    },
+    transition: {
+      duration: 1,
+      repeat: Infinity,
+      ease: 'linear'
+    },
+    style: {
+      width: 44,
+      height: 44,
+      margin: '0 auto 20px',
+      borderRadius: '50%',
+      border: '4px solid rgba(139,92,246,.16)',
+      borderTopColor: '#8b5cf6'
+    }
+  }), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: '0 0 8px',
+      color: 'var(--text-main)'
+    }
+  }, "Ultimate LMS"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      color: 'var(--text-sec)',
+      fontSize: '13px',
+      lineHeight: 1.6
+    }
+  }, "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u0438 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438\u2026")), !isAuthLoading && authError && /*#__PURE__*/React.createElement(motion.div, {
+    key: "auth-error",
+    initial: {
+      opacity: 0,
+      y: 12
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "glass-panel",
+    style: {
+      width: '100%',
+      maxWidth: 430,
+      padding: '34px 28px',
+      textAlign: 'center',
+      borderRadius: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 48,
+      height: 48,
+      borderRadius: 15,
+      margin: '0 auto 16px',
+      display: 'grid',
+      placeItems: 'center',
+      background: 'rgba(239,68,68,.1)',
+      color: '#ef4444',
+      fontSize: 23
+    }
+  }, "!"), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: '0 0 8px',
+      color: 'var(--text-main)'
+    }
+  }, "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: '0 0 20px',
+      color: 'var(--text-sec)',
+      fontSize: 13,
+      lineHeight: 1.6
+    }
+  }, authError), /*#__PURE__*/React.createElement(Button, {
+    onClick: () => window.location.reload(),
+    style: {
+      minHeight: 48
+    }
+  }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")), !isAuthLoading && !authError && !user && /*#__PURE__*/React.createElement("div", {
+    key: "landing-wrapper",
+    style: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      overflowY: 'auto',
+      zIndex: 5000,
+      background: '#050308'
+    }
+  }, /*#__PURE__*/React.createElement(LandingView, {
+    onLogin: handleDirectLogin
+  })), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, null), appReady && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && /*#__PURE__*/React.createElement(TestsLMS, {
+    view: view,
+    setView: setView,
+    currentSet: currentSet,
+    tests: tests,
+    setTests: setTests,
+    user: user,
+    history: history,
+    setHistory: setHistory,
+    fp: fp,
+    sets: sets,
+    addSet: addSet,
+    deleteSet: deleteSet,
+    openSet: openSet,
+    teacherTests: teacherTests,
+    openTeacherAssignedTest: openTeacherAssignedTest,
+    removeTeacherTestStudent: removeTeacherTestStudent
+  }), appReady && view === 'stats' && allowedModules.includes('stats') && /*#__PURE__*/React.createElement(StatsView, {
+    history: history,
+    setHistory: setHistory,
+    userData: userData
+  }), appReady && view === 'typing' && allowedModules.includes('typing') && /*#__PURE__*/React.createElement(motion.div, {
+    key: "typing_test",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    style: {
+      width: '100%',
+      maxWidth: '1100px'
+    }
+  }, /*#__PURE__*/React.createElement(TypingTest, null)), appReady && view === 'hotkeys' && allowedModules.includes('hotkeys') && /*#__PURE__*/React.createElement(motion.div, {
+    key: "hotkey_trainer",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    style: {
+      width: '100%',
+      maxWidth: '700px'
+    }
+  }, /*#__PURE__*/React.createElement(HotkeyTrainer, null)), appReady && view === 'code' && allowedModules.includes('code') && /*#__PURE__*/React.createElement(motion.div, {
+    key: "code_playground",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    style: {
+      width: '100%',
+      maxWidth: '1200px'
+    }
+  }, /*#__PURE__*/React.createElement(CodePlayground, null)), appReady && view === 'flashcards' && allowedModules.includes('flashcards') && /*#__PURE__*/React.createElement(motion.div, {
+    key: "flashcards_view",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    style: {
+      width: '100%',
+      maxWidth: '1000px'
+    }
+  }, /*#__PURE__*/React.createElement(FlashcardsLMS, {
+    onBack: () => setView('menu')
+  })), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
+    key: "excel_view",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    style: {
+      width: '100%',
+      maxWidth: '1000px'
+    }
+  }, /*#__PURE__*/React.createElement(ExcelTrainerLMS, {
+    onBack: () => setView('menu')
+  }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(window.AIChatWidget, null)));
 }
-
-const root = ReactDOM.createRoot(
-  document.getElementById('root')
-);
-
-root.render(<App />);
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(/*#__PURE__*/React.createElement(App, null));
