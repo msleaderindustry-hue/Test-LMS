@@ -113,7 +113,7 @@ const SUBJECTS = [
     { id: 'typing', label: 'Печать', icon: 'keyboard' },
     { id: 'excel', label: 'Excel', icon: 'barChart' }
 ];
-const KEY_LABELS = { level: 'Уровень', xp: 'Опыт (XP)', completedLessons: 'Пройдено уроков', streak: 'Серия', maxWpm: 'Лучшая скорость (WPM)', maxCombo: 'Лучшее комбо', testsCompleted: 'Завершено тренировок', totalScore: 'Всего очков', maxScore: 'Лучший результат за подход', sessionsPlayed: 'Сессий', topic: 'Тема', student: 'Ученик', date: 'Дата', at: 'Дата и время', createdAt: 'Создано', updatedAt: 'Обновлено', percent: 'Результат, %', score: 'Очков', total: 'Заданий', id: 'ID', title: 'Название', questions: 'Вопросов', history: 'История', type: 'Тип события', section: 'Раздел', action: 'Действие', label: 'Описание', path: 'Страница / путь', details: 'Детали', duration: 'Длительность', device: 'Устройство' };
+const KEY_LABELS = { level: 'Уровень', xp: 'Опыт (XP)', completedLessons: 'Пройдено уроков', streak: 'Серия', maxWpm: 'Лучшая скорость (WPM)', maxCombo: 'Лучшее комбо', testsCompleted: 'Завершено тренировок', totalScore: 'Всего очков', maxScore: 'Лучший результат за подход', sessionsPlayed: 'Сессий', topic: 'Тема', student: 'Ученик', date: 'Дата', at: 'Дата и время', createdAt: 'Создано', updatedAt: 'Обновлено', percent: 'Результат, %', score: 'Очков', total: 'Заданий', id: 'ID', title: 'Название', questions: 'Вопросов', history: 'История', type: 'Тип события', section: 'Раздел', action: 'Действие', label: 'Описание', path: 'Страница / путь', details: 'Детали', duration: 'Длительность', device: 'Устройство', view: 'Экран' };
 function cellValue(v) {
     if (v == null) return '';
     if (typeof v === 'number') return v > 1e12 && v < 1e14 ? new Date(v).toLocaleString('ru-RU') : v;
@@ -177,11 +177,13 @@ function buildXlsx(sheets) {
     const end = new Uint8Array(22), ev = new DataView(end.buffer); ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, directory.length, true); ev.setUint16(10, directory.length, true); ev.setUint32(12, directory.reduce((s, x) => s + x.length, 0), true); ev.setUint32(16, offset, true);
     return new Blob([...chunks, ...directory, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
+const ACTIVITY_SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование'};
 function activitySheet(items) {
     const rows = array(items).map(item => ({
         at: firstDefined(item, ['at', 'date', 'createdAt', 'time']),
         type: str(item?.type) || str(item?.kind),
-        section: str(item?.section) || str(item?.module),
+        section: str(item?.sectionLabel) || ACTIVITY_SECTIONS[str(item?.section) || str(item?.module)] || str(item?.section) || str(item?.module),
+        view: str(item?.view) || str(item?.details?.view),
         action: str(item?.action),
         label: str(item?.label) || str(item?.title) || str(item?.name),
         path: str(item?.path) || str(item?.route),
