@@ -23,8 +23,15 @@ const {
   logVisitor
 } = window;
 
+// Экраны, на которых показывается кнопка-бургер
+const LAUNCHER_VIEWS = ['menu', 'stats', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'admin'];
+
+// Позиция бургера и резерв места под него (48px кнопка + 8px отступ + 8px зазор)
+const LAUNCHER_TOP = 'max(8px, env(safe-area-inset-top))';
+const CONTENT_TOP_WITH_LAUNCHER = 'calc(max(8px, env(safe-area-inset-top)) + 64px)';
+
 // =========================================================================
-// 3D LOW-POLY ФОН
+// КНОПКА-БУРГЕР
 // =========================================================================
 const SidebarLauncher = ({
   isOpen,
@@ -64,7 +71,7 @@ const SidebarLauncher = ({
   "aria-label": isOpen ? 'Закрыть меню' : 'Открыть меню',
   "aria-expanded": isOpen,
   onClick: onClick,
-  title: "\u041C\u0435\u043D\u044E"
+  title: "Меню"
 }, /*#__PURE__*/React.createElement("svg", {
   width: "24",
   height: "24",
@@ -93,6 +100,10 @@ const SidebarLauncher = ({
   x2: "20",
   y2: "18"
 }))));
+
+// =========================================================================
+// 3D LOW-POLY ФОН
+// =========================================================================
 const LowPolyBackground = ({
   theme
 }) => {
@@ -283,6 +294,9 @@ function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isAdmin = userRole === 'admin';
   const appReady = !isAuthLoading && !!user && !!userData && Array.isArray(teacherTests) && Array.isArray(allowedModules);
+
+  // Показывается ли сейчас бургер — от этого зависит верхний отступ контента
+  const showLauncher = appReady && LAUNCHER_VIEWS.includes(view);
 
   // -----------------------------------------------------------------------
   // ЛОКАЛЬНЫЕ ДАННЫЕ
@@ -654,11 +668,11 @@ function App() {
 
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
     theme: theme
-  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+  }), showLauncher && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
     className: "lms-menu-page-launcher",
     style: {
       position: "absolute",
-      top: "max(8px, env(safe-area-inset-top))",
+      top: LAUNCHER_TOP,
       left: "max(8px, env(safe-area-inset-left))",
       zIndex: 1900
     }
@@ -701,12 +715,16 @@ function App() {
     user: user,
     onClose: () => setIsChatOpen(false)
   }))), /*#__PURE__*/React.createElement("div", {
+    // ИСПРАВЛЕНИЕ: когда виден бургер, резервируем под него место сверху,
+    // чтобы карточка не наезжала на кнопку на телефоне и при зуме 125%+.
     style: {
+      boxSizing: 'border-box',
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px 10px'
+      padding: '20px 10px',
+      paddingTop: showLauncher ? CONTENT_TOP_WITH_LAUNCHER : '20px'
     }
   }, /*#__PURE__*/React.createElement(AnimatePresence, {
     mode: "wait"
@@ -763,7 +781,7 @@ function App() {
       fontSize: '13px',
       lineHeight: 1.6
     }
-  }, "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u0438 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438\u2026")), !isAuthLoading && authError && /*#__PURE__*/React.createElement(motion.div, {
+  }, "Проверяем аккаунт и загружаем актуальные настройки…")), !isAuthLoading && authError && /*#__PURE__*/React.createElement(motion.div, {
     key: "auth-error",
     initial: {
       opacity: 0,
@@ -801,7 +819,7 @@ function App() {
       margin: '0 0 8px',
       color: 'var(--text-main)'
     }
-  }, "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C"), /*#__PURE__*/React.createElement("p", {
+  }, "Не удалось открыть профиль"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 20px',
       color: 'var(--text-sec)',
@@ -813,7 +831,7 @@ function App() {
     style: {
       minHeight: 48
     }
-  }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")), !isAuthLoading && !authError && !user && /*#__PURE__*/React.createElement("div", {
+  }, "Повторить")), !isAuthLoading && !authError && !user && /*#__PURE__*/React.createElement("div", {
     key: "landing-wrapper",
     style: {
       position: 'fixed',
