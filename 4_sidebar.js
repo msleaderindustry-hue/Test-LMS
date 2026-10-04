@@ -632,12 +632,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 @media(max-width:400px){.ulms-menu{width:330px}.ulms-menu-header{padding:18px 18px 14px}.ulms-menu-body{padding:2px 12px 16px}.ulms-menu-row{padding:9px 10px;min-height:62px}.ulms-menu-footer{padding:12px 18px max(14px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.ulms-menu,.ulms-menu *,.ulms-menu *::before,.ulms-menu *::after,.ulms-menu::before,.ulms-menu-backdrop{animation:none!important;transition:none!important}}
 
-/* Native transitions: menu stays mounted until the closing movement finishes. */
-.ulms-menu[data-entered]{transform:translate3d(-105%,0,0);transition:transform .5s cubic-bezier(.4,0,.6,1),background-color .3s,color .3s;will-change:transform}
-.ulms-menu[data-entered=true]{transform:translate3d(0,0,0);transition:transform .68s cubic-bezier(.22,.7,.25,1),background-color .3s,color .3s}
-.ulms-menu-backdrop[data-entered]{opacity:0;transition:opacity .5s ease;will-change:opacity}
-.ulms-menu-backdrop[data-entered=true]{opacity:1;transition:opacity .6s ease}
-@media(prefers-reduced-motion:reduce){.ulms-menu[data-entered],.ulms-menu-backdrop[data-entered]{transition:none!important}}
+/* Открытие/закрытие панели анимируется через Web Animations API (см. SidebarMenu) */
 `;
   function injectMenuStyles() {
     document.getElementById('ulms-sidebar-motion-v3')?.remove();
@@ -740,25 +735,70 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       busy = useRef(false);
     closeRef.current = onClose;
     const [present, setPresent] = useState(isOpen);
-    const [entered, setEntered] = useState(false);
+    const show = isOpen || present;
+    const backdropRef = useRef(null);
+    const running = useRef([]);
+    const shown = useRef(false);
     const returnFocus = useRef(null);
     useEffect(() => {
-      let firstFrame, secondFrame, timer;
       if (isOpen) {
         returnFocus.current = document.activeElement;
         setPresent(true);
-        firstFrame = requestAnimationFrame(() => {
-          secondFrame = requestAnimationFrame(() => setEntered(true));
-        });
-      } else {
-        setEntered(false);
-        timer = setTimeout(() => {
+      }
+    }, [isOpen]);
+
+    // Плавное открытие/закрытие: WAAPI не зависит от CSS-правил страницы и prefers-reduced-motion
+    React.useLayoutEffect(() => {
+      const p = panel.current,
+        b = backdropRef.current;
+      if (!p || !b || typeof p.animate !== 'function') {
+        if (!isOpen) {
           setPresent(false);
           unlockScroll();
-          if (returnFocus.current?.isConnected) returnFocus.current.focus();
-        }, reduced ? 0 : 540);
+        }
+        return;
       }
-      return () => { cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); clearTimeout(timer); };
+      const OFF = 'translate3d(calc(-100% - 60px),0,0)';
+      const fromP = shown.current ? getComputedStyle(p).transform : OFF;
+      const fromB = shown.current ? parseFloat(getComputedStyle(b).opacity) : 0;
+      shown.current = true;
+      const dur = reduced ? 320 : isOpen ? 720 : 460;
+      const opts = {
+        duration: dur,
+        easing: isOpen ? 'cubic-bezier(.16,1,.3,1)' : 'cubic-bezier(.4,0,.2,1)',
+        fill: 'both'
+      };
+      const prev = running.current;
+      const ap = p.animate([{
+        transform: fromP
+      }, {
+        transform: isOpen ? 'none' : OFF
+      }], opts);
+      const ab = b.animate([{
+        opacity: fromB
+      }, {
+        opacity: isOpen ? 1 : 0
+      }], {
+        ...opts,
+        easing: 'ease'
+      });
+      running.current = [ap, ab];
+      prev.forEach(a => a.cancel());
+      ap.onfinish = () => {
+        if (isOpen) {
+          ap.cancel();
+          ab.cancel();
+          running.current = [];
+        } else {
+          shown.current = false;
+          running.current = [];
+          setPresent(false);
+          unlockScroll();
+          if (returnFocus.current?.isConnected) returnFocus.current.focus({
+            preventScroll: true
+          });
+        }
+      };
     }, [isOpen, reduced]);
     const scrollLock = useRef(null);
     const lockScroll = () => {
@@ -848,12 +888,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const allowed = Array.isArray(allowedModules) ? allowedModules : [];
     const modules = MENU_ITEMS.filter(item => allowed.includes(item.id));
     useEffect(() => {
-      if (!present) return;
+      if (!show) return;
       setError('');
       setScrolled(false);
       const previous = document.activeElement;
       lockScroll();
-      const frame = requestAnimationFrame(() => panel.current?.querySelector('[data-close]')?.focus());
+      const frame = requestAnimationFrame(() => panel.current?.querySelector('[data-close]')?.focus({ preventScroll: true }));
       const onKey = e => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -883,7 +923,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         document.removeEventListener('keydown', onKey);
 
       };
-    }, [present]);
+    }, [show]);
     const go = id => {
       setView(view === id ? 'menu' : id);
       onClose();
@@ -913,24 +953,24 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       active: view === item.id,
       onClick: () => go(item.id)
     }));
-    return ReactDOM.createPortal(React.createElement(React.Fragment, null, present && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    return ReactDOM.createPortal(React.createElement(React.Fragment, null, show && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       key: "menu-backdrop",
       className: "ulms-menu-backdrop",
-      "data-entered": entered,
+      ref: backdropRef,
       "aria-hidden": "true",
       onClick: onClose,
       style: {
         position: 'fixed',
         inset: 0,
         background: '#03091680',
-        backdropFilter: 'blur(7px)', WebkitBackdropFilter: 'blur(7px)',
+        backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+        willChange: 'opacity',
         zIndex: 2000
       }
     }), /*#__PURE__*/React.createElement("aside", {
       key: "menu-panel",
       ref: panel,
       className: "ulms-menu",
-      "data-entered": entered,
       "data-theme": theme === 'light' ? 'light' : 'dark',
       role: "dialog",
       "aria-modal": "true",
