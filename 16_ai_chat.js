@@ -120,6 +120,19 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
 `;
 
 
+    const HOST_LAYOUT_FIX = `/* Topic cards own their geometry even when the host site sets button heights. */
+.ula-widget .ula-topics{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:minmax(108px,auto);align-items:stretch;gap:10px}
+.ula-widget button.ula-topic{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;position:relative!important;height:auto!important;min-height:108px!important;max-height:none!important;width:100%!important;min-width:0!important;padding:13px!important;margin:0!important;gap:10px!important;line-height:1.4!important;text-align:left!important;white-space:normal!important;overflow:visible!important;border-radius:17px;isolation:isolate}
+.ula-widget button.ula-topic:after{display:none}
+.ula-widget .ula-topic-top{position:static!important;display:flex!important;align-items:center!important;justify-content:space-between!important;height:31px!important;min-height:31px!important;width:100%!important;flex:none!important;margin:0!important;padding:0!important;transform:none!important}
+.ula-widget .ula-topic-icon{position:static!important;display:grid!important;place-items:center;width:31px!important;height:31px!important;flex:0 0 31px!important;margin:0!important;padding:0!important;transform:none!important}
+.ula-widget .ula-topic-icon svg{display:block;position:static!important;flex:none;transform:none!important;color:inherit}
+.ula-widget .ula-topic-title{position:static!important;display:block!important;width:100%;height:auto!important;min-height:0;max-height:none!important;flex:none!important;margin:0!important;padding:0!important;transform:none!important;white-space:normal!important;font-size:12px;line-height:1.45;overflow:visible!important}
+.ula-widget .ula-topic-desc{position:static!important;display:block!important;height:auto!important;max-height:none!important;margin:4px 0 0!important;padding:0!important;transform:none!important;white-space:normal!important;font-size:10px!important;line-height:1.45!important;overflow:visible!important}
+.ula-widget .ula-topic-arrow{position:static!important;display:inline-flex!important;flex:none!important;margin:0!important;padding:0!important;height:auto!important;width:auto!important}
+@media(max-width:350px){.ula-widget .ula-topics{gap:8px}.ula-widget button.ula-topic{padding:10px!important;min-height:112px!important}.ula-widget .ula-topic-title{font-size:11px}}
+`;
+
     function AIChatWidget() {
         const [open, setOpen] = useState(false);
         const [closing, setClosing] = useState(false);
@@ -141,7 +154,7 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             mounted.current = true;
             let style = document.getElementById('ai-chat-styles');
             if (!style) { style = document.createElement('style'); style.id = 'ai-chat-styles'; document.head.appendChild(style); }
-            style.textContent = CSS;
+            style.textContent = CSS + HOST_LAYOUT_FIX;
             return () => {
                 mounted.current = false;
                 active.current?.controller.abort();
@@ -164,7 +177,7 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
         }, [input, open]);
         useEffect(() => {
             if (!teacher || teacher.kind === 'pending') return;
-            const timer = setTimeout(() => setTeacher(null), teacher.kind === 'success' ? 4000 : 6500);
+            const timer = setTimeout(() => setTeacher(null), teacher.kind === 'success' ? 3000 : 6500);
             return () => clearTimeout(timer);
         }, [teacher]);
         useEffect(() => {
@@ -244,9 +257,16 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             const name = String(user?.displayName || user?.email || 'Студент').replace(/[\r\n*_`~<>@]/g, ' ').slice(0, 150);
             try {
                 const response = await fetch(CONFIG.teacherURL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ content: `Запрос помощи на платформе Ultimate LMS.\nСтудент: ${name}\nПросит связаться с преподавателем.`, allowed_mentions: { parse: [] } }) });
+                // Both an empty HTTP 204 and a successful JSON acknowledgment are valid.
                 if (!response.ok) throw new Error('delivery');
+                const body = await response.text();
+                if (body.trim().startsWith('{')) {
+                    let result;
+                    try { result = JSON.parse(body); } catch { throw new Error('delivery'); }
+                    if (result.ok === false || result.success === false || result.error) throw new Error('delivery');
+                }
                 teacherUntil.current = Date.now() + CONFIG.teacherCooldown;
-                if (mounted.current) setTeacher({ kind: 'success', text: 'Запрос отправлен преподавателю.' });
+                if (mounted.current) setTeacher({ kind: 'success', text: 'Запрос отправлен' });
             } catch {
                 if (mounted.current) setTeacher({ kind: 'error', text: 'Не удалось подтвердить отправку. Попробуй позже.' });
             } finally { clearTimeout(timeout); if (teacherRequest.current === controller) teacherRequest.current = null; }
