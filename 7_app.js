@@ -31,18 +31,17 @@ const SidebarLauncher = ({
   onClick,
   theme
 }) => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, `
-.lms-menu-launcher{position:relative;isolation:isolate;display:grid;place-items:center;width:54px;height:54px;padding:0;border:1px solid #8396ca50;border-radius:17px;background:linear-gradient(145deg,#26344d,#18243a);color:#d6e0ff;box-shadow:0 7px 22px #0c173331,inset 0 1px 0 #ffffff12;cursor:pointer;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;animation:lms-launcher-in .5s cubic-bezier(.2,.7,.3,1) both}
-.lms-menu-launcher[data-theme=light]{background:linear-gradient(145deg,#fff,#eaf0fc);color:#435bcc;border-color:#a9b8e2;box-shadow:0 6px 20px #40588c22,inset 0 1px 0 #fff}
-.lms-menu-launcher::after{content:'';position:absolute;inset:-50%;background:linear-gradient(110deg,transparent 38%,#a9baff28 49%,transparent 60%);transform:translateX(-100%);animation:lms-launcher-shine 7s ease-in-out infinite;pointer-events:none;z-index:-1}
-.lms-menu-launcher:hover{transform:translateY(-3px);border-color:#899bf4;box-shadow:0 10px 26px #546bca35}
-.lms-menu-launcher:active{transform:translateY(0) scale(.91)}
-.lms-menu-launcher:focus-visible{outline:3px solid #8a9cf0;outline-offset:4px}
-.lms-menu-launcher svg{display:block;overflow:visible}.lms-menu-launcher line{transform-box:fill-box;transform-origin:center;transition:transform .32s cubic-bezier(.2,.7,.3,1),opacity .2s}
-.lms-menu-launcher:hover .lms-menu-line-a{transform:translateX(3px)}.lms-menu-launcher:hover .lms-menu-line-c{transform:translateX(-3px)}
-.lms-menu-launcher[aria-expanded=true] .lms-menu-line-a{transform:translate(2px,6px) rotate(45deg)}.lms-menu-launcher[aria-expanded=true] .lms-menu-line-b{transform:scaleX(0);opacity:0}.lms-menu-launcher[aria-expanded=true] .lms-menu-line-c{transform:translate(-2px,-6px) rotate(-45deg)}
-@keyframes lms-launcher-in{from{opacity:0;transform:translateY(-8px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes lms-launcher-shine{0%,65%{transform:translateX(-100%)}90%,100%{transform:translateX(100%)}}
-@media(prefers-reduced-motion:reduce){.lms-menu-launcher,.lms-menu-launcher::after,.lms-menu-launcher line{animation:none;transition:none}}
+.lms-menu-launcher{position:relative;display:grid;place-items:center;width:48px;height:48px;padding:0;border:1px solid #7186aa40;border-radius:15px;background:#1a2538;color:#cbd9f8;box-shadow:0 5px 16px #10213b22;cursor:pointer;overflow:hidden;transition:background .25s,box-shadow .25s,transform .25s}
+.lms-menu-launcher[data-theme=light]{background:#fff;color:#43577e;border-color:#ccd7e9;box-shadow:0 5px 18px #546b9320}
+.lms-menu-launcher:hover{background:#334a70;color:#fff;box-shadow:0 7px 24px #435b9638;transform:translateY(-2px)}
+.lms-menu-launcher:active{transform:scale(.9)}.lms-menu-launcher:focus-visible{outline:3px solid #7e99db;outline-offset:4px}
+.lms-menu-launcher svg{display:block;overflow:visible}.lms-menu-launcher line{transform-box:fill-box;transform-origin:center;animation:lms-menu-wave 3.2s ease-in-out infinite}
+.lms-menu-launcher .lms-menu-line-b{animation-delay:.16s}.lms-menu-launcher .lms-menu-line-c{animation-delay:.32s}
+.lms-menu-launcher:hover line{animation:lms-menu-hover .8s ease-in-out infinite alternate}.lms-menu-launcher:hover .lms-menu-line-b{animation-delay:.12s}.lms-menu-launcher:hover .lms-menu-line-c{animation-delay:.24s}
+.lms-menu-launcher[aria-expanded=true] line{animation:none}
+@keyframes lms-menu-wave{0%,12%,60%,100%{transform:translateX(0);opacity:1}28%{transform:translateX(3px);opacity:.55}44%{transform:translateX(-2px);opacity:1}}
+@keyframes lms-menu-hover{from{transform:scaleX(.7)}to{transform:scaleX(1.12)}}
+@media(prefers-reduced-motion:reduce){.lms-menu-launcher,.lms-menu-launcher line{animation:none!important;transition:none!important}}
 `), /*#__PURE__*/React.createElement("button", {
   type: "button",
   className: "lms-menu-launcher",
@@ -52,32 +51,32 @@ const SidebarLauncher = ({
   onClick: onClick,
   title: "\u041C\u0435\u043D\u044E"
 }, /*#__PURE__*/React.createElement("svg", {
-  width: "26",
-  height: "26",
-  viewBox: "0 0 26 26",
+  width: "24",
+  height: "24",
+  viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: "2.2",
+  strokeWidth: "2",
   strokeLinecap: "round",
   "aria-hidden": "true"
 }, /*#__PURE__*/React.createElement("line", {
   className: "lms-menu-line-a",
   x1: "4",
-  y1: "7",
-  x2: "18",
-  y2: "7"
+  y1: "6",
+  x2: "20",
+  y2: "6"
 }), /*#__PURE__*/React.createElement("line", {
   className: "lms-menu-line-b",
   x1: "4",
-  y1: "13",
-  x2: "22",
-  y2: "13"
+  y1: "12",
+  x2: "20",
+  y2: "12"
 }), /*#__PURE__*/React.createElement("line", {
   className: "lms-menu-line-c",
-  x1: "8",
-  y1: "19",
-  x2: "22",
-  y2: "19"
+  x1: "4",
+  y1: "18",
+  x2: "20",
+  y2: "18"
 }))));
 const LowPolyBackground = ({
   theme
@@ -641,7 +640,13 @@ function App() {
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
     theme: theme
   }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && /*#__PURE__*/React.createElement("div", {
-    className: "mobile-burger-fixed"
+    className: "mobile-burger-fixed",
+    style: {
+      position: "fixed",
+      top: "max(16px, env(safe-area-inset-top))",
+      left: "max(16px, env(safe-area-inset-left))",
+      zIndex: 1900
+    }
   }, /*#__PURE__*/React.createElement(SidebarLauncher, {
     isOpen: isSidebarOpen,
     theme: theme,
