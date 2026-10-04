@@ -339,9 +339,6 @@ function App() {
 
   // -----------------------------------------------------------------------
   // FIREBASE AUTH + ПРОФИЛЬ FIRESTORE
-  //
-  // Главное исправление:
-  // интерфейс НЕ показывается между onAuthStateChanged и загрузкой профиля.
   // -----------------------------------------------------------------------
 
   useEffect(() => {
@@ -376,7 +373,6 @@ function App() {
       setIsAuthLoading(true);
       resetProfile();
 
-      // Пользователь не вошёл.
       if (!currentUser) {
         if (!active || sequence !== authSequence) return;
         setView('menu');
@@ -385,14 +381,10 @@ function App() {
       }
       const profileRef = window.db.collection('users').doc(currentUser.uid);
       try {
-        // Новый 3_auth.js экспортирует ensureLmsUserProfile().
-        // Транзакция проверяет профиль на сервере, создаёт его при первом входе,
-        // проверяет блокировку и не перезаписывает админские настройки.
         let initialData = null;
         if (typeof window.ensureLmsUserProfile === 'function') {
           initialData = await window.ensureLmsUserProfile(currentUser);
         } else {
-          // Запасной путь, если старый auth-файл ещё не заменён.
           const serverSnapshot = await profileRef.get({
             source: 'server'
           });
@@ -428,19 +420,16 @@ function App() {
           throw error;
         }
 
-        // Первый показ LMS происходит только после этой строки.
         applyProfile(currentUser, initialData);
         setView('menu');
         setIsAuthLoading(false);
 
-        // После первичной серверной проверки оставляем realtime-обновления.
         profileUnsubscribe = profileRef.onSnapshot({
           includeMetadataChanges: true
         }, async snapshot => {
           if (!active || sequence !== authSequence) return;
           if (!snapshot.exists) return;
 
-          // Не разрешаем старому кешу откатить уже проверенные права.
           if (snapshot.metadata?.fromCache) return;
           const data = snapshot.data() || {};
           if (data.isBanned === true) {
@@ -458,9 +447,6 @@ function App() {
           applyProfile(currentUser, data);
         }, error => {
           console.error('[Ultimate LMS Profile Snapshot]', error);
-
-          // Если первоначальная загрузка уже прошла,
-          // не выкидываем ученика из интерфейса из-за временного сбоя listener.
         });
       } catch (error) {
         console.error('[Ultimate LMS Profile Bootstrap]', error);
@@ -517,7 +503,6 @@ function App() {
 
   // -----------------------------------------------------------------------
   // УСТРОЙСТВО + ЛОКАЛЬНАЯ ИСТОРИЯ
-  // Не переключаем view здесь — Firebase управляет моментом показа LMS.
   // -----------------------------------------------------------------------
 
   useEffect(() => {
@@ -548,9 +533,6 @@ function App() {
     };
   }, []);
 
-  // Логируем посетителя только после того,
-  // как Firebase определил состояние входа.
-  // Если пользователь уже был авторизован, Discord получит также email/имя.
   useEffect(() => {
     if (isAuthLoading) return;
     if (typeof logVisitor === 'function') {
@@ -559,10 +541,51 @@ function App() {
       });
     }
   }, [isAuthLoading, user?.uid]);
+
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // -----------------------------------------------------------------------
+  // ОТСЛЕЖИВАНИЕ АКТИВНОСТИ И ТЕКУЩЕГО ЭКРАНА ДЛЯ ТРЕКЕРА
+  // -----------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!user?.uid || ['loading', 'login', 'auth'].includes(view)) return;
+    const sections = {
+      menu: 'menu',
+      set_menu: 'tests',
+      timer_setup: 'tests',
+      review: 'tests',
+      tests: 'tests',
+      test: 'tests',
+      quiz: 'tests',
+      testing: 'tests',
+      test_setup: 'tests',
+      test_result: 'tests',
+      result: 'tests',
+      results: 'tests',
+      typing: 'typing',
+      hotkeys: 'hotkeys',
+      flashcards: 'flashcards',
+      code: 'code',
+      excel: 'excel',
+      stats: 'stats',
+      admin: 'admin'
+    };
+    const detail = {
+      section: isChatOpen ? 'chat' : (sections[view] || view || 'platform'),
+      view: isChatOpen ? 'chat' : view
+    };
+    // Сохраняем текущий экран даже если трекер подключится чуть позже.
+    window.__lmsCurrentSection = detail;
+    if (typeof window.trackLmsSection === 'function') {
+      window.trackLmsSection(detail.section, detail);
+    } else {
+      window.dispatchEvent(new CustomEvent('lms:section', { detail }));
+    }
+  }, [view, isChatOpen, user?.uid]);
 
   // -----------------------------------------------------------------------
   // ЛОКАЛЬНЫЕ НАБОРЫ ТЕСТОВ
@@ -588,7 +611,6 @@ function App() {
     setView('set_menu');
   };
   const openTeacherAssignedTest = testInfo => {
-    // Искусственная задержка больше не нужна.
     setCurrentSet(testInfo.title);
     setTests(Array.isArray(testInfo.data) ? testInfo.data : []);
     setView('set_menu');
@@ -600,8 +622,6 @@ function App() {
       await window.db.collection('users').doc(user.uid).update({
         assignedTests: updatedTests
       });
-
-      // Realtime listener сам синхронизирует teacherTests.
     } catch (error) {
       console.error('[Ultimate LMS Remove Assigned Test]', error);
       alert('Ошибка при удалении теста');
@@ -615,8 +635,6 @@ function App() {
       await window.db.collection('users').doc(user.uid).update({
         nickname: newNick.trim()
       });
-
-      // Ник обновится через realtime listener.
     } catch (error) {
       console.error('[Ultimate LMS Nickname]', error);
       alert('Ошибка при сохранении никнейма!');
@@ -625,9 +643,6 @@ function App() {
 
   // -----------------------------------------------------------------------
   // GOOGLE LOGIN
-  //
-  // Создание/проверка users/{uid} теперь выполняется в общем Firebase gate.
-  // Поэтому здесь больше нет второй копии логики регистрации.
   // -----------------------------------------------------------------------
 
   const handleDirectLogin = async () => {
@@ -638,7 +653,6 @@ function App() {
         return;
       }
 
-      // Запасной вариант на случай, если 3_auth.js ещё не обновлён.
       const provider = new window.firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: 'select_account'
@@ -715,8 +729,6 @@ function App() {
     user: user,
     onClose: () => setIsChatOpen(false)
   }))), /*#__PURE__*/React.createElement("div", {
-    // ИСПРАВЛЕНИЕ: когда виден бургер, резервируем под него место сверху,
-    // чтобы карточка не наезжала на кнопку на телефоне и при зуме 125%+.
     style: {
       boxSizing: 'border-box',
       minHeight: '100vh',
