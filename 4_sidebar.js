@@ -631,20 +631,27 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 @keyframes sm-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--item-color) 5%,transparent)}}
 @media(max-width:400px){.ulms-menu{width:330px}.ulms-menu-header{padding:18px 18px 14px}.ulms-menu-body{padding:2px 12px 16px}.ulms-menu-row{padding:9px 10px;min-height:62px}.ulms-menu-footer{padding:12px 18px max(14px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.ulms-menu,.ulms-menu *,.ulms-menu *::before,.ulms-menu *::after,.ulms-menu::before,.ulms-menu-backdrop{animation:none!important;transition:none!important}}
+
+/* Native transitions: menu stays mounted until the closing movement finishes. */
+.ulms-menu[data-entered]{transform:translate3d(-105%,0,0);transition:transform .5s cubic-bezier(.4,0,.6,1),background-color .3s,color .3s;will-change:transform}
+.ulms-menu[data-entered=true]{transform:translate3d(0,0,0);transition:transform .68s cubic-bezier(.22,.7,.25,1),background-color .3s,color .3s}
+.ulms-menu-backdrop[data-entered]{opacity:0;transition:opacity .5s ease;will-change:opacity}
+.ulms-menu-backdrop[data-entered=true]{opacity:1;transition:opacity .6s ease}
+@media(prefers-reduced-motion:reduce){.ulms-menu[data-entered],.ulms-menu-backdrop[data-entered]{transition:none!important}}
 `;
   function injectMenuStyles() {
     document.getElementById('ulms-sidebar-motion-v3')?.remove();
-    let el = document.getElementById('ulms-sidebar-v3');
+    let el = document.getElementById('ulms-sidebar-native-v4');
     if (!el) {
       el = document.createElement('style');
-      el.id = 'ulms-sidebar-v3';
+      el.id = 'ulms-sidebar-native-v4';
       document.head.appendChild(el);
     }
     if (el.textContent !== MENU_CSS) el.textContent = MENU_CSS;
   }
   injectMenuStyles();
   function useMenuStyles() {
-    if (!document.getElementById('ulms-sidebar-v3')) injectMenuStyles();
+    if (!document.getElementById('ulms-sidebar-native-v4')) injectMenuStyles();
   }
   function useReducedMotion() {
     const [value, setValue] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -732,6 +739,27 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       closeRef = useRef(onClose),
       busy = useRef(false);
     closeRef.current = onClose;
+    const [present, setPresent] = useState(isOpen);
+    const [entered, setEntered] = useState(false);
+    const returnFocus = useRef(null);
+    useEffect(() => {
+      let firstFrame, secondFrame, timer;
+      if (isOpen) {
+        returnFocus.current = document.activeElement;
+        setPresent(true);
+        firstFrame = requestAnimationFrame(() => {
+          secondFrame = requestAnimationFrame(() => setEntered(true));
+        });
+      } else {
+        setEntered(false);
+        timer = setTimeout(() => {
+          setPresent(false);
+          unlockScroll();
+          if (returnFocus.current?.isConnected) returnFocus.current.focus();
+        }, reduced ? 0 : 540);
+      }
+      return () => { cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); clearTimeout(timer); };
+    }, [isOpen, reduced]);
     const scrollLock = useRef(null);
     const lockScroll = () => {
       if (scrollLock.current) return;
@@ -820,7 +848,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const allowed = Array.isArray(allowedModules) ? allowedModules : [];
     const modules = MENU_ITEMS.filter(item => allowed.includes(item.id));
     useEffect(() => {
-      if (!isOpen) return;
+      if (!present) return;
       setError('');
       setScrolled(false);
       const previous = document.activeElement;
@@ -853,9 +881,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       return () => {
         cancelAnimationFrame(frame);
         document.removeEventListener('keydown', onKey);
-        if (previous?.isConnected) previous.focus();
+
       };
-    }, [isOpen]);
+    }, [present]);
     const go = id => {
       setView(view === id ? 'menu' : id);
       onClose();
@@ -885,31 +913,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       active: view === item.id,
       onClick: () => go(item.id)
     }));
-    return ReactDOM.createPortal(React.createElement(AnimatePresence, {
-      onExitComplete: unlockScroll
-    }, isOpen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(motion.div, {
+    return ReactDOM.createPortal(React.createElement(React.Fragment, null, present && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       key: "menu-backdrop",
       className: "ulms-menu-backdrop",
+      "data-entered": entered,
       "aria-hidden": "true",
-      initial: {
-        opacity: 0
-      },
-      animate: {
-        opacity: 1,
-
-        transition: {
-          duration: reduced ? 0 : .45,
-          ease: [.22, 1, .36, 1]
-        }
-      },
-      exit: {
-        opacity: 0,
-        // Backdrop opacity provides the fade.,
-        transition: {
-          duration: reduced ? 0 : .38,
-          ease: [.65, 0, .35, 1]
-        }
-      },
       onClick: onClose,
       style: {
         position: 'fixed',
@@ -918,41 +926,16 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         backdropFilter: 'blur(7px)', WebkitBackdropFilter: 'blur(7px)',
         zIndex: 2000
       }
-    }), /*#__PURE__*/React.createElement(motion.aside, {
+    }), /*#__PURE__*/React.createElement("aside", {
       key: "menu-panel",
       ref: panel,
       className: "ulms-menu",
+      "data-entered": entered,
       "data-theme": theme === 'light' ? 'light' : 'dark',
       role: "dialog",
       "aria-modal": "true",
       "aria-label": "\u041C\u0435\u043D\u044E Ultimate LMS",
       tabIndex: -1,
-      initial: {
-        x: reduced ? 0 : '-105%',
-        opacity: reduced ? 0 : 1
-      },
-      animate: {
-        x: 0,
-        opacity: 1
-      },
-      exit: {
-        x: reduced ? 0 : '-105%',
-        opacity: reduced ? 0 : 1,
-        transition: reduced ? {
-          duration: 0
-        } : {
-          type: 'tween',
-          duration: .42,
-          ease: [.4, 0, .6, 1]
-        }
-      },
-      transition: reduced ? {
-        duration: 0
-      } : {
-        type: 'tween',
-        duration: .58,
-        ease: [.25, .65, .25, 1]
-      },
       style: {
         willChange: 'transform'
       }
