@@ -633,7 +633,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 @media(prefers-reduced-motion:reduce){.ulms-menu,.ulms-menu *,.ulms-menu *::before,.ulms-menu *::after,.ulms-menu::before,.ulms-menu-backdrop{animation:none!important;transition:none!important}}
 `;
   function injectMenuStyles() {
-    document.getElementById('ulms-sidebar-v2')?.remove();
+    document.getElementById('ulms-sidebar-motion-v3')?.remove();
     let el = document.getElementById('ulms-sidebar-v3');
     if (!el) {
       el = document.createElement('style');
@@ -885,21 +885,18 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       active: view === item.id,
       onClick: () => go(item.id)
     }));
-    return /*#__PURE__*/React.createElement(AnimatePresence, {
+    return ReactDOM.createPortal(React.createElement(AnimatePresence, {
       onExitComplete: unlockScroll
     }, isOpen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(motion.div, {
       key: "menu-backdrop",
       className: "ulms-menu-backdrop",
       "aria-hidden": "true",
       initial: {
-        opacity: 0,
-        backdropFilter: 'blur(0px)',
-        WebkitBackdropFilter: 'blur(0px)'
+        opacity: 0
       },
       animate: {
         opacity: 1,
-        backdropFilter: 'blur(7px)',
-        WebkitBackdropFilter: 'blur(7px)',
+
         transition: {
           duration: reduced ? 0 : .45,
           ease: [.22, 1, .36, 1]
@@ -907,8 +904,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       },
       exit: {
         opacity: 0,
-        backdropFilter: 'blur(0px)',
-        WebkitBackdropFilter: 'blur(0px)',
+        // Backdrop opacity provides the fade.,
         transition: {
           duration: reduced ? 0 : .38,
           ease: [.65, 0, .35, 1]
@@ -919,6 +915,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         position: 'fixed',
         inset: 0,
         background: '#03091680',
+        backdropFilter: 'blur(7px)', WebkitBackdropFilter: 'blur(7px)',
         zIndex: 2000
       }
     }), /*#__PURE__*/React.createElement(motion.aside, {
@@ -931,7 +928,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "aria-label": "\u041C\u0435\u043D\u044E Ultimate LMS",
       tabIndex: -1,
       initial: {
-        x: reduced ? 0 : '-100%',
+        x: reduced ? 0 : '-105%',
         opacity: reduced ? 0 : 1
       },
       animate: {
@@ -939,22 +936,22 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         opacity: 1
       },
       exit: {
-        x: reduced ? 0 : '-100%',
+        x: reduced ? 0 : '-105%',
         opacity: reduced ? 0 : 1,
         transition: reduced ? {
           duration: 0
         } : {
           type: 'tween',
-          duration: .38,
-          ease: [.65, 0, .35, 1]
+          duration: .42,
+          ease: [.4, 0, .6, 1]
         }
       },
       transition: reduced ? {
         duration: 0
       } : {
         type: 'tween',
-        duration: .5,
-        ease: [.22, 1, .36, 1]
+        duration: .58,
+        ease: [.25, .65, .25, 1]
       },
       style: {
         willChange: 'transform'
@@ -1117,7 +1114,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "data-busy": signingOut,
       initial: "rest",
       whileHover: reduced ? 'rest' : 'hover'
-    }, /*#__PURE__*/React.createElement(LogoutIcon, null), signingOut ? 'Выходим…' : 'Выйти из аккаунта')))));
+    }, /*#__PURE__*/React.createElement(LogoutIcon, null), signingOut ? 'Выходим…' : 'Выйти из аккаунта'))))), document.body);
   };
   Object.assign(window, {
     SidebarMenu
