@@ -31,17 +31,32 @@ const SidebarLauncher = ({
   onClick,
   theme
 }) => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, `
-.lms-menu-launcher{position:relative;display:grid;place-items:center;width:48px;height:48px;padding:0;border:1px solid #7186aa40;border-radius:15px;background:#1a2538;color:#cbd9f8;box-shadow:0 5px 16px #10213b22;cursor:pointer;overflow:hidden;transition:background .25s,box-shadow .25s,transform .25s}
+.mobile-burger-fixed{position:fixed!important;top:max(16px,env(safe-area-inset-top))!important;left:max(16px,env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important;transform:none!important;z-index:1900}
+.lms-menu-launcher{--lms-ease:cubic-bezier(.34,1.56,.64,1);position:relative;display:grid;place-items:center;width:48px;height:48px;padding:0;border:1px solid #7186aa40;border-radius:15px;background:#1a2538;color:#cbd9f8;box-shadow:0 5px 16px #10213b22;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s,border-radius .5s var(--lms-ease),box-shadow .3s,transform .35s var(--lms-ease)}
 .lms-menu-launcher[data-theme=light]{background:#fff;color:#43577e;border-color:#ccd7e9;box-shadow:0 5px 18px #546b9320}
-.lms-menu-launcher:hover{background:#334a70;color:#fff;box-shadow:0 7px 24px #435b9638;transform:translateY(-2px)}
-.lms-menu-launcher:active{transform:scale(.9)}.lms-menu-launcher:focus-visible{outline:3px solid #7e99db;outline-offset:4px}
-.lms-menu-launcher svg{display:block;overflow:visible}.lms-menu-launcher line{transform-box:fill-box;transform-origin:center;animation:lms-menu-wave 3.2s ease-in-out infinite}
-.lms-menu-launcher .lms-menu-line-b{animation-delay:.16s}.lms-menu-launcher .lms-menu-line-c{animation-delay:.32s}
-.lms-menu-launcher:hover line{animation:lms-menu-hover .8s ease-in-out infinite alternate}.lms-menu-launcher:hover .lms-menu-line-b{animation-delay:.12s}.lms-menu-launcher:hover .lms-menu-line-c{animation-delay:.24s}
-.lms-menu-launcher[aria-expanded=true] line{animation:none}
-@keyframes lms-menu-wave{0%,12%,60%,100%{transform:translateX(0);opacity:1}28%{transform:translateX(3px);opacity:.55}44%{transform:translateX(-2px);opacity:1}}
-@keyframes lms-menu-hover{from{transform:scaleX(.7)}to{transform:scaleX(1.12)}}
-@media(prefers-reduced-motion:reduce){.lms-menu-launcher,.lms-menu-launcher line{animation:none!important;transition:none!important}}
+.lms-menu-launcher::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,#8da2ff55,transparent 70%);opacity:0;transform:scale(.4);transition:opacity .4s,transform .5s var(--lms-ease);pointer-events:none}
+.lms-menu-launcher:hover{background:#334a70;color:#fff;box-shadow:0 7px 24px #435b9638;transform:translateY(-2px);border-radius:18px}
+.lms-menu-launcher[data-theme=light]:hover{background:#eef2ff;color:#2f4290}
+.lms-menu-launcher:hover::before{opacity:1;transform:scale(1)}
+.lms-menu-launcher:active{transform:scale(.88)}
+.lms-menu-launcher:focus-visible{outline:3px solid #7e99db;outline-offset:4px}
+.lms-menu-launcher svg{display:block;overflow:visible}
+.lms-menu-launcher line{transform-box:fill-box;transform-origin:center;transition:transform .55s var(--lms-ease),opacity .25s ease}
+/* спокойное состояние: средняя линия короче, изредка «дышит» */
+.lms-menu-launcher .lms-menu-line-b{transform-origin:left center;transform:scaleX(.62);animation:lms-burger-breathe 5s ease-in-out infinite}
+.lms-menu-launcher .lms-menu-line-c{transform-origin:right center;transform:scaleX(.82)}
+/* hover: линии выравниваются волной */
+.lms-menu-launcher:hover .lms-menu-line-a{transform:translateX(0)}
+.lms-menu-launcher:hover .lms-menu-line-b{transform:scaleX(1);animation:none;transition-delay:.05s}
+.lms-menu-launcher:hover .lms-menu-line-c{transform:scaleX(1);transition-delay:.1s}
+/* открыто: превращается в крестик */
+.lms-menu-launcher[aria-expanded=true]{background:#3a55a8;color:#fff;border-radius:50%}
+.lms-menu-launcher[aria-expanded=true]::before{opacity:1;transform:scale(1)}
+.lms-menu-launcher[aria-expanded=true] .lms-menu-line-a,.lms-menu-launcher[aria-expanded=true]:hover .lms-menu-line-a{transform:translateY(6px) rotate(45deg)}
+.lms-menu-launcher[aria-expanded=true] .lms-menu-line-b,.lms-menu-launcher[aria-expanded=true]:hover .lms-menu-line-b{transform:scaleX(0);opacity:0;animation:none}
+.lms-menu-launcher[aria-expanded=true] .lms-menu-line-c,.lms-menu-launcher[aria-expanded=true]:hover .lms-menu-line-c{transform:translateY(-6px) rotate(-45deg)}
+@keyframes lms-burger-breathe{0%,72%,100%{scale:1}84%{scale:1.45}93%{scale:1.15}}
+@media(prefers-reduced-motion:reduce){.lms-menu-launcher .lms-menu-line-b{animation:none}}
 `), /*#__PURE__*/React.createElement("button", {
   type: "button",
   className: "lms-menu-launcher",
@@ -56,7 +71,7 @@ const SidebarLauncher = ({
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: "2",
+  strokeWidth: "2.2",
   strokeLinecap: "round",
   "aria-hidden": "true"
 }, /*#__PURE__*/React.createElement("line", {
@@ -639,7 +654,7 @@ function App() {
 
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
     theme: theme
-  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && /*#__PURE__*/React.createElement("div", {
+  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
     className: "mobile-burger-fixed",
     style: {
       position: "fixed",
@@ -651,7 +666,7 @@ function App() {
     isOpen: isSidebarOpen,
     theme: theme,
     onClick: () => setIsSidebarOpen(v => !v)
-  })), appReady && /*#__PURE__*/React.createElement(SidebarMenu, {
+  })), document.body), appReady && /*#__PURE__*/React.createElement(SidebarMenu, {
     isOpen: isSidebarOpen,
     onClose: () => setIsSidebarOpen(false),
     theme: theme,
