@@ -31,7 +31,7 @@ const SidebarLauncher = ({
   onClick,
   theme
 }) => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, `
-.mobile-burger-fixed{--lms-burger-top:5px;--lms-burger-left:5px;position:fixed!important;top:max(var(--lms-burger-top),env(safe-area-inset-top))!important;left:max(var(--lms-burger-left),env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important;margin:0!important;transform:none!important;z-index:1900}
+.mobile-burger-fixed{position:fixed!important;top:max(16px,env(safe-area-inset-top))!important;left:max(16px,env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important;transform:none!important;z-index:1900}
 .lms-menu-launcher{--lms-ease:cubic-bezier(.34,1.56,.64,1);position:relative;display:grid;place-items:center;width:48px;height:48px;padding:0;border:1px solid #7186aa40;border-radius:15px;background:#1a2538;color:#cbd9f8;box-shadow:0 5px 16px #10213b22;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s,border-radius .5s var(--lms-ease),box-shadow .3s,transform .35s var(--lms-ease)}
 .lms-menu-launcher[data-theme=light]{background:#fff;color:#43577e;border-color:#ccd7e9;box-shadow:0 5px 18px #546b9320}
 .lms-menu-launcher::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,#8da2ff55,transparent 70%);opacity:0;transform:scale(.4);transition:opacity .4s,transform .5s var(--lms-ease);pointer-events:none}
@@ -93,64 +93,6 @@ const SidebarLauncher = ({
   x2: "20",
   y2: "18"
 }))));
-const FixedBurger = ({
-  isOpen,
-  theme,
-  onClick
-}) => {
-  const ref = useRef(null);
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let raf = 0,
-      dx = 0,
-      dy = 0;
-    // Если какой-то родитель всё же тащит кнопку за скроллом, сразу возвращаем её на место
-    const fix = () => {
-      raf = 0;
-      const cs = getComputedStyle(el),
-        r = el.getBoundingClientRect(),
-        ex = r.left - (parseFloat(cs.left) || 0),
-        ey = r.top - (parseFloat(cs.top) || 0);
-      if (Math.abs(ex) > .5 || Math.abs(ey) > .5) {
-        dx -= ex;
-        dy -= ey;
-        el.style.translate = `${dx}px ${dy}px`;
-      }
-    };
-    const sched = () => {
-      if (!raf) raf = requestAnimationFrame(fix);
-    };
-    const vv = window.visualViewport;
-    window.addEventListener('scroll', sched, {
-      passive: true
-    });
-    window.addEventListener('resize', sched);
-    document.addEventListener('scroll', sched, {
-      passive: true,
-      capture: true
-    });
-    vv?.addEventListener('scroll', sched);
-    vv?.addEventListener('resize', sched);
-    sched();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', sched);
-      window.removeEventListener('resize', sched);
-      document.removeEventListener('scroll', sched, true);
-      vv?.removeEventListener('scroll', sched);
-      vv?.removeEventListener('resize', sched);
-    };
-  }, []);
-  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
-    ref: ref,
-    className: "mobile-burger-fixed"
-  }, /*#__PURE__*/React.createElement(SidebarLauncher, {
-    isOpen: isOpen,
-    theme: theme,
-    onClick: onClick
-  })), document.documentElement);
-};
 const LowPolyBackground = ({
   theme
 }) => {
@@ -712,11 +654,19 @@ function App() {
 
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
     theme: theme
-  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && /*#__PURE__*/React.createElement(FixedBurger, {
+  }), appReady && (view === 'menu' || view === 'stats' || view === 'typing' || view === 'hotkeys' || view === 'code' || view === 'flashcards' || view === 'excel' || view === 'admin') && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    className: "lms-menu-page-launcher",
+    style: {
+      position: "absolute",
+      top: "max(8px, env(safe-area-inset-top))",
+      left: "max(8px, env(safe-area-inset-left))",
+      zIndex: 1900
+    }
+  }, /*#__PURE__*/React.createElement(SidebarLauncher, {
     isOpen: isSidebarOpen,
     theme: theme,
     onClick: () => setIsSidebarOpen(v => !v)
-  }), appReady && /*#__PURE__*/React.createElement(SidebarMenu, {
+  })), document.body), appReady && /*#__PURE__*/React.createElement(SidebarMenu, {
     isOpen: isSidebarOpen,
     onClose: () => setIsSidebarOpen(false),
     theme: theme,
