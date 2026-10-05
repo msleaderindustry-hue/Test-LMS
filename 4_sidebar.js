@@ -617,6 +617,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 ::view-transition-old(root){z-index:1}
 ::view-transition-new(root){z-index:2}
 
+/* На время смены темы выключаем всё тяжёлое на всей странице:
+   переходы, бесконечные анимации и backdrop-filter (иначе страница «замирает») */
+.theme-vt *,.theme-vt *::before,.theme-vt *::after{transition:none!important;animation-play-state:paused!important}
+.theme-vt .ulms-menu-backdrop,.theme-vt .glass-panel,.theme-vt .glass-sidebar,.theme-vt .glass-chat-panel,.theme-vt .overlay,.theme-vt .theme-toggle-btn{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
 @keyframes sm-fade{from{opacity:0}}
 @keyframes sm-rise{from{opacity:0;transform:translateY(12px)}}
 @keyframes sm-slide{from{opacity:0;transform:translateX(-16px)}}
@@ -858,7 +863,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     };
 
-    // Смена темы круговой волной от кнопки (View Transitions), с запасным вариантом без неё
+    // Смена темы круговой волной от кнопки (View Transitions), с запасным вариантом без неё.
+    // Оптимизировано: один синхронный ререндер внутри перехода, без лишних кадров ожидания,
+    // а на время перехода отключаются переходы, анимации и blur (класс theme-vt на <html>).
     const switchTheme = e => {
       const next = theme === 'dark' ? 'light' : 'dark';
       if (reduced || typeof document.startViewTransition !== 'function') {
@@ -869,20 +876,26 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         x = r.left + r.width / 2,
         y = r.top + r.height / 2,
         end = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      const html = document.documentElement;
+      html.classList.add('theme-vt');
       panel.current?.setAttribute('data-vt', '');
-      const t = document.startViewTransition(() => new Promise(done => {
+      const t = document.startViewTransition(() => {
+        // Класс на body применяем сразу, не дожидаясь useEffect в App
+        document.body.className = next;
         const flush = window.ReactDOM?.flushSync;
         if (flush) flush(() => setTheme(next));else setTheme(next);
-        requestAnimationFrame(() => requestAnimationFrame(done));
-      }));
-      t.ready.then(() => document.documentElement.animate({
+      });
+      t.ready.then(() => html.animate({
         clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`]
       }, {
         duration: 650,
         easing: 'cubic-bezier(.22,1,.36,1)',
         pseudoElement: '::view-transition-new(root)'
       })).catch(() => {});
-      t.finished.finally(() => panel.current?.removeAttribute('data-vt'));
+      t.finished.finally(() => {
+        html.classList.remove('theme-vt');
+        panel.current?.removeAttribute('data-vt');
+      });
     };
     const name = String(userNickname || user?.displayName || user?.email || 'Гость').trim() || 'Гость';
     const allowed = Array.isArray(allowedModules) ? allowedModules : [];
