@@ -1,4 +1,4 @@
-// Ultimate LMS · статистика v3. Только StatsView.
+// Ultimate LMS · статистика v4 (анимации). Только StatsView.
 // Полная замена файла статистики; модуль тестирования менять не нужно.
 (function () {
   'use strict';
@@ -6,6 +6,7 @@
   const {
     useState,
     useEffect,
+    useLayoutEffect,
     useRef,
     useMemo
   } = React;
@@ -22,6 +23,7 @@
   const fmt = value => new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: 1
   }).format(value);
+  const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const TABS = [{
     id: 'tests',
     label: 'Тесты',
@@ -100,6 +102,133 @@
 .usp .usp-bar.zero{box-shadow:none!important;animation:none;}
 .usp .usp-bar.zero:after{content:"";position:absolute;bottom:0;left:0;right:0;border-top:2px solid var(--up-accent);}
 
+/* ================================================================
+   АНИМАЦИИ v4
+   ================================================================ */
+
+/* 1. Оболочка: «северное сияние» из двух дрейфующих световых пятен */
+.usp .usp-shell{position:relative;overflow:hidden}
+.usp .usp-shell>*{position:relative;z-index:1}
+.usp .usp-shell:before,.usp .usp-shell:after{content:"";position:absolute;z-index:0;border-radius:50%;filter:blur(70px);pointer-events:none;opacity:.55}
+.usp .usp-shell:before{width:340px;height:340px;top:-130px;right:-90px;background:#8a5ce766;animation:usp-drift-a 14s ease-in-out infinite alternate}
+.usp .usp-shell:after{width:300px;height:300px;bottom:-130px;left:-100px;background:#3fd5b333;animation:usp-drift-b 18s ease-in-out infinite alternate}
+.usp.theme-light .usp-shell:before,.usp.theme-light .usp-shell:after{opacity:.3}
+
+/* 2. Заголовок: последовательное появление, переливающийся градиент, плавающий значок */
+.usp .usp-enter{animation:usp-in .5s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-eyebrow{animation:usp-in .6s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-eyebrow svg{animation:usp-twinkle 2.6s ease-in-out infinite}
+.usp .usp-heading h2{animation:usp-in .7s .08s cubic-bezier(.2,.75,.25,1) backwards,usp-title 7s ease-in-out .9s infinite;background:linear-gradient(100deg,var(--up-text) 35%,var(--up-accent) 50%,var(--up-text) 65%) 100% 0/260% 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.usp .usp-subtitle{animation:usp-in .7s .18s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-heading .usp-mark{position:relative;animation:usp-float 5.5s ease-in-out infinite}
+.usp .usp-heading .usp-mark:after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid var(--up-accent);pointer-events:none;animation:usp-pulse-ring 2.8s ease-out infinite}
+.usp .usp-empty .usp-mark{animation:usp-bob 3.2s ease-in-out infinite}
+
+/* 3. Вкладки: скользящая «пилюля» с блеском, подпрыгивающие иконки */
+.usp .usp-tabs{position:relative}
+.usp .usp-tab-pill{position:absolute;top:6px;left:0;height:calc(100% - 12px);border-radius:13px;overflow:hidden;background:linear-gradient(130deg,#8a5ce7,#6d4ad1);border:1px solid #ac89ef70;box-shadow:0 6px 18px #6336b640;pointer-events:none;z-index:0;transition:transform .5s cubic-bezier(.34,1.35,.64,1),width .5s cubic-bezier(.34,1.35,.64,1)}
+.usp .usp-tab-pill:after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff33,transparent);transform:skewX(-20deg);animation:usp-shine 3.8s ease-in-out 1s infinite}
+.usp .usp-tab{position:relative;z-index:1;overflow:hidden}
+.usp .usp-tabs[data-pill] .usp-tab[aria-selected=true]{background:transparent;border-color:transparent;box-shadow:none;animation:none}
+.usp .usp-tab[aria-selected=true] svg{animation:usp-pop .55s cubic-bezier(.2,.75,.25,1)}
+.usp .usp-tab:not([aria-selected=true]):hover svg{animation:usp-wiggle .5s}
+
+/* 4. Карточки и метрики: подсветка, следующая за курсором, блик, виляющие иконки */
+.usp .usp-card,.usp .usp-metric{position:relative;isolation:isolate}
+.usp .usp-card:before,.usp .usp-metric:before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--up-accent) 16%,transparent),transparent 70%)}
+.usp .usp-card:hover:before,.usp .usp-metric:hover:before{opacity:1}
+.usp .usp-metric{overflow:hidden;animation:usp-in .55s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-metric:after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff1f,transparent);transform:skewX(-20deg);pointer-events:none}
+.usp .usp-metric:hover:after{animation:usp-shine .9s ease}
+.usp .usp-metric:hover .usp-metric-label svg{animation:usp-wiggle .6s}
+.usp .usp-metric-value{animation:usp-pop-in .7s .15s cubic-bezier(.2,.75,.25,1) backwards}
+
+/* 5. График: рост столбцов с пружинкой, глянец, подпись, ореол выбранного столбца */
+.usp .usp-bar{animation:usp-rise .95s cubic-bezier(.34,1.3,.64,1) both;transition:transform .25s,filter .2s}
+.usp .usp-bar:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,#ffffff4d,transparent 45%);pointer-events:none}
+.usp .usp-bar.zero:after{background:none}
+.usp .usp-bar-tip{animation:usp-tip .45s .75s ease backwards}
+.usp .usp-bar-col:hover .usp-bar{transform:scaleX(1.12)}
+.usp .usp-bar-col[aria-pressed=true] .usp-bar-track:before{content:"";position:absolute;left:-20%;width:140%;bottom:0;height:100%;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--up-accent) 28%,transparent),transparent 70%);animation:usp-breathe 2.2s ease-in-out infinite}
+.usp .usp-bar-label{transition:color .25s}
+.usp .usp-bar-col[aria-pressed=true] .usp-bar-label{color:var(--up-accent);font-weight:750}
+.usp .usp-chart-detail>div{animation:usp-in .4s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-chart-detail>b{animation:usp-pop-in .5s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-chip[aria-pressed=true],.usp .usp-segment button[aria-pressed=true]{animation:usp-pop-soft .35s cubic-bezier(.2,.75,.25,1)}
+
+/* 6. Кольцо: градиентная дуга, дышащее свечение, вращающаяся орбита */
+.usp .usp-ring{isolation:isolate}
+.usp .usp-ring:before{content:"";position:absolute;inset:16px;border-radius:50%;z-index:-1;background:radial-gradient(circle,color-mix(in srgb,var(--up-accent) 24%,transparent),transparent 68%);animation:usp-breathe 3.6s ease-in-out infinite}
+.usp .usp-ring-fill{transition:stroke-dashoffset 1.5s cubic-bezier(.16,1,.3,1) .15s}
+.usp .usp-ring-orbit{fill:none;stroke:var(--up-accent);stroke-opacity:.38;stroke-width:2;stroke-linecap:round;stroke-dasharray:1 11;transform-origin:center;animation:usp-spin 40s linear infinite}
+.usp .usp-ring-center strong{animation:usp-pop-in .8s .3s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-training-ring .usp-ring{animation:usp-bob 6s ease-in-out infinite}
+
+/* 7. История: поочерёдный выезд строк, сдвиг по наведению, подпрыгивающая оценка */
+.usp .usp-record{animation:usp-slide .5s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s,background .25s}
+.usp .usp-record:hover{transform:translateX(5px)}
+.usp .usp-record-icon{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.usp .usp-record:hover .usp-record-icon{transform:rotate(-10deg) scale(1.12)}
+.usp .usp-record-score{animation:usp-pop-in .55s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms + 150ms)}
+.usp .usp-confirm{animation:usp-in .35s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-error{animation:usp-shake .45s}
+.usp .usp-notice{animation:usp-notice 3s ease forwards}
+
+/* 8. Кнопки: волна при нажатии, движение иконок */
+.usp .usp-btn,.usp .usp-chip,.usp .usp-segment button{position:relative;overflow:hidden}
+.usp .usp-ripple{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:currentColor;opacity:.28;pointer-events:none;animation:usp-ripple .65s ease-out forwards}
+.usp .usp-btn:hover:not(:disabled) svg{animation:usp-nudge .6s ease}
+.usp .usp-icon-btn:hover:not(:disabled) svg{animation:usp-spin-once .6s ease}
+.usp .usp-icon-btn.danger:hover:not(:disabled) svg{animation:usp-wiggle .5s}
+.usp .usp-icon-btn[data-loading=true] svg{animation:usp-spin 1s linear infinite}
+
+/* 9. Рейтинг: каскад строк, медали, пульс собственной строки */
+.usp .usp-lb-row{animation:usp-lb-in .55s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms);transition:background .2s,transform .25s}
+.usp .usp-lb-row:hover{transform:translateX(4px)}
+.usp .usp-lb-row.me{animation:usp-lb-in .55s cubic-bezier(.2,.75,.25,1) backwards,usp-me 2.6s ease-in-out 1s infinite;animation-delay:calc(var(--i,0)*45ms)}
+.usp .usp-avatar{animation:usp-pop-in .5s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms + 120ms);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.usp .usp-lb-row:hover .usp-avatar{transform:rotate(-8deg) scale(1.1)}
+.usp .usp-rank.top.r1{background:linear-gradient(135deg,#ffd76a,#f0a93a);color:#4a3000;animation:usp-glow-gold 2.4s ease-in-out infinite}
+.usp .usp-rank.top.r2{background:linear-gradient(135deg,#e6ebf5,#aab4c8);color:#2c3446}
+.usp .usp-rank.top.r3{background:linear-gradient(135deg,#e8ac7e,#b9733f);color:#3b1f08}
+
+/* 10. Тренировки: волна точек, пульс последней, мерцание подсказки */
+.usp .usp-dot{animation:usp-dot-in .55s cubic-bezier(.2,.75,.25,1) backwards;transition:transform .2s}
+.usp .usp-dot:not(.off):hover{transform:scale(1.3) rotate(8deg)}
+.usp .usp-dot.last{animation:usp-dot-in .55s cubic-bezier(.2,.75,.25,1) backwards,usp-dot-pulse 1.9s ease-out infinite}
+.usp .usp-hint svg{animation:usp-twinkle 2.8s ease-in-out infinite}
+.usp .usp-training-hero{overflow:hidden}
+.usp .usp-training-hero:after{content:"";position:absolute;z-index:-1;width:230px;height:230px;right:-60px;top:-80px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#9b7aff40,transparent 70%);animation:usp-drift-a 9s ease-in-out infinite alternate}
+
+/* Ключевые кадры */
+@keyframes usp-in{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes usp-rise{from{height:0}}
+@keyframes usp-tip{from{opacity:0;transform:translate(-50%,6px)}}
+@keyframes usp-breathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes usp-drift-a{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,50px) scale(1.2)}}
+@keyframes usp-drift-b{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,-40px) scale(1.15)}}
+@keyframes usp-title{0%,100%{background-position:100% 0}50%{background-position:0 0}}
+@keyframes usp-twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.35) rotate(90deg)}}
+@keyframes usp-float{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-8px)}}
+@keyframes usp-pulse-ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.55)}}
+@keyframes usp-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes usp-pop{0%{transform:scale(.5) rotate(-25deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}
+@keyframes usp-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+@keyframes usp-shine{0%{left:-60%}60%,100%{left:140%}}
+@keyframes usp-slide{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes usp-lb-in{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes usp-pop-in{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes usp-pop-soft{0%{transform:scale(.88)}60%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes usp-notice{0%{opacity:0;transform:translateY(-10px) scale(.96)}10%{opacity:1;transform:none}88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes usp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes usp-spin{to{transform:rotate(360deg)}}
+@keyframes usp-spin-once{to{transform:rotate(360deg)}}
+@keyframes usp-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes usp-ripple{to{transform:scale(28);opacity:0}}
+@keyframes usp-dot-in{from{opacity:0;transform:scale(0) rotate(-90deg)}60%{opacity:1;transform:scale(1.25) rotate(8deg)}to{opacity:1;transform:none}}
+@keyframes usp-dot-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--up-accent) 60%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+@keyframes usp-me{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 18px 2px color-mix(in srgb,var(--up-accent) 28%,transparent)}}
+@keyframes usp-glow-gold{0%,100%{box-shadow:0 0 0 0 #ffd76a00}50%{box-shadow:0 0 16px 2px #ffd76a88}}
 `;
   function useStyles() {
     useEffect(() => {
@@ -111,6 +240,28 @@
       }
       if (node.textContent !== CSS) node.textContent = CSS;
     }, []);
+  }
+  // Волна при нажатии на кнопки (делегирование с корня компонента).
+  function spawnRipple(e) {
+    if (e.button > 0 || reducedMotion()) return;
+    const btn = e.target.closest?.('.usp-btn,.usp-chip,.usp-tab,.usp-segment button');
+    if (!btn || btn.disabled) return;
+    const rect = btn.getBoundingClientRect();
+    const dot = document.createElement('span');
+    dot.className = 'usp-ripple';
+    dot.setAttribute('aria-hidden', 'true');
+    dot.style.left = e.clientX - rect.left + 'px';
+    dot.style.top = e.clientY - rect.top + 'px';
+    btn.appendChild(dot);
+    setTimeout(() => dot.remove(), 700);
+  }
+  // Подсветка карточек, следующая за курсором.
+  function trackSpotlight(e) {
+    const el = e.target.closest?.('.usp-metric,.usp-card');
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', e.clientX - rect.left + 'px');
+    el.style.setProperty('--my', e.clientY - rect.top + 'px');
   }
   function Empty({
     title,
@@ -189,7 +340,33 @@
     label,
     id
   }) {
-    return <div className="usp-tabs" role="tablist" aria-label={label}>{tabs.map((tab, index) => <button type="button" key={tab.id} id={`${id}-${tab.id}`} role="tab" aria-selected={value === tab.id} aria-controls={`${id}-panel-${tab.id}`} tabIndex={value === tab.id ? 0 : -1} className="usp-tab" onClick={() => onChange(tab.id)} onKeyDown={e => {
+    const wrap = useRef(null);
+    const [pill, setPill] = useState(null);
+    // Скользящая «пилюля» следует за выбранной вкладкой.
+    const measure = () => {
+      const el = wrap.current?.querySelector('[role="tab"][aria-selected="true"]');
+      if (!el) return;
+      const x = el.offsetLeft,
+        w = el.offsetWidth;
+      setPill(prev => prev && prev.x === x && prev.w === w ? prev : {
+        x,
+        w
+      });
+    };
+    useLayoutEffect(measure, [value, tabs.length]);
+    useEffect(() => {
+      window.addEventListener('resize', measure);
+      const observer = typeof ResizeObserver === 'function' && wrap.current ? new ResizeObserver(measure) : null;
+      if (observer) observer.observe(wrap.current);
+      return () => {
+        window.removeEventListener('resize', measure);
+        if (observer) observer.disconnect();
+      };
+    }, []);
+    return <div ref={wrap} className="usp-tabs" role="tablist" aria-label={label} data-pill={pill ? '' : undefined}>{pill && <span className="usp-tab-pill" aria-hidden="true" style={{
+        width: pill.w,
+        transform: `translateX(${pill.x}px)`
+      }} />}{tabs.map((tab, index) => <button type="button" key={tab.id} id={`${id}-${tab.id}`} role="tab" aria-selected={value === tab.id} aria-controls={`${id}-panel-${tab.id}`} tabIndex={value === tab.id ? 0 : -1} className="usp-tab" onClick={() => onChange(tab.id)} onKeyDown={e => {
         let next = index;
         if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;else if (e.key === 'Home') next = 0;else if (e.key === 'End') next = tabs.length - 1;else return;
         e.preventDefault();
@@ -314,7 +491,9 @@
           setPage(0);
         }}>{label}</button>)}</div>}{exportError && <p className="usp-error" role="alert">{exportError}</p>}{notice && <div className="usp-notice" role="status">{notice}</div>}{target && <div className="usp-confirm" role="group" aria-label="Подтверждение удаления" onKeyDown={e => {
         if (e.key === 'Escape' && !busy) close();
-      }}><div className="usp-confirm-text"><strong>Удалить результат?</strong><div className="usp-caption">{str(target.raw.topic) || 'Тест'} · отменить удаление нельзя.</div></div><div className="usp-confirm-actions"><button ref={cancelRef} type="button" className="usp-btn" disabled={busy} onClick={close}>Отмена</button><button type="button" className="usp-btn danger" disabled={busy} onClick={confirmDelete}>{busy ? 'Удаление…' : 'Удалить'}</button></div>{error && <p className="usp-error" role="alert">{error}</p>}</div>}{visible.length ? visible.map(x => <div className="usp-record" key={x.index}><span className="usp-record-icon"><Icon name="tests" size={17} /></span><div><div className="usp-record-title">{str(x.raw.topic) || 'Тест без названия'}</div><div className="usp-record-meta">{dateLabel(x.raw)}{x.raw.student ? ` · ${str(x.raw.student)}` : ''}</div></div><span className={`usp-record-score ${x.value === null ? '' : x.value >= 50 ? 'positive' : 'negative'}`}>{x.value === null ? '—' : fmt(x.value)}{x.value !== null && <small>%</small>}</span>{canRemove ? <button type="button" className="usp-icon-btn danger" title="Удалить результат" aria-label={`Удалить результат: ${str(x.raw.topic) || 'Тест'}`} disabled={busy} onClick={e => {
+      }}><div className="usp-confirm-text"><strong>Удалить результат?</strong><div className="usp-caption">{str(target.raw.topic) || 'Тест'} · отменить удаление нельзя.</div></div><div className="usp-confirm-actions"><button ref={cancelRef} type="button" className="usp-btn" disabled={busy} onClick={close}>Отмена</button><button type="button" className="usp-btn danger" disabled={busy} onClick={confirmDelete}>{busy ? 'Удаление…' : 'Удалить'}</button></div>{error && <p className="usp-error" role="alert">{error}</p>}</div>}{visible.length ? visible.map((x, i) => <div className="usp-record" key={x.index} style={{
+        '--i': i
+      }}><span className="usp-record-icon"><Icon name="tests" size={17} /></span><div><div className="usp-record-title">{str(x.raw.topic) || 'Тест без названия'}</div><div className="usp-record-meta">{dateLabel(x.raw)}{x.raw.student ? ` · ${str(x.raw.student)}` : ''}</div></div><span className={`usp-record-score ${x.value === null ? '' : x.value >= 50 ? 'positive' : 'negative'}`}>{x.value === null ? '—' : fmt(x.value)}{x.value !== null && <small>%</small>}</span>{canRemove ? <button type="button" className="usp-icon-btn danger" title="Удалить результат" aria-label={`Удалить результат: ${str(x.raw.topic) || 'Тест'}`} disabled={busy} onClick={e => {
           opener.current = e.currentTarget;
           setTarget(x);
           setError('');
@@ -392,9 +571,11 @@
       user,
       value,
       rank
-    }) => <div className={`usp-lb-row ${user.id === uid ? 'me' : ''}`} key={user.id}><span className={`usp-rank ${rank <= 3 ? 'top' : ''}`}>{rank <= 3 ? <span title={`${rank} место`}>{rank}</span> : rank}</span><span className="usp-avatar" style={{
+    }, position = 0) => <div className={`usp-lb-row ${user.id === uid ? 'me' : ''}`} key={user.id} style={{
+      '--i': Math.min(position, 14)
+    }}><span className={`usp-rank ${rank <= 3 ? `top r${rank}` : ''}`}>{rank <= 3 ? <span title={`${rank} место`}>{rank}</span> : rank}</span><span className="usp-avatar" style={{
         '--hue': hue(user.id)
-      }}>{initials(user)}</span><div><div className="usp-lb-name">{userName(user)}{user.id === uid && <span className="usp-badge">ВЫ</span>}</div><div className="usp-caption">{user.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div></div><div className="usp-lb-value">{fmt(value)}<small>{unit}</small></div></div>;
+      }}>{initials(user)}</span><div><div className="usp-lb-name">{userName(user)}{user.id === uid && <span className="usp-badge">ВЫ</span>}</div><div className="usp-caption">{user.role === 'admin' ? 'Преподаватель' : 'Ученик'}</div></div><div className="usp-lb-value"><AnimatedNumber value={value} /><small>{unit}</small></div></div>;
     return <div className="usp-card" style={{
       marginTop: 0
     }}><div className="usp-section-head"><div><h3>Вместе двигаться интереснее</h3><p className="usp-caption">Топ-50 · одинаковый результат — одинаковое место</p></div></div><div className="usp-lb-top"><Tabs value={category} onChange={setCategory} tabs={TABS.slice(0, 4).map(({
@@ -403,9 +584,9 @@
         }) => ({
           id,
           label
-        }))} label="Категория рейтинга" id={id} /><button type="button" className="usp-icon-btn" title="Обновить рейтинг" aria-label="Обновить рейтинг" disabled={status === 'loading'} onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={17} /></button></div><div role="tabpanel" id={`${id}-panel-${category}`} aria-labelledby={`${id}-${category}`} aria-busy={status === 'loading'}>{status === 'loading' ? <div role="status" aria-label="Загрузка рейтинга">{[0, 1, 2, 3].map(i => <div className="usp-skeleton" key={i} />)}</div> : status === 'error' ? <div role="alert"><Empty title="Рейтинг пока недоступен" text={error} icon="cup"><button type="button" className="usp-btn" onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={15} />Повторить</button></Empty></div> : ranked.length ? <div className="usp-enter" key={category}>{ranked.slice(0, 50).map(renderRow)}{mine >= 50 && <><p className="usp-caption" style={{
+        }))} label="Категория рейтинга" id={id} /><button type="button" className="usp-icon-btn" title="Обновить рейтинг" aria-label="Обновить рейтинг" data-loading={status === 'loading'} disabled={status === 'loading'} onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={17} /></button></div><div role="tabpanel" id={`${id}-panel-${category}`} aria-labelledby={`${id}-${category}`} aria-busy={status === 'loading'}>{status === 'loading' ? <div role="status" aria-label="Загрузка рейтинга">{[0, 1, 2, 3].map(i => <div className="usp-skeleton" key={i} />)}</div> : status === 'error' ? <div role="alert"><Empty title="Рейтинг пока недоступен" text={error} icon="cup"><button type="button" className="usp-btn" onClick={() => setRetry(x => x + 1)}><Icon name="refresh" size={15} />Повторить</button></Empty></div> : ranked.length ? <div className="usp-enter" key={category}>{ranked.slice(0, 50).map((item, position) => renderRow(item, position))}{mine >= 50 && <><p className="usp-caption" style={{
               margin: '20px 0 8px'
-            }}>Твоё место</p>{renderRow(ranked[mine])}</>}</div> : <Empty title="Первое место ещё свободно" text="В этой категории пока нет сохранённых результатов." icon="cup" />}</div></div>;
+            }}>Твоё место</p>{renderRow(ranked[mine], 0)}</>}</div> : <Empty title="Первое место ещё свободно" text="В этой категории пока нет сохранённых результатов." icon="cup" />}</div></div>;
   }
   function Ring({
     value,
@@ -416,12 +597,19 @@
   }) {
     const ratio = Math.max(0, Math.min(1, num(value) / Math.max(1, max)));
     const [visible, setVisible] = useState(false);
+    const gradientId = 'usp-grad-' + String(useId()).replace(/[^a-zA-Z0-9_-]/g, '');
     useEffect(() => {
       const frame = requestAnimationFrame(() => setVisible(true));
       return () => cancelAnimationFrame(frame);
     }, []);
     const circumference = 2 * Math.PI * 76;
-    return <div className="usp-ring" role="img" aria-label={`${label}: ${fmt(display ?? value)} ${unit}`}><svg viewBox="0 0 180 180" aria-hidden="true"><circle className="usp-ring-track" cx="90" cy="90" r="76" /><circle className="usp-ring-fill" cx="90" cy="90" r="76" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - (visible ? ratio : 0))} /></svg><div className="usp-ring-center" aria-hidden="true"><strong><AnimatedNumber value={display ?? value} />{unit === '%' ? '%' : ''}</strong><small>{unit === '%' ? 'от всех попыток' : unit || label}</small></div></div>;
+    return <div className="usp-ring" role="img" aria-label={`${label}: ${fmt(display ?? value)} ${unit}`}><svg viewBox="0 0 180 180" aria-hidden="true"><defs><linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" style={{
+            stopColor: 'var(--up-accent)'
+          }} /><stop offset="100%" style={{
+            stopColor: 'var(--up-green)'
+          }} /></linearGradient></defs><circle className="usp-ring-orbit" cx="90" cy="90" r="87" /><circle className="usp-ring-track" cx="90" cy="90" r="76" /><circle className="usp-ring-fill" cx="90" cy="90" r="76" style={{
+          stroke: `url(#${gradientId})`
+        }} strokeDasharray={circumference} strokeDashoffset={circumference * (1 - (visible ? ratio : 0))} /></svg><div className="usp-ring-center" aria-hidden="true"><strong><AnimatedNumber value={display ?? value} />{unit === '%' ? '%' : ''}</strong><small>{unit === '%' ? 'от всех попыток' : unit || label}</small></div></div>;
   }
   function BestChart({
     rows
@@ -439,8 +627,8 @@
             setSelected(null);
           }}>{label}</button>)}</div></div>{points.length ? <><div className="usp-chart"><div className="usp-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div className="usp-bars" key={mode} role="group" aria-label="Выбрать результат на графике">{points.map((x, i) => <button type="button" className="usp-bar-col" key={x.index} aria-label={`${i + 1}. ${str(x.raw.topic) || 'Тест'}: ${fmt(x.value)}%, ${dateLabel(x.raw)}`} aria-pressed={current?.index === x.index} onClick={() => setSelected(x.index)} onFocus={() => setSelected(x.index)}><span className="usp-bar-track" aria-hidden="true"><span className={`usp-bar ${x.value === 0 ? 'zero' : ''}`} style={{
                   height: `${x.value}%`,
-                  animationDelay: `${i * 35}ms`
-                }}><span className="usp-bar-tip">{fmt(x.value)}</span></span></span><span className="usp-bar-label" aria-hidden="true">{i + 1}</span></button>)}</div></div><div className="usp-chart-detail" aria-live="polite" aria-atomic="true"><div><strong>{str(current.raw.topic) || 'Тест без названия'}</strong><span className="usp-caption">{dateLabel(current.raw)}</span></div><b>{fmt(current.value)}%</b></div></> : <Empty title={rows.length ? 'Нет результатов для графика' : 'Твой первый результат впереди'} text={mode === 'recent' && rows.length ? 'Для этого режима нужны результаты с датой. Посмотри вкладку «Лучшие».' : 'После прохождения теста здесь появится график.'} icon="tests" />}</div>;
+                  animationDelay: `${i * 55}ms`
+                }}><span className="usp-bar-tip">{fmt(x.value)}</span></span></span><span className="usp-bar-label" aria-hidden="true">{i + 1}</span></button>)}</div></div><div className="usp-chart-detail" aria-live="polite" aria-atomic="true"><div key={`t${current.index}`}><strong>{str(current.raw.topic) || 'Тест без названия'}</strong><span className="usp-caption">{dateLabel(current.raw)}</span></div><b key={`v${current.index}`}>{fmt(current.value)}%</b></div></> : <Empty title={rows.length ? 'Нет результатов для графика' : 'Твой первый результат впереди'} text={mode === 'recent' && rows.length ? 'Для этого режима нужны результаты с датой. Посмотри вкладку «Лучшие».' : 'После прохождения теста здесь появится график.'} icon="tests" />}</div>;
   }
   // Минимальный OOXML-экспорт: настоящий XLSX, без CDN и дополнительных скриптов.
   function historyWorkbook(rows) {
@@ -584,12 +772,13 @@
         }]
       }
     }[type];
+    const lastDot = Math.min(content.count, 24) - 1;
     return <><div className="usp-card usp-training-hero"><div className="usp-training-copy"><span className="usp-badge"><Icon name={content.icon} size={16} />Личный прогресс</span><h3>{content.title}</h3><p>{content.text}</p></div><div className="usp-training-ring"><Ring value={content.value} max={content.max} display={content.display} unit={content.unit} label="Прогресс" /><p className="usp-caption">{content.ringNote}</p></div></div><div style={{
         '--up-columns': content.metrics.length
       }}><Metrics items={content.metrics} /></div><div className="usp-card"><div className="usp-section-head"><div><h3>{content.countLabel}</h3><p className="usp-caption">Каждое занятие добавляет уверенности</p></div><span className="usp-badge">{fmt(content.count)}</span></div><div className="usp-dots" aria-hidden="true">{Array.from({
             length: 24
-          }, (_, i) => <span key={i} className={`usp-dot ${i >= content.count ? 'off' : ''}`} style={{
-            animationDelay: `${i * 22}ms`
+          }, (_, i) => <span key={i} className={`usp-dot ${i >= content.count ? 'off' : ''} ${i === lastDot ? 'last' : ''}`} style={{
+            animationDelay: `${i * 30}ms`
           }} />)}</div><p className="usp-caption">{content.count > 24 ? `Показаны 24 из ${fmt(content.count)} занятий.` : 'Один заполненный квадрат — одно завершённое занятие.'}</p><div className="usp-hint"><Icon name="spark" size={18} /><span>{content.hint}</span></div></div></>;
   }
   function StatsPanel({
@@ -687,7 +876,7 @@
       icon: 'clock'
     }];
     const passRate = summary.total ? Math.round(summary.passed / summary.total * 100) : 0;
-    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения"><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
+    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения" onPointerMove={trackSpotlight} onPointerDown={spawnRipple}><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
   }
   function StatsView(props) {
     const uid = useUserId();
