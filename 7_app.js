@@ -103,6 +103,7 @@ const SidebarLauncher = ({
 
 // =========================================================================
 // 3D LOW-POLY ФОН
+// (оптимизация: ~30 кадров/с, пауза в скрытой вкладке, быстрая смена цвета)
 // =========================================================================
 const LowPolyBackground = ({
   theme
@@ -141,6 +142,8 @@ const LowPolyBackground = ({
       light: [...themes[initialTheme].light]
     };
     let animationId;
+    let lastFrame = 0;
+    const FRAME_MS = 33; // ~30 кадров в секунду
     const initMesh = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
@@ -183,11 +186,17 @@ const LowPolyBackground = ({
     };
     const lerp = (a, b, t) => a + (b - a) * t;
     const animateMesh = time => {
+      // Планируем следующий кадр сразу, чтобы цикл не прерывался при раннем выходе
+      animationId = requestAnimationFrame(animateMesh);
+
+      // Не рисуем в скрытой вкладке и ограничиваем частоту кадров
+      if (document.hidden || time - lastFrame < FRAME_MS) return;
+      lastFrame = time;
       const targetThemeMode = canvas.dataset.theme || 'light';
       const target = themes[targetThemeMode];
       for (let i = 0; i < 3; i++) {
-        currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.05);
-        currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.05);
+        currentColor.base[i] = lerp(currentColor.base[i], target.base[i], 0.3);
+        currentColor.light[i] = lerp(currentColor.light[i], target.light[i], 0.3);
       }
       points.forEach(p => {
         const t = time * config.speed * p.speed;
@@ -236,7 +245,6 @@ const LowPolyBackground = ({
         ctx.fill();
         ctx.stroke();
       });
-      animationId = requestAnimationFrame(animateMesh);
     };
     initMesh();
     animationId = requestAnimationFrame(animateMesh);
@@ -248,6 +256,7 @@ const LowPolyBackground = ({
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
       cancelAnimationFrame(animationId);
     };
   }, []);
@@ -297,6 +306,21 @@ function App() {
 
   // Показывается ли сейчас бургер — от этого зависит верхний отступ контента
   const showLauncher = appReady && LAUNCHER_VIEWS.includes(view);
+
+  // -----------------------------------------------------------------------
+  // БЫСТРАЯ СМЕНА ТЕМЫ
+  // На время переключения отключаем размытие, переходы и анимации
+  // (класс .theme-switching описан в styles.css), затем возвращаем.
+  // -----------------------------------------------------------------------
+
+  const changeTheme = next => {
+    const value = typeof next === 'function' ? next(theme) : next;
+    if (value === theme) return;
+    document.documentElement.classList.add('theme-switching');
+    // Страховка: класс обязательно снимется, даже если что-то пойдёт не так
+    setTimeout(() => document.documentElement.classList.remove('theme-switching'), 800);
+    setTheme(value);
+  };
 
   // -----------------------------------------------------------------------
   // ЛОКАЛЬНЫЕ ДАННЫЕ
@@ -542,9 +566,23 @@ function App() {
     }
   }, [isAuthLoading, user?.uid]);
 
+  // Применение темы: класс на body, сохранение, затем снятие .theme-switching
+  // через два кадра — когда браузер уже отрисовал новую тему без размытия.
   useEffect(() => {
     document.body.className = theme;
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (_) {}
+    let frameA, frameB;
+    frameA = requestAnimationFrame(() => {
+      frameB = requestAnimationFrame(() => {
+        document.documentElement.classList.remove('theme-switching');
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frameA);
+      cancelAnimationFrame(frameB);
+    };
   }, [theme]);
 
   // -----------------------------------------------------------------------
@@ -698,7 +736,7 @@ function App() {
     isOpen: isSidebarOpen,
     onClose: () => setIsSidebarOpen(false),
     theme: theme,
-    setTheme: setTheme,
+    setTheme: changeTheme,
     user: user,
     userNickname: userNickname,
     changeNickname: changeNickname,
