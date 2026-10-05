@@ -1,4 +1,4 @@
-// --- ProType / TypingTest — полная замена исходного файла ---
+// --- ProType / TypingTest — полная замена исходного файла (версия с анимациями) ---
 // React + существующий Firebase compat. JSX подключается как раньше.
 (function () {
 const { useState, useEffect, useRef } = React;
@@ -118,7 +118,80 @@ html.light .pt-root,body.light .pt-root,.theme-light .pt-root,[data-theme="light
 .pt-bottom{margin-top:10px;padding-top:10px}
 @media(max-width:720px){.pt-shell{padding:20px 22px 14px}.pt-stats{margin-bottom:16px}.pt-text{font-size:23px;line-height:1.6}.pt-key{font-size:12px}}
 @media(max-width:480px){.pt-shell{padding:18px 16px 13px}.pt-header{gap:12px;margin-bottom:18px}.pt-stats{margin:0 0 14px}.pt-text{height:clamp(132px,calc(100dvh - 510px),180px);min-height:0;max-height:none;font-size:21px;line-height:1.65}.pt-practice-top{margin-bottom:9px}.pt-keyboard-section{margin-top:17px}.pt-keyboard{gap:4px}.pt-key{height:33px;font-size:11px}.pt-key.space{height:27px}.pt-bottom{margin-top:12px;padding-top:9px}}
-@media(prefers-reduced-motion:reduce){.pt-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+`;
+// ---------- Анимации ----------
+const ANIMATIONS = `
+/* ---------- ключевые кадры ---------- */
+@keyframes pt-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pt-pop{0%{opacity:0;transform:scale(.4) rotate(-12deg)}70%{transform:scale(1.12) rotate(3deg)}100%{opacity:1;transform:none}}
+@keyframes pt-bump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes pt-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes pt-caret{0%,100%{box-shadow:0 0 0 0 var(--pt-soft)}50%{box-shadow:0 0 14px 3px var(--pt-accent)}}
+@keyframes pt-letter-in{from{color:var(--pt-accent);text-shadow:0 0 12px var(--pt-accent)}to{text-shadow:0 0 0 transparent}}
+@keyframes pt-wrong-flash{0%{box-shadow:0 0 0 0 var(--pt-error)}50%{box-shadow:0 0 0 5px var(--pt-error-bg)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes pt-key-pulse{0%,100%{box-shadow:0 0 6px var(--pt-soft)}50%{box-shadow:0 0 22px var(--pt-accent)}}
+@keyframes pt-shimmer{from{background-position:0 0}to{background-position:200% 0}}
+@keyframes pt-menu-in{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pt-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* ---------- появление интерфейса ---------- */
+.pt-shell{animation:pt-rise .55s cubic-bezier(.2,.8,.2,1) backwards}
+.pt-brand{animation:pt-rise .5s cubic-bezier(.2,.8,.2,1) .08s backwards}
+.pt-header-actions{animation:pt-rise .5s cubic-bezier(.2,.8,.2,1) .14s backwards}
+.pt-stat{animation:pt-rise .5s cubic-bezier(.2,.8,.2,1) backwards}
+.pt-stat:nth-child(1){animation-delay:.18s}
+.pt-stat:nth-child(2){animation-delay:.24s}
+.pt-stat:nth-child(3){animation-delay:.30s}
+.pt-stat:nth-child(4){animation-delay:.36s}
+.pt-practice-top{animation:pt-rise .5s cubic-bezier(.2,.8,.2,1) .4s backwards}
+.pt-text{animation:pt-rise .6s cubic-bezier(.2,.8,.2,1) .45s backwards}
+.pt-keyboard-section{animation:pt-rise .6s cubic-bezier(.2,.8,.2,1) .55s backwards}
+.pt-notice{animation:pt-rise .25s ease-out}
+.pt-menu{animation:pt-menu-in .16s ease-out;transform-origin:top right}
+.pt-brand h2 span{display:inline-block;animation:pt-float 3.2s ease-in-out infinite}
+
+/* ---------- кнопки ---------- */
+.pt-btn{transition:background .15s,color .15s,transform .15s,filter .15s}
+.pt-btn:hover:not(:disabled){transform:translateY(-1px)}
+.pt-btn:active:not(:disabled){transform:scale(.96)}
+.pt-icon-btn{transition:background .15s,color .15s,transform .15s}
+.pt-icon-btn:active{transform:scale(.88)}
+.pt-segment button{transition:background .2s,color .2s}
+
+/* ---------- цифры статистики ---------- */
+.pt-stat.combo strong,.pt-stat.precision strong{display:inline-block;animation:pt-bump .22s ease-out}
+
+/* ---------- набор текста ---------- */
+.pt-letter{transition:color .12s,background .12s}
+.pt-letter.correct{animation:pt-letter-in .35s ease-out}
+.pt-letter.current{animation:pt-caret 1.2s ease-in-out infinite}
+.pt-letter.current.wrong{animation:pt-wrong-flash .35s ease-out}
+.pt-progress>div{background:linear-gradient(90deg,var(--pt-accent),var(--pt-blue),var(--pt-accent));background-size:200% 100%;animation:pt-shimmer 3s linear infinite;transition:width .18s ease-out}
+
+/* ---------- клавиатура ---------- */
+.pt-key.target{animation:pt-key-pulse 1.2s ease-in-out infinite}
+.pt-key.mistake{animation:pt-shake .28s ease-out}
+
+/* ---------- результаты ---------- */
+.pt-result-icon{animation:pt-pop .7s cubic-bezier(.34,1.56,.64,1) backwards}
+.pt-results h3{animation:pt-rise .5s ease-out .15s backwards}
+.pt-results>p{animation:pt-rise .5s ease-out .22s backwards}
+.pt-result-stat{animation:pt-rise .5s ease-out backwards}
+.pt-result-stat:nth-child(1){animation-delay:.3s}
+.pt-result-stat:nth-child(2){animation-delay:.4s}
+.pt-result-stat:nth-child(3){animation-delay:.5s}
+.pt-result-actions{animation:pt-rise .5s ease-out .6s backwards}
+.pt-save{animation:pt-rise .5s ease-out .7s backwards}
+
+/* ---------- «уменьшить движение»: оставляем только мягкое появление ---------- */
+@media(prefers-reduced-motion:reduce){
+@keyframes pt-rise{from{opacity:0}to{opacity:1}}
+@keyframes pt-pop{from{opacity:0}to{opacity:1}}
+@keyframes pt-menu-in{from{opacity:0}to{opacity:1}}
+.pt-brand h2 span,.pt-letter.current,.pt-key.target,.pt-key.mistake,.pt-progress>div,.pt-stat.combo strong,.pt-stat.precision strong{animation:none!important}
+.pt-progress>div{background:var(--pt-accent)}
+.pt-btn:hover:not(:disabled),.pt-btn:active:not(:disabled),.pt-icon-btn:active{transform:none}
+}
 `;
 const Button = ({ variant = '', children, ...props }) => <button type="button" className={`pt-btn ${variant}`} {...props}>{children}</button>;
 function Keyboard({ lang, expected, pressed, caps, wrongCode }) {
@@ -161,7 +234,7 @@ function TypingTest({ onBack }) {
         alive.current = true;
         let style = document.getElementById('protype-v2-styles');
         if (!style) { style = document.createElement('style'); style.id = 'protype-v2-styles'; document.head.appendChild(style); }
-        style.textContent = STYLES;
+        style.textContent = STYLES + ANIMATIONS;
         return () => {
             alive.current = false;
             if (request.current) { clearTimeout(request.current.timer); request.current.controller.abort(); request.current = null; }
@@ -323,8 +396,8 @@ function TypingTest({ onBack }) {
         <header className="pt-header"><div className="pt-brand"><div><h2>Pro<span>Type</span></h2><p>Найди свой ритм</p></div></div><div className="pt-header-actions"><div className="pt-segment" aria-label="Язык текста">{[['en', 'English'], ['ru', 'Русский']].map(([lang, label]) => <button key={lang} type="button" className={game.lang === lang ? 'selected' : ''} aria-pressed={game.lang === lang} onClick={() => changeLanguage(lang)}>{label}</button>)}</div>{onBack && <button type="button" className="pt-icon-btn" onClick={onBack} title="Назад" aria-label="Назад"><Icon name="back" size={17}/></button>}<Button aria-expanded={showAI} onClick={() => { setShowAI(value => !value); setShowMenu(false); }}><Icon name="spark" size={15}/>Текст с ИИ</Button><div className="pt-menu-wrap" ref={menuRef}><button type="button" className="pt-icon-btn" aria-label="Настройки тренировки" aria-expanded={showMenu} title="Настройки тренировки" onClick={() => setShowMenu(value => !value)}><Icon name="more" size={20}/></button>{showMenu && <div className="pt-menu" aria-label="Настройки тренировки"><button type="button" disabled={generating} onClick={() => { setShowMenu(false); reset(true); }}><Icon name="refresh" size={15}/>Повторить текст</button><button type="button" disabled={generating} onClick={() => { setShowMenu(false); reset(false); }}><Icon name="play" size={15}/>Другой текст</button><button type="button" onClick={() => { setShowKeyboard(value => !value); setShowMenu(false); }}><Icon name="keyboard" size={15}/>{showKeyboard ? 'Скрыть клавиатуру' : 'Показать клавиатуру'}</button></div>}</div></div></header>
         <div className="pt-stats" aria-label="Показатели тренировки">
             <div className="pt-stat speed"><div className="pt-stat-title"><Icon name="bolt" size={14}/>Скорость</div><strong>{stats.wpm}</strong><small>WPM</small></div>
-            <div className={`pt-stat precision ${stats.accuracy < 90 ? 'low' : ''}`}><div className="pt-stat-title"><Icon name="target" size={14}/>Точность</div><strong>{stats.accuracy}%</strong></div>
-            <div className="pt-stat combo"><div className="pt-stat-title"><Icon name="spark" size={14}/>Серия</div><strong>{game.combo}</strong><small>символов</small></div>
+            <div className={`pt-stat precision ${stats.accuracy < 90 ? 'low' : ''}`}><div className="pt-stat-title"><Icon name="target" size={14}/>Точность</div><strong key={stats.accuracy}>{stats.accuracy}%</strong></div>
+            <div className="pt-stat combo"><div className="pt-stat-title"><Icon name="spark" size={14}/>Серия</div><strong key={game.combo}>{game.combo}</strong><small>символов</small></div>
             <div className="pt-stat"><div className="pt-stat-title"><Icon name="clock" size={14}/>Время печати</div><strong>{formatTime(stats.ms)}</strong></div>
         </div>
 
