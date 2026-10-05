@@ -1,4 +1,4 @@
-// --- 6_admin.js — Ultimate LMS / обновлённая панель (с анимациями) ---
+// --- 6_admin.js — Ultimate LMS / обновлённая панель ---
 // Полная замена файла. React + существующий Firebase compat.
 // JSX подключается тем же способом, что и исходный 6_admin.js.
 (function () {
@@ -274,190 +274,120 @@ async function exportUser(user, parts, allUsers = []) {
     @media(max-width:850px){.adm-workspace{grid-template-columns:280px minmax(0,1fr)}.adm-detail{padding:20px 18px}.adm-tabs{gap:12px}.adm-head{padding:22px}.adm-summary{padding:0 22px 20px;gap:9px}.adm-modules{grid-template-columns:1fr}.adm-live{display:none}}
     @media(max-width:620px){.adm-shell{border-radius:18px;max-height:92dvh}.adm-head{padding:20px 16px}.adm-head h2{font-size:21px}.adm-head p{font-size:11px}.adm-summary{grid-template-columns:1fr 1fr;padding:0 16px 18px}.adm-summary-card{padding:12px}.adm-summary-card strong{font-size:23px}.adm-workspace{grid-template-columns:1fr}.adm-directory{border-right:0;border-bottom:1px solid var(--ad-line);padding:16px}.adm-users{max-height:255px;overflow:auto;scrollbar-width:thin}.adm-detail{padding:20px 16px}.adm-modules{grid-template-columns:1fr 1fr}.adm-module{padding:11px 8px;gap:6px}.adm-module-name{font-size:11px}.adm-module>svg{width:14px}.adm-action-row{align-items:flex-start}.adm-footer{padding:13px 16px;flex-wrap:wrap}.adm-banner{margin:0 16px 16px}.adm-profile h3{font-size:17px}.adm-input{font-size:16px!important}.adm-stat{padding:12px}.adm-dialog{padding:20px}.adm-saving{font-size:9px}}
     @media(max-width:360px){.adm-modules{grid-template-columns:1fr}.adm-tabs{gap:10px}.adm-tab{font-size:11px!important}.adm-action-row{flex-wrap:wrap}.adm-action-row .adm-btn{max-width:100%}}
+    @media(prefers-reduced-motion:reduce){.adm-root *{animation:none!important;transition:none!important}}
+    /* Motion layer: durations are deliberate; reduced motion disables every effect. */
+    .adm-root{--ad-ease:cubic-bezier(.22,1,.36,1);--ad-spring:cubic-bezier(.2,.8,.25,1.15)}
+    .adm-shell{animation:adm-shell-in .65s var(--ad-ease) both}
+    .adm-head{animation:adm-rise .6s .06s var(--ad-ease) both}
+    .adm-brand{position:relative;overflow:hidden;animation:adm-brand-in .8s var(--ad-spring) both}
+    .adm-brand:after{content:'';position:absolute;inset:-40%;background:linear-gradient(110deg,transparent 38%,color-mix(in srgb,var(--ad-accent) 30%,transparent) 50%,transparent 62%);transform:translateX(-100%) rotate(12deg);animation:adm-brand-shine 6s 1s ease-in-out infinite;pointer-events:none}
+    .adm-dot{animation:adm-live-pulse 2.8s ease-out infinite}
+    .adm-summary-card{position:relative;overflow:hidden;animation:adm-rise .6s var(--ad-ease) both;transition:translate .25s var(--ad-ease),border-color .25s,box-shadow .25s}
+    .adm-summary-card:nth-child(1){animation-delay:.1s}.adm-summary-card:nth-child(2){animation-delay:.17s}.adm-summary-card:nth-child(3){animation-delay:.24s}.adm-summary-card:nth-child(4){animation-delay:.31s}
+    .adm-summary-card:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 25%,var(--ad-soft) 50%,transparent 75%);transform:translateX(-120%);transition:transform .7s var(--ad-ease)}
+    .adm-summary-card strong{font-variant-numeric:tabular-nums}
+    .adm-directory{animation:adm-rise .55s .16s var(--ad-ease) both}
+    .adm-detail{animation:adm-detail-in .5s var(--ad-ease) both}
+    .adm-pane{animation:adm-pane-in .44s var(--ad-ease) both}
+    .adm-person{position:relative;overflow:hidden;animation:adm-list-in .44s var(--ad-ease) both;animation-delay:calc(min(var(--ad-order,0),8)*35ms);transition:background .25s,border-color .25s,translate .25s var(--ad-ease)}
+    .adm-person:before{content:'';position:absolute;left:0;top:25%;height:50%;width:3px;background:var(--ad-accent);border-radius:5px;transform:scaleY(0);transition:transform .3s var(--ad-spring)}.adm-person.selected:before{transform:scaleY(1)}
+    .adm-avatar{transition:background .3s,color .3s,transform .35s var(--ad-spring)}.adm-person.selected .adm-avatar{background:var(--ad-soft);transform:scale(1.06)}
+    .adm-root :is(.adm-btn,.adm-icon-btn,.adm-chip,.adm-module,.adm-subject,.adm-contact-mode,.adm-contact,.adm-upload){position:relative;transition:background .25s,border-color .25s,color .25s,box-shadow .25s,translate .25s var(--ad-ease)}
+    .adm-root :is(.adm-btn,.adm-icon-btn,.adm-chip,.adm-module,.adm-subject,.adm-contact-mode,.adm-contact,.adm-upload):active:not(:disabled){translate:0 2px;transition-duration:.08s}
+    .adm-root :is(.adm-btn,.adm-icon-btn,.adm-chip,.adm-module,.adm-subject,.adm-contact-mode,.adm-contact,.adm-upload)>svg{transition:transform .3s var(--ad-spring),color .25s}
+    .adm-tabs{position:relative}.adm-tab{position:relative;border-bottom-color:transparent!important;transition:color .25s}.adm-tab:after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ad-accent);border-radius:3px;transform:scaleX(0);transform-origin:center;transition:transform .35s var(--ad-ease)}.adm-tab.active:after{transform:scaleX(1)}.adm-tab svg{transition:transform .3s var(--ad-spring)}.adm-tab.active svg{transform:translateY(-1px) scale(1.12)}
+    .adm-root :is(.adm-module,.adm-subject,.adm-stat,.adm-test,.adm-contact-mode,.adm-contact){animation:adm-rise .43s var(--ad-ease) both}
+    .adm-root :is(.adm-modules,.adm-subjects,.adm-stat-grid,.adm-test-list,.adm-contact-modes,.adm-contact-list)>:nth-child(2){animation-delay:45ms}.adm-root :is(.adm-modules,.adm-subjects,.adm-stat-grid,.adm-test-list,.adm-contact-modes,.adm-contact-list)>:nth-child(3){animation-delay:90ms}.adm-root :is(.adm-modules,.adm-subjects,.adm-stat-grid,.adm-test-list,.adm-contact-list)>:nth-child(4){animation-delay:135ms}.adm-root :is(.adm-modules,.adm-subjects,.adm-test-list,.adm-contact-list)>:nth-child(n+5){animation-delay:180ms}
+    .adm-switch{transition:background .3s,box-shadow .3s}.adm-switch:before{transition:transform .38s var(--ad-spring)}.adm-module.on .adm-switch{box-shadow:0 0 0 3px var(--ad-soft)}
+    .adm-check{transition:background .25s,border-color .25s,color .25s}.adm-check svg{transform:scale(.4);opacity:0;transition:transform .35s var(--ad-spring),opacity .2s}.on .adm-check svg{transform:scale(1);opacity:1}
+    .adm-search{transition:filter .25s}.adm-input{transition:border-color .25s,box-shadow .25s}.adm-input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-soft)}.adm-search:focus-within>svg{color:var(--ad-accent);transform:rotate(-8deg);transition:transform .3s,color .3s}
+    .adm-report-meter>i{transition:width .55s var(--ad-ease)}.adm-report-box{animation:adm-rise .5s .1s var(--ad-ease) both}
+    .adm-preview,.adm-saving,.adm-note,.adm-banner,.adm-empty{animation:adm-rise .35s var(--ad-ease) both}.adm-error{animation:adm-error-in .38s ease-out both}
+    .adm-presence{display:contents}.adm-overlay{animation:adm-overlay-in .3s ease-out both}.adm-dialog{transform-origin:50% 55%;animation:adm-dialog-in .5s var(--ad-ease) both}
+    .adm-presence.leaving{pointer-events:none}.adm-presence.leaving .adm-overlay{animation:adm-overlay-out .22s ease-in both}.adm-presence.leaving .adm-dialog{animation:adm-dialog-out .22s ease-in both}
+    .adm-toast{position:relative;overflow:hidden;animation:adm-toast-in .45s var(--ad-ease) both}.adm-toast:after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ad-green);transform-origin:left;animation:adm-toast-clock 4.5s linear both}.adm-toast.error:after{background:var(--ad-red)}.adm-toast.leaving{pointer-events:none;animation:adm-toast-out .24s ease-in both}
+    .adm-skeleton{position:relative;overflow:hidden;animation:none}.adm-skeleton:after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent,var(--ad-soft),transparent);animation:adm-skeleton-shine 1.5s linear infinite}
+    .adm-ripple{position:fixed;border-radius:50%;border:2px solid var(--ad-accent);background:var(--ad-soft);pointer-events:none;z-index:10006;animation:adm-ripple-out .5s ease-out both}
+    @media(hover:hover) and (pointer:fine){.adm-summary-card:hover{translate:0 -4px;border-color:var(--ad-accent);box-shadow:0 10px 24px #0001}.adm-summary-card:hover:after{transform:translateX(120%)}.adm-person:hover{translate:2px 0}.adm-root :is(.adm-btn,.adm-module,.adm-subject,.adm-contact-mode,.adm-upload):hover:not(:disabled){translate:0 -2px;box-shadow:0 5px 14px #0001}.adm-root :is(.adm-btn,.adm-icon-btn,.adm-module,.adm-subject,.adm-contact-mode,.adm-upload):hover:not(:disabled)>svg{transform:translateY(-1px) rotate(-5deg)}}
+    @keyframes adm-shell-in{from{opacity:0;transform:translateY(20px) scale(.99)}to{opacity:1;transform:none}}
+    @keyframes adm-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    @keyframes adm-detail-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+    @keyframes adm-pane-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    @keyframes adm-list-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+    @keyframes adm-brand-in{from{opacity:0;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:none}}
+    @keyframes adm-brand-shine{0%,65%{transform:translateX(-110%) rotate(12deg)}90%,100%{transform:translateX(110%) rotate(12deg)}}
+    @keyframes adm-live-pulse{0%{box-shadow:0 0 0 0 var(--ad-soft)}75%,100%{box-shadow:0 0 0 8px transparent}}
+    @keyframes adm-overlay-in{from{opacity:0}to{opacity:1}}@keyframes adm-overlay-out{to{opacity:0}}
+    @keyframes adm-dialog-in{from{opacity:0;transform:translateY(25px) scale(.95)}to{opacity:1;transform:none}}@keyframes adm-dialog-out{to{opacity:0;transform:translateY(14px) scale(.98)}}
+    @keyframes adm-toast-in{from{opacity:0;transform:translateX(30px) scale(.96)}to{opacity:1;transform:none}}@keyframes adm-toast-out{to{opacity:0;transform:translateX(25px) scale(.97)}}@keyframes adm-toast-clock{to{transform:scaleX(0)}}
+    @keyframes adm-error-in{0%{opacity:0;transform:translateX(-4px)}35%{transform:translateX(4px)}65%{transform:translateX(-2px)}100%{opacity:1;transform:none}}
+    @keyframes adm-skeleton-shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}@keyframes adm-ripple-out{from{opacity:.7;transform:scale(.3)}to{opacity:0;transform:scale(1.5)}}
+    @media(prefers-reduced-motion:reduce){.adm-root *,.adm-root *:before,.adm-root *:after{animation:none!important;transition:none!important}.adm-ripple{display:none}}
+    .adm-summary-card strong>span{font:inherit;color:inherit;letter-spacing:inherit}
 
-    /* ================= АНИМАЦИИ ================= */
-    .adm-root{--ease-out:cubic-bezier(.22,1,.36,1);--ease-spring:cubic-bezier(.34,1.56,.64,1)}
-    @keyframes adm-shell-in{from{opacity:0;transform:translateY(22px) scale(.985)}to{opacity:1;transform:none}}
-    @keyframes adm-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-    @keyframes adm-slide-left{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
-    @keyframes adm-slide-right{from{opacity:0;transform:translateX(26px) scale(.97)}to{opacity:1;transform:none}}
-    @keyframes adm-pane{from{opacity:0;transform:translateY(10px) scale(.992);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
-    @keyframes adm-detail-in{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
-    @keyframes adm-pop{0%{transform:scale(0) rotate(-25deg)}60%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1) rotate(0)}}
-    @keyframes adm-dialog-in{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
-    @keyframes adm-overlay-in{from{opacity:0;backdrop-filter:blur(0)}to{opacity:1;backdrop-filter:blur(5px)}}
-    @keyframes adm-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ad-green) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
-    @keyframes adm-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-    @keyframes adm-glow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 22px -2px color-mix(in srgb,var(--ad-accent) 55%,transparent)}}
-    @keyframes adm-shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
-    @keyframes adm-sweep{0%{transform:translateX(-120%) skewX(-18deg)}60%,100%{transform:translateX(260%) skewX(-18deg)}}
-    @keyframes adm-underline{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-    @keyframes adm-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
-    @keyframes adm-icon-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
-
-    .adm-shell{animation:adm-shell-in .6s var(--ease-out) both}
-    .adm-brand{animation:adm-pop .7s var(--ease-spring) .1s both,adm-glow 4s ease-in-out 1s infinite}
-    .adm-head>div:nth-child(2){animation:adm-slide-left .55s var(--ease-out) .15s both}
-    .adm-live{animation:adm-rise .5s var(--ease-out) .4s both}
-    .adm-dot{animation:adm-pulse 2s infinite}
-
-    .adm-summary-card{animation:adm-rise .55s var(--ease-out) both;animation-delay:calc(.12s + var(--i,0) * 70ms);transition:transform .25s var(--ease-out),box-shadow .25s,border-color .25s;position:relative;overflow:hidden}
-    .adm-summary-card:hover{transform:translateY(-4px);border-color:var(--ad-accent);box-shadow:0 12px 28px -12px color-mix(in srgb,var(--ad-accent) 50%,transparent)}
-    .adm-summary-card svg{transition:transform .4s var(--ease-spring)}
-    .adm-summary-card:hover svg{transform:scale(1.2) rotate(-8deg)}
-    .adm-summary-card:after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,color-mix(in srgb,var(--ad-accent) 14%,transparent) 50%,transparent 70%);transform:translateX(-120%) skewX(-18deg);pointer-events:none}
-    .adm-summary-card:hover:after{animation:adm-sweep .9s var(--ease-out)}
-
-    .adm-directory{animation:adm-slide-left .55s var(--ease-out) .25s both}
-    .adm-person{animation:adm-slide-left .45s var(--ease-out) both;animation-delay:calc(.05s + var(--i,0) * 35ms);transition:background .2s,border-color .2s,transform .25s var(--ease-out)}
-    .adm-person:hover{transform:translateX(5px)}
-    .adm-person:active{transform:scale(.98)}
-    .adm-person .adm-avatar{transition:transform .3s var(--ease-spring),background .2s}
-    .adm-person:hover .adm-avatar{transform:scale(1.1) rotate(-5deg)}
-    .adm-person.selected .adm-avatar{background:var(--ad-accent);color:var(--ad-bg);border-color:transparent}
-    .adm-role-dot{animation:adm-pulse 2.4s infinite}
-    .adm-role-dot.banned{animation:none}
-
-    .adm-chip{transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease-spring)}
-    .adm-chip:hover{transform:translateY(-1px)}
-    .adm-chip:active{transform:scale(.93)}
-    .adm-chip.active{animation:adm-pop .35s var(--ease-spring)}
-    .adm-input{transition:border-color .2s,box-shadow .25s,transform .25s var(--ease-out)}
-    .adm-input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 4px var(--ad-soft)}
-    .adm-search>svg{transition:color .2s,transform .3s var(--ease-spring)}
-    .adm-search:focus-within>svg{color:var(--ad-accent);transform:scale(1.15)}
-
-    .adm-btn{position:relative;overflow:hidden;transition:background .2s,transform .2s var(--ease-spring),box-shadow .25s,border-color .2s}
-    .adm-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 18px -8px color-mix(in srgb,var(--ad-accent) 55%,transparent)}
-    .adm-btn:not(:disabled):active{transform:translateY(0) scale(.95);box-shadow:none}
-    .adm-btn.danger:not(:disabled):hover{box-shadow:0 8px 18px -8px color-mix(in srgb,var(--ad-red) 60%,transparent);border-color:var(--ad-red)}
-    .adm-btn.primary:not(:disabled):after{content:'';position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-120%) skewX(-18deg);pointer-events:none}
-    .adm-btn.primary:not(:disabled):hover:after{animation:adm-sweep .8s var(--ease-out)}
-    .adm-btn svg{transition:transform .3s var(--ease-spring)}
-    .adm-btn:not(:disabled):hover svg{transform:scale(1.15)}
-    .adm-icon-btn{transition:background .2s,color .2s,transform .25s var(--ease-spring)}
-    .adm-icon-btn:hover{transform:rotate(90deg) scale(1.1)}
-    .adm-icon-btn:active{transform:scale(.85)}
-
-    .adm-detail{animation:adm-detail-in .5s var(--ease-out) both}
-    .adm-avatar.large{animation:adm-pop .6s var(--ease-spring) .05s both;transition:transform .4s var(--ease-spring),box-shadow .3s}
-    .adm-avatar.large:hover{transform:scale(1.08) rotate(-6deg);box-shadow:0 10px 26px -8px color-mix(in srgb,var(--ad-accent) 55%,transparent)}
-    .adm-profile-text{animation:adm-slide-left .5s var(--ease-out) .1s both}
-    .adm-badge{animation:adm-pop .45s var(--ease-spring) both;animation-delay:calc(.2s + var(--i,0) * 70ms)}
-    .adm-saving{animation:adm-rise .25s var(--ease-out)}
-
-    .adm-tabs{position:relative}
-    .adm-tab{position:relative;transition:color .2s,transform .2s var(--ease-spring);border-bottom-color:transparent!important}
-    .adm-tab:hover{color:var(--ad-text);transform:translateY(-1px)}
-    .adm-tab:after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;background:var(--ad-accent);transform:scaleX(0);transform-origin:left}
-    .adm-tab.active:after{animation:adm-underline .4s var(--ease-out) forwards}
-    .adm-tab.active svg{animation:adm-icon-wiggle .5s var(--ease-out)}
-    .adm-pane{animation:adm-pane .45s var(--ease-out) both}
-
-    .adm-module{animation:adm-rise .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 45ms);transition:background .2s,border-color .2s,transform .25s var(--ease-out),box-shadow .25s}
-    .adm-module:not(:disabled):hover{transform:translateY(-3px);border-color:var(--ad-accent);box-shadow:0 10px 22px -12px color-mix(in srgb,var(--ad-accent) 55%,transparent)}
-    .adm-module:not(:disabled):active{transform:scale(.97)}
-    .adm-module>svg{transition:transform .35s var(--ease-spring),color .2s}
-    .adm-module.on>svg{transform:scale(1.12)}
-    .adm-module:hover>svg{transform:scale(1.2) rotate(-8deg)}
-    .adm-switch{transition:background .25s}
-    .adm-switch:before{transition:transform .35s var(--ease-spring),width .2s}
-    .adm-module:active .adm-switch:before{width:15px}
-    .on .adm-switch:before{transform:translateX(12px)}
-    .on:active .adm-switch:before{transform:translateX(8px)}
-    .adm-module-name small{transition:color .2s}
-    .adm-setting{animation:adm-rise .5s var(--ease-out) .4s both}
-    .adm-note{animation:adm-rise .45s var(--ease-out) both}
-
-    .adm-section-label{animation:adm-slide-left .4s var(--ease-out) both}
-    .adm-action-row{animation:adm-rise .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 80ms);transition:background .2s,padding-left .25s var(--ease-out)}
-    .adm-action-row:hover{padding-left:8px}
-
-    .adm-stat{animation:adm-rise .55s var(--ease-out) both;animation-delay:calc(var(--i,0) * 80ms);transition:transform .3s var(--ease-out),border-color .25s,box-shadow .3s;position:relative;overflow:hidden}
-    .adm-stat:hover{transform:translateY(-5px) scale(1.015);border-color:var(--ad-accent);box-shadow:0 16px 32px -16px color-mix(in srgb,var(--ad-accent) 60%,transparent)}
-    .adm-stat-title svg{transition:transform .5s var(--ease-spring)}
-    .adm-stat:hover .adm-stat-title svg{transform:scale(1.3) rotate(-10deg)}
-    .adm-stat:after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,color-mix(in srgb,var(--ad-accent) 12%,transparent) 50%,transparent 70%);transform:translateX(-120%) skewX(-18deg);pointer-events:none}
-    .adm-stat:hover:after{animation:adm-sweep .9s var(--ease-out)}
-
-    .adm-test{animation:adm-slide-left .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 60ms);transition:transform .25s var(--ease-out),border-color .2s,background .2s}
-    .adm-test:hover{transform:translateX(6px);border-color:var(--ad-accent);background:var(--ad-panel)}
-    .adm-test>svg{transition:transform .35s var(--ease-spring)}
-    .adm-test:hover>svg{transform:scale(1.2) rotate(-8deg)}
-
-    .adm-empty{animation:adm-rise .5s var(--ease-out) both}
-    .adm-empty>svg{animation:adm-float 3.2s ease-in-out infinite}
-    .adm-banner{animation:adm-rise .4s var(--ease-out) both,adm-shake .5s .15s}
-    .adm-footer{animation:adm-rise .5s var(--ease-out) .5s both}
-
-    .adm-skeleton{background:linear-gradient(90deg,var(--ad-panel) 25%,color-mix(in srgb,var(--ad-accent) 14%,var(--ad-panel)) 50%,var(--ad-panel) 75%);background-size:200% 100%;animation:adm-shimmer 1.4s linear infinite}
-
-    .adm-subject{animation:adm-rise .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 55ms);transition:background .2s,border-color .2s,transform .25s var(--ease-out),box-shadow .25s}
-    .adm-subject:not(:disabled):hover{transform:translateY(-3px);box-shadow:0 10px 22px -12px color-mix(in srgb,var(--ad-accent) 55%,transparent)}
-    .adm-subject:not(:disabled):active{transform:scale(.97)}
-    .adm-subject>svg{transition:transform .35s var(--ease-spring),color .2s}
-    .adm-subject:hover>svg{transform:scale(1.2) rotate(-8deg)}
-    .adm-check{transition:background .2s,border-color .2s,transform .3s var(--ease-spring)}
-    .adm-check svg{transform:scale(0);transition:transform .35s var(--ease-spring)}
-    .adm-subject.on .adm-check,.adm-contact.on .adm-check{transform:scale(1.1)}
-    .adm-subject.on .adm-check svg,.adm-contact.on .adm-check svg{transform:scale(1)}
-
-    .adm-report-box{animation:adm-rise .55s var(--ease-out) .1s both}
-    .adm-report-icon{transition:transform .4s var(--ease-spring);animation:adm-glow 3.5s ease-in-out infinite}
-    .adm-report-box:hover .adm-report-icon{transform:rotate(-10deg) scale(1.1)}
-    .adm-report-icon svg{animation:adm-float 2.6s ease-in-out infinite}
-    .adm-report-meter>i{transition:width .5s var(--ease-spring);background-size:200% 100%;background-image:linear-gradient(90deg,var(--ad-accent),#66b8d8,var(--ad-accent));animation:adm-shimmer 2.5s linear infinite}
-
-    .adm-contact-mode{animation:adm-rise .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 70ms);transition:background .2s,border-color .2s,transform .25s var(--ease-out),box-shadow .25s}
-    .adm-contact-mode:not(:disabled):hover{transform:translateY(-3px);box-shadow:0 10px 22px -12px color-mix(in srgb,var(--ad-accent) 55%,transparent)}
-    .adm-contact-mode:not(:disabled):active{transform:scale(.97)}
-    .adm-contact-mode>svg{transition:transform .35s var(--ease-spring)}
-    .adm-contact-mode:hover>svg,.adm-contact-mode.on>svg{transform:scale(1.2) rotate(-8deg)}
-    .adm-contact{animation:adm-slide-left .35s var(--ease-out) both;animation-delay:calc(var(--i,0) * 25ms);transition:background .2s,border-color .2s,transform .25s var(--ease-out)}
-    .adm-contact:not(:disabled):hover{transform:translateX(5px)}
-    .adm-contact:not(:disabled):active{transform:scale(.98)}
-    .adm-contact-list,.adm-contact-toolbar,.adm-chat-summary{animation:adm-rise .4s var(--ease-out) both}
-    .adm-contact-empty{animation:adm-rise .4s var(--ease-out) both}
-
-    .adm-overlay{animation:adm-overlay-in .25s ease-out both}
-    .adm-dialog{animation:adm-dialog-in .4s var(--ease-spring) both}
-    .adm-dialog>svg{animation:adm-pop .55s var(--ease-spring) .1s both}
-    .adm-dialog .adm-error{animation:adm-shake .45s}
-    .adm-preview{animation:adm-pop .45s var(--ease-spring) both;transform-origin:left center}
-    .adm-upload{transition:border-color .2s,background .2s,transform .25s var(--ease-out)}
-    .adm-upload:not(:disabled):hover{border-color:var(--ad-accent);background:var(--ad-soft);transform:translateY(-2px)}
-    .adm-upload svg{transition:transform .4s var(--ease-spring);animation:adm-float 3s ease-in-out infinite}
-    .adm-upload:not(:disabled):hover svg{transform:scale(1.2)}
-
-    .adm-toast{animation:adm-slide-right .45s var(--ease-spring) both}
-    .adm-toast>svg{animation:adm-pop .5s var(--ease-spring) .1s both}
-    .adm-toast.error{animation:adm-slide-right .45s var(--ease-spring) both,adm-shake .45s .3s}
-
-    @media(prefers-reduced-motion:reduce){.adm-root *,.adm-root *:before,.adm-root *:after{animation:none!important;transition:none!important}}
-    @media(prefers-reduced-motion:reduce){.adm-summary-card,.adm-person,.adm-module,.adm-stat,.adm-test,.adm-subject,.adm-contact,.adm-badge{opacity:1!important}}
     `;
 
-    // Плавный счётчик: числа "накручиваются" от прежнего значения к новому.
-    const AnimatedNumber = ({ value, suffix = '' }) => {
-        const [shown, setShown] = useState(typeof value === 'number' ? 0 : value);
-        const prev = useRef(typeof value === 'number' ? 0 : value);
+    // Keep dialogs mounted until their closing animation finishes.
+    function AdminPresence({ show, children, immediate = false }) {
+        const [retained, setRetained] = useState(show);
+        const last = useRef(children);
+        if (show) last.current = children;
         useEffect(() => {
-            if (typeof value !== 'number') { setShown(value); prev.current = value; return; }
-            const from = typeof prev.current === 'number' ? prev.current : 0, to = value;
-            const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (from === to || reduce) { setShown(to); prev.current = to; return; }
-            let raf, start;
-            const step = time => {
-                start = start ?? time;
-                const p = Math.min(1, (time - start) / 800), eased = 1 - Math.pow(1 - p, 3);
-                setShown(Math.round(from + (to - from) * eased));
-                if (p < 1) raf = requestAnimationFrame(step);
+            if (show) { setRetained(true); return; }
+            const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
+            const timer = setTimeout(() => setRetained(false), delay);
+            return () => clearTimeout(timer);
+        }, [show]);
+        if (immediate || (!show && !retained)) return null;
+        return <div className={`adm-presence ${show ? '' : 'leaving'}`} ref={el => { if (el) el.inert = !show; }} aria-hidden={show ? undefined : true}>{show ? children : last.current}</div>;
+    }
+    function AdminNumber({ value }) {
+        const [display, setDisplay] = useState(typeof value === 'number' ? 0 : value);
+        const current = useRef(typeof value === 'number' ? 0 : value);
+        useEffect(() => {
+            if (typeof value !== 'number' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+                current.current = value; setDisplay(value); return;
+            }
+            const from = typeof current.current === 'number' ? current.current : 0;
+            if (from === value) { current.current = value; setDisplay(value); return; }
+            let frame, start;
+            const tick = now => {
+                if (start === undefined) start = now;
+                const t = Math.min(1, (now - start) / 550);
+                const next = Math.round(from + (value - from) * (1 - Math.pow(1 - t, 3)));
+                current.current = next; setDisplay(next);
+                if (t < 1) frame = requestAnimationFrame(tick);
             };
-            raf = requestAnimationFrame(step);
-            return () => { cancelAnimationFrame(raf); prev.current = to; };
+            frame = requestAnimationFrame(tick);
+            return () => cancelAnimationFrame(frame);
         }, [value]);
-        return <>{shown}{suffix}</>;
-    };
+        return <><span aria-hidden="true">{display}</span><span className="adm-hidden">{value}</span></>;
+    }
+    // The ripple is decorative and never intercepts clicks or writes to Firebase.
+    function useAdminRipples(ref) {
+        useEffect(() => {
+            const root = ref.current;
+            if (!root) return;
+            const nodes = new Set();
+            const handle = event => {
+                if (event.button !== 0 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+                const target = event.target.closest('button');
+                if (!target || target.disabled || !root.contains(target) || target.closest('.leaving')) return;
+                const ripple = document.createElement('i');
+                ripple.className = 'adm-ripple'; ripple.setAttribute('aria-hidden', 'true');
+                const size = Math.min(72, Math.max(36, target.offsetHeight));
+                Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${event.clientX-size/2}px`, top: `${event.clientY-size/2}px` });
+                root.appendChild(ripple); nodes.add(ripple);
+                const done = () => { clearTimeout(ripple._admTimer); nodes.delete(ripple); ripple.remove(); };
+                ripple.addEventListener('animationend', done, { once: true });
+                ripple.addEventListener('animationcancel', done, { once: true });
+                // Bounded fallback also covers a motion preference change mid-animation.
+                const timer = setTimeout(done, 650); ripple._admTimer = timer;
+            };
+            root.addEventListener('pointerdown', handle);
+            return () => { root.removeEventListener('pointerdown', handle); nodes.forEach(node => { clearTimeout(node._admTimer); node.remove(); }); };
+        }, [ref]);
+    }
 
     const Btn = ({ children, variant = '', ...props }) => <button type="button" className={`adm-btn ${variant}`} {...props}>{children}</button>;
     const IconBtn = ({ icon = 'x', label, ...props }) => <button type="button" className="adm-icon-btn" title={label} aria-label={label} {...props}><AdminIcon name={icon} size={15}/></button>;
@@ -518,7 +448,7 @@ async function exportUser(user, parts, allUsers = []) {
                 <button className="adm-upload" type="button" disabled={busy || reading} onClick={() => fileRef.current?.click()}><AdminIcon name="cloud" size={23}/>{reading ? 'Проверяем файл…' : fileName || 'Выбрать JSON-файл'}<small>До 350 КБ · до 300 вопросов</small></button>
                 {data && <div className="adm-preview"><AdminIcon name="checkCircle" size={15}/>Проверено вопросов: {data.length}</div>}
                 <label htmlFor="adm-test-title">Название теста</label><input id="adm-test-title" className="adm-input" autoComplete="off" maxLength={100} value={title} onChange={event => setTitle(event.target.value)} placeholder="Например: Excel — базовые формулы" disabled={busy}/>
-                {error && <p className="adm-error" role="alert" key={error}>{error}</p>}
+                {error && <p className="adm-error" role="alert">{error}</p>}
                 <div className="adm-dialog-actions"><Btn disabled={busy} onClick={onClose}>Отмена</Btn><button type="submit" className="adm-btn primary" disabled={busy || reading || !data || !title.trim()}>{busy ? 'Сохраняем…' : 'Назначить тест'}</button></div>
             </form>
         </Dialog>;
@@ -540,20 +470,21 @@ async function exportUser(user, parts, allUsers = []) {
         const visibleContactCount = contactMode === 'all' ? contactCandidates.length : contactMode === 'teachers' ? contactCandidates.filter(item => item.role === 'admin').length : allowedContacts.filter(id => contactCandidates.some(item => item.id === id)).length;
         const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['chat', 'chat', 'Чат'], ['account', 'shield', 'Аккаунт']];
         const download = async parts => { if (exporting) return; setExporting(true); try { await onExport(parts); } finally { setExporting(false); } };
-        const idx = i => ({ '--i': i });
         return <section className="adm-detail" aria-label={`Пользователь ${nameOf(user)}`} aria-busy={busy}>
-            <div className="adm-profile"><div className="adm-avatar large">{initials(user)}</div><div className="adm-profile-text"><h3>{nameOf(user)}</h3><p>{str(user.email) || 'Email не указан'}</p><div className="adm-badges"><span className={`adm-badge ${user.isBanned ? 'bad' : 'good'}`} style={idx(0)}>{user.isBanned ? 'Заблокирован' : 'Не заблокирован'}</span><span className="adm-badge" style={idx(1)}>{user.role === 'admin' ? 'Администратор' : 'Студент'}</span>{self && <span className="adm-badge accent" style={idx(2)}>Это вы</span>}</div></div>{busy && <div className="adm-saving" role="status"><i className="adm-spinner"/>Сохранение</div>}</div>
+            <div className="adm-profile"><div className="adm-avatar large">{initials(user)}</div><div className="adm-profile-text"><h3>{nameOf(user)}</h3><p>{str(user.email) || 'Email не указан'}</p><div className="adm-badges"><span className={`adm-badge ${user.isBanned ? 'bad' : 'good'}`}>{user.isBanned ? 'Заблокирован' : 'Не заблокирован'}</span><span className="adm-badge">{user.role === 'admin' ? 'Администратор' : 'Студент'}</span>{self && <span className="adm-badge accent">Это вы</span>}</div></div>{busy && <div className="adm-saving" role="status"><i className="adm-spinner"/>Сохранение</div>}</div>
             <div className="adm-tabs" role="tablist" aria-label="Разделы пользователя">{tabs.map(([id, icon, label], index) => <button key={id} type="button" className={`adm-tab ${tab === id ? 'active' : ''}`} role="tab" id={`adm-tab-${id}`} aria-controls={`adm-pane-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)} onKeyDown={event => { const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1; if (next >= 0) { event.preventDefault(); setTab(tabs[next][0]); document.getElementById(`adm-tab-${tabs[next][0]}`)?.focus(); } }}><AdminIcon name={icon} size={14}/>{label}</button>)}</div>
-            <div className="adm-pane" key={tab} role="tabpanel" id={`adm-pane-${tab}`} aria-labelledby={`adm-tab-${tab}`}>
-            {tab === 'access' && <><div className="adm-section-label"><div><h3>Модули платформы</h3><p>Настройте доступ к каждому разделу.</p></div><span className="adm-count">{AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length} / {AVAILABLE_MODULES.length}</span></div><div className="adm-modules">{AVAILABLE_MODULES.map((module, mi) => { const on = modulesOf(user).includes(module.id); return <button key={module.id} type="button" role="switch" aria-checked={on} aria-label={`Доступ: ${module.label}`} disabled={busy} style={idx(mi)} className={`adm-module ${on ? 'on' : ''}`} onClick={() => onModule(module.id, !on)}><AdminIcon name={module.icon} size={18}/><span className="adm-module-name">{module.label}<small>{on ? 'Доступ открыт' : 'Доступ закрыт'}</small></span><span className="adm-switch" aria-hidden="true"/></button>; })}</div><div className="adm-setting"><button type="button" role="switch" aria-label="Подсказки Excel" aria-checked={user.excelHintsEnabled !== false} disabled={busy} className={`adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`} onClick={() => onHints(user.excelHintsEnabled === false)}><AdminIcon name="lightbulb" size={19}/><span className="adm-module-name">Подсказки Excel<small>{user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены'}</small></span><span className="adm-switch" aria-hidden="true"/></button></div>{user.isBanned && <div className="adm-note"><AdminIcon name="lock" size={15}/>Аккаунт заблокирован. Настройка модулей не снимает общую блокировку.</div>}</>}
-            {tab === 'tests' && <><div className="adm-section-label"><div><h3>Персональные тесты</h3><p>Задания, назначенные этому пользователю.</p></div><Btn variant="primary" onClick={onImport} disabled={busy}><AdminIcon name="cloud" size={14}/>Назначить</Btn></div>{!tests.length ? <Empty title="Пока нет назначенных тестов">Загрузите файл с вопросами, чтобы добавить первое задание.</Empty> : <div className="adm-test-list">{tests.map((test, index) => <div className="adm-test" style={idx(index)} key={`${test.id}-${index}`}><AdminIcon name="fileText" size={19}/><div className="adm-test-text"><strong>{str(test.title) || 'Без названия'}</strong><small>{array(test.data).length} вопросов</small></div><IconBtn label={`Удалить тест: ${str(test.title) || 'Без названия'}`} disabled={busy || test.id == null} onClick={() => onRemove(test)}/></div>)}</div>}</>}
-            {tab === 'stats' && <><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat" style={idx(0)}><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong><AnimatedNumber value={number(excel.level, 1)}/><small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat" style={idx(1)}><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong><AnimatedNumber value={number(typing.maxWpm)}/><small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat" style={idx(2)}><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong><AnimatedNumber value={number(hotkeys.totalScore)}/><small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat" style={idx(3)}><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : <AnimatedNumber value={avg} suffix="%"/>}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} style={idx(0)} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map((s, si) => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} style={idx(si + 1)} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
-            {tab === 'chat' && <><div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{visibleContactCount} доступно</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc], mi) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} style={idx(mi)} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map((contact, ci) => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} style={idx(Math.min(ci, 14))} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
-            {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row" style={idx(0)}><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row" style={idx(1)}><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
+            <div key={tab} className="adm-pane" role="tabpanel" id={`adm-pane-${tab}`} aria-labelledby={`adm-tab-${tab}`}>
+            {tab === 'access' && <><div className="adm-section-label"><div><h3>Модули платформы</h3><p>Настройте доступ к каждому разделу.</p></div><span className="adm-count">{AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length} / {AVAILABLE_MODULES.length}</span></div><div className="adm-modules">{AVAILABLE_MODULES.map(module => { const on = modulesOf(user).includes(module.id); return <button key={module.id} type="button" role="switch" aria-checked={on} aria-label={`Доступ: ${module.label}`} disabled={busy} className={`adm-module ${on ? 'on' : ''}`} onClick={() => onModule(module.id, !on)}><AdminIcon name={module.icon} size={18}/><span className="adm-module-name">{module.label}<small>{on ? 'Доступ открыт' : 'Доступ закрыт'}</small></span><span className="adm-switch" aria-hidden="true"/></button>; })}</div><div className="adm-setting"><button type="button" role="switch" aria-label="Подсказки Excel" aria-checked={user.excelHintsEnabled !== false} disabled={busy} className={`adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`} onClick={() => onHints(user.excelHintsEnabled === false)}><AdminIcon name="lightbulb" size={19}/><span className="adm-module-name">Подсказки Excel<small>{user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены'}</small></span><span className="adm-switch" aria-hidden="true"/></button></div>{user.isBanned && <div className="adm-note"><AdminIcon name="lock" size={15}/>Аккаунт заблокирован. Настройка модулей не снимает общую блокировку.</div>}</>}
+            {tab === 'tests' && <><div className="adm-section-label"><div><h3>Персональные тесты</h3><p>Задания, назначенные этому пользователю.</p></div><Btn variant="primary" onClick={onImport} disabled={busy}><AdminIcon name="cloud" size={14}/>Назначить</Btn></div>{!tests.length ? <Empty title="Пока нет назначенных тестов">Загрузите файл с вопросами, чтобы добавить первое задание.</Empty> : <div className="adm-test-list">{tests.map((test, index) => <div className="adm-test" key={`${test.id}-${index}`}><AdminIcon name="fileText" size={19}/><div className="adm-test-text"><strong>{str(test.title) || 'Без названия'}</strong><small>{array(test.data).length} вопросов</small></div><IconBtn label={`Удалить тест: ${str(test.title) || 'Без названия'}`} disabled={busy || test.id == null} onClick={() => onRemove(test)}/></div>)}</div>}</>}
+            {tab === 'stats' && <><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
+            {tab === 'chat' && <><div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{visibleContactCount} доступно</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
+            {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row"><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row"><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
             </div>
         </section>;
     }
     function AdminPanel({ onKicked }) {
+        const motionRoot = useRef(null);
+        useAdminRipples(motionRoot);
         const [uid, setUid] = useState(window.auth?.currentUser?.uid || null);
         const [authReady, setAuthReady] = useState(!!window.auth?.currentUser || typeof window.auth?.onAuthStateChanged !== 'function');
         const [access, setAccess] = useState({ state: 'checking', uid: null, message: '' });
@@ -650,11 +581,18 @@ async function exportUser(user, parts, allUsers = []) {
         const selected = list.find(user => user.id === selectedId) || visible[0] || null;
         const importUser = array(users).find(user => user.id === importUid);
         const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
+        function dismissToast(id) {
+            if (!alive.current) return;
+            setToasts(previous => previous.map(item => item.id === id ? { ...item, leaving: true } : item));
+            const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 250;
+            const timer = setTimeout(() => { timers.current.delete(timer); if (alive.current) setToasts(previous => previous.filter(item => item.id !== id)); }, delay);
+            timers.current.add(timer);
+        }
         function toast(message, type = 'success') {
             if (!alive.current) return;
             const id = `${Date.now()}-${Math.random()}`;
             setToasts(previous => [...previous.slice(-3), { id, message, type }]);
-            const timer = setTimeout(() => { timers.current.delete(timer); if (alive.current) setToasts(previous => previous.filter(item => item.id !== id)); }, 4500);
+            const timer = setTimeout(() => { timers.current.delete(timer); if (alive.current) dismissToast(id); }, 4500);
             timers.current.add(timer);
         }
         // Транзакция читает актуальный профиль и не затирает параллельные изменения.
@@ -743,19 +681,19 @@ async function exportUser(user, parts, allUsers = []) {
             if (alive.current && actor.current === actorUid) setImportUid(null);
         }
         const changePage = value => { setPage(Math.max(1, Math.min(pageCount, value))); setSelectedId(null); };
-        return <div className="adm-root">
-            <div className="adm-toasts" aria-live="polite">{toasts.map(item => <div key={item.id} className={`adm-toast ${item.type}`}><AdminIcon name={item.type === 'error' ? 'alertTriangle' : 'checkCircle'} size={17}/><span>{item.message}</span><IconBtn label="Скрыть уведомление" onClick={() => setToasts(previous => previous.filter(t => t.id !== item.id))}/></div>)}</div>
-            {ready && confirm && <Dialog title={confirm.title} busy={pending.has(confirm.uid)} onClose={() => setConfirm(null)}><p>{confirm.message}</p>{dialogError && <p className="adm-error" role="alert" key={dialogError}>{dialogError}</p>}<div className="adm-dialog-actions"><Btn disabled={pending.has(confirm.uid)} onClick={() => setConfirm(null)}>Отмена</Btn><Btn variant={confirm.danger ? 'danger' : 'primary'} disabled={pending.has(confirm.uid)} onClick={confirmAction}>{pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label}</Btn></div></Dialog>}
-            {ready && importUser && <ImportDialog key={importUid} user={importUser} busy={pending.has(importUid)} onClose={() => setImportUid(null)} onSave={saveTest}/>}
+        return <div className="adm-root" ref={motionRoot}>
+            <div className="adm-toasts" aria-live="polite">{toasts.map(item => <div key={item.id} className={`adm-toast ${item.type} ${item.leaving ? 'leaving' : ''}`}><AdminIcon name={item.type === 'error' ? 'alertTriangle' : 'checkCircle'} size={17}/><span>{item.message}</span><IconBtn label="Скрыть уведомление" onClick={() => dismissToast(item.id)}/></div>)}</div>
+            <AdminPresence immediate={!ready} show={!!(ready && confirm)}>{ready && confirm && <Dialog title={confirm.title} busy={pending.has(confirm.uid)} onClose={() => setConfirm(null)}><p>{confirm.message}</p>{dialogError && <p className="adm-error" role="alert">{dialogError}</p>}<div className="adm-dialog-actions"><Btn disabled={pending.has(confirm.uid)} onClick={() => setConfirm(null)}>Отмена</Btn><Btn variant={confirm.danger ? 'danger' : 'primary'} disabled={pending.has(confirm.uid)} onClick={confirmAction}>{pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label}</Btn></div></Dialog>}</AdminPresence>
+            <AdminPresence immediate={!ready} show={!!(ready && importUser)}>{ready && importUser && <ImportDialog key={importUid} user={importUser} busy={pending.has(importUid)} onClose={() => setImportUid(null)} onSave={saveTest}/>}</AdminPresence>
             <main className="adm-shell" aria-label="Панель администратора">
                 <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>Автообновление</div>}</header>
                 {!ready ? <Empty title={access.state === 'checking' ? 'Проверяем права доступа…' : access.state === 'denied' ? 'Доступ ограничен' : 'Не удалось открыть панель'}><p role="status">{access.message}</p>{access.state === 'error' && <Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn>}</Empty> : <>
-                    <div className="adm-summary">{[['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" style={{ '--i': index }} key={label}><span>{label}</span><strong>{users === null ? '—' : <AnimatedNumber value={stats[index]}/>}</strong><AdminIcon name={icon} size={21}/></div>)}</div>
+                    <div className="adm-summary">{[['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
                     {loadError ? <div className="adm-banner" role="alert"><AdminIcon name="alertTriangle" size={19}/><span>{loadError}</span><Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn></div> : <div className="adm-workspace">
                         <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count">{list.length} найдено</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
                             <div className="adm-filter" aria-label="Фильтр пользователей">{[['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы']].map(([id, label]) => <button type="button" key={id} className={`adm-chip ${filter === id ? 'active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div>
                             <div className="adm-sort"><span>Сортировка</span><select aria-label="Сортировка пользователей" value={sort} onChange={event => setSort(event.target.value)}><option value="name">По имени</option><option value="role">Администраторы выше</option><option value="tests">Больше тестов</option></select></div>
-                            <div className="adm-users" key={`${filter}-${sort}-${currentPage}-${search}`}>{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton" style={{ animationDelay: `${i * 120}ms` }}/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, vi) => <button type="button" key={user.id} style={{ '--i': vi }} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
+                            <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, index) => <button style={{'--ad-order': index}} type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
                             {list.length > PAGE_SIZE && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}</span><Btn disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>Далее</Btn></nav>}
                         </aside>
                         {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { await exportUser(selected, parts, array(users)); toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
