@@ -2,6 +2,7 @@
 // Темы: html.light, body.light, .theme-light, [data-theme=light].
 // Диалог не сохраняется на устройство; endpoints и существующие функции сохранены.
 // Требуется только существующий React. JSX и window.Motion не нужны.
+// Кнопка-стрелка убрана: чтобы спрятать кнопку ИИ, перетащи её к левому/правому краю экрана.
 (function () {
     'use strict';
     const { createElement: h, useState, useEffect, useLayoutEffect, useRef } = React;
@@ -451,6 +452,9 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
 `;
 
     const DOCK_KEY = 'ultimate-ai-launcher-v1';
+    const EDGE_GAP = 16;       // отступ кнопки от края, когда она не спрятана
+    const EDGE_SNAP = 8;       // если отпустить кнопку ближе этого расстояния к краю — она прячется
+    const RATIO_H = 60;        // высота для расчёта вертикальной позиции (одинакова для обоих состояний)
     const clampDock = (n, min, max) => Math.max(min, Math.min(max, n));
     function useLauncherDock() {
         const [dock, setDock] = useState(() => {
@@ -465,10 +469,11 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
         const [point, setPoint] = useState(null);
         const gesture = useRef(null), suppressClick = useRef(false), latest = useRef(dock);
         latest.current = dock;
-        const dimensions = folded => ({ w: folded ? 32 : 56, h: folded ? 60 : 94 });
+        const dimensions = folded => ({ w: folded ? 32 : 56, h: folded ? 60 : 56 });
         function place(state, viewport = size) {
-            const d = dimensions(state.folded), gap = state.folded ? 0 : 10;
-            return { x: state.side === 'left' ? gap : Math.max(0, viewport.w - d.w - gap), y: 16 + state.ratio * Math.max(0, viewport.h - d.h - 40) };
+            const d = dimensions(state.folded), gap = state.folded ? 0 : EDGE_GAP;
+            const y = 16 + state.ratio * Math.max(0, viewport.h - RATIO_H - 40) + (RATIO_H - d.h) / 2;
+            return { x: state.side === 'left' ? gap : Math.max(0, viewport.w - d.w - gap), y };
         }
         function save(next) {
             latest.current = next; setDock(next);
@@ -493,38 +498,50 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             if (!g.moved && Math.hypot(dx, dy) < 7) return;
             g.moved = true; suppressClick.current = true;
             const d = dimensions(latest.current.folded);
-            g.point = { x: clampDock(g.origin.x + dx, 0, Math.max(0,size.w-d.w)), y: clampDock(g.origin.y + dy,16,Math.max(16,size.h-d.h-24)) };
+            g.point = { x: clampDock(g.origin.x + dx, 0, Math.max(0, size.w - d.w)), y: clampDock(g.origin.y + dy, 16, Math.max(16, size.h - d.h - 24)) };
             setPoint(g.point);
         }
         function end(event, cancelled = false) {
             const g = gesture.current;
             if (!g || event.pointerId !== g.id) return;
             gesture.current = null;
-            if (g.moved && !cancelled) {
+            if (g.moved && !cancelled && g.point) {
                 const d = dimensions(latest.current.folded);
-                save({ ...latest.current, side: g.point.x + d.w/2 < size.w/2 ? 'left' : 'right', ratio: clampDock((g.point.y-16)/Math.max(1,size.h-d.h-40),0,1) });
+                const side = g.point.x + d.w / 2 < size.w / 2 ? 'left' : 'right';
+                const edgeDistance = side === 'left' ? g.point.x : size.w - (g.point.x + d.w);
+                // Прижали к стене — кнопка прячется в язычок; оттащили от стены — снова полная кнопка.
+                const folded = edgeDistance <= EDGE_SNAP;
+                const centerY = g.point.y + d.h / 2;
+                const ratio = clampDock((centerY - RATIO_H / 2 - 16) / Math.max(1, size.h - RATIO_H - 40), 0, 1);
+                save({ side, ratio, folded });
             }
             setPoint(null);
             if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
         }
         function activate(event, openChat) {
             if (event.detail !== 0 && suppressClick.current) { suppressClick.current = false; event.preventDefault(); return; }
+            // Спрятанный язычок по клику сначала разворачивается в кнопку.
             if (latest.current.folded) save({ ...latest.current, folded: false });
             else openChat();
         }
         function keyboard(event) {
-            if (!event.altKey || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) return;
+            if (!event.altKey || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
             event.preventDefault();
-            const next = { ...latest.current };
-            if (event.key === 'ArrowLeft') next.side = 'left';
-            if (event.key === 'ArrowRight') next.side = 'right';
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') next.ratio = clampDock(next.ratio + (event.key === 'ArrowUp' ? -.08 : .08),0,1);
+            const cur = latest.current, next = { ...cur };
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                const target = event.key === 'ArrowLeft' ? 'left' : 'right';
+                // Уже у этого края — прячем; иначе переносим к краю и показываем кнопку.
+                if (cur.side === target && !cur.folded) next.folded = true;
+                else { next.side = target; next.folded = false; }
+            } else {
+                next.ratio = clampDock(next.ratio + (event.key === 'ArrowUp' ? -.08 : .08), 0, 1);
+            }
             save(next);
         }
         const p = point || place(dock);
         return { dock, dragging: !!point, style: { left: p.x, top: p.y, right: 'auto', bottom: 'auto' },
-            events: { onPointerDown: start, onPointerMove: move, onPointerUp: event => end(event), onPointerCancel: event => end(event,true), onLostPointerCapture: event => { if(gesture.current) end(event,true); }, onKeyDown: keyboard },
-            activate, fold: () => save({ ...latest.current, folded: true }) };
+            events: { onPointerDown: start, onPointerMove: move, onPointerUp: event => end(event), onPointerCancel: event => end(event, true), onLostPointerCapture: event => { if (gesture.current) end(event, true); }, onKeyDown: keyboard },
+            activate };
     }
     const DOCK_CSS = `
     .ula-widget.ula-docked{transition:left .3s cubic-bezier(.2,.85,.25,1),top .3s cubic-bezier(.2,.85,.25,1);width:56px}
@@ -533,8 +550,6 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
     .ula-docked .ula-fab{width:56px;height:56px;min-width:0;min-height:0;padding:0;display:grid;place-items:center;border-radius:50%;animation:none;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;transition:background .2s,box-shadow .2s,border-radius .25s,width .25s,height .25s}
     .ula-docked .ula-fab:hover{transform:none}.ula-docked.is-dragging .ula-fab{cursor:grabbing;box-shadow:0 12px 30px var(--glow)}
     .ula-docked .ula-fab:before{display:none}.ula-docked .ula-fab-mark{background:transparent;width:36px;height:36px}
-    .ula-dock-fold{width:34px;height:34px;min-height:34px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--accent);background:var(--bg);box-shadow:0 3px 10px #0001;font-size:20px!important;line-height:1;transition:background .2s,transform .2s}
-    .ula-dock-fold:hover{background:var(--hover);transform:scale(1.07)}
     .ula-widget.ula-folded,.ula-folded .ula-dock-controls{width:32px}
     .ula-folded .ula-fab{width:32px;height:60px;border-radius:16px 0 0 16px;box-shadow:0 4px 16px #0002}
     .ula-folded.ula-edge-left .ula-fab{border-radius:0 16px 16px 0}.ula-folded .ula-fab-mark{width:28px;height:38px}.ula-folded .ula-fab-mark svg{width:19px;animation:none}
@@ -725,12 +740,11 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             h('button', { type: 'button', ref: launcher, className: 'ula-fab', ...floating.events,
                 onClick: event => floating.activate(event, () => setOpen(true)),
                 onContextMenu: event => event.preventDefault(),
-                title: floating.dock.folded ? 'Развернуть кнопку помощника' : 'Открыть ИИ-чат. Можно перетащить к другому краю.',
+                title: floating.dock.folded ? 'Развернуть кнопку помощника' : 'Открыть ИИ-чат. Перетащи к краю экрана, чтобы спрятать.',
                 'aria-label': floating.dock.folded ? 'Развернуть кнопку помощника' : 'Открыть учебного ассистента',
                 'aria-describedby': 'ula-drag-help', 'aria-haspopup': floating.dock.folded ? undefined : 'dialog'
             }, h('span', {className:'ula-fab-mark'}, h(Icon, {name:'spark',size:25}))),
-            !floating.dock.folded && h('button', {type:'button',className:'ula-dock-fold',onClick:floating.fold,title:'Свернуть к краю','aria-label':'Свернуть кнопку помощника к краю'}, h('span', {'aria-hidden':true}, floating.dock.side === 'left' ? '‹' : '›')),
-            h('span',{id:'ula-drag-help',className:'ula-sr'},'Перетащи кнопку мышкой или пальцем. С клавиатуры: Alt и стрелки. Нажми, чтобы открыть; боковой язычок сначала разворачивает кнопку.')
+            h('span',{id:'ula-drag-help',className:'ula-sr'},'Перетащи кнопку мышкой или пальцем. Прижми к левому или правому краю экрана, чтобы спрятать её в язычок; нажми на язычок, чтобы вернуть кнопку. С клавиатуры: Alt и стрелки.')
         ));
     }
     Object.assign(window, { AIChatWidget });
