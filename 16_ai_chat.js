@@ -450,7 +450,100 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
 @media(prefers-reduced-motion:reduce){.ula-widget *,.ula-widget *:before,.ula-widget *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 `;
 
+    const DOCK_KEY = 'ultimate-ai-launcher-v1';
+    const clampDock = (n, min, max) => Math.max(min, Math.min(max, n));
+    function useLauncherDock() {
+        const [dock, setDock] = useState(() => {
+            try {
+                const saved = JSON.parse(localStorage.getItem(DOCK_KEY));
+                if (saved && ['left', 'right'].includes(saved.side) && Number.isFinite(saved.ratio))
+                    return { side: saved.side, ratio: clampDock(saved.ratio, 0, 1), folded: !!saved.folded };
+            } catch (_) {}
+            return { side: 'right', ratio: .7, folded: false };
+        });
+        const [size, setSize] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+        const [point, setPoint] = useState(null);
+        const gesture = useRef(null), suppressClick = useRef(false), latest = useRef(dock);
+        latest.current = dock;
+        const dimensions = folded => ({ w: folded ? 32 : 56, h: folded ? 60 : 94 });
+        function place(state, viewport = size) {
+            const d = dimensions(state.folded), gap = state.folded ? 0 : 10;
+            return { x: state.side === 'left' ? gap : Math.max(0, viewport.w - d.w - gap), y: 16 + state.ratio * Math.max(0, viewport.h - d.h - 40) };
+        }
+        function save(next) {
+            latest.current = next; setDock(next);
+            try { localStorage.setItem(DOCK_KEY, JSON.stringify(next)); } catch (_) {}
+        }
+        useEffect(() => {
+            const resize = () => { gesture.current = null; setPoint(null); setSize({ w: window.innerWidth, h: window.innerHeight }); };
+            window.addEventListener('resize', resize);
+            return () => window.removeEventListener('resize', resize);
+        }, []);
+        function start(event) {
+            if (event.button !== 0 || !event.isPrimary) return;
+            const p = place(latest.current);
+            suppressClick.current = false;
+            gesture.current = { id: event.pointerId, x: event.clientX, y: event.clientY, origin: p, moved: false };
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+        }
+        function move(event) {
+            const g = gesture.current;
+            if (!g || event.pointerId !== g.id) return;
+            const dx = event.clientX - g.x, dy = event.clientY - g.y;
+            if (!g.moved && Math.hypot(dx, dy) < 7) return;
+            g.moved = true; suppressClick.current = true;
+            const d = dimensions(latest.current.folded);
+            g.point = { x: clampDock(g.origin.x + dx, 0, Math.max(0,size.w-d.w)), y: clampDock(g.origin.y + dy,16,Math.max(16,size.h-d.h-24)) };
+            setPoint(g.point);
+        }
+        function end(event, cancelled = false) {
+            const g = gesture.current;
+            if (!g || event.pointerId !== g.id) return;
+            gesture.current = null;
+            if (g.moved && !cancelled) {
+                const d = dimensions(latest.current.folded);
+                save({ ...latest.current, side: g.point.x + d.w/2 < size.w/2 ? 'left' : 'right', ratio: clampDock((g.point.y-16)/Math.max(1,size.h-d.h-40),0,1) });
+            }
+            setPoint(null);
+            if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        function activate(event, openChat) {
+            if (event.detail !== 0 && suppressClick.current) { suppressClick.current = false; event.preventDefault(); return; }
+            if (latest.current.folded) save({ ...latest.current, folded: false });
+            else openChat();
+        }
+        function keyboard(event) {
+            if (!event.altKey || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) return;
+            event.preventDefault();
+            const next = { ...latest.current };
+            if (event.key === 'ArrowLeft') next.side = 'left';
+            if (event.key === 'ArrowRight') next.side = 'right';
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') next.ratio = clampDock(next.ratio + (event.key === 'ArrowUp' ? -.08 : .08),0,1);
+            save(next);
+        }
+        const p = point || place(dock);
+        return { dock, dragging: !!point, style: { left: p.x, top: p.y, right: 'auto', bottom: 'auto' },
+            events: { onPointerDown: start, onPointerMove: move, onPointerUp: event => end(event), onPointerCancel: event => end(event,true), onLostPointerCapture: event => { if(gesture.current) end(event,true); }, onKeyDown: keyboard },
+            activate, fold: () => save({ ...latest.current, folded: true }) };
+    }
+    const DOCK_CSS = `
+    .ula-widget.ula-docked{transition:left .3s cubic-bezier(.2,.85,.25,1),top .3s cubic-bezier(.2,.85,.25,1);width:56px}
+    .ula-widget.ula-docked.is-dragging{transition:none!important;user-select:none;-webkit-user-select:none}
+    .ula-dock-controls{display:flex;flex-direction:column;align-items:center;gap:4px;width:56px}
+    .ula-docked .ula-fab{width:56px;height:56px;min-width:0;min-height:0;padding:0;display:grid;place-items:center;border-radius:50%;animation:none;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;transition:background .2s,box-shadow .2s,border-radius .25s,width .25s,height .25s}
+    .ula-docked .ula-fab:hover{transform:none}.ula-docked.is-dragging .ula-fab{cursor:grabbing;box-shadow:0 12px 30px var(--glow)}
+    .ula-docked .ula-fab:before{display:none}.ula-docked .ula-fab-mark{background:transparent;width:36px;height:36px}
+    .ula-dock-fold{width:34px;height:34px;min-height:34px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--accent);background:var(--bg);box-shadow:0 3px 10px #0001;font-size:20px!important;line-height:1;transition:background .2s,transform .2s}
+    .ula-dock-fold:hover{background:var(--hover);transform:scale(1.07)}
+    .ula-widget.ula-folded,.ula-folded .ula-dock-controls{width:32px}
+    .ula-folded .ula-fab{width:32px;height:60px;border-radius:16px 0 0 16px;box-shadow:0 4px 16px #0002}
+    .ula-folded.ula-edge-left .ula-fab{border-radius:0 16px 16px 0}.ula-folded .ula-fab-mark{width:28px;height:38px}.ula-folded .ula-fab-mark svg{width:19px;animation:none}
+    .ula-docked button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+    @media(prefers-reduced-motion:reduce){.ula-widget.ula-docked{transition:none!important}}
+    `;
+
     function AIChatWidget() {
+        const floating = useLauncherDock();
         const [open, setOpen] = useState(false);
         const [closing, setClosing] = useState(false);
         const closeTimer = useRef(null);
@@ -471,7 +564,7 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             mounted.current = true;
             let style = document.getElementById('ai-chat-styles');
             if (!style) { style = document.createElement('style'); style.id = 'ai-chat-styles'; document.head.appendChild(style); }
-            style.textContent = CSS + HOST_LAYOUT_FIX + MOTION_CSS;
+            style.textContent = CSS + HOST_LAYOUT_FIX + MOTION_CSS + DOCK_CSS;
             return () => {
                 mounted.current = false;
                 active.current?.controller.abort();
@@ -613,7 +706,7 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
                 ));
             }
         });
-        return h('div', { className: 'ula-widget' }, open ? h('section', { className: `ula-panel${wide ? ' ula-wide' : ''}${closing ? ' is-closing' : ''}${busy ? ' is-busy' : ''}`, role: 'dialog', 'aria-label': 'Учебный ИИ-ассистент', onKeyDown: event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } } },
+        return h('div', { className: `ula-widget${open ? '' : ' ula-docked'}${!open && floating.dragging ? ' is-dragging' : ''}${!open && floating.dock.folded ? ' ula-folded' : ''} ula-edge-${floating.dock.side}`, style: open ? undefined : floating.style }, open ? h('section', { className: `ula-panel${wide ? ' ula-wide' : ''}${closing ? ' is-closing' : ''}${busy ? ' is-busy' : ''}`, role: 'dialog', 'aria-label': 'Учебный ИИ-ассистент', onKeyDown: event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } } },
             h('header', { className: 'ula-header' }, h('div', { className: 'ula-logo' }, h(Icon, { name: 'spark', size: 23 })), h('div', { className: 'ula-heading' }, h('h2', null, 'Учебный ассистент'), h('div', { className: 'ula-status' }, h('span', { className: 'ula-dot' }), busy ? 'Готовит ответ' : 'Ultimate LMS · AI')), h('div', { className: 'ula-actions' }, iconButton(wide ? 'shrink' : 'expand', wide ? 'Уменьшить окно' : 'Расширить окно', () => setWide(value => !value), { className: 'ula-icon ula-expand' }), iconButton('close', 'Закрыть чат', close, { className: 'ula-icon ula-close' }))),
             confirm && h('div', { className: 'ula-confirm' }, 'Очистить текущий диалог?', h('div', null, h('button', { className: 'ula-text-btn', onClick: reset, type: 'button' }, 'Да, начать новый'), h('button', { className: 'ula-text-btn', onClick: () => setConfirm(false), type: 'button' }, 'Отмена'))),
             h('div', { className: 'ula-toolbar' }, h('button', {type:'button',className:'ula-text-btn ula-new',onClick:()=>setConfirm(value=>!value),disabled:!messages.length}, h(Icon,{name:'plus',size:14}), 'Новый диалог'), h('button', { type: 'button', className: 'ula-text-btn ula-teacher', onClick: callTeacher, disabled: teacher?.kind === 'pending' }, h(Icon, { name: 'bell', size: 13 }), 'Позвать преподавателя')),
@@ -628,7 +721,17 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             teacher && h('div', { className: `ula-notice${teacher.kind === 'error' ? ' ula-error' : teacher.kind === 'success' ? ' success' : ''}`, role: 'status' }, h('span', null, teacher.text), teacher.kind !== 'pending' && iconButton('close', 'Скрыть уведомление', () => setTeacher(null))),
             copyError && h('div', { className: 'ula-notice', role: 'status' }, h('span', null, 'Не удалось скопировать. Выдели текст вручную.'), iconButton('close', 'Скрыть уведомление', () => setCopyError(false))),
             h('footer', { className: 'ula-footer' }, h('form', { className: 'ula-compose', onSubmit: event => { event.preventDefault(); send(input); } }, h('label', { className: 'ula-sr', htmlFor: 'ula-question' }, 'Твой вопрос'), h('textarea', { id: 'ula-question', ref: editor, rows: 1, placeholder: 'С чем помочь?', value: input, maxLength: CONFIG.maxInput, onChange: event => setInput(event.target.value), onKeyDown: event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); send(input); } } }), busy ? h('button', { type: 'button', className: 'ula-submit is-stop', onClick: stop, title: 'Остановить ответ', 'aria-label': 'Остановить ответ' }, h(Icon, { name: 'stop', size: 15 })) : h('button', { type: 'submit', className: 'ula-submit', disabled: !input.trim(), title: 'Отправить', 'aria-label': 'Отправить' }, h(Icon, { name: 'arrow', size: 20 }))), h('div', { className: 'ula-footnote' }, h('span', null, 'ИИ может ошибаться. Проверяй важное.'), h('span', { className: 'ula-shortcut' }, input.length > 3500 ? `${input.length}/${CONFIG.maxInput}` : 'Shift + Enter — новая строка')))
-        ) : h('button', { type: 'button', ref: launcher, className: 'ula-fab', onClick: () => setOpen(true), 'aria-label': 'Открыть учебного ассистента', 'aria-haspopup': 'dialog' }, h('span', {className:'ula-fab-mark'}, h(Icon, { name: 'spark', size: 23 })), h('span', {className:'ula-fab-label'}, h('strong', null, 'Спросить AI'), h('small', null, 'Разберёмся вместе'))));
+        ) : h('div', { className: 'ula-dock-controls' },
+            h('button', { type: 'button', ref: launcher, className: 'ula-fab', ...floating.events,
+                onClick: event => floating.activate(event, () => setOpen(true)),
+                onContextMenu: event => event.preventDefault(),
+                title: floating.dock.folded ? 'Развернуть кнопку помощника' : 'Открыть ИИ-чат. Можно перетащить к другому краю.',
+                'aria-label': floating.dock.folded ? 'Развернуть кнопку помощника' : 'Открыть учебного ассистента',
+                'aria-describedby': 'ula-drag-help', 'aria-haspopup': floating.dock.folded ? undefined : 'dialog'
+            }, h('span', {className:'ula-fab-mark'}, h(Icon, {name:'spark',size:25}))),
+            !floating.dock.folded && h('button', {type:'button',className:'ula-dock-fold',onClick:floating.fold,title:'Свернуть к краю','aria-label':'Свернуть кнопку помощника к краю'}, h('span', {'aria-hidden':true}, floating.dock.side === 'left' ? '‹' : '›')),
+            h('span',{id:'ula-drag-help',className:'ula-sr'},'Перетащи кнопку мышкой или пальцем. С клавиатуры: Alt и стрелки. Нажми, чтобы открыть; боковой язычок сначала разворачивает кнопку.')
+        ));
     }
     Object.assign(window, { AIChatWidget });
 })();
