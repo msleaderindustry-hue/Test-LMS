@@ -17,6 +17,7 @@ const {
   CodePlayground,
   FlashcardsLMS,
   ExcelTrainerLMS,
+  ChessLMS,
   LandingView,
   SidebarMenu,
   TestsLMS,
@@ -24,7 +25,7 @@ const {
 } = window;
 
 // Экраны, на которых показывается кнопка-бургер
-const LAUNCHER_VIEWS = ['menu', 'stats', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'admin'];
+const LAUNCHER_VIEWS = ['menu', 'stats', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'chess', 'admin'];
 
 // Позиция бургера и резерв места под него (48px кнопка + 8px отступ + 8px зазор)
 const LAUNCHER_TOP = 'max(8px, env(safe-area-inset-top))';
@@ -271,7 +272,7 @@ const LowPolyBackground = ({
 
 // --- APP ---
 function App() {
-  const DEFAULT_MODULES = ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'stats'];
+  const DEFAULT_MODULES = ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'chess', 'stats'];
   const [view, setView] = useState('loading');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [sets, setSets] = useState([]);
@@ -490,7 +491,8 @@ function App() {
       hotkeys: 'hotkeys',
       code: 'code',
       flashcards: 'flashcards',
-      excel: 'excel'
+      excel: 'excel',
+      chess: 'chess'
     };
     const requiredModule = viewModule[view];
     if (requiredModule && !allowedModules.includes(requiredModule)) {
@@ -574,6 +576,7 @@ function App() {
       flashcards: 'flashcards',
       code: 'code',
       excel: 'excel',
+      chess: 'chess',
       stats: 'stats',
       admin: 'admin'
     };
@@ -593,6 +596,16 @@ function App() {
   // -----------------------------------------------------------------------
   // ЛОКАЛЬНЫЕ НАБОРЫ ТЕСТОВ
   // -----------------------------------------------------------------------
+
+  const chessInviteHandled = useRef(false);
+  useEffect(() => {
+    if (!appReady || chessInviteHandled.current) return;
+    const room = new URLSearchParams(location.search).get('chessRoom');
+    if (room && /^[a-f0-9]{12}$/i.test(room) && allowedModules.includes('chess')) {
+      chessInviteHandled.current = true;
+      setView('chess');
+    }
+  }, [appReady, allowedModules]);
 
   const addSet = name => {
     if (!name) return;
@@ -943,7 +956,10 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement(FlashcardsLMS, {
     onBack: () => setView('menu')
-  })), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
+  })), appReady && view === 'chess' && allowedModules.includes('chess') && React.createElement(motion.div, {
+    key: 'chess_view',initial:{opacity:0,y:12},animate:{opacity:1,y:0},exit:{opacity:0},transition:{duration:.25},
+    style:{width:'100%',maxWidth:'1600px'}
+  }, React.createElement(ChessLMS,{theme,user,userNickname,onThemeChange:setTheme})), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
     key: "excel_view",
     initial: {
       opacity: 0
