@@ -520,6 +520,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     strokeWidth: "2",
     strokeLinecap: "round"
   }));
+  const ChessIcon = () => React.createElement(motion.svg, {
+    width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,
+    strokeLinecap:'round',strokeLinejoin:'round',variants:{rest:{rotate:0},hover:{rotate:[0,-8,5,0]}},transition:{duration:.45}
+  },React.createElement('path',{d:'M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8zm-2 0h14v4H6z'}),React.createElement('circle',{cx:11,cy:8,r:.7}));
   const MENU_ITEMS = [{
     id: 'typing',
     label: 'Тренажёр печати',
@@ -544,6 +548,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     hint: 'Запоминай надолго',
     Icon: CardsIcon,
     color: '#c084fc'
+  }, {
+    id: 'chess',
+    label: 'Шахматы',
+    hint: 'Игра, бот и анализ',
+    Icon: ChessIcon,
+    color: '#7dd3fc'
   }, {
     id: 'excel',
     label: 'Тренажёр Excel',
