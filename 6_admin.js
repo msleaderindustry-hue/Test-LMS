@@ -5,6 +5,7 @@
     const { useState, useEffect, useRef, useMemo } = React;
     const ADMIN_ICON_PATHS = {
         chat: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
+        chess: <><path d="M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8z"/><path d="M6 18h14v4H6z"/><circle cx="11" cy="8" r=".7"/></>,
         keyboard: <><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" /></>,
         zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />,
         code: <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>,
@@ -50,6 +51,7 @@
         { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
         { id: 'flashcards', icon: 'layers', label: 'Карточки', color: '#3b82f6' },
         { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' },
+        { id: 'chess', icon: 'chess', label: 'Шахматы', color: '#7dd3fc' },
         { id: 'stats', icon: 'user', label: 'Статистика', color: '#f59e0b' } 
     ];
 
@@ -177,7 +179,7 @@ function buildXlsx(sheets) {
     const end = new Uint8Array(22), ev = new DataView(end.buffer); ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, directory.length, true); ev.setUint16(10, directory.length, true); ev.setUint32(12, directory.reduce((s, x) => s + x.length, 0), true); ev.setUint32(16, offset, true);
     return new Blob([...chunks, ...directory, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
-const ACTIVITY_SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование'};
+const ACTIVITY_SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chess:'Шахматы',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование'};
 function activitySheet(items) {
     const rows = array(items).map(item => ({
         at: firstDefined(item, ['at', 'date', 'createdAt', 'time']),
