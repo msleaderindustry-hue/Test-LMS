@@ -24,1013 +24,69 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      1. ПОЛНАЯ БАЗА ДАННЫХ ФУНКЦИЙ EXCEL
      ========================================================================= */
   const EXCEL_DATABASE = {
-    "Математические": [
-      "СУММ",
-      "СУММЕСЛИ",
-      "СУММЕСЛИМН",
-      "ОКРУГЛ",
-      "ОКРУГЛВВЕРХ",
-      "ОКРУГЛВНИЗ",
-      "ОКРУГЛТ",
-      "ПРОИЗВЕД",
-      "ОСТАТ",
-      "КОРЕНЬ",
-      "СТЕПЕНЬ",
-      "СЛЧИС",
-      "СЛМЕЖДУ",
-      "ЦЕЛОЕ",
-      "ОТБР",
-      "ЧАСТНОЕ",
-      "СУММПРОИЗВ",
-      "АБС",
-      "ЗНАК",
-      "ЧЁТН",
-      "НЕЧЁТ",
-      "ФАКТР",
-      "ПИ",
-      "РИМСКОЕ",
-      "АРАБСКОЕ"
-    ],
-    "Динамические массивы": [
-      "ПРОСМОТРX",
-      "ФИЛЬТР",
-      "УНИК",
-      "СОРТ",
-      "СОРТПО",
-      "ПОСЛЕДОВ",
-      "СЛМАССИВ",
-      "ТЕКСТДО",
-      "ТЕКСТПОСЛЕ",
-      "ТЕКСТРАЗДЕЛ",
-      "ВСТРОКУ",
-      "ВСТОЛБЕЦ",
-      "ВЫБОРСТОЛБЦОВ",
-      "ВЫБОРСТРОК"
-    ],
-    "Поиск и ссылки": [
-      "ВПР",
-      "ГПР",
-      "ИНДЕКС",
-      "ПОИСКПОЗ",
-      "ПОИСКПОЗX",
-      "СМЕЩ",
-      "ДВССЫЛ",
-      "СТРОКА",
-      "СТРОКИ",
-      "СТОЛБЕЦ",
-      "СТОЛБЦЫ",
-      "ПРОСМОТР",
-      "ВЫБОР",
-      "ТРАНСП",
-      "АДРЕС",
-      "ГИПЕРССЫЛКА",
-      "ФОРМУЛАТЕКСТ"
-    ],
-    "Логические": [
-      "ЕСЛИ",
-      "И",
-      "ИЛИ",
-      "ЕСЛИОШИБКА",
-      "ЕСНД",
-      "НЕ",
-      "ИСТИНА",
-      "ЛОЖЬ",
-      "ЕСЛИМН",
-      "ПЕРЕКЛЮЧ",
-      "ИСКЛИЛИ"
-    ],
-    "Текстовые": [
-      "СЦЕПИТЬ",
-      "СЦЕП",
-      "ОБЪЕДИНИТЬ",
-      "ЛЕВСИМВ",
-      "ПРАВСИМВ",
-      "ПСТР",
-      "ДЛСТР",
-      "НАЙТИ",
-      "ПОИСК",
-      "ЗАМЕНИТЬ",
-      "ПОДСТАВИТЬ",
-      "ПРОПИСН",
-      "СТРОЧН",
-      "ПРОПНАЧ",
-      "СЖПРОБЕЛЫ",
-      "ТЕКСТ",
-      "ЗНАЧЕН",
-      "СОВПАД",
-      "ПОВТОР",
-      "СИМВОЛ",
-      "КОДСИМВ",
-      "ПЕЧСИМВ"
-    ],
-    "Дата и время": [
-      "СЕГОДНЯ",
-      "ТДАТА",
-      "ДЕНЬ",
-      "МЕСЯЦ",
-      "ГОД",
-      "ДАТА",
-      "ДЕНЬНЕД",
-      "ЧАС",
-      "МИНУТЫ",
-      "СЕКУНДЫ",
-      "ВРЕМЯ",
-      "РАБДЕНЬ",
-      "РАБДЕНЬ.МЕЖД",
-      "ЧИСТРАБДНИ",
-      "ЧИСТРАБДНИ.МЕЖД",
-      "ДОЛЯГОДА",
-      "НОМНЕДЕЛИ",
-      "НОМНЕДЕЛИ.ISO",
-      "ДАТАМЕС",
-      "КОНМЕСЯЦ",
-      "РАЗНДАТ",
-      "ДАТАЗНАЧ",
-      "ВРЕМЗНАЧ"
-    ],
-    "Статистические": [
-      "СРЗНАЧ",
-      "СРЗНАЧЕСЛИ",
-      "СРЗНАЧЕСЛИМН",
-      "МАКС",
-      "МИН",
-      "МАКСЕСЛИ",
-      "МИНЕСЛИ",
-      "СЧЁТ",
-      "СЧЁТЕСЛИ",
-      "СЧЁТЕСЛИМН",
-      "СЧЁТЗ",
-      "СЧИТАТЬПУСТОТЫ",
-      "МЕДИАНА",
-      "МОДА",
-      "МОДА.ОДН",
-      "НАИБОЛЬШИЙ",
-      "НАИМЕНЬШИЙ",
-      "РАНГ",
-      "РАНГ.РВ",
-      "СРГЕОМ",
-      "СРГАРМ",
-      "ДИСП",
-      "СТАНДОТКЛОН",
-      "КВАРТИЛЬ",
-      "ПЕРСЕНТИЛЬ",
-      "КОРРЕЛ"
-    ],
-    "Финансовые": [
-      "ПЛТ",
-      "БС",
-      "КПЕР",
-      "СТАВКА",
-      "ПРПЛТ",
-      "ОСПЛТ",
-      "ЧПС",
-      "ВНДОХ",
-      "ЭФФЕКТ",
-      "НОМИНАЛ",
-      "АМОРТИЗ"
-    ],
-    "Базы данных": [
-      "БДСУММ",
-      "БДСРЗНАЧ",
-      "БДМАКС",
-      "БДМИН",
-      "БДСЧЁТ",
-      "БДСЧЁТА",
-      "БДПРОИЗВЕД",
-      "БДИЗВЛЕЧЬ"
-    ],
-    "Информационные": [
-      "ЕПУСТО",
-      "ЕЧИСЛО",
-      "ЕТЕКСТ",
-      "ЕНЕТЕКСТ",
-      "ЕЛОГИЧ",
-      "ЕОШИБКА",
-      "ЕОШ",
-      "ЕНД",
-      "ТИП",
-      "ТИП.ОШИБКИ",
-      "ЯЧЕЙКА",
-      "ЛИСТ",
-      "ЛИСТЫ",
-      "Ч"
-    ],
-    "Инженерные": [
-      "ДЕС.В.ДВ",
-      "ДЕС.В.ШЕСТН",
-      "ДЕС.В.ВОСЬМ",
-      "ДВ.В.ДЕС",
-      "ДВ.В.ШЕСТН",
-      "ШЕСТН.В.ДЕС",
-      "ШЕСТН.В.ДВ",
-      "ПРЕОБР",
-      "ДЕЛЬТА",
-      "ПОРОГ"
-    ]
+    "Математические": ["СУММ", "СУММЕСЛИ", "СУММЕСЛИМН", "ОКРУГЛ", "ОКРУГЛВВЕРХ", "ОКРУГЛВНИЗ", "ОКРУГЛТ", "ПРОИЗВЕД", "ОСТАТ", "КОРЕНЬ", "СТЕПЕНЬ", "СЛЧИС", "СЛМЕЖДУ", "ЦЕЛОЕ", "ОТБР", "ЧАСТНОЕ", "СУММПРОИЗВ", "АБС", "ЗНАК", "ЧЁТН", "НЕЧЁТ", "ФАКТР", "ПИ", "РИМСКОЕ", "АРАБСКОЕ", "ACOS", "ACOSH", "ACOT", "ACOTH", "AGGREGATE", "ASIN", "ASINH", "ATAN", "ATAN2", "ATANH", "BASE", "CEILING", "CEILING.MATH", "CEILING.PRECISE", "COMBIN", "COMBINA", "COS", "COSH", "COT", "COTH", "CSC", "CSCH", "DECIMAL", "DEGREES", "EXP", "FACTDOUBLE", "FLOOR.MATH", "FLOOR.PRECISE", "GCD", "ISO.CEILING", "LCM", "LN", "LOG", "LOG10", "MDETERM", "MINVERSE", "MMULT", "MULTINOMIAL", "MUNIT", "PERCENTOF", "RADIANS", "SEC", "SECH", "SERIESSUM", "SIN", "SINH", "SQRTPI", "SUBTOTAL", "SUMSQ", "SUMX2MY2", "SUMX2PY2", "SUMXMY2", "TAN", "TANH"],
+    "Динамические массивы": ["ПРОСМОТРX", "ФИЛЬТР", "УНИК", "СОРТ", "СОРТПО", "ПОСЛЕДОВ", "СЛМАССИВ", "ТЕКСТДО", "ТЕКСТПОСЛЕ", "TEXTSPLIT", "TOROW", "TOCOL", "CHOOSECOLS", "ВЫБОРСТРОК", "BYCOL", "BYROW", "LAMBDA", "LET", "MAKEARRAY", "MAP", "REDUCE", "SCAN", "DROP", "EXPAND", "GROUPBY", "HSTACK", "PIVOTBY", "TAKE", "TRIMRANGE", "VSTACK", "WRAPCOLS", "WRAPROWS"],
+    "Поиск и ссылки": ["ВПР", "ГПР", "ИНДЕКС", "ПОИСКПОЗ", "ПОИСКПОЗX", "СМЕЩ", "ДВССЫЛ", "СТРОКА", "СТРОКИ", "СТОЛБЕЦ", "СТОЛБЦЫ", "ПРОСМОТР", "ВЫБОР", "ТРАНСП", "АДРЕС", "ГИПЕРССЫЛКА", "ФОРМУЛАТЕКСТ", "AREAS", "GETPIVOTDATA", "IMAGE", "RTD"],
+    "Логические": ["ЕСЛИ", "И", "ИЛИ", "ЕСЛИОШИБКА", "ЕСНД", "НЕ", "ИСТИНА", "ЛОЖЬ", "ЕСЛИМН", "ПЕРЕКЛЮЧ", "ИСКЛИЛИ"],
+    "Текстовые": ["СЦЕПИТЬ", "СЦЕП", "ОБЪЕДИНИТЬ", "ЛЕВСИМВ", "ПРАВСИМВ", "ПСТР", "ДЛСТР", "НАЙТИ", "ПОИСК", "ЗАМЕНИТЬ", "ПОДСТАВИТЬ", "ПРОПИСН", "СТРОЧН", "ПРОПНАЧ", "СЖПРОБЕЛЫ", "ТЕКСТ", "ЗНАЧЕН", "СОВПАД", "ПОВТОР", "СИМВОЛ", "КОДСИМВ", "ПЕЧСИМВ", "ASC", "ARRAYTOTEXT", "BAHTTEXT", "DBCS", "DETECTLANGUAGE", "DOLLAR", "FINDB", "FIXED", "LEFTB", "LENB", "MIDB", "NUMBERVALUE", "PHONETIC", "REGEXEXTRACT", "REGEXREPLACE", "REGEXTEST", "REPLACEB", "RIGHTB", "SEARCHB", "T", "TRANSLATE", "UNICHAR", "UNICODE", "VALUETOTEXT"],
+    "Дата и время": ["СЕГОДНЯ", "ТДАТА", "ДЕНЬ", "МЕСЯЦ", "ГОД", "ДАТА", "ДЕНЬНЕД", "ЧАС", "МИНУТЫ", "СЕКУНДЫ", "ВРЕМЯ", "РАБДЕНЬ", "РАБДЕНЬ.МЕЖД", "ЧИСТРАБДНИ", "ЧИСТРАБДНИ.МЕЖД", "ДОЛЯГОДА", "НОМНЕДЕЛИ", "НОМНЕДЕЛИ.ISO", "ДАТАМЕС", "КОНМЕСЯЦ", "РАЗНДАТ", "ДАТАЗНАЧ", "ВРЕМЗНАЧ", "DAYS", "DAYS360"],
+    "Статистические": ["СРЗНАЧ", "СРЗНАЧЕСЛИ", "СРЗНАЧЕСЛИМН", "МАКС", "МИН", "МАКСЕСЛИМН", "МИНЕСЛИМН", "СЧЁТ", "СЧЁТЕСЛИ", "СЧЁТЕСЛИМН", "СЧЁТЗ", "СЧИТАТЬПУСТОТЫ", "МЕДИАНА", "МОДА", "МОДА.ОДН", "НАИБОЛЬШИЙ", "НАИМЕНЬШИЙ", "РАНГ", "РАНГ.РВ", "СРГЕОМ", "СРГАРМ", "ДИСП", "СТАНДОТКЛОН", "КВАРТИЛЬ", "ПЕРСЕНТИЛЬ", "КОРРЕЛ", "AVEDEV", "AVERAGEA", "BETA.DIST", "BETA.INV", "BINOM.DIST", "BINOM.DIST.RANGE", "BINOM.INV", "CHISQ.DIST", "CHISQ.DIST.RT", "CHISQ.INV", "CHISQ.INV.RT", "CHISQ.TEST", "CONFIDENCE.NORM", "CONFIDENCE.T", "COVARIANCE.P", "COVARIANCE.S", "DEVSQ", "EXPON.DIST", "F.DIST", "F.DIST.RT", "F.INV", "F.INV.RT", "F.TEST", "FISHER", "FISHERINV", "FORECAST.ETS", "FORECAST.ETS.CONFINT", "FORECAST.ETS.SEASONALITY", "FORECAST.ETS.STAT", "FORECAST.LINEAR", "FREQUENCY", "GAMMA", "GAMMA.DIST", "GAMMA.INV", "GAMMALN", "GAMMALN.PRECISE", "GAUSS", "GROWTH", "HYPGEOM.DIST", "INTERCEPT", "KURT", "LINEST", "LOGEST", "LOGNORM.DIST", "LOGNORM.INV", "MAXA", "MINA", "MODE.MULT", "NEGBINOM.DIST", "NORM.DIST", "NORM.INV", "NORM.S.DIST", "NORM.S.INV", "PEARSON", "PERCENTILE.EXC", "PERCENTILE.INC", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERMUT", "PERMUTATIONA", "PHI", "POISSON.DIST", "PROB", "QUARTILE.EXC", "QUARTILE.INC", "RANK.AVG", "RSQ", "SKEW", "SKEW.P", "SLOPE", "STANDARDIZE", "STDEV.P", "STDEV.S", "STDEVA", "STDEVPA", "STEYX", "T.DIST", "T.DIST.2T", "T.DIST.RT", "T.INV", "T.INV.2T", "T.TEST", "TREND", "TRIMMEAN", "VAR.P", "VAR.S", "VARA", "VARPA", "WEIBULL.DIST", "Z.TEST"],
+    "Финансовые": ["ПЛТ", "БС", "КПЕР", "СТАВКА", "ПРПЛТ", "ОСПЛТ", "ЧПС", "ВНДОХ", "ЭФФЕКТ", "НОМИНАЛ", "АПЛ", "ACCRINT", "ACCRINTM", "AMORDEGRC", "AMORLINC", "COUPDAYBS", "COUPDAYS", "COUPDAYSNC", "COUPNCD", "COUPNUM", "COUPPCD", "CUMIPMT", "CUMPRINC", "DB", "DDB", "DISC", "DOLLARDE", "DOLLARFR", "DURATION", "FVSCHEDULE", "INTRATE", "ISPMT", "MDURATION", "MIRR", "ODDFPRICE", "ODDFYIELD", "ODDLPRICE", "ODDLYIELD", "PDURATION", "PRICE", "PRICEDISC", "PRICEMAT", "PV", "RECEIVED", "RRI", "SYD", "TBILLEQ", "TBILLPRICE", "TBILLYIELD", "VDB", "XIRR", "XNPV", "YIELD", "YIELDDISC", "YIELDMAT"],
+    "Базы данных": ["БДСУММ", "ДСРЗНАЧ", "ДМАКС", "ДМИН", "БСЧЁТ", "БСЧЁТА", "БДПРОИЗВЕД", "БИЗВЛЕЧЬ", "DSTDEV", "DSTDEVP", "DVAR", "DVARP"],
+    "Информационные": ["ЕПУСТО", "ЕЧИСЛО", "ЕТЕКСТ", "ЕНЕТЕКСТ", "ЕЛОГИЧ", "ЕОШИБКА", "ЕОШ", "ЕНД", "ТИП", "ТИП.ОШИБКИ", "ЯЧЕЙКА", "ЛИСТ", "ЛИСТЫ", "Ч", "INFO", "ISEVEN", "ISFORMULA", "ISODD", "ISOMITTED", "ISREF", "NA", "STOCKHISTORY"],
+    "Инженерные": ["ДЕС.В.ДВ", "ДЕС.В.ШЕСТН", "ДЕС.В.ВОСЬМ", "ДВ.В.ДЕС", "ДВ.В.ШЕСТН", "ШЕСТН.В.ДЕС", "ШЕСТН.В.ДВ", "ПРЕОБР", "ДЕЛЬТА", "ПОРОГ", "BESSELI", "BESSELJ", "BESSELK", "BESSELY", "BIN2OCT", "BITAND", "BITLSHIFT", "BITOR", "BITRSHIFT", "BITXOR", "COMPLEX", "ERF", "ERF.PRECISE", "ERFC", "ERFC.PRECISE", "HEX2OCT", "IMABS", "IMAGINARY", "IMARGUMENT", "IMCONJUGATE", "IMCOS", "IMCOSH", "IMCOT", "IMCSC", "IMCSCH", "IMDIV", "IMEXP", "IMLN", "IMLOG10", "IMLOG2", "IMPOWER", "IMPRODUCT", "IMREAL", "IMSEC", "IMSECH", "IMSIN", "IMSINH", "IMSQRT", "IMSUB", "IMSUM", "IMTAN", "OCT2BIN", "OCT2DEC", "OCT2HEX"],
+    "Совместимость": ["BETADIST", "BETAINV", "BINOMDIST", "CHIDIST", "CHIINV", "CHITEST", "CONFIDENCE", "COVAR", "CRITBINOM", "EXPONDIST", "FDIST", "FINV", "FLOOR", "FORECAST", "FTEST", "GAMMADIST", "GAMMAINV", "HYPGEOMDIST", "LOGINV", "LOGNORMDIST", "NEGBINOMDIST", "NORMDIST", "NORMINV", "NORMSDIST", "NORMSINV", "PERCENTRANK", "POISSON", "STDEVP", "TDIST", "TINV", "TTEST", "VARP", "WEIBULL", "ZTEST"],
+    "Кубы": ["CUBEKPIMEMBER", "CUBEMEMBER", "CUBEMEMBERPROPERTY", "CUBERANKEDMEMBER", "CUBESET", "CUBESETCOUNT", "CUBEVALUE"],
+    "Надстройки": ["CALL", "EUROCONVERT", "REGISTER.ID"],
+    "Веб-функции": ["ENCODEURL", "FILTERXML", "WEBSERVICE"]
   };
   const FUNCTION_META = {
-    "СУММ": {
-      "en": "SUM",
-      "category": "Математические",
+    "BETADIST": {
+      "en": "BETADIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СУММ",
-      "aliases": [
-        "СУММ",
-        "SUM"
-      ],
+      "name": "BETADIST",
       "reference": false
     },
-    "СУММЕСЛИ": {
-      "en": "SUMIF",
-      "category": "Математические",
+    "BETAINV": {
+      "en": "BETAINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СУММЕСЛИ",
-      "aliases": [
-        "СУММЕСЛИ",
-        "SUMIF"
-      ],
+      "name": "BETAINV",
       "reference": false
     },
-    "СУММЕСЛИМН": {
-      "en": "SUMIFS",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "СУММЕСЛИМН",
-      "aliases": [
-        "СУММЕСЛИМН",
-        "SUMIFS"
-      ],
-      "reference": false
-    },
-    "ОКРУГЛ": {
-      "en": "ROUND",
-      "category": "Математические",
+    "BINOMDIST": {
+      "en": "BINOMDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ОКРУГЛ",
-      "aliases": [
-        "ОКРУГЛ",
-        "ROUND"
-      ],
+      "name": "BINOMDIST",
       "reference": false
     },
-    "ОКРУГЛВВЕРХ": {
-      "en": "ROUNDUP",
-      "category": "Математические",
+    "CHIDIST": {
+      "en": "CHIDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ОКРУГЛВВЕРХ",
-      "aliases": [
-        "ОКРУГЛВВЕРХ",
-        "ROUNDUP"
-      ],
+      "name": "CHIDIST",
       "reference": false
     },
-    "ОКРУГЛВНИЗ": {
-      "en": "ROUNDDOWN",
-      "category": "Математические",
+    "CHIINV": {
+      "en": "CHIINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ОКРУГЛВНИЗ",
-      "aliases": [
-        "ОКРУГЛВНИЗ",
-        "ROUNDDOWN"
-      ],
+      "name": "CHIINV",
       "reference": false
     },
-    "ОКРУГЛТ": {
-      "en": "MROUND",
-      "category": "Математические",
+    "CHITEST": {
+      "en": "CHITEST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ОКРУГЛТ",
-      "aliases": [
-        "ОКРУГЛТ",
-        "MROUND"
-      ],
-      "reference": false
-    },
-    "ПРОИЗВЕД": {
-      "en": "PRODUCT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПРОИЗВЕД",
-      "aliases": [
-        "ПРОИЗВЕД",
-        "PRODUCT"
-      ],
-      "reference": false
-    },
-    "ОСТАТ": {
-      "en": "MOD",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ОСТАТ",
-      "aliases": [
-        "ОСТАТ",
-        "MOD"
-      ],
-      "reference": false
-    },
-    "КОРЕНЬ": {
-      "en": "SQRT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "КОРЕНЬ",
-      "aliases": [
-        "КОРЕНЬ",
-        "SQRT"
-      ],
-      "reference": false
-    },
-    "СТЕПЕНЬ": {
-      "en": "POWER",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТЕПЕНЬ",
-      "aliases": [
-        "СТЕПЕНЬ",
-        "POWER"
-      ],
-      "reference": false
-    },
-    "СЛЧИС": {
-      "en": "RAND",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЛЧИС",
-      "aliases": [
-        "СЛЧИС",
-        "RAND"
-      ],
-      "reference": false
-    },
-    "СЛМЕЖДУ": {
-      "en": "RANDBETWEEN",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЛМЕЖДУ",
-      "aliases": [
-        "СЛМЕЖДУ",
-        "RANDBETWEEN"
-      ],
-      "reference": false
-    },
-    "ЦЕЛОЕ": {
-      "en": "INT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЦЕЛОЕ",
-      "aliases": [
-        "ЦЕЛОЕ",
-        "INT"
-      ],
-      "reference": false
-    },
-    "ОТБР": {
-      "en": "TRUNC",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ОТБР",
-      "aliases": [
-        "ОТБР",
-        "TRUNC"
-      ],
-      "reference": false
-    },
-    "ЧАСТНОЕ": {
-      "en": "QUOTIENT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЧАСТНОЕ",
-      "aliases": [
-        "ЧАСТНОЕ",
-        "QUOTIENT"
-      ],
-      "reference": false
-    },
-    "СУММПРОИЗВ": {
-      "en": "SUMPRODUCT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СУММПРОИЗВ",
-      "aliases": [
-        "СУММПРОИЗВ",
-        "SUMPRODUCT"
-      ],
-      "reference": false
-    },
-    "АБС": {
-      "en": "ABS",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "АБС",
-      "aliases": [
-        "АБС",
-        "ABS"
-      ],
-      "reference": false
-    },
-    "ЗНАК": {
-      "en": "SIGN",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЗНАК",
-      "aliases": [
-        "ЗНАК",
-        "SIGN"
-      ],
-      "reference": false
-    },
-    "ЧЁТН": {
-      "en": "EVEN",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЧЁТН",
-      "aliases": [
-        "ЧЁТН",
-        "EVEN"
-      ],
-      "reference": false
-    },
-    "НЕЧЁТ": {
-      "en": "ODD",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "НЕЧЁТ",
-      "aliases": [
-        "НЕЧЁТ",
-        "ODD"
-      ],
-      "reference": false
-    },
-    "ФАКТР": {
-      "en": "FACT",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ФАКТР",
-      "aliases": [
-        "ФАКТР",
-        "FACT"
-      ],
-      "reference": false
-    },
-    "ПИ": {
-      "en": "PI",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПИ",
-      "aliases": [
-        "ПИ",
-        "PI"
-      ],
-      "reference": false
-    },
-    "РИМСКОЕ": {
-      "en": "ROMAN",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "РИМСКОЕ",
-      "aliases": [
-        "РИМСКОЕ",
-        "ROMAN"
-      ],
-      "reference": false
-    },
-    "АРАБСКОЕ": {
-      "en": "ARABIC",
-      "category": "Математические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "АРАБСКОЕ",
-      "aliases": [
-        "АРАБСКОЕ",
-        "ARABIC"
-      ],
-      "reference": false
-    },
-    "ПРОСМОТРX": {
-      "en": "XLOOKUP",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "ПРОСМОТРX",
-      "aliases": [
-        "ПРОСМОТРX",
-        "XLOOKUP"
-      ],
-      "reference": false
-    },
-    "ФИЛЬТР": {
-      "en": "FILTER",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "ФИЛЬТР",
-      "aliases": [
-        "ФИЛЬТР",
-        "FILTER"
-      ],
-      "reference": false
-    },
-    "УНИК": {
-      "en": "UNIQUE",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "УНИК",
-      "aliases": [
-        "УНИК",
-        "UNIQUE"
-      ],
-      "reference": false
-    },
-    "СОРТ": {
-      "en": "SORT",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "СОРТ",
-      "aliases": [
-        "СОРТ",
-        "SORT"
-      ],
-      "reference": false
-    },
-    "СОРТПО": {
-      "en": "SORTBY",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "СОРТПО",
-      "aliases": [
-        "СОРТПО",
-        "SORTBY"
-      ],
-      "reference": false
-    },
-    "ПОСЛЕДОВ": {
-      "en": "SEQUENCE",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "ПОСЛЕДОВ",
-      "aliases": [
-        "ПОСЛЕДОВ",
-        "SEQUENCE"
-      ],
-      "reference": false
-    },
-    "СЛМАССИВ": {
-      "en": "RANDARRAY",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "СЛМАССИВ",
-      "aliases": [
-        "СЛМАССИВ",
-        "RANDARRAY"
-      ],
-      "reference": false
-    },
-    "ТЕКСТДО": {
-      "en": "TEXTBEFORE",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ТЕКСТДО",
-      "aliases": [
-        "ТЕКСТДО",
-        "TEXTBEFORE"
-      ],
-      "reference": false
-    },
-    "ТЕКСТПОСЛЕ": {
-      "en": "TEXTAFTER",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ТЕКСТПОСЛЕ",
-      "aliases": [
-        "ТЕКСТПОСЛЕ",
-        "TEXTAFTER"
-      ],
-      "reference": false
-    },
-    "ТЕКСТРАЗДЕЛ": {
-      "en": "TEXTSPLIT",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ТЕКСТРАЗДЕЛ",
-      "aliases": [
-        "ТЕКСТРАЗДЕЛ",
-        "TEXTSPLIT"
-      ],
-      "reference": false
-    },
-    "ВСТРОКУ": {
-      "en": "TOROW",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ВСТРОКУ",
-      "aliases": [
-        "ВСТРОКУ",
-        "TOROW"
-      ],
-      "reference": false
-    },
-    "ВСТОЛБЕЦ": {
-      "en": "TOCOL",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ВСТОЛБЕЦ",
-      "aliases": [
-        "ВСТОЛБЕЦ",
-        "TOCOL"
-      ],
-      "reference": false
-    },
-    "ВЫБОРСТОЛБЦОВ": {
-      "en": "CHOOSECOLS",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ВЫБОРСТОЛБЦОВ",
-      "aliases": [
-        "ВЫБОРСТОЛБЦОВ",
-        "CHOOSECOLS"
-      ],
-      "reference": false
-    },
-    "ВЫБОРСТРОК": {
-      "en": "CHOOSEROWS",
-      "category": "Динамические массивы",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2024",
-      "name": "ВЫБОРСТРОК",
-      "aliases": [
-        "ВЫБОРСТРОК",
-        "CHOOSEROWS"
-      ],
-      "reference": false
-    },
-    "ВПР": {
-      "en": "VLOOKUP",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ВПР",
-      "aliases": [
-        "ВПР",
-        "VLOOKUP"
-      ],
-      "reference": false
-    },
-    "ГПР": {
-      "en": "HLOOKUP",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ГПР",
-      "aliases": [
-        "ГПР",
-        "HLOOKUP"
-      ],
-      "reference": false
-    },
-    "ИНДЕКС": {
-      "en": "INDEX",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ИНДЕКС",
-      "aliases": [
-        "ИНДЕКС",
-        "INDEX"
-      ],
-      "reference": false
-    },
-    "ПОИСКПОЗ": {
-      "en": "MATCH",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПОИСКПОЗ",
-      "aliases": [
-        "ПОИСКПОЗ",
-        "MATCH"
-      ],
-      "reference": false
-    },
-    "ПОИСКПОЗX": {
-      "en": "XMATCH",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2021",
-      "name": "ПОИСКПОЗX",
-      "aliases": [
-        "ПОИСКПОЗX",
-        "XMATCH"
-      ],
-      "reference": false
-    },
-    "СМЕЩ": {
-      "en": "OFFSET",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СМЕЩ",
-      "aliases": [
-        "СМЕЩ",
-        "OFFSET"
-      ],
-      "reference": false
-    },
-    "ДВССЫЛ": {
-      "en": "INDIRECT",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДВССЫЛ",
-      "aliases": [
-        "ДВССЫЛ",
-        "INDIRECT"
-      ],
-      "reference": false
-    },
-    "СТРОКА": {
-      "en": "ROW",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТРОКА",
-      "aliases": [
-        "СТРОКА",
-        "ROW"
-      ],
-      "reference": false
-    },
-    "СТРОКИ": {
-      "en": "ROWS",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТРОКИ",
-      "aliases": [
-        "СТРОКИ",
-        "ROWS"
-      ],
-      "reference": false
-    },
-    "СТОЛБЕЦ": {
-      "en": "COLUMN",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТОЛБЕЦ",
-      "aliases": [
-        "СТОЛБЕЦ",
-        "COLUMN"
-      ],
-      "reference": false
-    },
-    "СТОЛБЦЫ": {
-      "en": "COLUMNS",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТОЛБЦЫ",
-      "aliases": [
-        "СТОЛБЦЫ",
-        "COLUMNS"
-      ],
-      "reference": false
-    },
-    "ПРОСМОТР": {
-      "en": "LOOKUP",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПРОСМОТР",
-      "aliases": [
-        "ПРОСМОТР",
-        "LOOKUP"
-      ],
-      "reference": false
-    },
-    "ВЫБОР": {
-      "en": "CHOOSE",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ВЫБОР",
-      "aliases": [
-        "ВЫБОР",
-        "CHOOSE"
-      ],
-      "reference": false
-    },
-    "ТРАНСП": {
-      "en": "TRANSPOSE",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ТРАНСП",
-      "aliases": [
-        "ТРАНСП",
-        "TRANSPOSE"
-      ],
-      "reference": false
-    },
-    "АДРЕС": {
-      "en": "ADDRESS",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "АДРЕС",
-      "aliases": [
-        "АДРЕС",
-        "ADDRESS"
-      ],
-      "reference": false
-    },
-    "ГИПЕРССЫЛКА": {
-      "en": "HYPERLINK",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ГИПЕРССЫЛКА",
-      "aliases": [
-        "ГИПЕРССЫЛКА",
-        "HYPERLINK"
-      ],
-      "reference": false
-    },
-    "ФОРМУЛАТЕКСТ": {
-      "en": "FORMULATEXT",
-      "category": "Поиск и ссылки",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2013",
-      "name": "ФОРМУЛАТЕКСТ",
-      "aliases": [
-        "ФОРМУЛАТЕКСТ",
-        "FORMULATEXT"
-      ],
-      "reference": false
-    },
-    "ЕСЛИ": {
-      "en": "IF",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЕСЛИ",
-      "aliases": [
-        "ЕСЛИ",
-        "IF"
-      ],
-      "reference": false
-    },
-    "И": {
-      "en": "AND",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "И",
-      "aliases": [
-        "И",
-        "AND"
-      ],
-      "reference": false
-    },
-    "ИЛИ": {
-      "en": "OR",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ИЛИ",
-      "aliases": [
-        "ИЛИ",
-        "OR"
-      ],
-      "reference": false
-    },
-    "ЕСЛИОШИБКА": {
-      "en": "IFERROR",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЕСЛИОШИБКА",
-      "aliases": [
-        "ЕСЛИОШИБКА",
-        "IFERROR"
-      ],
-      "reference": false
-    },
-    "ЕСНД": {
-      "en": "IFNA",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2013",
-      "name": "ЕСНД",
-      "aliases": [
-        "ЕСНД",
-        "IFNA"
-      ],
-      "reference": false
-    },
-    "НЕ": {
-      "en": "NOT",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "НЕ",
-      "aliases": [
-        "НЕ",
-        "NOT"
-      ],
-      "reference": false
-    },
-    "ИСТИНА": {
-      "en": "TRUE",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ИСТИНА",
-      "aliases": [
-        "ИСТИНА",
-        "TRUE"
-      ],
-      "reference": false
-    },
-    "ЛОЖЬ": {
-      "en": "FALSE",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЛОЖЬ",
-      "aliases": [
-        "ЛОЖЬ",
-        "FALSE"
-      ],
-      "reference": false
-    },
-    "ЕСЛИМН": {
-      "en": "IFS",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "ЕСЛИМН",
-      "aliases": [
-        "ЕСЛИМН",
-        "IFS"
-      ],
-      "reference": false
-    },
-    "ПЕРЕКЛЮЧ": {
-      "en": "SWITCH",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2016",
-      "name": "ПЕРЕКЛЮЧ",
-      "aliases": [
-        "ПЕРЕКЛЮЧ",
-        "SWITCH"
-      ],
-      "reference": false
-    },
-    "ИСКЛИЛИ": {
-      "en": "XOR",
-      "category": "Логические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2013",
-      "name": "ИСКЛИЛИ",
-      "aliases": [
-        "ИСКЛИЛИ",
-        "XOR"
-      ],
+      "name": "CHITEST",
       "reference": false
     },
     "СЦЕПИТЬ": {
@@ -1039,696 +95,119 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "СЦЕПИТЬ",
-      "aliases": [
-        "СЦЕПИТЬ",
-        "CONCATENATE"
-      ],
+      "aliases": ["СЦЕПИТЬ", "CONCATENATE"],
       "reference": false
     },
-    "СЦЕП": {
-      "en": "CONCAT",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "СЦЕП",
-      "aliases": [
-        "СЦЕП",
-        "CONCAT"
-      ],
-      "reference": false
-    },
-    "ОБЪЕДИНИТЬ": {
-      "en": "TEXTJOIN",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "ОБЪЕДИНИТЬ",
-      "aliases": [
-        "ОБЪЕДИНИТЬ",
-        "TEXTJOIN"
-      ],
-      "reference": false
-    },
-    "ЛЕВСИМВ": {
-      "en": "LEFT",
-      "category": "Текстовые",
+    "CONFIDENCE": {
+      "en": "CONFIDENCE",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЛЕВСИМВ",
-      "aliases": [
-        "ЛЕВСИМВ",
-        "LEFT"
-      ],
+      "name": "CONFIDENCE",
       "reference": false
     },
-    "ПРАВСИМВ": {
-      "en": "RIGHT",
-      "category": "Текстовые",
+    "COVAR": {
+      "en": "COVAR",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПРАВСИМВ",
-      "aliases": [
-        "ПРАВСИМВ",
-        "RIGHT"
-      ],
+      "name": "COVAR",
       "reference": false
     },
-    "ПСТР": {
-      "en": "MID",
-      "category": "Текстовые",
+    "CRITBINOM": {
+      "en": "CRITBINOM",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПСТР",
-      "aliases": [
-        "ПСТР",
-        "MID"
-      ],
+      "name": "CRITBINOM",
       "reference": false
     },
-    "ДЛСТР": {
-      "en": "LEN",
-      "category": "Текстовые",
+    "EXPONDIST": {
+      "en": "EXPONDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ДЛСТР",
-      "aliases": [
-        "ДЛСТР",
-        "LEN"
-      ],
+      "name": "EXPONDIST",
       "reference": false
     },
-    "НАЙТИ": {
-      "en": "FIND",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
-      "version": "",
-      "name": "НАЙТИ",
-      "aliases": [
-        "НАЙТИ",
-        "FIND"
-      ],
-      "reference": false
-    },
-    "ПОИСК": {
-      "en": "SEARCH",
-      "category": "Текстовые",
+    "FDIST": {
+      "en": "FDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПОИСК",
-      "aliases": [
-        "ПОИСК",
-        "SEARCH"
-      ],
+      "name": "FDIST",
       "reference": false
     },
-    "ЗАМЕНИТЬ": {
-      "en": "REPLACE",
-      "category": "Текстовые",
+    "FINV": {
+      "en": "FINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЗАМЕНИТЬ",
-      "aliases": [
-        "ЗАМЕНИТЬ",
-        "REPLACE"
-      ],
+      "name": "FINV",
       "reference": false
     },
-    "ПОДСТАВИТЬ": {
-      "en": "SUBSTITUTE",
-      "category": "Текстовые",
+    "FLOOR": {
+      "en": "FLOOR",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПОДСТАВИТЬ",
-      "aliases": [
-        "ПОДСТАВИТЬ",
-        "SUBSTITUTE"
-      ],
+      "name": "FLOOR",
       "reference": false
     },
-    "ПРОПИСН": {
-      "en": "UPPER",
-      "category": "Текстовые",
+    "FORECAST": {
+      "en": "FORECAST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПРОПИСН",
-      "aliases": [
-        "ПРОПИСН",
-        "UPPER"
-      ],
+      "name": "FORECAST",
       "reference": false
     },
-    "СТРОЧН": {
-      "en": "LOWER",
-      "category": "Текстовые",
+    "FTEST": {
+      "en": "FTEST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СТРОЧН",
-      "aliases": [
-        "СТРОЧН",
-        "LOWER"
-      ],
+      "name": "FTEST",
       "reference": false
     },
-    "ПРОПНАЧ": {
-      "en": "PROPER",
-      "category": "Текстовые",
+    "GAMMADIST": {
+      "en": "GAMMADIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПРОПНАЧ",
-      "aliases": [
-        "ПРОПНАЧ",
-        "PROPER"
-      ],
+      "name": "GAMMADIST",
       "reference": false
     },
-    "СЖПРОБЕЛЫ": {
-      "en": "TRIM",
-      "category": "Текстовые",
+    "GAMMAINV": {
+      "en": "GAMMAINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СЖПРОБЕЛЫ",
-      "aliases": [
-        "СЖПРОБЕЛЫ",
-        "TRIM"
-      ],
+      "name": "GAMMAINV",
       "reference": false
     },
-    "ТЕКСТ": {
-      "en": "TEXT",
-      "category": "Текстовые",
+    "HYPGEOMDIST": {
+      "en": "HYPGEOMDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ТЕКСТ",
-      "aliases": [
-        "ТЕКСТ",
-        "TEXT"
-      ],
+      "name": "HYPGEOMDIST",
       "reference": false
     },
-    "ЗНАЧЕН": {
-      "en": "VALUE",
-      "category": "Текстовые",
+    "LOGINV": {
+      "en": "LOGINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЗНАЧЕН",
-      "aliases": [
-        "ЗНАЧЕН",
-        "VALUE"
-      ],
+      "name": "LOGINV",
       "reference": false
     },
-    "СОВПАД": {
-      "en": "EXACT",
-      "category": "Текстовые",
+    "LOGNORMDIST": {
+      "en": "LOGNORMDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СОВПАД",
-      "aliases": [
-        "СОВПАД",
-        "EXACT"
-      ],
-      "reference": false
-    },
-    "ПОВТОР": {
-      "en": "REPT",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПОВТОР",
-      "aliases": [
-        "ПОВТОР",
-        "REPT"
-      ],
-      "reference": false
-    },
-    "СИМВОЛ": {
-      "en": "CHAR",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СИМВОЛ",
-      "aliases": [
-        "СИМВОЛ",
-        "CHAR"
-      ],
-      "reference": false
-    },
-    "КОДСИМВ": {
-      "en": "CODE",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "КОДСИМВ",
-      "aliases": [
-        "КОДСИМВ",
-        "CODE"
-      ],
-      "reference": false
-    },
-    "ПЕЧСИМВ": {
-      "en": "CLEAN",
-      "category": "Текстовые",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ПЕЧСИМВ",
-      "aliases": [
-        "ПЕЧСИМВ",
-        "CLEAN"
-      ],
-      "reference": false
-    },
-    "СЕГОДНЯ": {
-      "en": "TODAY",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЕГОДНЯ",
-      "aliases": [
-        "СЕГОДНЯ",
-        "TODAY"
-      ],
-      "reference": false
-    },
-    "ТДАТА": {
-      "en": "NOW",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ТДАТА",
-      "aliases": [
-        "ТДАТА",
-        "NOW"
-      ],
-      "reference": false
-    },
-    "ДЕНЬ": {
-      "en": "DAY",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДЕНЬ",
-      "aliases": [
-        "ДЕНЬ",
-        "DAY"
-      ],
-      "reference": false
-    },
-    "МЕСЯЦ": {
-      "en": "MONTH",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "МЕСЯЦ",
-      "aliases": [
-        "МЕСЯЦ",
-        "MONTH"
-      ],
-      "reference": false
-    },
-    "ГОД": {
-      "en": "YEAR",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ГОД",
-      "aliases": [
-        "ГОД",
-        "YEAR"
-      ],
-      "reference": false
-    },
-    "ДАТА": {
-      "en": "DATE",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДАТА",
-      "aliases": [
-        "ДАТА",
-        "DATE"
-      ],
-      "reference": false
-    },
-    "ДЕНЬНЕД": {
-      "en": "WEEKDAY",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДЕНЬНЕД",
-      "aliases": [
-        "ДЕНЬНЕД",
-        "WEEKDAY"
-      ],
-      "reference": false
-    },
-    "ЧАС": {
-      "en": "HOUR",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЧАС",
-      "aliases": [
-        "ЧАС",
-        "HOUR"
-      ],
-      "reference": false
-    },
-    "МИНУТЫ": {
-      "en": "MINUTE",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "МИНУТЫ",
-      "aliases": [
-        "МИНУТЫ",
-        "MINUTE"
-      ],
-      "reference": false
-    },
-    "СЕКУНДЫ": {
-      "en": "SECOND",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЕКУНДЫ",
-      "aliases": [
-        "СЕКУНДЫ",
-        "SECOND"
-      ],
-      "reference": false
-    },
-    "ВРЕМЯ": {
-      "en": "TIME",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ВРЕМЯ",
-      "aliases": [
-        "ВРЕМЯ",
-        "TIME"
-      ],
-      "reference": false
-    },
-    "РАБДЕНЬ": {
-      "en": "WORKDAY",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "РАБДЕНЬ",
-      "aliases": [
-        "РАБДЕНЬ",
-        "WORKDAY"
-      ],
-      "reference": false
-    },
-    "РАБДЕНЬ.МЕЖД": {
-      "en": "WORKDAY.INTL",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2010",
-      "name": "РАБДЕНЬ.МЕЖД",
-      "aliases": [
-        "РАБДЕНЬ.МЕЖД",
-        "WORKDAY.INTL"
-      ],
-      "reference": false
-    },
-    "ЧИСТРАБДНИ": {
-      "en": "NETWORKDAYS",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЧИСТРАБДНИ",
-      "aliases": [
-        "ЧИСТРАБДНИ",
-        "NETWORKDAYS"
-      ],
-      "reference": false
-    },
-    "ЧИСТРАБДНИ.МЕЖД": {
-      "en": "NETWORKDAYS.INTL",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2010",
-      "name": "ЧИСТРАБДНИ.МЕЖД",
-      "aliases": [
-        "ЧИСТРАБДНИ.МЕЖД",
-        "NETWORKDAYS.INTL"
-      ],
-      "reference": false
-    },
-    "ДОЛЯГОДА": {
-      "en": "YEARFRAC",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДОЛЯГОДА",
-      "aliases": [
-        "ДОЛЯГОДА",
-        "YEARFRAC"
-      ],
-      "reference": false
-    },
-    "НОМНЕДЕЛИ": {
-      "en": "WEEKNUM",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "НОМНЕДЕЛИ",
-      "aliases": [
-        "НОМНЕДЕЛИ",
-        "WEEKNUM"
-      ],
-      "reference": false
-    },
-    "НОМНЕДЕЛИ.ISO": {
-      "en": "ISOWEEKNUM",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2013",
-      "name": "НОМНЕДЕЛИ.ISO",
-      "aliases": [
-        "НОМНЕДЕЛИ.ISO",
-        "ISOWEEKNUM"
-      ],
-      "reference": false
-    },
-    "ДАТАМЕС": {
-      "en": "EDATE",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДАТАМЕС",
-      "aliases": [
-        "ДАТАМЕС",
-        "EDATE"
-      ],
-      "reference": false
-    },
-    "КОНМЕСЯЦ": {
-      "en": "EOMONTH",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "КОНМЕСЯЦ",
-      "aliases": [
-        "КОНМЕСЯЦ",
-        "EOMONTH"
-      ],
-      "reference": false
-    },
-    "РАЗНДАТ": {
-      "en": "DATEDIF",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "РАЗНДАТ",
-      "aliases": [
-        "РАЗНДАТ",
-        "DATEDIF"
-      ],
-      "reference": false
-    },
-    "ДАТАЗНАЧ": {
-      "en": "DATEVALUE",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДАТАЗНАЧ",
-      "aliases": [
-        "ДАТАЗНАЧ",
-        "DATEVALUE"
-      ],
-      "reference": false
-    },
-    "ВРЕМЗНАЧ": {
-      "en": "TIMEVALUE",
-      "category": "Дата и время",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ВРЕМЗНАЧ",
-      "aliases": [
-        "ВРЕМЗНАЧ",
-        "TIMEVALUE"
-      ],
-      "reference": false
-    },
-    "СРЗНАЧ": {
-      "en": "AVERAGE",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СРЗНАЧ",
-      "aliases": [
-        "СРЗНАЧ",
-        "AVERAGE"
-      ],
-      "reference": false
-    },
-    "СРЗНАЧЕСЛИ": {
-      "en": "AVERAGEIF",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СРЗНАЧЕСЛИ",
-      "aliases": [
-        "СРЗНАЧЕСЛИ",
-        "AVERAGEIF"
-      ],
-      "reference": false
-    },
-    "СРЗНАЧЕСЛИМН": {
-      "en": "AVERAGEIFS",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "СРЗНАЧЕСЛИМН",
-      "aliases": [
-        "СРЗНАЧЕСЛИМН",
-        "AVERAGEIFS"
-      ],
-      "reference": false
-    },
-    "МАКС": {
-      "en": "MAX",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "МАКС",
-      "aliases": [
-        "МАКС",
-        "MAX"
-      ],
-      "reference": false
-    },
-    "МИН": {
-      "en": "MIN",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "МИН",
-      "aliases": [
-        "МИН",
-        "MIN"
-      ],
-      "reference": false
-    },
-    "МАКСЕСЛИ": {
-      "en": "MAXIFS",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "МАКСЕСЛИ",
-      "aliases": [
-        "МАКСЕСЛИ",
-        "МАКСЕСЛИМН",
-        "MAXIFS"
-      ],
-      "reference": false
-    },
-    "МИНЕСЛИ": {
-      "en": "MINIFS",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "МИНЕСЛИ",
-      "aliases": [
-        "МИНЕСЛИ",
-        "МИНЕСЛИМН",
-        "MINIFS"
-      ],
-      "reference": false
-    },
-    "СЧЁТ": {
-      "en": "COUNT",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЧЁТ",
-      "aliases": [
-        "СЧЁТ",
-        "COUNT"
-      ],
-      "reference": false
-    },
-    "СЧЁТЕСЛИ": {
-      "en": "COUNTIF",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЧЁТЕСЛИ",
-      "aliases": [
-        "СЧЁТЕСЛИ",
-        "COUNTIF"
-      ],
-      "reference": false
-    },
-    "СЧЁТЕСЛИМН": {
-      "en": "COUNTIFS",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2019",
-      "name": "СЧЁТЕСЛИМН",
-      "aliases": [
-        "СЧЁТЕСЛИМН",
-        "COUNTIFS"
-      ],
-      "reference": false
-    },
-    "СЧЁТЗ": {
-      "en": "COUNTA",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЧЁТЗ",
-      "aliases": [
-        "СЧЁТЗ",
-        "COUNTA"
-      ],
-      "reference": false
-    },
-    "СЧИТАТЬПУСТОТЫ": {
-      "en": "COUNTBLANK",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СЧИТАТЬПУСТОТЫ",
-      "aliases": [
-        "СЧИТАТЬПУСТОТЫ",
-        "COUNTBLANK"
-      ],
-      "reference": false
-    },
-    "МЕДИАНА": {
-      "en": "MEDIAN",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "МЕДИАНА",
-      "aliases": [
-        "МЕДИАНА",
-        "MEDIAN"
-      ],
+      "name": "LOGNORMDIST",
       "reference": false
     },
     "МОДА": {
@@ -1737,130 +216,47 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "МОДА",
-      "aliases": [
-        "МОДА",
-        "MODE"
-      ],
+      "aliases": ["МОДА", "MODE"],
       "reference": false
     },
-    "МОДА.ОДН": {
-      "en": "MODE.SNGL",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2010",
-      "name": "МОДА.ОДН",
-      "aliases": [
-        "МОДА.ОДН",
-        "MODE.SNGL"
-      ],
-      "reference": false
-    },
-    "НАИБОЛЬШИЙ": {
-      "en": "LARGE",
-      "category": "Статистические",
+    "NEGBINOMDIST": {
+      "en": "NEGBINOMDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "НАИБОЛЬШИЙ",
-      "aliases": [
-        "НАИБОЛЬШИЙ",
-        "LARGE"
-      ],
+      "name": "NEGBINOMDIST",
       "reference": false
     },
-    "НАИМЕНЬШИЙ": {
-      "en": "SMALL",
-      "category": "Статистические",
+    "NORMDIST": {
+      "en": "NORMDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "НАИМЕНЬШИЙ",
-      "aliases": [
-        "НАИМЕНЬШИЙ",
-        "SMALL"
-      ],
+      "name": "NORMDIST",
       "reference": false
     },
-    "РАНГ": {
-      "en": "RANK",
-      "category": "Статистические",
+    "NORMINV": {
+      "en": "NORMINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "РАНГ",
-      "aliases": [
-        "РАНГ",
-        "RANK"
-      ],
+      "name": "NORMINV",
       "reference": false
     },
-    "РАНГ.РВ": {
-      "en": "RANK.EQ",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "2010",
-      "name": "РАНГ.РВ",
-      "aliases": [
-        "РАНГ.РВ",
-        "RANK.EQ"
-      ],
-      "reference": false
-    },
-    "СРГЕОМ": {
-      "en": "GEOMEAN",
-      "category": "Статистические",
+    "NORMSDIST": {
+      "en": "NORMSDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СРГЕОМ",
-      "aliases": [
-        "СРГЕОМ",
-        "GEOMEAN"
-      ],
+      "name": "NORMSDIST",
       "reference": false
     },
-    "СРГАРМ": {
-      "en": "HARMEAN",
-      "category": "Статистические",
+    "NORMSINV": {
+      "en": "NORMSINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СРГАРМ",
-      "aliases": [
-        "СРГАРМ",
-        "HARMEAN"
-      ],
-      "reference": false
-    },
-    "ДИСП": {
-      "en": "VAR",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ДИСП",
-      "aliases": [
-        "ДИСП",
-        "VAR"
-      ],
-      "reference": false
-    },
-    "СТАНДОТКЛОН": {
-      "en": "STDEV",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "СТАНДОТКЛОН",
-      "aliases": [
-        "СТАНДОТКЛОН",
-        "STDEV"
-      ],
-      "reference": false
-    },
-    "КВАРТИЛЬ": {
-      "en": "QUARTILE",
-      "category": "Статистические",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "КВАРТИЛЬ",
-      "aliases": [
-        "КВАРТИЛЬ",
-        "QUARTILE"
-      ],
+      "name": "NORMSINV",
       "reference": false
     },
     "ПЕРСЕНТИЛЬ": {
@@ -1869,232 +265,225 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ПЕРСЕНТИЛЬ",
-      "aliases": [
-        "ПЕРСЕНТИЛЬ",
-        "PERCENTILE"
-      ],
+      "aliases": ["ПЕРСЕНТИЛЬ", "PERCENTILE"],
       "reference": false
     },
-    "КОРРЕЛ": {
-      "en": "CORREL",
+    "PERCENTRANK": {
+      "en": "PERCENTRANK",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PERCENTRANK",
+      "reference": false
+    },
+    "POISSON": {
+      "en": "POISSON",
+      "category": "Совместимость",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "POISSON",
+      "reference": false
+    },
+    "КВАРТИЛЬ": {
+      "en": "QUARTILE",
       "category": "Статистические",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "КОРРЕЛ",
-      "aliases": [
-        "КОРРЕЛ",
-        "CORREL"
-      ],
+      "name": "КВАРТИЛЬ",
+      "aliases": ["КВАРТИЛЬ", "QUARTILE"],
       "reference": false
     },
-    "ПЛТ": {
-      "en": "PMT",
-      "category": "Финансовые",
+    "РАНГ": {
+      "en": "RANK",
+      "category": "Статистические",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПЛТ",
-      "aliases": [
-        "ПЛТ",
-        "PMT"
-      ],
+      "name": "РАНГ",
+      "aliases": ["РАНГ", "RANK"],
       "reference": false
     },
-    "БС": {
-      "en": "FV",
-      "category": "Финансовые",
+    "СТАНДОТКЛОН": {
+      "en": "STDEV",
+      "category": "Статистические",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БС",
-      "aliases": [
-        "БС",
-        "FV"
-      ],
+      "name": "СТАНДОТКЛОН",
+      "aliases": ["СТАНДОТКЛОН", "STDEV"],
       "reference": false
     },
-    "КПЕР": {
-      "en": "NPER",
-      "category": "Финансовые",
+    "STDEVP": {
+      "en": "STDEVP",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "КПЕР",
-      "aliases": [
-        "КПЕР",
-        "NPER"
-      ],
+      "name": "STDEVP",
       "reference": false
     },
-    "СТАВКА": {
-      "en": "RATE",
-      "category": "Финансовые",
+    "TDIST": {
+      "en": "TDIST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "СТАВКА",
-      "aliases": [
-        "СТАВКА",
-        "RATE"
-      ],
+      "name": "TDIST",
       "reference": false
     },
-    "ПРПЛТ": {
-      "en": "IPMT",
-      "category": "Финансовые",
+    "TINV": {
+      "en": "TINV",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ПРПЛТ",
-      "aliases": [
-        "ПРПЛТ",
-        "IPMT"
-      ],
+      "name": "TINV",
       "reference": false
     },
-    "ОСПЛТ": {
-      "en": "PPMT",
-      "category": "Финансовые",
+    "TTEST": {
+      "en": "TTEST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ОСПЛТ",
-      "aliases": [
-        "ОСПЛТ",
-        "PPMT"
-      ],
+      "name": "TTEST",
       "reference": false
     },
-    "ЧПС": {
-      "en": "NPV",
-      "category": "Финансовые",
+    "ДИСП": {
+      "en": "VAR",
+      "category": "Статистические",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЧПС",
-      "aliases": [
-        "ЧПС",
-        "NPV"
-      ],
+      "name": "ДИСП",
+      "aliases": ["ДИСП", "VAR"],
       "reference": false
     },
-    "ВНДОХ": {
-      "en": "IRR",
-      "category": "Финансовые",
+    "VARP": {
+      "en": "VARP",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ВНДОХ",
-      "aliases": [
-        "ВНДОХ",
-        "IRR"
-      ],
+      "name": "VARP",
       "reference": false
     },
-    "ЭФФЕКТ": {
-      "en": "EFFECT",
-      "category": "Финансовые",
+    "WEIBULL": {
+      "en": "WEIBULL",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЭФФЕКТ",
-      "aliases": [
-        "ЭФФЕКТ",
-        "EFFECT"
-      ],
+      "name": "WEIBULL",
       "reference": false
     },
-    "НОМИНАЛ": {
-      "en": "NOMINAL",
-      "category": "Финансовые",
+    "ZTEST": {
+      "en": "ZTEST",
+      "category": "Совместимость",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "НОМИНАЛ",
-      "aliases": [
-        "НОМИНАЛ",
-        "NOMINAL"
-      ],
+      "name": "ZTEST",
       "reference": false
     },
-    "АМОРТИЗ": {
-      "en": "SLN",
-      "category": "Финансовые",
+    "CUBEKPIMEMBER": {
+      "en": "CUBEKPIMEMBER",
+      "category": "Кубы",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "АМОРТИЗ",
-      "aliases": [
-        "АМОРТИЗ",
-        "АПЛ",
-        "SLN"
-      ],
-      "reference": false
+      "name": "CUBEKPIMEMBER",
+      "reference": true
     },
-    "БДСУММ": {
-      "en": "DSUM",
-      "category": "Базы данных",
+    "CUBEMEMBER": {
+      "en": "CUBEMEMBER",
+      "category": "Кубы",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БДСУММ",
-      "aliases": [
-        "БДСУММ",
-        "DSUM"
-      ],
-      "reference": false
+      "name": "CUBEMEMBER",
+      "reference": true
     },
-    "БДСРЗНАЧ": {
+    "CUBEMEMBERPROPERTY": {
+      "en": "CUBEMEMBERPROPERTY",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEMEMBERPROPERTY",
+      "reference": true
+    },
+    "CUBERANKEDMEMBER": {
+      "en": "CUBERANKEDMEMBER",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBERANKEDMEMBER",
+      "reference": true
+    },
+    "CUBESET": {
+      "en": "CUBESET",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBESET",
+      "reference": true
+    },
+    "CUBESETCOUNT": {
+      "en": "CUBESETCOUNT",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBESETCOUNT",
+      "reference": true
+    },
+    "CUBEVALUE": {
+      "en": "CUBEVALUE",
+      "category": "Кубы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUBEVALUE",
+      "reference": true
+    },
+    "ДСРЗНАЧ": {
       "en": "DAVERAGE",
       "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БДСРЗНАЧ",
-      "aliases": [
-        "БДСРЗНАЧ",
-        "ДСРЗНАЧ",
-        "DAVERAGE"
-      ],
+      "name": "ДСРЗНАЧ",
+      "aliases": ["БДСРЗНАЧ", "DAVERAGE"],
       "reference": false
     },
-    "БДМАКС": {
-      "en": "DMAX",
-      "category": "Базы данных",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "БДМАКС",
-      "aliases": [
-        "БДМАКС",
-        "ДМАКС",
-        "DMAX"
-      ],
-      "reference": false
-    },
-    "БДМИН": {
-      "en": "DMIN",
-      "category": "Базы данных",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "БДМИН",
-      "aliases": [
-        "БДМИН",
-        "ДМИН",
-        "DMIN"
-      ],
-      "reference": false
-    },
-    "БДСЧЁТ": {
+    "БСЧЁТ": {
       "en": "DCOUNT",
       "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БДСЧЁТ",
-      "aliases": [
-        "БДСЧЁТ",
-        "БСЧЁТ",
-        "DCOUNT"
-      ],
+      "name": "БСЧЁТ",
+      "aliases": ["БДСЧЁТ", "DCOUNT"],
       "reference": false
     },
-    "БДСЧЁТА": {
+    "БСЧЁТА": {
       "en": "DCOUNTA",
       "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БДСЧЁТА",
-      "aliases": [
-        "БДСЧЁТА",
-        "БСЧЁТА",
-        "DCOUNTA"
-      ],
+      "name": "БСЧЁТА",
+      "aliases": ["БДСЧЁТА", "DCOUNTA"],
+      "reference": false
+    },
+    "БИЗВЛЕЧЬ": {
+      "en": "DGET",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БИЗВЛЕЧЬ",
+      "aliases": ["БДИЗВЛЕЧЬ", "DGET"],
+      "reference": false
+    },
+    "ДМАКС": {
+      "en": "DMAX",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДМАКС",
+      "aliases": ["БДМАКС", "DMAX"],
+      "reference": false
+    },
+    "ДМИН": {
+      "en": "DMIN",
+      "category": "Базы данных",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДМИН",
+      "aliases": ["БДМИН", "DMIN"],
       "reference": false
     },
     "БДПРОИЗВЕД": {
@@ -2103,227 +492,303 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "БДПРОИЗВЕД",
-      "aliases": [
-        "БДПРОИЗВЕД",
-        "DPRODUCT"
-      ],
+      "aliases": ["БДПРОИЗВЕД", "DPRODUCT"],
       "reference": false
     },
-    "БДИЗВЛЕЧЬ": {
-      "en": "DGET",
+    "DSTDEV": {
+      "en": "DSTDEV",
       "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "БДИЗВЛЕЧЬ",
-      "aliases": [
-        "БДИЗВЛЕЧЬ",
-        "БИЗВЛЕЧЬ",
-        "DGET"
-      ],
+      "name": "DSTDEV",
       "reference": false
     },
-    "ЕПУСТО": {
-      "en": "ISBLANK",
-      "category": "Информационные",
+    "DSTDEVP": {
+      "en": "DSTDEVP",
+      "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕПУСТО",
-      "aliases": [
-        "ЕПУСТО",
-        "ISBLANK"
-      ],
+      "name": "DSTDEVP",
       "reference": false
     },
-    "ЕЧИСЛО": {
-      "en": "ISNUMBER",
-      "category": "Информационные",
+    "БДСУММ": {
+      "en": "DSUM",
+      "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕЧИСЛО",
-      "aliases": [
-        "ЕЧИСЛО",
-        "ISNUMBER"
-      ],
+      "name": "БДСУММ",
+      "aliases": ["БДСУММ", "DSUM"],
       "reference": false
     },
-    "ЕТЕКСТ": {
-      "en": "ISTEXT",
-      "category": "Информационные",
+    "DVAR": {
+      "en": "DVAR",
+      "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕТЕКСТ",
-      "aliases": [
-        "ЕТЕКСТ",
-        "ISTEXT"
-      ],
+      "name": "DVAR",
       "reference": false
     },
-    "ЕНЕТЕКСТ": {
-      "en": "ISNONTEXT",
-      "category": "Информационные",
+    "DVARP": {
+      "en": "DVARP",
+      "category": "Базы данных",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕНЕТЕКСТ",
-      "aliases": [
-        "ЕНЕТЕКСТ",
-        "ISNONTEXT"
-      ],
+      "name": "DVARP",
       "reference": false
     },
-    "ЕЛОГИЧ": {
-      "en": "ISLOGICAL",
-      "category": "Информационные",
+    "ДАТА": {
+      "en": "DATE",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕЛОГИЧ",
-      "aliases": [
-        "ЕЛОГИЧ",
-        "ISLOGICAL"
-      ],
+      "name": "ДАТА",
+      "aliases": ["ДАТА", "DATE"],
       "reference": false
     },
-    "ЕОШИБКА": {
-      "en": "ISERROR",
-      "category": "Информационные",
+    "РАЗНДАТ": {
+      "en": "DATEDIF",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕОШИБКА",
-      "aliases": [
-        "ЕОШИБКА",
-        "ISERROR"
-      ],
+      "name": "РАЗНДАТ",
+      "aliases": ["РАЗНДАТ", "DATEDIF"],
       "reference": false
     },
-    "ЕОШ": {
-      "en": "ISERR",
-      "category": "Информационные",
+    "ДАТАЗНАЧ": {
+      "en": "DATEVALUE",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕОШ",
-      "aliases": [
-        "ЕОШ",
-        "ISERR"
-      ],
+      "name": "ДАТАЗНАЧ",
+      "aliases": ["ДАТАЗНАЧ", "DATEVALUE"],
       "reference": false
     },
-    "ЕНД": {
-      "en": "ISNA",
-      "category": "Информационные",
+    "ДЕНЬ": {
+      "en": "DAY",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ЕНД",
-      "aliases": [
-        "ЕНД",
-        "ISNA"
-      ],
+      "name": "ДЕНЬ",
+      "aliases": ["ДЕНЬ", "DAY"],
       "reference": false
     },
-    "ТИП": {
-      "en": "TYPE",
-      "category": "Информационные",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ТИП",
-      "aliases": [
-        "ТИП",
-        "TYPE"
-      ],
-      "reference": false
-    },
-    "ТИП.ОШИБКИ": {
-      "en": "ERROR.TYPE",
-      "category": "Информационные",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ТИП.ОШИБКИ",
-      "aliases": [
-        "ТИП.ОШИБКИ",
-        "ERROR.TYPE"
-      ],
-      "reference": false
-    },
-    "ЯЧЕЙКА": {
-      "en": "CELL",
-      "category": "Информационные",
-      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-      "version": "",
-      "name": "ЯЧЕЙКА",
-      "aliases": [
-        "ЯЧЕЙКА",
-        "CELL"
-      ],
-      "reference": false
-    },
-    "ЛИСТ": {
-      "en": "SHEET",
-      "category": "Информационные",
+    "DAYS": {
+      "en": "DAYS",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "2013",
-      "name": "ЛИСТ",
-      "aliases": [
-        "ЛИСТ",
-        "SHEET"
-      ],
+      "name": "DAYS",
       "reference": false
     },
-    "ЛИСТЫ": {
-      "en": "SHEETS",
-      "category": "Информационные",
+    "DAYS360": {
+      "en": "DAYS360",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DAYS360",
+      "reference": false
+    },
+    "ДАТАМЕС": {
+      "en": "EDATE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДАТАМЕС",
+      "aliases": ["ДАТАМЕС", "EDATE"],
+      "reference": false
+    },
+    "КОНМЕСЯЦ": {
+      "en": "EOMONTH",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОНМЕСЯЦ",
+      "aliases": ["КОНМЕСЯЦ", "EOMONTH"],
+      "reference": false
+    },
+    "ЧАС": {
+      "en": "HOUR",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧАС",
+      "aliases": ["ЧАС", "HOUR"],
+      "reference": false
+    },
+    "НОМНЕДЕЛИ.ISO": {
+      "en": "ISOWEEKNUM",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "2013",
-      "name": "ЛИСТЫ",
-      "aliases": [
-        "ЛИСТЫ",
-        "SHEETS"
-      ],
+      "name": "НОМНЕДЕЛИ.ISO",
+      "aliases": ["НОМНЕДЕЛИ.ISO", "ISOWEEKNUM"],
       "reference": false
     },
-    "Ч": {
-      "en": "N",
-      "category": "Информационные",
+    "МИНУТЫ": {
+      "en": "MINUTE",
+      "category": "Дата и время",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "Ч",
-      "aliases": [
-        "Ч",
-        "N"
-      ],
+      "name": "МИНУТЫ",
+      "aliases": ["МИНУТЫ", "MINUTE"],
       "reference": false
     },
-    "ДЕС.В.ДВ": {
-      "en": "DEC2BIN",
+    "МЕСЯЦ": {
+      "en": "MONTH",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МЕСЯЦ",
+      "aliases": ["МЕСЯЦ", "MONTH"],
+      "reference": false
+    },
+    "ЧИСТРАБДНИ": {
+      "en": "NETWORKDAYS",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧИСТРАБДНИ",
+      "aliases": ["ЧИСТРАБДНИ", "NETWORKDAYS"],
+      "reference": false
+    },
+    "ЧИСТРАБДНИ.МЕЖД": {
+      "en": "NETWORKDAYS.INTL",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ЧИСТРАБДНИ.МЕЖД",
+      "aliases": ["ЧИСТРАБДНИ.МЕЖД", "NETWORKDAYS.INTL"],
+      "reference": false
+    },
+    "ТДАТА": {
+      "en": "NOW",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТДАТА",
+      "aliases": ["ТДАТА", "NOW"],
+      "reference": false
+    },
+    "СЕКУНДЫ": {
+      "en": "SECOND",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЕКУНДЫ",
+      "aliases": ["СЕКУНДЫ", "SECOND"],
+      "reference": false
+    },
+    "ВРЕМЯ": {
+      "en": "TIME",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВРЕМЯ",
+      "aliases": ["ВРЕМЯ", "TIME"],
+      "reference": false
+    },
+    "ВРЕМЗНАЧ": {
+      "en": "TIMEVALUE",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВРЕМЗНАЧ",
+      "aliases": ["ВРЕМЗНАЧ", "TIMEVALUE"],
+      "reference": false
+    },
+    "СЕГОДНЯ": {
+      "en": "TODAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЕГОДНЯ",
+      "aliases": ["СЕГОДНЯ", "TODAY"],
+      "reference": false
+    },
+    "ДЕНЬНЕД": {
+      "en": "WEEKDAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕНЬНЕД",
+      "aliases": ["ДЕНЬНЕД", "WEEKDAY"],
+      "reference": false
+    },
+    "НОМНЕДЕЛИ": {
+      "en": "WEEKNUM",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НОМНЕДЕЛИ",
+      "aliases": ["НОМНЕДЕЛИ", "WEEKNUM"],
+      "reference": false
+    },
+    "РАБДЕНЬ": {
+      "en": "WORKDAY",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РАБДЕНЬ",
+      "aliases": ["РАБДЕНЬ", "WORKDAY"],
+      "reference": false
+    },
+    "РАБДЕНЬ.МЕЖД": {
+      "en": "WORKDAY.INTL",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "РАБДЕНЬ.МЕЖД",
+      "aliases": ["РАБДЕНЬ.МЕЖД", "WORKDAY.INTL"],
+      "reference": false
+    },
+    "ГОД": {
+      "en": "YEAR",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГОД",
+      "aliases": ["ГОД", "YEAR"],
+      "reference": false
+    },
+    "ДОЛЯГОДА": {
+      "en": "YEARFRAC",
+      "category": "Дата и время",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДОЛЯГОДА",
+      "aliases": ["ДОЛЯГОДА", "YEARFRAC"],
+      "reference": false
+    },
+    "BESSELI": {
+      "en": "BESSELI",
       "category": "Инженерные",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ДЕС.В.ДВ",
-      "aliases": [
-        "ДЕС.В.ДВ",
-        "DEC2BIN"
-      ],
+      "name": "BESSELI",
       "reference": false
     },
-    "ДЕС.В.ШЕСТН": {
-      "en": "DEC2HEX",
+    "BESSELJ": {
+      "en": "BESSELJ",
       "category": "Инженерные",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ДЕС.В.ШЕСТН",
-      "aliases": [
-        "ДЕС.В.ШЕСТН",
-        "DEC2HEX"
-      ],
+      "name": "BESSELJ",
       "reference": false
     },
-    "ДЕС.В.ВОСЬМ": {
-      "en": "DEC2OCT",
+    "BESSELK": {
+      "en": "BESSELK",
       "category": "Инженерные",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ДЕС.В.ВОСЬМ",
-      "aliases": [
-        "ДЕС.В.ВОСЬМ",
-        "DEC2OCT"
-      ],
+      "name": "BESSELK",
+      "reference": false
+    },
+    "BESSELY": {
+      "en": "BESSELY",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BESSELY",
       "reference": false
     },
     "ДВ.В.ДЕС": {
@@ -2332,10 +797,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ДВ.В.ДЕС",
-      "aliases": [
-        "ДВ.В.ДЕС",
-        "BIN2DEC"
-      ],
+      "aliases": ["ДВ.В.ДЕС", "BIN2DEC"],
       "reference": false
     },
     "ДВ.В.ШЕСТН": {
@@ -2344,34 +806,63 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ДВ.В.ШЕСТН",
-      "aliases": [
-        "ДВ.В.ШЕСТН",
-        "BIN2HEX"
-      ],
+      "aliases": ["ДВ.В.ШЕСТН", "BIN2HEX"],
       "reference": false
     },
-    "ШЕСТН.В.ДЕС": {
-      "en": "HEX2DEC",
+    "BIN2OCT": {
+      "en": "BIN2OCT",
       "category": "Инженерные",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ШЕСТН.В.ДЕС",
-      "aliases": [
-        "ШЕСТН.В.ДЕС",
-        "HEX2DEC"
-      ],
+      "name": "BIN2OCT",
       "reference": false
     },
-    "ШЕСТН.В.ДВ": {
-      "en": "HEX2BIN",
+    "BITAND": {
+      "en": "BITAND",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITAND",
+      "reference": false
+    },
+    "BITLSHIFT": {
+      "en": "BITLSHIFT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITLSHIFT",
+      "reference": false
+    },
+    "BITOR": {
+      "en": "BITOR",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITOR",
+      "reference": false
+    },
+    "BITRSHIFT": {
+      "en": "BITRSHIFT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITRSHIFT",
+      "reference": false
+    },
+    "BITXOR": {
+      "en": "BITXOR",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BITXOR",
+      "reference": false
+    },
+    "COMPLEX": {
+      "en": "COMPLEX",
       "category": "Инженерные",
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
-      "name": "ШЕСТН.В.ДВ",
-      "aliases": [
-        "ШЕСТН.В.ДВ",
-        "HEX2BIN"
-      ],
+      "name": "COMPLEX",
       "reference": false
     },
     "ПРЕОБР": {
@@ -2380,10 +871,34 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ПРЕОБР",
-      "aliases": [
-        "ПРЕОБР",
-        "CONVERT"
-      ],
+      "aliases": ["ПРЕОБР", "CONVERT"],
+      "reference": false
+    },
+    "ДЕС.В.ДВ": {
+      "en": "DEC2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ДВ",
+      "aliases": ["ДЕС.В.ДВ", "DEC2BIN"],
+      "reference": false
+    },
+    "ДЕС.В.ШЕСТН": {
+      "en": "DEC2HEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ШЕСТН",
+      "aliases": ["ДЕС.В.ШЕСТН", "DEC2HEX"],
+      "reference": false
+    },
+    "ДЕС.В.ВОСЬМ": {
+      "en": "DEC2OCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЕС.В.ВОСЬМ",
+      "aliases": ["ДЕС.В.ВОСЬМ", "DEC2OCT"],
       "reference": false
     },
     "ДЕЛЬТА": {
@@ -2392,10 +907,39 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ДЕЛЬТА",
-      "aliases": [
-        "ДЕЛЬТА",
-        "DELTA"
-      ],
+      "aliases": ["ДЕЛЬТА", "DELTA"],
+      "reference": false
+    },
+    "ERF": {
+      "en": "ERF",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ERF",
+      "reference": false
+    },
+    "ERF.PRECISE": {
+      "en": "ERF.PRECISE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ERF.PRECISE",
+      "reference": false
+    },
+    "ERFC": {
+      "en": "ERFC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ERFC",
+      "reference": false
+    },
+    "ERFC.PRECISE": {
+      "en": "ERFC.PRECISE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "ERFC.PRECISE",
       "reference": false
     },
     "ПОРОГ": {
@@ -2404,11 +948,3439 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
       "version": "",
       "name": "ПОРОГ",
-      "aliases": [
-        "ПОРОГ",
-        "GESTEP"
-      ],
+      "aliases": ["ПОРОГ", "GESTEP"],
       "reference": false
+    },
+    "ШЕСТН.В.ДВ": {
+      "en": "HEX2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ШЕСТН.В.ДВ",
+      "aliases": ["ШЕСТН.В.ДВ", "HEX2BIN"],
+      "reference": false
+    },
+    "ШЕСТН.В.ДЕС": {
+      "en": "HEX2DEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ШЕСТН.В.ДЕС",
+      "aliases": ["ШЕСТН.В.ДЕС", "HEX2DEC"],
+      "reference": false
+    },
+    "HEX2OCT": {
+      "en": "HEX2OCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "HEX2OCT",
+      "reference": false
+    },
+    "IMABS": {
+      "en": "IMABS",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMABS",
+      "reference": false
+    },
+    "IMAGINARY": {
+      "en": "IMAGINARY",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMAGINARY",
+      "reference": false
+    },
+    "IMARGUMENT": {
+      "en": "IMARGUMENT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMARGUMENT",
+      "reference": false
+    },
+    "IMCONJUGATE": {
+      "en": "IMCONJUGATE",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMCONJUGATE",
+      "reference": false
+    },
+    "IMCOS": {
+      "en": "IMCOS",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMCOS",
+      "reference": false
+    },
+    "IMCOSH": {
+      "en": "IMCOSH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCOSH",
+      "reference": false
+    },
+    "IMCOT": {
+      "en": "IMCOT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCOT",
+      "reference": false
+    },
+    "IMCSC": {
+      "en": "IMCSC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCSC",
+      "reference": false
+    },
+    "IMCSCH": {
+      "en": "IMCSCH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMCSCH",
+      "reference": false
+    },
+    "IMDIV": {
+      "en": "IMDIV",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMDIV",
+      "reference": false
+    },
+    "IMEXP": {
+      "en": "IMEXP",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMEXP",
+      "reference": false
+    },
+    "IMLN": {
+      "en": "IMLN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLN",
+      "reference": false
+    },
+    "IMLOG10": {
+      "en": "IMLOG10",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLOG10",
+      "reference": false
+    },
+    "IMLOG2": {
+      "en": "IMLOG2",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMLOG2",
+      "reference": false
+    },
+    "IMPOWER": {
+      "en": "IMPOWER",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMPOWER",
+      "reference": false
+    },
+    "IMPRODUCT": {
+      "en": "IMPRODUCT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMPRODUCT",
+      "reference": false
+    },
+    "IMREAL": {
+      "en": "IMREAL",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMREAL",
+      "reference": false
+    },
+    "IMSEC": {
+      "en": "IMSEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSEC",
+      "reference": false
+    },
+    "IMSECH": {
+      "en": "IMSECH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSECH",
+      "reference": false
+    },
+    "IMSIN": {
+      "en": "IMSIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSIN",
+      "reference": false
+    },
+    "IMSINH": {
+      "en": "IMSINH",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMSINH",
+      "reference": false
+    },
+    "IMSQRT": {
+      "en": "IMSQRT",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSQRT",
+      "reference": false
+    },
+    "IMSUB": {
+      "en": "IMSUB",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSUB",
+      "reference": false
+    },
+    "IMSUM": {
+      "en": "IMSUM",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "IMSUM",
+      "reference": false
+    },
+    "IMTAN": {
+      "en": "IMTAN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "IMTAN",
+      "reference": false
+    },
+    "OCT2BIN": {
+      "en": "OCT2BIN",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2BIN",
+      "reference": false
+    },
+    "OCT2DEC": {
+      "en": "OCT2DEC",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2DEC",
+      "reference": false
+    },
+    "OCT2HEX": {
+      "en": "OCT2HEX",
+      "category": "Инженерные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "OCT2HEX",
+      "reference": false
+    },
+    "ACCRINT": {
+      "en": "ACCRINT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACCRINT",
+      "reference": false
+    },
+    "ACCRINTM": {
+      "en": "ACCRINTM",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACCRINTM",
+      "reference": false
+    },
+    "AMORDEGRC": {
+      "en": "AMORDEGRC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AMORDEGRC",
+      "reference": false
+    },
+    "AMORLINC": {
+      "en": "AMORLINC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AMORLINC",
+      "reference": false
+    },
+    "COUPDAYBS": {
+      "en": "COUPDAYBS",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYBS",
+      "reference": false
+    },
+    "COUPDAYS": {
+      "en": "COUPDAYS",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYS",
+      "reference": false
+    },
+    "COUPDAYSNC": {
+      "en": "COUPDAYSNC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPDAYSNC",
+      "reference": false
+    },
+    "COUPNCD": {
+      "en": "COUPNCD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPNCD",
+      "reference": false
+    },
+    "COUPNUM": {
+      "en": "COUPNUM",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPNUM",
+      "reference": false
+    },
+    "COUPPCD": {
+      "en": "COUPPCD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COUPPCD",
+      "reference": false
+    },
+    "CUMIPMT": {
+      "en": "CUMIPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUMIPMT",
+      "reference": false
+    },
+    "CUMPRINC": {
+      "en": "CUMPRINC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CUMPRINC",
+      "reference": false
+    },
+    "DB": {
+      "en": "DB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DB",
+      "reference": false
+    },
+    "DDB": {
+      "en": "DDB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DDB",
+      "reference": false
+    },
+    "DISC": {
+      "en": "DISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DISC",
+      "reference": false
+    },
+    "DOLLARDE": {
+      "en": "DOLLARDE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLARDE",
+      "reference": false
+    },
+    "DOLLARFR": {
+      "en": "DOLLARFR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLARFR",
+      "reference": false
+    },
+    "DURATION": {
+      "en": "DURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DURATION",
+      "reference": false
+    },
+    "ЭФФЕКТ": {
+      "en": "EFFECT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЭФФЕКТ",
+      "aliases": ["ЭФФЕКТ", "EFFECT"],
+      "reference": false
+    },
+    "БС": {
+      "en": "FV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "БС",
+      "aliases": ["БС", "FV"],
+      "reference": false
+    },
+    "FVSCHEDULE": {
+      "en": "FVSCHEDULE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FVSCHEDULE",
+      "reference": false
+    },
+    "INTRATE": {
+      "en": "INTRATE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INTRATE",
+      "reference": false
+    },
+    "ПРПЛТ": {
+      "en": "IPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРПЛТ",
+      "aliases": ["ПРПЛТ", "IPMT"],
+      "reference": false
+    },
+    "ВНДОХ": {
+      "en": "IRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВНДОХ",
+      "aliases": ["ВНДОХ", "IRR"],
+      "reference": false
+    },
+    "ISPMT": {
+      "en": "ISPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISPMT",
+      "reference": false
+    },
+    "MDURATION": {
+      "en": "MDURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MDURATION",
+      "reference": false
+    },
+    "MIRR": {
+      "en": "MIRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MIRR",
+      "reference": false
+    },
+    "НОМИНАЛ": {
+      "en": "NOMINAL",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НОМИНАЛ",
+      "aliases": ["НОМИНАЛ", "NOMINAL"],
+      "reference": false
+    },
+    "КПЕР": {
+      "en": "NPER",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КПЕР",
+      "aliases": ["КПЕР", "NPER"],
+      "reference": false
+    },
+    "ЧПС": {
+      "en": "NPV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧПС",
+      "aliases": ["ЧПС", "NPV"],
+      "reference": false
+    },
+    "ODDFPRICE": {
+      "en": "ODDFPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDFPRICE",
+      "reference": false
+    },
+    "ODDFYIELD": {
+      "en": "ODDFYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDFYIELD",
+      "reference": false
+    },
+    "ODDLPRICE": {
+      "en": "ODDLPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDLPRICE",
+      "reference": false
+    },
+    "ODDLYIELD": {
+      "en": "ODDLYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ODDLYIELD",
+      "reference": false
+    },
+    "PDURATION": {
+      "en": "PDURATION",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PDURATION",
+      "reference": false
+    },
+    "ПЛТ": {
+      "en": "PMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПЛТ",
+      "aliases": ["ПЛТ", "PMT"],
+      "reference": false
+    },
+    "ОСПЛТ": {
+      "en": "PPMT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОСПЛТ",
+      "aliases": ["ОСПЛТ", "PPMT"],
+      "reference": false
+    },
+    "PRICE": {
+      "en": "PRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICE",
+      "reference": false
+    },
+    "PRICEDISC": {
+      "en": "PRICEDISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICEDISC",
+      "reference": false
+    },
+    "PRICEMAT": {
+      "en": "PRICEMAT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PRICEMAT",
+      "reference": false
+    },
+    "PV": {
+      "en": "PV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PV",
+      "reference": false
+    },
+    "СТАВКА": {
+      "en": "RATE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТАВКА",
+      "aliases": ["СТАВКА", "RATE"],
+      "reference": false
+    },
+    "RECEIVED": {
+      "en": "RECEIVED",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RECEIVED",
+      "reference": false
+    },
+    "RRI": {
+      "en": "RRI",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "RRI",
+      "reference": false
+    },
+    "АПЛ": {
+      "en": "SLN",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АПЛ",
+      "aliases": ["АМОРТИЗ", "SLN"],
+      "reference": false
+    },
+    "SYD": {
+      "en": "SYD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SYD",
+      "reference": false
+    },
+    "TBILLEQ": {
+      "en": "TBILLEQ",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLEQ",
+      "reference": false
+    },
+    "TBILLPRICE": {
+      "en": "TBILLPRICE",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLPRICE",
+      "reference": false
+    },
+    "TBILLYIELD": {
+      "en": "TBILLYIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TBILLYIELD",
+      "reference": false
+    },
+    "VDB": {
+      "en": "VDB",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VDB",
+      "reference": false
+    },
+    "XIRR": {
+      "en": "XIRR",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "XIRR",
+      "reference": false
+    },
+    "XNPV": {
+      "en": "XNPV",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "XNPV",
+      "reference": false
+    },
+    "YIELD": {
+      "en": "YIELD",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELD",
+      "reference": false
+    },
+    "YIELDDISC": {
+      "en": "YIELDDISC",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELDDISC",
+      "reference": false
+    },
+    "YIELDMAT": {
+      "en": "YIELDMAT",
+      "category": "Финансовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "YIELDMAT",
+      "reference": false
+    },
+    "ЯЧЕЙКА": {
+      "en": "CELL",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЯЧЕЙКА",
+      "aliases": ["ЯЧЕЙКА", "CELL"],
+      "reference": false
+    },
+    "ТИП.ОШИБКИ": {
+      "en": "ERROR.TYPE",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТИП.ОШИБКИ",
+      "aliases": ["ТИП.ОШИБКИ", "ERROR.TYPE"],
+      "reference": false
+    },
+    "INFO": {
+      "en": "INFO",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INFO",
+      "reference": false
+    },
+    "ЕПУСТО": {
+      "en": "ISBLANK",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕПУСТО",
+      "aliases": ["ЕПУСТО", "ISBLANK"],
+      "reference": false
+    },
+    "ЕОШ": {
+      "en": "ISERR",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕОШ",
+      "aliases": ["ЕОШ", "ISERR"],
+      "reference": false
+    },
+    "ЕОШИБКА": {
+      "en": "ISERROR",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕОШИБКА",
+      "aliases": ["ЕОШИБКА", "ISERROR"],
+      "reference": false
+    },
+    "ISEVEN": {
+      "en": "ISEVEN",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISEVEN",
+      "reference": false
+    },
+    "ISFORMULA": {
+      "en": "ISFORMULA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ISFORMULA",
+      "reference": false
+    },
+    "ЕЛОГИЧ": {
+      "en": "ISLOGICAL",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕЛОГИЧ",
+      "aliases": ["ЕЛОГИЧ", "ISLOGICAL"],
+      "reference": false
+    },
+    "ЕНД": {
+      "en": "ISNA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕНД",
+      "aliases": ["ЕНД", "ISNA"],
+      "reference": false
+    },
+    "ЕНЕТЕКСТ": {
+      "en": "ISNONTEXT",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕНЕТЕКСТ",
+      "aliases": ["ЕНЕТЕКСТ", "ISNONTEXT"],
+      "reference": false
+    },
+    "ЕЧИСЛО": {
+      "en": "ISNUMBER",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕЧИСЛО",
+      "aliases": ["ЕЧИСЛО", "ISNUMBER"],
+      "reference": false
+    },
+    "ISODD": {
+      "en": "ISODD",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISODD",
+      "reference": false
+    },
+    "ISOMITTED": {
+      "en": "ISOMITTED",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ISOMITTED",
+      "reference": false
+    },
+    "ISREF": {
+      "en": "ISREF",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ISREF",
+      "reference": false
+    },
+    "ЕТЕКСТ": {
+      "en": "ISTEXT",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕТЕКСТ",
+      "aliases": ["ЕТЕКСТ", "ISTEXT"],
+      "reference": false
+    },
+    "Ч": {
+      "en": "N",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "Ч",
+      "aliases": ["Ч", "N"],
+      "reference": false
+    },
+    "NA": {
+      "en": "NA",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "NA",
+      "reference": false
+    },
+    "ЛИСТ": {
+      "en": "SHEET",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЛИСТ",
+      "aliases": ["ЛИСТ", "SHEET"],
+      "reference": false
+    },
+    "ЛИСТЫ": {
+      "en": "SHEETS",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЛИСТЫ",
+      "aliases": ["ЛИСТЫ", "SHEETS"],
+      "reference": false
+    },
+    "STOCKHISTORY": {
+      "en": "STOCKHISTORY",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "STOCKHISTORY",
+      "reference": true
+    },
+    "ТИП": {
+      "en": "TYPE",
+      "category": "Информационные",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТИП",
+      "aliases": ["ТИП", "TYPE"],
+      "reference": false
+    },
+    "И": {
+      "en": "AND",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "И",
+      "aliases": ["И", "AND"],
+      "reference": false
+    },
+    "BYCOL": {
+      "en": "BYCOL",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "BYCOL",
+      "reference": false
+    },
+    "BYROW": {
+      "en": "BYROW",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "BYROW",
+      "reference": false
+    },
+    "ЛОЖЬ": {
+      "en": "FALSE",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЛОЖЬ",
+      "aliases": ["ЛОЖЬ", "FALSE"],
+      "reference": false
+    },
+    "ЕСЛИ": {
+      "en": "IF",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕСЛИ",
+      "aliases": ["ЕСЛИ", "IF"],
+      "reference": false
+    },
+    "ЕСЛИОШИБКА": {
+      "en": "IFERROR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЕСЛИОШИБКА",
+      "aliases": ["ЕСЛИОШИБКА", "IFERROR"],
+      "reference": false
+    },
+    "ЕСНД": {
+      "en": "IFNA",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ЕСНД",
+      "aliases": ["ЕСНД", "IFNA"],
+      "reference": false
+    },
+    "ЕСЛИМН": {
+      "en": "IFS",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "ЕСЛИМН",
+      "aliases": ["ЕСЛИМН", "IFS"],
+      "reference": false
+    },
+    "LAMBDA": {
+      "en": "LAMBDA",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "LAMBDA",
+      "reference": false
+    },
+    "LET": {
+      "en": "LET",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "LET",
+      "reference": false
+    },
+    "MAKEARRAY": {
+      "en": "MAKEARRAY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "MAKEARRAY",
+      "reference": false
+    },
+    "MAP": {
+      "en": "MAP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "MAP",
+      "reference": false
+    },
+    "НЕ": {
+      "en": "NOT",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НЕ",
+      "aliases": ["НЕ", "NOT"],
+      "reference": false
+    },
+    "ИЛИ": {
+      "en": "OR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИЛИ",
+      "aliases": ["ИЛИ", "OR"],
+      "reference": false
+    },
+    "REDUCE": {
+      "en": "REDUCE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "REDUCE",
+      "reference": false
+    },
+    "SCAN": {
+      "en": "SCAN",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "SCAN",
+      "reference": false
+    },
+    "ПЕРЕКЛЮЧ": {
+      "en": "SWITCH",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "ПЕРЕКЛЮЧ",
+      "aliases": ["ПЕРЕКЛЮЧ", "SWITCH"],
+      "reference": false
+    },
+    "ИСТИНА": {
+      "en": "TRUE",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИСТИНА",
+      "aliases": ["ИСТИНА", "TRUE"],
+      "reference": false
+    },
+    "ИСКЛИЛИ": {
+      "en": "XOR",
+      "category": "Логические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ИСКЛИЛИ",
+      "aliases": ["ИСКЛИЛИ", "XOR"],
+      "reference": false
+    },
+    "АДРЕС": {
+      "en": "ADDRESS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АДРЕС",
+      "aliases": ["АДРЕС", "ADDRESS"],
+      "reference": false
+    },
+    "AREAS": {
+      "en": "AREAS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AREAS",
+      "reference": false
+    },
+    "ВЫБОР": {
+      "en": "CHOOSE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВЫБОР",
+      "aliases": ["ВЫБОР", "CHOOSE"],
+      "reference": false
+    },
+    "CHOOSECOLS": {
+      "en": "CHOOSECOLS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "CHOOSECOLS",
+      "aliases": ["ВЫБОРСТОЛБЦОВ", "CHOOSECOLS"],
+      "reference": false
+    },
+    "ВЫБОРСТРОК": {
+      "en": "CHOOSEROWS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ВЫБОРСТРОК",
+      "aliases": ["ВЫБОРСТРОК", "CHOOSEROWS"],
+      "reference": false
+    },
+    "СТОЛБЕЦ": {
+      "en": "COLUMN",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТОЛБЕЦ",
+      "aliases": ["СТОЛБЕЦ", "COLUMN"],
+      "reference": false
+    },
+    "СТОЛБЦЫ": {
+      "en": "COLUMNS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТОЛБЦЫ",
+      "aliases": ["СТОЛБЦЫ", "COLUMNS"],
+      "reference": false
+    },
+    "DROP": {
+      "en": "DROP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "DROP",
+      "reference": false
+    },
+    "EXPAND": {
+      "en": "EXPAND",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "EXPAND",
+      "reference": false
+    },
+    "ФИЛЬТР": {
+      "en": "FILTER",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ФИЛЬТР",
+      "aliases": ["ФИЛЬТР", "FILTER"],
+      "reference": false
+    },
+    "ФОРМУЛАТЕКСТ": {
+      "en": "FORMULATEXT",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ФОРМУЛАТЕКСТ",
+      "aliases": ["ФОРМУЛАТЕКСТ", "FORMULATEXT"],
+      "reference": false
+    },
+    "GETPIVOTDATA": {
+      "en": "GETPIVOTDATA",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GETPIVOTDATA",
+      "reference": true
+    },
+    "GROUPBY": {
+      "en": "GROUPBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "GROUPBY",
+      "reference": false
+    },
+    "ГПР": {
+      "en": "HLOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГПР",
+      "aliases": ["ГПР", "HLOOKUP"],
+      "reference": false
+    },
+    "HSTACK": {
+      "en": "HSTACK",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "HSTACK",
+      "reference": false
+    },
+    "ГИПЕРССЫЛКА": {
+      "en": "HYPERLINK",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ГИПЕРССЫЛКА",
+      "aliases": ["ГИПЕРССЫЛКА", "HYPERLINK"],
+      "reference": false
+    },
+    "IMAGE": {
+      "en": "IMAGE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "IMAGE",
+      "reference": true
+    },
+    "ИНДЕКС": {
+      "en": "INDEX",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ИНДЕКС",
+      "aliases": ["ИНДЕКС", "INDEX"],
+      "reference": false
+    },
+    "ДВССЫЛ": {
+      "en": "INDIRECT",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДВССЫЛ",
+      "aliases": ["ДВССЫЛ", "INDIRECT"],
+      "reference": false
+    },
+    "ПРОСМОТР": {
+      "en": "LOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОСМОТР",
+      "aliases": ["ПРОСМОТР", "LOOKUP"],
+      "reference": false
+    },
+    "ПОИСКПОЗ": {
+      "en": "MATCH",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОИСКПОЗ",
+      "aliases": ["ПОИСКПОЗ", "MATCH"],
+      "reference": false
+    },
+    "СМЕЩ": {
+      "en": "OFFSET",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СМЕЩ",
+      "aliases": ["СМЕЩ", "OFFSET"],
+      "reference": false
+    },
+    "PIVOTBY": {
+      "en": "PIVOTBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "PIVOTBY",
+      "reference": false
+    },
+    "СТРОКА": {
+      "en": "ROW",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОКА",
+      "aliases": ["СТРОКА", "ROW"],
+      "reference": false
+    },
+    "СТРОКИ": {
+      "en": "ROWS",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОКИ",
+      "aliases": ["СТРОКИ", "ROWS"],
+      "reference": false
+    },
+    "RTD": {
+      "en": "RTD",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RTD",
+      "reference": true
+    },
+    "СОРТ": {
+      "en": "SORT",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СОРТ",
+      "aliases": ["СОРТ", "SORT"],
+      "reference": false
+    },
+    "СОРТПО": {
+      "en": "SORTBY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СОРТПО",
+      "aliases": ["СОРТПО", "SORTBY"],
+      "reference": false
+    },
+    "TAKE": {
+      "en": "TAKE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TAKE",
+      "reference": false
+    },
+    "TOCOL": {
+      "en": "TOCOL",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TOCOL",
+      "aliases": ["ВСТОЛБЕЦ", "TOCOL"],
+      "reference": false
+    },
+    "TOROW": {
+      "en": "TOROW",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TOROW",
+      "aliases": ["ВСТРОКУ", "TOROW"],
+      "reference": false
+    },
+    "ТРАНСП": {
+      "en": "TRANSPOSE",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТРАНСП",
+      "aliases": ["ТРАНСП", "TRANSPOSE"],
+      "reference": false
+    },
+    "TRIMRANGE": {
+      "en": "TRIMRANGE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "TRIMRANGE",
+      "reference": false
+    },
+    "УНИК": {
+      "en": "UNIQUE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "УНИК",
+      "aliases": ["УНИК", "UNIQUE"],
+      "reference": false
+    },
+    "ВПР": {
+      "en": "VLOOKUP",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ВПР",
+      "aliases": ["ВПР", "VLOOKUP"],
+      "reference": false
+    },
+    "VSTACK": {
+      "en": "VSTACK",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "VSTACK",
+      "reference": false
+    },
+    "WRAPCOLS": {
+      "en": "WRAPCOLS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "WRAPCOLS",
+      "reference": false
+    },
+    "WRAPROWS": {
+      "en": "WRAPROWS",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "WRAPROWS",
+      "reference": false
+    },
+    "ПРОСМОТРX": {
+      "en": "XLOOKUP",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПРОСМОТРX",
+      "aliases": ["ПРОСМОТРX", "XLOOKUP"],
+      "reference": false
+    },
+    "ПОИСКПОЗX": {
+      "en": "XMATCH",
+      "category": "Поиск и ссылки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПОИСКПОЗX",
+      "aliases": ["ПОИСКПОЗX", "XMATCH"],
+      "reference": false
+    },
+    "АБС": {
+      "en": "ABS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АБС",
+      "aliases": ["АБС", "ABS"],
+      "reference": false
+    },
+    "ACOS": {
+      "en": "ACOS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACOS",
+      "reference": false
+    },
+    "ACOSH": {
+      "en": "ACOSH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ACOSH",
+      "reference": false
+    },
+    "ACOT": {
+      "en": "ACOT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ACOT",
+      "reference": false
+    },
+    "ACOTH": {
+      "en": "ACOTH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ACOTH",
+      "reference": false
+    },
+    "AGGREGATE": {
+      "en": "AGGREGATE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AGGREGATE",
+      "reference": false
+    },
+    "АРАБСКОЕ": {
+      "en": "ARABIC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "АРАБСКОЕ",
+      "aliases": ["АРАБСКОЕ", "ARABIC"],
+      "reference": false
+    },
+    "ASIN": {
+      "en": "ASIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASIN",
+      "reference": false
+    },
+    "ASINH": {
+      "en": "ASINH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASINH",
+      "reference": false
+    },
+    "ATAN": {
+      "en": "ATAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATAN",
+      "reference": false
+    },
+    "ATAN2": {
+      "en": "ATAN2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATAN2",
+      "reference": false
+    },
+    "ATANH": {
+      "en": "ATANH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ATANH",
+      "reference": false
+    },
+    "BASE": {
+      "en": "BASE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BASE",
+      "reference": false
+    },
+    "CEILING": {
+      "en": "CEILING",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CEILING",
+      "reference": false
+    },
+    "CEILING.MATH": {
+      "en": "CEILING.MATH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CEILING.MATH",
+      "reference": false
+    },
+    "CEILING.PRECISE": {
+      "en": "CEILING.PRECISE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CEILING.PRECISE",
+      "reference": false
+    },
+    "COMBIN": {
+      "en": "COMBIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COMBIN",
+      "reference": false
+    },
+    "COMBINA": {
+      "en": "COMBINA",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COMBINA",
+      "reference": false
+    },
+    "COS": {
+      "en": "COS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COS",
+      "reference": false
+    },
+    "COSH": {
+      "en": "COSH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "COSH",
+      "reference": false
+    },
+    "COT": {
+      "en": "COT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COT",
+      "reference": false
+    },
+    "COTH": {
+      "en": "COTH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "COTH",
+      "reference": false
+    },
+    "CSC": {
+      "en": "CSC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CSC",
+      "reference": false
+    },
+    "CSCH": {
+      "en": "CSCH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "CSCH",
+      "reference": false
+    },
+    "DECIMAL": {
+      "en": "DECIMAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "DECIMAL",
+      "reference": false
+    },
+    "DEGREES": {
+      "en": "DEGREES",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DEGREES",
+      "reference": false
+    },
+    "ЧЁТН": {
+      "en": "EVEN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧЁТН",
+      "aliases": ["ЧЁТН", "EVEN"],
+      "reference": false
+    },
+    "EXP": {
+      "en": "EXP",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "EXP",
+      "reference": false
+    },
+    "ФАКТР": {
+      "en": "FACT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ФАКТР",
+      "aliases": ["ФАКТР", "FACT"],
+      "reference": false
+    },
+    "FACTDOUBLE": {
+      "en": "FACTDOUBLE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FACTDOUBLE",
+      "reference": false
+    },
+    "FLOOR.MATH": {
+      "en": "FLOOR.MATH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "FLOOR.MATH",
+      "reference": false
+    },
+    "FLOOR.PRECISE": {
+      "en": "FLOOR.PRECISE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FLOOR.PRECISE",
+      "reference": false
+    },
+    "GCD": {
+      "en": "GCD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GCD",
+      "reference": false
+    },
+    "ЦЕЛОЕ": {
+      "en": "INT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЦЕЛОЕ",
+      "aliases": ["ЦЕЛОЕ", "INT"],
+      "reference": false
+    },
+    "ISO.CEILING": {
+      "en": "ISO.CEILING",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ISO.CEILING",
+      "reference": false
+    },
+    "LCM": {
+      "en": "LCM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LCM",
+      "reference": false
+    },
+    "LN": {
+      "en": "LN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LN",
+      "reference": false
+    },
+    "LOG": {
+      "en": "LOG",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOG",
+      "reference": false
+    },
+    "LOG10": {
+      "en": "LOG10",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOG10",
+      "reference": false
+    },
+    "MDETERM": {
+      "en": "MDETERM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MDETERM",
+      "reference": false
+    },
+    "MINVERSE": {
+      "en": "MINVERSE",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MINVERSE",
+      "reference": false
+    },
+    "MMULT": {
+      "en": "MMULT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MMULT",
+      "reference": false
+    },
+    "ОСТАТ": {
+      "en": "MOD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОСТАТ",
+      "aliases": ["ОСТАТ", "MOD"],
+      "reference": false
+    },
+    "ОКРУГЛТ": {
+      "en": "MROUND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛТ",
+      "aliases": ["ОКРУГЛТ", "MROUND"],
+      "reference": false
+    },
+    "MULTINOMIAL": {
+      "en": "MULTINOMIAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MULTINOMIAL",
+      "reference": false
+    },
+    "MUNIT": {
+      "en": "MUNIT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "MUNIT",
+      "reference": false
+    },
+    "НЕЧЁТ": {
+      "en": "ODD",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НЕЧЁТ",
+      "aliases": ["НЕЧЁТ", "ODD"],
+      "reference": false
+    },
+    "PERCENTOF": {
+      "en": "PERCENTOF",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "PERCENTOF",
+      "reference": false
+    },
+    "ПИ": {
+      "en": "PI",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПИ",
+      "aliases": ["ПИ", "PI"],
+      "reference": false
+    },
+    "СТЕПЕНЬ": {
+      "en": "POWER",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТЕПЕНЬ",
+      "aliases": ["СТЕПЕНЬ", "POWER"],
+      "reference": false
+    },
+    "ПРОИЗВЕД": {
+      "en": "PRODUCT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОИЗВЕД",
+      "aliases": ["ПРОИЗВЕД", "PRODUCT"],
+      "reference": false
+    },
+    "ЧАСТНОЕ": {
+      "en": "QUOTIENT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЧАСТНОЕ",
+      "aliases": ["ЧАСТНОЕ", "QUOTIENT"],
+      "reference": false
+    },
+    "RADIANS": {
+      "en": "RADIANS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RADIANS",
+      "reference": false
+    },
+    "СЛЧИС": {
+      "en": "RAND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЛЧИС",
+      "aliases": ["СЛЧИС", "RAND"],
+      "reference": false
+    },
+    "СЛМАССИВ": {
+      "en": "RANDARRAY",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "СЛМАССИВ",
+      "aliases": ["СЛМАССИВ", "RANDARRAY"],
+      "reference": false
+    },
+    "СЛМЕЖДУ": {
+      "en": "RANDBETWEEN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЛМЕЖДУ",
+      "aliases": ["СЛМЕЖДУ", "RANDBETWEEN"],
+      "reference": false
+    },
+    "РИМСКОЕ": {
+      "en": "ROMAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "РИМСКОЕ",
+      "aliases": ["РИМСКОЕ", "ROMAN"],
+      "reference": false
+    },
+    "ОКРУГЛ": {
+      "en": "ROUND",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛ",
+      "aliases": ["ОКРУГЛ", "ROUND"],
+      "reference": false
+    },
+    "ОКРУГЛВНИЗ": {
+      "en": "ROUNDDOWN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛВНИЗ",
+      "aliases": ["ОКРУГЛВНИЗ", "ROUNDDOWN"],
+      "reference": false
+    },
+    "ОКРУГЛВВЕРХ": {
+      "en": "ROUNDUP",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОКРУГЛВВЕРХ",
+      "aliases": ["ОКРУГЛВВЕРХ", "ROUNDUP"],
+      "reference": false
+    },
+    "SEC": {
+      "en": "SEC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SEC",
+      "reference": false
+    },
+    "SECH": {
+      "en": "SECH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SECH",
+      "reference": false
+    },
+    "SERIESSUM": {
+      "en": "SERIESSUM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SERIESSUM",
+      "reference": false
+    },
+    "ПОСЛЕДОВ": {
+      "en": "SEQUENCE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ПОСЛЕДОВ",
+      "aliases": ["ПОСЛЕДОВ", "SEQUENCE"],
+      "reference": false
+    },
+    "ЗНАК": {
+      "en": "SIGN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗНАК",
+      "aliases": ["ЗНАК", "SIGN"],
+      "reference": false
+    },
+    "SIN": {
+      "en": "SIN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SIN",
+      "reference": false
+    },
+    "SINH": {
+      "en": "SINH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SINH",
+      "reference": false
+    },
+    "КОРЕНЬ": {
+      "en": "SQRT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОРЕНЬ",
+      "aliases": ["КОРЕНЬ", "SQRT"],
+      "reference": false
+    },
+    "SQRTPI": {
+      "en": "SQRTPI",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SQRTPI",
+      "reference": false
+    },
+    "SUBTOTAL": {
+      "en": "SUBTOTAL",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUBTOTAL",
+      "reference": false
+    },
+    "СУММ": {
+      "en": "SUM",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММ",
+      "aliases": ["СУММ", "SUM"],
+      "reference": false
+    },
+    "СУММЕСЛИ": {
+      "en": "SUMIF",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММЕСЛИ",
+      "aliases": ["СУММЕСЛИ", "SUMIF"],
+      "reference": false
+    },
+    "СУММЕСЛИМН": {
+      "en": "SUMIFS",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СУММЕСЛИМН",
+      "aliases": ["СУММЕСЛИМН", "SUMIFS"],
+      "reference": false
+    },
+    "СУММПРОИЗВ": {
+      "en": "SUMPRODUCT",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СУММПРОИЗВ",
+      "aliases": ["СУММПРОИЗВ", "SUMPRODUCT"],
+      "reference": false
+    },
+    "SUMSQ": {
+      "en": "SUMSQ",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMSQ",
+      "reference": false
+    },
+    "SUMX2MY2": {
+      "en": "SUMX2MY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMX2MY2",
+      "reference": false
+    },
+    "SUMX2PY2": {
+      "en": "SUMX2PY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMX2PY2",
+      "reference": false
+    },
+    "SUMXMY2": {
+      "en": "SUMXMY2",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SUMXMY2",
+      "reference": false
+    },
+    "TAN": {
+      "en": "TAN",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TAN",
+      "reference": false
+    },
+    "TANH": {
+      "en": "TANH",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TANH",
+      "reference": false
+    },
+    "ОТБР": {
+      "en": "TRUNC",
+      "category": "Математические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ОТБР",
+      "aliases": ["ОТБР", "TRUNC"],
+      "reference": false
+    },
+    "AVEDEV": {
+      "en": "AVEDEV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AVEDEV",
+      "reference": false
+    },
+    "СРЗНАЧ": {
+      "en": "AVERAGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРЗНАЧ",
+      "aliases": ["СРЗНАЧ", "AVERAGE"],
+      "reference": false
+    },
+    "AVERAGEA": {
+      "en": "AVERAGEA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "AVERAGEA",
+      "reference": false
+    },
+    "СРЗНАЧЕСЛИ": {
+      "en": "AVERAGEIF",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРЗНАЧЕСЛИ",
+      "aliases": ["СРЗНАЧЕСЛИ", "AVERAGEIF"],
+      "reference": false
+    },
+    "СРЗНАЧЕСЛИМН": {
+      "en": "AVERAGEIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СРЗНАЧЕСЛИМН",
+      "aliases": ["СРЗНАЧЕСЛИМН", "AVERAGEIFS"],
+      "reference": false
+    },
+    "BETA.DIST": {
+      "en": "BETA.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BETA.DIST",
+      "reference": false
+    },
+    "BETA.INV": {
+      "en": "BETA.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BETA.INV",
+      "reference": false
+    },
+    "BINOM.DIST": {
+      "en": "BINOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BINOM.DIST",
+      "reference": false
+    },
+    "BINOM.DIST.RANGE": {
+      "en": "BINOM.DIST.RANGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "BINOM.DIST.RANGE",
+      "reference": false
+    },
+    "BINOM.INV": {
+      "en": "BINOM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "BINOM.INV",
+      "reference": false
+    },
+    "CHISQ.DIST": {
+      "en": "CHISQ.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.DIST",
+      "reference": false
+    },
+    "CHISQ.DIST.RT": {
+      "en": "CHISQ.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.DIST.RT",
+      "reference": false
+    },
+    "CHISQ.INV": {
+      "en": "CHISQ.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.INV",
+      "reference": false
+    },
+    "CHISQ.INV.RT": {
+      "en": "CHISQ.INV.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.INV.RT",
+      "reference": false
+    },
+    "CHISQ.TEST": {
+      "en": "CHISQ.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CHISQ.TEST",
+      "reference": false
+    },
+    "CONFIDENCE.NORM": {
+      "en": "CONFIDENCE.NORM",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CONFIDENCE.NORM",
+      "reference": false
+    },
+    "CONFIDENCE.T": {
+      "en": "CONFIDENCE.T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "CONFIDENCE.T",
+      "reference": false
+    },
+    "КОРРЕЛ": {
+      "en": "CORREL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОРРЕЛ",
+      "aliases": ["КОРРЕЛ", "CORREL"],
+      "reference": false
+    },
+    "СЧЁТ": {
+      "en": "COUNT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТ",
+      "aliases": ["СЧЁТ", "COUNT"],
+      "reference": false
+    },
+    "СЧЁТЗ": {
+      "en": "COUNTA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТЗ",
+      "aliases": ["СЧЁТЗ", "COUNTA"],
+      "reference": false
+    },
+    "СЧИТАТЬПУСТОТЫ": {
+      "en": "COUNTBLANK",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧИТАТЬПУСТОТЫ",
+      "aliases": ["СЧИТАТЬПУСТОТЫ", "COUNTBLANK"],
+      "reference": false
+    },
+    "СЧЁТЕСЛИ": {
+      "en": "COUNTIF",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЧЁТЕСЛИ",
+      "aliases": ["СЧЁТЕСЛИ", "COUNTIF"],
+      "reference": false
+    },
+    "СЧЁТЕСЛИМН": {
+      "en": "COUNTIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СЧЁТЕСЛИМН",
+      "aliases": ["СЧЁТЕСЛИМН", "COUNTIFS"],
+      "reference": false
+    },
+    "COVARIANCE.P": {
+      "en": "COVARIANCE.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "COVARIANCE.P",
+      "reference": false
+    },
+    "COVARIANCE.S": {
+      "en": "COVARIANCE.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "COVARIANCE.S",
+      "reference": false
+    },
+    "DEVSQ": {
+      "en": "DEVSQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DEVSQ",
+      "reference": false
+    },
+    "EXPON.DIST": {
+      "en": "EXPON.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "EXPON.DIST",
+      "reference": false
+    },
+    "F.DIST": {
+      "en": "F.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.DIST",
+      "reference": false
+    },
+    "F.DIST.RT": {
+      "en": "F.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.DIST.RT",
+      "reference": false
+    },
+    "F.INV": {
+      "en": "F.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.INV",
+      "reference": false
+    },
+    "F.INV.RT": {
+      "en": "F.INV.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.INV.RT",
+      "reference": false
+    },
+    "F.TEST": {
+      "en": "F.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "F.TEST",
+      "reference": false
+    },
+    "FISHER": {
+      "en": "FISHER",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FISHER",
+      "reference": false
+    },
+    "FISHERINV": {
+      "en": "FISHERINV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FISHERINV",
+      "reference": false
+    },
+    "FORECAST.ETS": {
+      "en": "FORECAST.ETS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS",
+      "reference": false
+    },
+    "FORECAST.ETS.CONFINT": {
+      "en": "FORECAST.ETS.CONFINT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.CONFINT",
+      "reference": false
+    },
+    "FORECAST.ETS.SEASONALITY": {
+      "en": "FORECAST.ETS.SEASONALITY",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.SEASONALITY",
+      "reference": false
+    },
+    "FORECAST.ETS.STAT": {
+      "en": "FORECAST.ETS.STAT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.ETS.STAT",
+      "reference": false
+    },
+    "FORECAST.LINEAR": {
+      "en": "FORECAST.LINEAR",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2016",
+      "name": "FORECAST.LINEAR",
+      "reference": false
+    },
+    "FREQUENCY": {
+      "en": "FREQUENCY",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FREQUENCY",
+      "reference": false
+    },
+    "GAMMA": {
+      "en": "GAMMA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "GAMMA",
+      "reference": false
+    },
+    "GAMMA.DIST": {
+      "en": "GAMMA.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMA.DIST",
+      "reference": false
+    },
+    "GAMMA.INV": {
+      "en": "GAMMA.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMA.INV",
+      "reference": false
+    },
+    "GAMMALN": {
+      "en": "GAMMALN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GAMMALN",
+      "reference": false
+    },
+    "GAMMALN.PRECISE": {
+      "en": "GAMMALN.PRECISE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "GAMMALN.PRECISE",
+      "reference": false
+    },
+    "GAUSS": {
+      "en": "GAUSS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "GAUSS",
+      "reference": false
+    },
+    "СРГЕОМ": {
+      "en": "GEOMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРГЕОМ",
+      "aliases": ["СРГЕОМ", "GEOMEAN"],
+      "reference": false
+    },
+    "GROWTH": {
+      "en": "GROWTH",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "GROWTH",
+      "reference": false
+    },
+    "СРГАРМ": {
+      "en": "HARMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СРГАРМ",
+      "aliases": ["СРГАРМ", "HARMEAN"],
+      "reference": false
+    },
+    "HYPGEOM.DIST": {
+      "en": "HYPGEOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "HYPGEOM.DIST",
+      "reference": false
+    },
+    "INTERCEPT": {
+      "en": "INTERCEPT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "INTERCEPT",
+      "reference": false
+    },
+    "KURT": {
+      "en": "KURT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "KURT",
+      "reference": false
+    },
+    "НАИБОЛЬШИЙ": {
+      "en": "LARGE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НАИБОЛЬШИЙ",
+      "aliases": ["НАИБОЛЬШИЙ", "LARGE"],
+      "reference": false
+    },
+    "LINEST": {
+      "en": "LINEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LINEST",
+      "reference": false
+    },
+    "LOGEST": {
+      "en": "LOGEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LOGEST",
+      "reference": false
+    },
+    "LOGNORM.DIST": {
+      "en": "LOGNORM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "LOGNORM.DIST",
+      "reference": false
+    },
+    "LOGNORM.INV": {
+      "en": "LOGNORM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "LOGNORM.INV",
+      "reference": false
+    },
+    "МАКС": {
+      "en": "MAX",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МАКС",
+      "aliases": ["МАКС", "MAX"],
+      "reference": false
+    },
+    "MAXA": {
+      "en": "MAXA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MAXA",
+      "reference": false
+    },
+    "МАКСЕСЛИМН": {
+      "en": "MAXIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "МАКСЕСЛИМН",
+      "aliases": ["МАКСЕСЛИ", "MAXIFS"],
+      "reference": false
+    },
+    "МЕДИАНА": {
+      "en": "MEDIAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МЕДИАНА",
+      "aliases": ["МЕДИАНА", "MEDIAN"],
+      "reference": false
+    },
+    "МИН": {
+      "en": "MIN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "МИН",
+      "aliases": ["МИН", "MIN"],
+      "reference": false
+    },
+    "MINA": {
+      "en": "MINA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MINA",
+      "reference": false
+    },
+    "МИНЕСЛИМН": {
+      "en": "MINIFS",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "МИНЕСЛИМН",
+      "aliases": ["МИНЕСЛИ", "MINIFS"],
+      "reference": false
+    },
+    "MODE.MULT": {
+      "en": "MODE.MULT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "MODE.MULT",
+      "reference": false
+    },
+    "МОДА.ОДН": {
+      "en": "MODE.SNGL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "МОДА.ОДН",
+      "aliases": ["МОДА.ОДН", "MODE.SNGL"],
+      "reference": false
+    },
+    "NEGBINOM.DIST": {
+      "en": "NEGBINOM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NEGBINOM.DIST",
+      "reference": false
+    },
+    "NORM.DIST": {
+      "en": "NORM.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.DIST",
+      "reference": false
+    },
+    "NORM.INV": {
+      "en": "NORM.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.INV",
+      "reference": false
+    },
+    "NORM.S.DIST": {
+      "en": "NORM.S.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.S.DIST",
+      "reference": false
+    },
+    "NORM.S.INV": {
+      "en": "NORM.S.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "NORM.S.INV",
+      "reference": false
+    },
+    "PEARSON": {
+      "en": "PEARSON",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PEARSON",
+      "reference": false
+    },
+    "PERCENTILE.EXC": {
+      "en": "PERCENTILE.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTILE.EXC",
+      "reference": false
+    },
+    "PERCENTILE.INC": {
+      "en": "PERCENTILE.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTILE.INC",
+      "reference": false
+    },
+    "PERCENTRANK.EXC": {
+      "en": "PERCENTRANK.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTRANK.EXC",
+      "reference": false
+    },
+    "PERCENTRANK.INC": {
+      "en": "PERCENTRANK.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "PERCENTRANK.INC",
+      "reference": false
+    },
+    "PERMUT": {
+      "en": "PERMUT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PERMUT",
+      "reference": false
+    },
+    "PERMUTATIONA": {
+      "en": "PERMUTATIONA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PERMUTATIONA",
+      "reference": false
+    },
+    "PHI": {
+      "en": "PHI",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "PHI",
+      "reference": false
+    },
+    "POISSON.DIST": {
+      "en": "POISSON.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "POISSON.DIST",
+      "reference": false
+    },
+    "PROB": {
+      "en": "PROB",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PROB",
+      "reference": false
+    },
+    "QUARTILE.EXC": {
+      "en": "QUARTILE.EXC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "QUARTILE.EXC",
+      "reference": false
+    },
+    "QUARTILE.INC": {
+      "en": "QUARTILE.INC",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "QUARTILE.INC",
+      "reference": false
+    },
+    "RANK.AVG": {
+      "en": "RANK.AVG",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "RANK.AVG",
+      "reference": false
+    },
+    "РАНГ.РВ": {
+      "en": "RANK.EQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "РАНГ.РВ",
+      "aliases": ["РАНГ.РВ", "RANK.EQ"],
+      "reference": false
+    },
+    "RSQ": {
+      "en": "RSQ",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RSQ",
+      "reference": false
+    },
+    "SKEW": {
+      "en": "SKEW",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SKEW",
+      "reference": false
+    },
+    "SKEW.P": {
+      "en": "SKEW.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "SKEW.P",
+      "reference": false
+    },
+    "SLOPE": {
+      "en": "SLOPE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SLOPE",
+      "reference": false
+    },
+    "НАИМЕНЬШИЙ": {
+      "en": "SMALL",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "НАИМЕНЬШИЙ",
+      "aliases": ["НАИМЕНЬШИЙ", "SMALL"],
+      "reference": false
+    },
+    "STANDARDIZE": {
+      "en": "STANDARDIZE",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STANDARDIZE",
+      "reference": false
+    },
+    "STDEV.P": {
+      "en": "STDEV.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "STDEV.P",
+      "reference": false
+    },
+    "STDEV.S": {
+      "en": "STDEV.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "STDEV.S",
+      "reference": false
+    },
+    "STDEVA": {
+      "en": "STDEVA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STDEVA",
+      "reference": false
+    },
+    "STDEVPA": {
+      "en": "STDEVPA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STDEVPA",
+      "reference": false
+    },
+    "STEYX": {
+      "en": "STEYX",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "STEYX",
+      "reference": false
+    },
+    "T.DIST": {
+      "en": "T.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST",
+      "reference": false
+    },
+    "T.DIST.2T": {
+      "en": "T.DIST.2T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST.2T",
+      "reference": false
+    },
+    "T.DIST.RT": {
+      "en": "T.DIST.RT",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.DIST.RT",
+      "reference": false
+    },
+    "T.INV": {
+      "en": "T.INV",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.INV",
+      "reference": false
+    },
+    "T.INV.2T": {
+      "en": "T.INV.2T",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.INV.2T",
+      "reference": false
+    },
+    "T.TEST": {
+      "en": "T.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "T.TEST",
+      "reference": false
+    },
+    "TREND": {
+      "en": "TREND",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TREND",
+      "reference": false
+    },
+    "TRIMMEAN": {
+      "en": "TRIMMEAN",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "TRIMMEAN",
+      "reference": false
+    },
+    "VAR.P": {
+      "en": "VAR.P",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "VAR.P",
+      "reference": false
+    },
+    "VAR.S": {
+      "en": "VAR.S",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "VAR.S",
+      "reference": false
+    },
+    "VARA": {
+      "en": "VARA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VARA",
+      "reference": false
+    },
+    "VARPA": {
+      "en": "VARPA",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "VARPA",
+      "reference": false
+    },
+    "WEIBULL.DIST": {
+      "en": "WEIBULL.DIST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "WEIBULL.DIST",
+      "reference": false
+    },
+    "Z.TEST": {
+      "en": "Z.TEST",
+      "category": "Статистические",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2010",
+      "name": "Z.TEST",
+      "reference": false
+    },
+    "ASC": {
+      "en": "ASC",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ASC",
+      "reference": false
+    },
+    "ARRAYTOTEXT": {
+      "en": "ARRAYTOTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "ARRAYTOTEXT",
+      "reference": false
+    },
+    "BAHTTEXT": {
+      "en": "BAHTTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "BAHTTEXT",
+      "reference": false
+    },
+    "СИМВОЛ": {
+      "en": "CHAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СИМВОЛ",
+      "aliases": ["СИМВОЛ", "CHAR"],
+      "reference": false
+    },
+    "ПЕЧСИМВ": {
+      "en": "CLEAN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПЕЧСИМВ",
+      "aliases": ["ПЕЧСИМВ", "CLEAN"],
+      "reference": false
+    },
+    "КОДСИМВ": {
+      "en": "CODE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "КОДСИМВ",
+      "aliases": ["КОДСИМВ", "CODE"],
+      "reference": false
+    },
+    "СЦЕП": {
+      "en": "CONCAT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "СЦЕП",
+      "aliases": ["СЦЕП", "CONCAT"],
+      "reference": false
+    },
+    "DBCS": {
+      "en": "DBCS",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "DBCS",
+      "reference": false
+    },
+    "DETECTLANGUAGE": {
+      "en": "DETECTLANGUAGE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "DETECTLANGUAGE",
+      "reference": true
+    },
+    "DOLLAR": {
+      "en": "DOLLAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "DOLLAR",
+      "reference": false
+    },
+    "СОВПАД": {
+      "en": "EXACT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СОВПАД",
+      "aliases": ["СОВПАД", "EXACT"],
+      "reference": false
+    },
+    "НАЙТИ": {
+      "en": "FIND",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
+      "version": "",
+      "name": "НАЙТИ",
+      "aliases": ["НАЙТИ", "FIND"],
+      "reference": false
+    },
+    "FINDB": {
+      "en": "FINDB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
+      "version": "",
+      "name": "FINDB",
+      "reference": false
+    },
+    "FIXED": {
+      "en": "FIXED",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "FIXED",
+      "reference": false
+    },
+    "ЛЕВСИМВ": {
+      "en": "LEFT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЛЕВСИМВ",
+      "aliases": ["ЛЕВСИМВ", "LEFT"],
+      "reference": false
+    },
+    "LEFTB": {
+      "en": "LEFTB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LEFTB",
+      "reference": false
+    },
+    "ДЛСТР": {
+      "en": "LEN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ДЛСТР",
+      "aliases": ["ДЛСТР", "LEN"],
+      "reference": false
+    },
+    "LENB": {
+      "en": "LENB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "LENB",
+      "reference": false
+    },
+    "СТРОЧН": {
+      "en": "LOWER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СТРОЧН",
+      "aliases": ["СТРОЧН", "LOWER"],
+      "reference": false
+    },
+    "ПСТР": {
+      "en": "MID",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПСТР",
+      "aliases": ["ПСТР", "MID"],
+      "reference": false
+    },
+    "MIDB": {
+      "en": "MIDB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "MIDB",
+      "reference": false
+    },
+    "NUMBERVALUE": {
+      "en": "NUMBERVALUE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "NUMBERVALUE",
+      "reference": false
+    },
+    "PHONETIC": {
+      "en": "PHONETIC",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "PHONETIC",
+      "reference": false
+    },
+    "ПРОПНАЧ": {
+      "en": "PROPER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОПНАЧ",
+      "aliases": ["ПРОПНАЧ", "PROPER"],
+      "reference": false
+    },
+    "REGEXEXTRACT": {
+      "en": "REGEXEXTRACT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXEXTRACT",
+      "reference": false
+    },
+    "REGEXREPLACE": {
+      "en": "REGEXREPLACE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXREPLACE",
+      "reference": false
+    },
+    "REGEXTEST": {
+      "en": "REGEXTEST",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "REGEXTEST",
+      "reference": false
+    },
+    "ЗАМЕНИТЬ": {
+      "en": "REPLACE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗАМЕНИТЬ",
+      "aliases": ["ЗАМЕНИТЬ", "REPLACE"],
+      "reference": false
+    },
+    "REPLACEB": {
+      "en": "REPLACEB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "REPLACEB",
+      "reference": false
+    },
+    "ПОВТОР": {
+      "en": "REPT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОВТОР",
+      "aliases": ["ПОВТОР", "REPT"],
+      "reference": false
+    },
+    "ПРАВСИМВ": {
+      "en": "RIGHT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРАВСИМВ",
+      "aliases": ["ПРАВСИМВ", "RIGHT"],
+      "reference": false
+    },
+    "RIGHTB": {
+      "en": "RIGHTB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "RIGHTB",
+      "reference": false
+    },
+    "ПОИСК": {
+      "en": "SEARCH",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОИСК",
+      "aliases": ["ПОИСК", "SEARCH"],
+      "reference": false
+    },
+    "SEARCHB": {
+      "en": "SEARCHB",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "SEARCHB",
+      "reference": false
+    },
+    "ПОДСТАВИТЬ": {
+      "en": "SUBSTITUTE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПОДСТАВИТЬ",
+      "aliases": ["ПОДСТАВИТЬ", "SUBSTITUTE"],
+      "reference": false
+    },
+    "T": {
+      "en": "T",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "T",
+      "reference": false
+    },
+    "ТЕКСТ": {
+      "en": "TEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ТЕКСТ",
+      "aliases": ["ТЕКСТ", "TEXT"],
+      "reference": false
+    },
+    "ТЕКСТПОСЛЕ": {
+      "en": "TEXTAFTER",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ТЕКСТПОСЛЕ",
+      "aliases": ["ТЕКСТПОСЛЕ", "TEXTAFTER"],
+      "reference": false
+    },
+    "ТЕКСТДО": {
+      "en": "TEXTBEFORE",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "ТЕКСТДО",
+      "aliases": ["ТЕКСТДО", "TEXTBEFORE"],
+      "reference": false
+    },
+    "ОБЪЕДИНИТЬ": {
+      "en": "TEXTJOIN",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2019",
+      "name": "ОБЪЕДИНИТЬ",
+      "aliases": ["ОБЪЕДИНИТЬ", "TEXTJOIN"],
+      "reference": false
+    },
+    "TEXTSPLIT": {
+      "en": "TEXTSPLIT",
+      "category": "Динамические массивы",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2024",
+      "name": "TEXTSPLIT",
+      "aliases": ["ТЕКСТРАЗДЕЛ", "TEXTSPLIT"],
+      "reference": false
+    },
+    "TRANSLATE": {
+      "en": "TRANSLATE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "365",
+      "name": "TRANSLATE",
+      "reference": true
+    },
+    "СЖПРОБЕЛЫ": {
+      "en": "TRIM",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "СЖПРОБЕЛЫ",
+      "aliases": ["СЖПРОБЕЛЫ", "TRIM"],
+      "reference": false
+    },
+    "UNICHAR": {
+      "en": "UNICHAR",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "UNICHAR",
+      "reference": false
+    },
+    "UNICODE": {
+      "en": "UNICODE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "UNICODE",
+      "reference": false
+    },
+    "ПРОПИСН": {
+      "en": "UPPER",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ПРОПИСН",
+      "aliases": ["ПРОПИСН", "UPPER"],
+      "reference": false
+    },
+    "ЗНАЧЕН": {
+      "en": "VALUE",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "ЗНАЧЕН",
+      "aliases": ["ЗНАЧЕН", "VALUE"],
+      "reference": false
+    },
+    "VALUETOTEXT": {
+      "en": "VALUETOTEXT",
+      "category": "Текстовые",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2021",
+      "name": "VALUETOTEXT",
+      "reference": false
+    },
+    "CALL": {
+      "en": "CALL",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "CALL",
+      "reference": true
+    },
+    "EUROCONVERT": {
+      "en": "EUROCONVERT",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "EUROCONVERT",
+      "reference": true
+    },
+    "REGISTER.ID": {
+      "en": "REGISTER.ID",
+      "category": "Надстройки",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "",
+      "name": "REGISTER.ID",
+      "reference": true
+    },
+    "ENCODEURL": {
+      "en": "ENCODEURL",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "ENCODEURL",
+      "reference": true
+    },
+    "FILTERXML": {
+      "en": "FILTERXML",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "FILTERXML",
+      "reference": true
+    },
+    "WEBSERVICE": {
+      "en": "WEBSERVICE",
+      "category": "Веб-функции",
+      "url": "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
+      "version": "2013",
+      "name": "WEBSERVICE",
+      "reference": true
     }
   };
   const functionSearchKey = value => String(value).toUpperCase().replace(/Ё/g, "Е").replace(/\s+/g, "");
