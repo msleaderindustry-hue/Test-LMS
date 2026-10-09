@@ -1,6 +1,5 @@
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 // --- 13_landing.js — Ultimate LMS ---
-
 (function () {
   const {
     useState,
@@ -270,6 +269,460 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       name: "check"
     }))));
   }
+  // Each module has its own lightweight SVG scene; no timers or network requests.
+  function ModuleScene({
+    type
+  }) {
+    const label = {
+      tests: 'Проверка знаний',
+      flashcards: 'Запоминание',
+      excel: 'Работа с формулами',
+      chat: 'Объяснение шаг за шагом',
+      typing: 'Ритм и точность',
+      playground: 'От кода к результату',
+      hotkeys: 'Навык в одном сочетании',
+      account: 'Твой учебный маршрут'
+    }[type];
+    return /*#__PURE__*/React.createElement("div", {
+      className: 'ulp-module-scene scene-' + type,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ulp-scene-caption"
+    }, label, /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 420 200",
+      fill: "none"
+    }, /*#__PURE__*/React.createElement("ellipse", {
+      cx: "210",
+      cy: "179",
+      rx: "134",
+      ry: "10",
+      fill: "currentColor",
+      opacity: ".07"
+    }), /*#__PURE__*/React.createElement("circle", {
+      className: "ms-halo",
+      cx: "210",
+      cy: "100",
+      r: "78",
+      stroke: "currentColor",
+      opacity: ".12",
+      strokeDasharray: "3 7"
+    }), type === 'tests' && /*#__PURE__*/React.createElement("g", {
+      className: "ms-hover"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "105",
+      y: "21",
+      width: "210",
+      height: "149",
+      rx: "16"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-heading",
+      x: "125",
+      y: "48"
+    }, "\u041F\u0440\u043E\u0432\u0435\u0440\u044C \u0441\u0432\u043E\u0438 \u0437\u043D\u0430\u043D\u0438\u044F"), [0, 1, 2].map(n => /*#__PURE__*/React.createElement("g", {
+      key: n
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-row",
+      x: "124",
+      y: 61 + n * 31,
+      width: "172",
+      height: "25",
+      rx: "7"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "137",
+      cy: 74 + n * 31,
+      r: "5",
+      stroke: "currentColor",
+      opacity: ".4"
+    }), /*#__PURE__*/React.createElement("path", {
+      className: 'ms-draw ms-delay-' + n,
+      d: `m133 ${74 + n * 31} 3 3 6-7`,
+      stroke: "currentColor",
+      strokeWidth: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: `M153 ${74 + n * 31}h${90 - n * 14}`,
+      stroke: "currentColor",
+      opacity: ".25",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    }))), /*#__PURE__*/React.createElement("g", {
+      className: "ms-badge"
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "318",
+      cy: "52",
+      r: "22",
+      fill: "currentColor"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m307 52 7 7 14-16",
+      stroke: "white",
+      strokeWidth: "3",
+      strokeLinecap: "round"
+    }))), type === 'flashcards' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-back-card",
+      x: "116",
+      y: "36",
+      width: "186",
+      height: "124",
+      rx: "17",
+      transform: "rotate(-12 209 98)"
+    }), /*#__PURE__*/React.createElement("rect", {
+      className: "ms-back-card",
+      x: "116",
+      y: "36",
+      width: "186",
+      height: "124",
+      rx: "17",
+      transform: "rotate(9 209 98)"
+    }), /*#__PURE__*/React.createElement("g", {
+      className: "ms-flip"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "116",
+      y: "31",
+      width: "188",
+      height: "130",
+      rx: "17"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-label",
+      x: "210",
+      y: "59",
+      textAnchor: "middle"
+    }, "\u0421\u041B\u041E\u0412\u041E \u2192 \u0417\u041D\u0410\u0427\u0415\u041D\u0418\u0415"), /*#__PURE__*/React.createElement("g", {
+      className: "ms-front-word"
+    }, /*#__PURE__*/React.createElement("text", {
+      className: "ms-big",
+      x: "210",
+      y: "105",
+      textAnchor: "middle"
+    }, "discover"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "210",
+      y: "131",
+      textAnchor: "middle"
+    }, "\u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0432\u0441\u043F\u043E\u043C\u043D\u0438\u0442\u044C")), /*#__PURE__*/React.createElement("g", {
+      className: "ms-back-word"
+    }, /*#__PURE__*/React.createElement("text", {
+      className: "ms-big",
+      x: "210",
+      y: "105",
+      textAnchor: "middle"
+    }, "\u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0442\u044C"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "210",
+      y: "131",
+      textAnchor: "middle"
+    }, "\u0415\u0449\u0451 \u043E\u0434\u043D\u043E \u043D\u043E\u0432\u043E\u0435 \u0441\u043B\u043E\u0432\u043E")))), type === 'excel' && /*#__PURE__*/React.createElement("g", {
+      className: "ms-hover"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "82",
+      y: "26",
+      width: "254",
+      height: "144",
+      rx: "15"
+    }), /*#__PURE__*/React.createElement("rect", {
+      className: "ms-row",
+      x: "94",
+      y: "38",
+      width: "230",
+      height: "25",
+      rx: "6"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-mono",
+      x: "105",
+      y: "55"
+    }, "\u0192x  =\u0421\u0423\u041C\u041C(A1:A3)"), ['A', 'B', 'C'].map((x, n) => /*#__PURE__*/React.createElement("text", {
+      key: x,
+      className: "ms-small",
+      x: 141 + n * 74,
+      y: "83",
+      textAnchor: "middle"
+    }, x)), [0, 1, 2].map(n => /*#__PURE__*/React.createElement("g", {
+      key: n
+    }, /*#__PURE__*/React.createElement("path", {
+      d: `M101 ${90 + n * 22}h217`,
+      stroke: "currentColor",
+      opacity: ".18"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "118",
+      y: 106 + n * 22
+    }, n + 1), /*#__PURE__*/React.createElement("text", {
+      className: "ms-mono",
+      x: "140",
+      y: 106 + n * 22
+    }, [12, 8, 5][n]))), /*#__PURE__*/React.createElement("path", {
+      d: "M173 68v88M247 68v88",
+      stroke: "currentColor",
+      opacity: ".18"
+    }), /*#__PURE__*/React.createElement("rect", {
+      className: "ms-cell",
+      x: "130",
+      y: "90",
+      width: "42",
+      height: "66",
+      rx: "4",
+      stroke: "currentColor"
+    }), /*#__PURE__*/React.createElement("g", {
+      className: "ms-result"
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: "263",
+      y: "116",
+      width: "93",
+      height: "47",
+      rx: "12",
+      fill: "currentColor"
+    }), /*#__PURE__*/React.createElement("text", {
+      x: "309",
+      y: "146",
+      textAnchor: "middle",
+      fill: "white",
+      fontSize: "24",
+      fontWeight: "700"
+    }, "25"))), type === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("g", {
+      className: "ms-chat-question"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "124",
+      y: "28",
+      width: "217",
+      height: "48",
+      rx: "16"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-heading",
+      x: "141",
+      y: "57"
+    }, "\u041A\u0430\u043A \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C\u0441\u044F \u0432 \u0442\u0435\u043C\u0435?")), /*#__PURE__*/React.createElement("g", {
+      className: "ms-chat-answer"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "78",
+      y: "87",
+      width: "252",
+      height: "79",
+      rx: "16"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "102",
+      cy: "109",
+      r: "9",
+      fill: "currentColor",
+      opacity: ".2"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-heading",
+      x: "120",
+      y: "114"
+    }, "\u0414\u0430\u0432\u0430\u0439 \u043F\u043E \u0448\u0430\u0433\u0430\u043C."), /*#__PURE__*/React.createElement("path", {
+      className: "ms-code-line",
+      d: "M100 135h189M100 147h139",
+      stroke: "currentColor",
+      opacity: ".4",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    })), [0, 1, 2].map(n => /*#__PURE__*/React.createElement("circle", {
+      key: n,
+      className: "ms-dot",
+      style: {
+        animationDelay: n * .18 + 's'
+      },
+      cx: 288 + n * 12,
+      cy: "151",
+      r: "3",
+      fill: "currentColor"
+    }))), type === 'typing' && /*#__PURE__*/React.createElement("g", {
+      className: "ms-hover"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "78",
+      y: "31",
+      width: "264",
+      height: "132",
+      rx: "17"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-label",
+      x: "99",
+      y: "55"
+    }, "\u0422\u041E\u0427\u041D\u041E\u0421\u0422\u042C \u041D\u0410\u0427\u0418\u041D\u0410\u0415\u0422\u0421\u042F \u0421 \u041F\u0420\u0410\u041A\u0422\u0418\u041A\u0418"), 'Учись каждый день'.split('').map((letter, n) => /*#__PURE__*/React.createElement("text", {
+      key: n,
+      className: "ms-letter",
+      style: {
+        animationDelay: n * .12 + 's'
+      },
+      x: 98 + n * 13,
+      y: "96",
+      fontSize: "20",
+      fill: "currentColor",
+      fontFamily: "monospace"
+    }, letter)), /*#__PURE__*/React.createElement("path", {
+      d: "M98 114h220",
+      stroke: "currentColor",
+      opacity: ".15",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    }), /*#__PURE__*/React.createElement("path", {
+      className: "ms-type-track",
+      d: "M98 114h220",
+      stroke: "currentColor",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "99",
+      y: "144"
+    }, "\u041A\u0430\u0436\u0434\u043E\u0435 \u043D\u0430\u0436\u0430\u0442\u0438\u0435 \u2014 \u0448\u0430\u0433 \u0432\u043F\u0435\u0440\u0451\u0434")), type === 'playground' && /*#__PURE__*/React.createElement("g", {
+      className: "ms-hover"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "84",
+      y: "24",
+      width: "252",
+      height: "144",
+      rx: "15"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M84 53h252",
+      stroke: "currentColor",
+      opacity: ".18"
+    }), [0, 1, 2].map(n => /*#__PURE__*/React.createElement("circle", {
+      key: n,
+      cx: 101 + n * 11,
+      cy: "39",
+      r: "3",
+      fill: "currentColor",
+      opacity: .3 + n * .2
+    })), /*#__PURE__*/React.createElement("text", {
+      className: "ms-label",
+      x: "237",
+      y: "42"
+    }, "HELLO.JS"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-mono",
+      x: "106",
+      y: "78"
+    }, "const learn = () => ", '{'), /*#__PURE__*/React.createElement("g", {
+      className: "ms-code-line"
+    }, /*#__PURE__*/React.createElement("text", {
+      className: "ms-mono",
+      x: "121",
+      y: "103"
+    }, "return \"\u041D\u043E\u0432\u044B\u0439 \u043D\u0430\u0432\u044B\u043A\";")), /*#__PURE__*/React.createElement("text", {
+      className: "ms-mono",
+      x: "106",
+      y: "126"
+    }, '};'), /*#__PURE__*/React.createElement("g", {
+      className: "ms-result"
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: "241",
+      y: "135",
+      width: "110",
+      height: "35",
+      rx: "10",
+      fill: "currentColor"
+    }), /*#__PURE__*/React.createElement("text", {
+      fill: "white",
+      fontSize: "11",
+      fontWeight: "600",
+      x: "296",
+      y: "157",
+      textAnchor: "middle"
+    }, "\u2713 \u0413\u043E\u0442\u043E\u0432\u043E"))), type === 'hotkeys' && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("text", {
+      className: "ms-label",
+      x: "210",
+      y: "43",
+      textAnchor: "middle"
+    }, "\u041E\u0414\u041D\u041E \u0421\u041E\u0427\u0415\u0422\u0410\u041D\u0418\u0415. \u041C\u0415\u041D\u042C\u0428\u0415 \u0414\u0415\u0419\u0421\u0422\u0412\u0418\u0419."), [['Ctrl', 90, 76], ['Shift', 182, 76], ['N', 275, 56]].map(([key, x, w], n) => /*#__PURE__*/React.createElement("g", {
+      key: key,
+      className: "ms-key",
+      style: {
+        animationDelay: n * .3 + 's'
+      }
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: x,
+      y: "81",
+      width: w,
+      height: "62",
+      rx: "12",
+      fill: "currentColor",
+      opacity: ".2"
+    }), /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: x,
+      y: "74",
+      width: w,
+      height: "62",
+      rx: "12"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-big",
+      x: x + w / 2,
+      y: "112",
+      textAnchor: "middle",
+      style: {
+        fontSize: 20
+      }
+    }, key))), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "174",
+      y: "112",
+      textAnchor: "middle"
+    }, "+"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "267",
+      y: "112",
+      textAnchor: "middle"
+    }, "+"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "210",
+      y: "171",
+      textAnchor: "middle"
+    }, "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043F\u0430\u043F\u043A\u0443 \u0432 \u041F\u0440\u043E\u0432\u043E\u0434\u043D\u0438\u043A\u0435")), type === 'account' && /*#__PURE__*/React.createElement("g", {
+      className: "ms-hover"
+    }, /*#__PURE__*/React.createElement("rect", {
+      className: "ms-paper",
+      x: "86",
+      y: "25",
+      width: "249",
+      height: "146",
+      rx: "16"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "118",
+      cy: "55",
+      r: "16",
+      fill: "currentColor",
+      opacity: ".17"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M108 61c0-10 20-10 20 0M123 48a5 5 0 1 1-10 0 5 5 0 0 1 10 0",
+      stroke: "currentColor",
+      strokeWidth: "2"
+    }), /*#__PURE__*/React.createElement("text", {
+      className: "ms-heading",
+      x: "143",
+      y: "51"
+    }, "\u0422\u0432\u043E\u0439 \u0443\u0447\u0435\u0431\u043D\u044B\u0439 \u043F\u0443\u0442\u044C"), /*#__PURE__*/React.createElement("text", {
+      className: "ms-small",
+      x: "143",
+      y: "67"
+    }, "\u0428\u0430\u0433 \u0437\u0430 \u0448\u0430\u0433\u043E\u043C"), /*#__PURE__*/React.createElement("path", {
+      d: "M106 144h207",
+      stroke: "currentColor",
+      opacity: ".2"
+    }), [28, 48, 39, 64, 52, 77].map((h, n) => /*#__PURE__*/React.createElement("rect", {
+      key: n,
+      className: "ms-bar",
+      style: {
+        animationDelay: n * .16 + 's',
+        transformOrigin: `${122 + n * 31}px 143px`
+      },
+      x: 113 + n * 31,
+      y: 143 - h * .8,
+      width: "19",
+      height: h * .8,
+      rx: "5",
+      fill: "currentColor",
+      opacity: .35 + n * .1
+    })), /*#__PURE__*/React.createElement("text", {
+      className: "ms-label",
+      x: "211",
+      y: "161",
+      textAnchor: "middle"
+    }, "\u0423\u0427\u0418\u0421\u042C \u0412 \u0421\u0412\u041E\u0401\u041C \u0422\u0415\u041C\u041F\u0415"))));
+  }
   const LandingView = ({
     onLogin
   }) => {
@@ -324,7 +777,25 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement("div", {
       className: "ulp-ambient",
       "aria-hidden": "true"
-    }), /*#__PURE__*/React.createElement("header", {
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "ulp-aura ulp-aura-one"
+    }), /*#__PURE__*/React.createElement("i", {
+      className: "ulp-aura ulp-aura-two"
+    }), /*#__PURE__*/React.createElement("i", {
+      className: "ulp-aura ulp-aura-three"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "ulp-stars",
+      "aria-hidden": "true"
+    }, Array.from({
+      length: 12
+    }, (_, i) => /*#__PURE__*/React.createElement("i", {
+      key: i,
+      style: {
+        left: (i * 37 + 11) % 100 + '%',
+        top: (i * 19 + 3) % 91 + '%',
+        animationDelay: -i * .7 + 's'
+      }
+    }))), /*#__PURE__*/React.createElement("header", {
       className: "ulp-header"
     }, /*#__PURE__*/React.createElement("div", {
       className: "ulp-shell ulp-nav"
@@ -389,7 +860,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "ulp-hero-copy"
     }, /*#__PURE__*/React.createElement("div", {
       className: "ulp-pill"
-    }, /*#__PURE__*/React.createElement("span", null), "\u0422\u0432\u043E\u044F \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0430\u044F \u0441\u0442\u0443\u043F\u0435\u043D\u044C"), /*#__PURE__*/React.createElement("h1", null, "\u0417\u043D\u0430\u043D\u0438\u044F \u0441\u0442\u0430\u043D\u043E\u0432\u044F\u0442\u0441\u044F", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", null, "\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044F\u043C\u0438.")), /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("span", null), "\u0422\u0432\u043E\u044F \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0430\u044F \u0441\u0442\u0443\u043F\u0435\u043D\u044C"), /*#__PURE__*/React.createElement("h1", null, "\u0417\u043D\u0430\u043D\u0438\u044F \u0441\u0442\u0430\u043D\u043E\u0432\u044F\u0442\u0441\u044F", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+      className: "ulp-spectrum"
+    }, "\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044F\u043C\u0438.")), /*#__PURE__*/React.createElement("p", {
       className: "ulp-lead"
     }, "\u0418\u0437\u0443\u0447\u0430\u0439. \u041F\u0440\u043E\u0431\u0443\u0439. \u041F\u043E\u043B\u0443\u0447\u0430\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442.", /*#__PURE__*/React.createElement("br", null), "\u0422\u0435\u0441\u0442\u044B, \u0442\u0440\u0435\u043D\u0430\u0436\u0451\u0440\u044B \u0438 \u043F\u043E\u043C\u043E\u0449\u044C \u0418\u0418 \u2014 \u0432 \u043E\u0434\u043D\u043E\u043C \u043F\u0440\u043E\u0441\u0442\u0440\u0430\u043D\u0441\u0442\u0432\u0435, \u0433\u0434\u0435 \u0442\u0435\u043E\u0440\u0438\u044F \u043F\u0440\u0435\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044F \u0432 \u043D\u0430\u0432\u044B\u043A."), /*#__PURE__*/React.createElement("div", {
       className: "ulp-actions"
@@ -415,6 +888,31 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "ulp-orbit",
       "aria-hidden": "true"
     }), /*#__PURE__*/React.createElement("div", {
+      className: "ulp-orbit ulp-orbit-second",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "ulp-scene-cap",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 100 86",
+      fill: "none"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "m50 8 46 23-46 24L4 31 50 8Z",
+      fill: "#a788ff"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m50 12 35 19-35 18-35-18 35-19Z",
+      fill: "#bda6ff"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M22 47v18c17 14 39 14 56 0V47L50 62 22 47Z",
+      fill: "#8460e2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M90 34v31",
+      stroke: "#fbc978",
+      strokeWidth: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m90 60-5 14h10l-5-14Z",
+      fill: "#fbc978"
+    }))), /*#__PURE__*/React.createElement("div", {
       className: "ulp-mini-tag"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "spark"
@@ -505,7 +1003,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       "aria-label": "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u044F"
     }, filtered.map(item => /*#__PURE__*/React.createElement("button", {
       key: item.id,
-      className: 'ulp-module ' + (active === item.id ? 'is-active' : ''),
+      className: 'ulp-module ulp-color-' + item.id + ' ' + (active === item.id ? 'is-active' : ''),
       onClick: () => setActive(item.id),
       "aria-pressed": active === item.id
     }, /*#__PURE__*/React.createElement("span", {
@@ -519,11 +1017,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "ulp-text-btn",
       onClick: () => setQuery('')
     }, "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0432\u0441\u0435 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F"))), /*#__PURE__*/React.createElement("div", {
-      className: "ulp-module-preview",
+      className: "ulp-module-preview ulp-color-" + active,
       "aria-live": "polite"
     }, /*#__PURE__*/React.createElement("div", {
       className: "ulp-preview-content",
       key: active
+    }, /*#__PURE__*/React.createElement(ModuleScene, {
+      type: active
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "ulp-preview-copy"
     }, /*#__PURE__*/React.createElement("span", {
       className: "ulp-preview-symbol",
       "aria-hidden": "true"
@@ -536,10 +1038,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       name: "arrow"
     })), /*#__PURE__*/React.createElement("span", {
       className: "ulp-preview-note"
-    }, "\u0420\u0430\u0437\u0434\u0435\u043B \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0432\u043D\u0443\u0442\u0440\u0438 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B")), /*#__PURE__*/React.createElement("div", {
+    }, "\u0420\u0430\u0437\u0434\u0435\u043B \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0432\u043D\u0443\u0442\u0440\u0438 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B"))), /*#__PURE__*/React.createElement("div", {
       className: "ulp-preview-grid",
       "aria-hidden": "true"
-    })))), /*#__PURE__*/React.createElement("section", {
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "ulp-preview-orbit",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "spark"
+    }))))), /*#__PURE__*/React.createElement("section", {
       className: "ulp-shell ulp-section ulp-about",
       id: "ulp-about",
       "data-reveal": true
@@ -550,7 +1057,107 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       onClick: login
     }, "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443", /*#__PURE__*/React.createElement(Icon, {
       name: "arrow"
-    }))), /*#__PURE__*/React.createElement("ol", {
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "ulp-learning-art",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 500 230",
+      fill: "none"
+    }, /*#__PURE__*/React.createElement("ellipse", {
+      cx: "248",
+      cy: "195",
+      rx: "186",
+      ry: "17",
+      fill: "currentColor",
+      opacity: ".07"
+    }), /*#__PURE__*/React.createElement("g", {
+      className: "ulp-art-book"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M89 164 233 125l176 33-145 50L89 177Z",
+      fill: "#7451cd"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M99 161 239 124l159 32v13l-137 43-162-39Z",
+      fill: "#e9ddff"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M90 151 232 112l177 37-145 49-174-37Z",
+      fill: "#ad86ef"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m248 126 135 28-119 35-128-27 112-36Z",
+      fill: "#c3a4f6"
+    })), /*#__PURE__*/React.createElement("g", {
+      className: "ulp-art-screen"
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: "167",
+      y: "24",
+      width: "210",
+      height: "128",
+      rx: "15",
+      fill: "#55409a"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "175",
+      y: "32",
+      width: "194",
+      height: "108",
+      rx: "9",
+      fill: "#24203e"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "190",
+      cy: "44",
+      r: "3",
+      fill: "#fb92bb"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "201",
+      cy: "44",
+      r: "3",
+      fill: "#ffd482"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "212",
+      cy: "44",
+      r: "3",
+      fill: "#66dcc5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m209 69-17 15 17 15M331 69l17 15-17 15m-67-35-14 42",
+      stroke: "#bb9aff",
+      strokeWidth: "5",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }), /*#__PURE__*/React.createElement("path", {
+      className: "ulp-art-line",
+      d: "M222 121h93",
+      stroke: "#78dddc",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m160 152-15 9h252l-14-9",
+      fill: "#9183c7"
+    })), /*#__PURE__*/React.createElement("g", {
+      className: "ulp-art-note"
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: "79",
+      y: "36",
+      width: "65",
+      height: "81",
+      rx: "12",
+      fill: "#ffe7ad"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "m94 65 9 9 19-22",
+      stroke: "#c58d37",
+      strokeWidth: "4",
+      strokeLinecap: "round"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M94 90h35M94 99h23",
+      stroke: "#d6a75c",
+      strokeWidth: "3",
+      strokeLinecap: "round"
+    })), /*#__PURE__*/React.createElement("g", {
+      className: "ulp-art-spark",
+      stroke: "#a084ee",
+      strokeWidth: "3"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "m420 75 4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M125 136v14m-7-7h14M395 29v16m-8-8h16"
+    }))), /*#__PURE__*/React.createElement("span", null, "\u041F\u0440\u043E\u0431\u0443\u0439. \u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439. \u041E\u0442\u043A\u0440\u044B\u0432\u0430\u0439."))), /*#__PURE__*/React.createElement("ol", {
       className: "ulp-steps"
     }, [['Войди в свой аккаунт', 'Твоё обучение и результаты будут связаны с твоим профилем.'], ['Выбери, что интересно', 'От слов и формул до программирования и горячих клавиш.'], ['Практикуйся и проверяй себя', 'Закрепляй материал упражнениями и обращайся к ИИ, если нужна подсказка.']].map(([title, desc], i) => /*#__PURE__*/React.createElement("li", {
       key: title
