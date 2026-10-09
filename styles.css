@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap&subset=cyrillic");
 :root {
   --primary-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --bg-anim: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #fff1eb, #ace0f9);
@@ -1342,3 +1343,211 @@ body.dark .tlms-timer-stepper button:hover{ background: rgba(168,85,247,0.2); }
     animation: none !important;
   }
 }
+/* ===== WOW LAYER — поверх существующего лендинга ===== */
+@property --wow-ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+#wow-intro,#wow-progress,#wow-glow,#wow-glare,#wow-fx{display:none}
+.wow-shoot{display:none}
+@media (prefers-reduced-motion:no-preference){
+
+/* ---------- ИНТРО-ЗАНАВЕС ---------- */
+#wow-intro{display:block;position:fixed;inset:0;z-index:100000;pointer-events:none;animation:wow-hide 0s linear 2.45s forwards}
+#wow-intro .p{position:absolute;left:0;right:0;height:50.2%;background:linear-gradient(160deg,#150e2c,#3d1f86 55%,#a04dd4)}
+#wow-intro .p1{top:0;animation:wow-up .95s cubic-bezier(.76,0,.24,1) 1.35s forwards}
+#wow-intro .p2{bottom:0;background:linear-gradient(20deg,#150e2c,#3d1f86 55%,#7a5bff);animation:wow-down .95s cubic-bezier(.76,0,.24,1) 1.35s forwards}
+#wow-intro .ln{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,transparent,#fff,#ff7ac6,#7ab8ff,transparent);box-shadow:0 0 24px #b88cff;transform:scaleX(0);animation:wow-line 1.4s cubic-bezier(.7,0,.2,1) .15s forwards}
+#wow-intro .lg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:22px;color:#fff;font:800 15px/1 Inter,Arial,sans-serif;animation:wow-logo-out .55s cubic-bezier(.6,0,.9,.4) 1.1s forwards}
+#wow-intro svg{width:96px;height:96px;overflow:visible;filter:drop-shadow(0 0 18px #b88cff)}
+#wow-intro circle{fill:none;stroke:url(#wowg);stroke-width:3;stroke-linecap:round;stroke-dasharray:226;stroke-dashoffset:226;transform-origin:center;animation:wow-draw 1.1s cubic-bezier(.6,0,.2,1) .25s forwards}
+#wow-intro .sp{fill:#fff;transform-origin:center;transform:scale(0);animation:wow-spark-in .7s cubic-bezier(.3,1.6,.5,1) .85s forwards}
+#wow-intro .tx{letter-spacing:1.2em;opacity:0;animation:wow-tx 1.1s cubic-bezier(.2,.8,.2,1) .45s forwards;padding-left:1.2em}
+@keyframes wow-up{to{transform:translateY(-101%)}}
+@keyframes wow-down{to{transform:translateY(101%)}}
+@keyframes wow-line{0%{transform:scaleX(0);opacity:1}60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+@keyframes wow-draw{to{stroke-dashoffset:0;transform:rotate(360deg)}}
+@keyframes wow-spark-in{to{transform:scale(1) rotate(180deg)}}
+@keyframes wow-tx{to{letter-spacing:.42em;opacity:1;padding-left:.42em}}
+@keyframes wow-logo-out{to{opacity:0;transform:translate(-50%,-50%) scale(1.7);filter:blur(10px)}}
+@keyframes wow-hide{to{visibility:hidden}}
+
+/* ---------- ПРОГРЕСС СКРОЛЛА, СВЕТ КУРСОРА ---------- */
+#wow-progress{display:block;position:fixed;top:0;left:0;width:100%;height:4px;z-index:99990;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#7ab8ff,#a04dd4,#ff7ac6,#ffd27a);box-shadow:0 0 16px #b66cff,0 0 4px #ff7ac6}
+#wow-glow{display:block;position:fixed;left:0;top:0;width:560px;height:560px;border-radius:50%;pointer-events:none;z-index:4;opacity:0;transition:opacity .6s;background:radial-gradient(circle,rgba(166,104,255,.2),rgba(255,122,198,.07) 45%,transparent 68%)}
+#wow-glow.on{opacity:1}
+body.dark #wow-glow{mix-blend-mode:screen;background:radial-gradient(circle,rgba(166,104,255,.3),rgba(122,184,255,.09) 45%,transparent 68%)}
+#wow-fx{display:block;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99980}
+#wow-glare{display:block;position:fixed;left:0;top:0;pointer-events:none;z-index:60;opacity:0;transition:opacity .3s}
+.wow-net{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none}
+
+/* ---------- ХЕРО: ПОЯВЛЕНИЕ ---------- */
+.ulp .ulp-hero-copy>*{animation:wow-rise 1.1s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(1.5s + var(--k,0)*.13s)}
+.ulp .ulp-hero-copy>:nth-child(1){--k:0}.ulp .ulp-hero-copy>:nth-child(2){--k:1}.ulp .ulp-hero-copy>:nth-child(3){--k:3}
+.ulp .ulp-hero-copy>:nth-child(4){--k:4}.ulp .ulp-hero-copy>:nth-child(5){--k:5}.ulp .ulp-hero-copy>:nth-child(6){--k:6}
+.ulp .ulp-hero-copy>h1{animation:none;perspective:900px}
+.ulp .wow-word{display:inline-block;transform-origin:50% 100%;animation:wow-word 1.1s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(1.5s + var(--w,0)*.1s)}
+.ulp h1 .ulp-spectrum{display:inline-block;animation:ulp-spectrum 10s ease-in-out infinite,wow-word 1.2s cubic-bezier(.16,1,.3,1) backwards,wow-text-glow 4.5s ease-in-out 3s infinite;animation-delay:0s,calc(1.5s + var(--w,0)*.1s),3s}
+@keyframes wow-rise{from{opacity:0;transform:translateY(46px) scale(.96);filter:blur(10px)}}
+@keyframes wow-word{from{opacity:0;transform:translateY(60px) rotateX(-80deg) scale(.9);filter:blur(14px)}}
+@keyframes wow-text-glow{0%,100%{filter:drop-shadow(0 0 0 rgba(160,90,240,0))}50%{filter:drop-shadow(0 0 20px rgba(160,90,240,.5))}}
+.ulp .ulp-scene{animation:wow-scene 1.5s cubic-bezier(.16,1,.3,1) 1.75s backwards}
+@keyframes wow-scene{from{opacity:0;transform:perspective(1200px) translate3d(0,110px,-260px) rotateX(20deg) rotateY(-14deg);filter:blur(12px)}}
+.ulp .ulp-hero .ulp-primary{animation:wow-halo 2.8s ease-out 3.2s infinite}
+@keyframes wow-halo{0%{box-shadow:0 7px 22px #945bd848,0 0 0 0 rgba(160,90,240,.55)}70%,100%{box-shadow:0 7px 22px #945bd848,0 0 0 22px rgba(160,90,240,0)}}
+
+/* ---------- ПОЯВЛЕНИЕ СЕКЦИЙ И ЭЛЕМЕНТОВ ---------- */
+.ulp-observed{opacity:0;transform:translateY(80px) scale(.94);filter:blur(8px);transition:opacity 1s,transform 1.2s cubic-bezier(.16,1,.3,1),filter .9s}
+.ulp-visible{opacity:1;transform:none;filter:none}
+[data-wow-group]:not([data-wow-in])>*{opacity:0}
+[data-wow-group][data-wow-in]>*{animation:wow-pop .95s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(.05s + var(--i,0)*.09s)}
+@keyframes wow-pop{from{opacity:0;transform:translateY(46px) scale(.82) rotate(-2.5deg);filter:blur(8px)}}
+
+/* ---------- АВРОРА, ЗВЁЗДЫ, МЕТЕОРЫ ---------- */
+.ulp-aura{opacity:.95;animation:ulp-aurora 13s ease-in-out infinite alternate,wow-aura-hue 16s ease-in-out infinite alternate}
+@keyframes wow-aura-hue{from{filter:blur(45px) hue-rotate(0deg)}to{filter:blur(45px) hue-rotate(70deg)}}
+.wow-shoot{display:block;position:absolute;top:var(--y);left:var(--x);width:170px;height:2px;border-radius:2px;opacity:0;pointer-events:none;background:linear-gradient(90deg,#fff,#ff7ac6 18%,#a04dd4 45%,transparent);filter:drop-shadow(0 0 7px #b88cff);animation:wow-shoot 8s linear infinite;animation-delay:var(--d)}
+@keyframes wow-shoot{0%{opacity:0;transform:translate(0,0) rotate(-35deg)}2%{opacity:1}11%{opacity:0;transform:translate(-560px,392px) rotate(-35deg)}100%{opacity:0;transform:translate(-560px,392px) rotate(-35deg)}}
+
+/* ---------- 3D-НАКЛОН ---------- */
+[data-wow-tilt]{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .4s;will-change:transform}
+[data-wow-tilt][data-tilting]{transition:transform .09s linear,box-shadow .4s}
+.ulp .ulp-workspace[data-wow-tilt]{transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) rotate(-2deg) scale(var(--sc,1))}
+.ulp .ulp-module[data-wow-tilt],.ulp .ulp-steps li[data-wow-tilt],.ulp .ulp-final[data-wow-tilt],.ulp .ulp-module-preview[data-wow-tilt],.ulp .ulp-learning-art[data-wow-tilt]{transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(var(--sc,1)) !important}
+.ulp-btn,.ulp-icon-btn{translate:var(--mgx,0px) var(--mgy,0px)}
+
+/* ---------- ВРАЩАЮЩАЯСЯ РАДУЖНАЯ РАМКА + БЛИК ---------- */
+.ulp .ulp-workspace{border:2px solid transparent;background:linear-gradient(130deg,var(--u-panel),var(--u-soft)) padding-box,linear-gradient(var(--u-bg),var(--u-bg)) padding-box,conic-gradient(from var(--wow-ang),#7ab8ff,#a04dd4,#ff7ac6,#ffd27a,#74e0b8,#7ab8ff) border-box;animation:ulp-workspace-light 8s ease-in-out infinite,wow-spin 7s linear infinite}
+@keyframes wow-spin{to{--wow-ang:360deg}}
+.ulp .ulp-final{background:linear-gradient(110deg,var(--u-soft) 0%,var(--u-soft) 38%,rgba(190,140,255,.32) 50%,var(--u-soft) 62%,var(--u-soft) 100%);background-size:260% 100%;animation:wow-sheen 6.5s linear infinite}
+@keyframes wow-sheen{from{background-position:130% 0}to{background-position:-130% 0}}
+.ulp .ulp-brand-icon{animation:ulp-brand-glow 5s ease-in-out infinite,wow-wiggle 7s ease-in-out 3s infinite}
+@keyframes wow-wiggle{0%,90%,100%{transform:none}93%{transform:rotate(-14deg) scale(1.1)}96%{transform:rotate(10deg) scale(1.1)}}
+}
+
+/* ===== V2 POLISH: типографика, кнопки, поля, панели ===== */
+.ulp{interpolate-size:allow-keywords;scrollbar-width:thin;scrollbar-color:#a04dd4 transparent}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:linear-gradient(#7ab8ff,#a04dd4,#ff7ac6);border-radius:10px;border:2px solid transparent;background-clip:padding-box}
+.ulp{font-family:'Inter','Segoe UI',Arial,sans-serif;--u-ease:cubic-bezier(.16,1,.3,1);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.ulp h1,.ulp h2,.ulp h3,.ulp-brand,.ulp-btn,.ulp-kicker{font-family:'Manrope','Inter','Segoe UI',Arial,sans-serif}
+.ulp ::selection{background:#a04dd4;color:#fff}
+.ulp-section{scroll-margin-top:90px}
+
+/* --- шапка: липкое стекло --- */
+.ulp-header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);background:color-mix(in srgb,var(--u-bg) 62%,transparent);transition:box-shadow .35s,background .35s,border-color .35s}
+.ulp-header[data-scrolled]{box-shadow:0 12px 40px -14px #5b34a666;border-bottom-color:transparent;background:color-mix(in srgb,var(--u-bg) 80%,transparent)}
+.ulp-nav{transition:height .4s var(--u-ease)}
+.ulp-header[data-scrolled] .ulp-nav{height:68px}
+.ulp-brand{font-weight:800;letter-spacing:-.02em}
+.ulp-brand-icon{border-radius:15px}
+.ulp-desktop-nav button{position:relative;font-weight:600;font-size:13.5px;padding:10px 2px}
+.ulp-desktop-nav button::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:2px;border-radius:2px;background:linear-gradient(90deg,#7ab8ff,#a04dd4,#ff7ac6);transform:scaleX(0);transform-origin:left;transition:transform .4s var(--u-ease)}
+.ulp-desktop-nav button:hover::after,.ulp-desktop-nav button[data-active]::after{transform:scaleX(1)}
+.ulp-desktop-nav button[data-active]{color:var(--u-accent)}
+.ulp-icon-btn{border-radius:14px;background:color-mix(in srgb,var(--u-panel) 80%,transparent);backdrop-filter:blur(10px);transition:transform .3s var(--u-ease),border-color .3s,background .3s}
+.ulp-icon-btn:hover{border-color:var(--u-accent);transform:scale(1.07)}
+
+/* --- хиро: типографика --- */
+.ulp h1{font-weight:800;letter-spacing:-.04em;line-height:1.05}
+@media(min-width:1051px){.ulp h1{font-size:clamp(40px,5.1vw,74px);margin-bottom:28px}.ulp-lead{font-size:clamp(16px,1.35vw,18.5px);line-height:1.75;max-width:520px}}
+.ulp-pill{border:1px solid transparent;font-size:12px;padding:8px 16px 8px 12px;backdrop-filter:blur(8px);background:linear-gradient(var(--u-panel),var(--u-panel)) padding-box,linear-gradient(110deg,#7ab8ff99,#a04dd499,#ff7ac699) border-box}
+.ulp-hero-meta{gap:10px;margin-top:28px}
+.ulp-hero-meta>span{padding:7px 14px 7px 10px;border:1px solid var(--u-line);border-radius:30px;background:color-mix(in srgb,var(--u-panel) 78%,transparent);font-size:12px;font-weight:600;backdrop-filter:blur(8px);transition:transform .3s var(--u-ease),border-color .3s}
+.ulp-hero-meta>span:hover{transform:translateY(-3px);border-color:var(--u-accent)}
+
+/* --- кнопки --- */
+.ulp-btn{border-radius:16px;font-weight:700;letter-spacing:.01em}
+.ulp-actions .ulp-btn,.ulp-preview-copy .ulp-btn,.ulp-final .ulp-btn{min-height:54px}
+.ulp-primary{background:linear-gradient(115deg,#7a4cf0,#a24fe0 50%,#e0589f);background-size:200% auto;border:1px solid #ffffff2e;box-shadow:0 12px 32px -8px #9457e099,inset 0 1px 0 #ffffff55,inset 0 -3px 8px #5a1fb033}
+.ulp-primary>svg{width:28px;height:28px;padding:6px;border-radius:50%;background:#ffffff2e;margin-right:-8px}
+.ulp-primary:hover{background-position:100% 0;box-shadow:0 18px 40px -8px #b05be0aa,inset 0 1px 0 #ffffff66,inset 0 -3px 8px #5a1fb033}
+.ulp-secondary{background:color-mix(in srgb,var(--u-panel) 70%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--u-line)}
+.ulp-secondary:hover{border-color:var(--u-accent);color:var(--u-accent)}
+.ulp-btn:focus-visible,.ulp-icon-btn:focus-visible{outline:3px solid #a04dd4;outline-offset:3px}
+
+/* --- заголовки секций --- */
+.ulp-section h2{font-weight:800;letter-spacing:-.035em}
+@media(min-width:1051px){.ulp-section h2{font-size:clamp(32px,3.4vw,50px);line-height:1.1}}
+.ulp-section h2::after{content:"";display:block;width:64px;height:5px;margin-top:18px;border-radius:5px;background:linear-gradient(90deg,#7ab8ff,#a04dd4,#ff7ac6);transform-origin:left;transition:transform .9s var(--u-ease) .35s}
+.ulp-observed:not(.ulp-visible) h2::after{transform:scaleX(0)}
+.ulp-kicker{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:800;letter-spacing:.2em;background:linear-gradient(90deg,var(--u-accent),#e0589f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ulp-kicker::before{content:"";width:26px;height:2px;border-radius:2px;background:linear-gradient(90deg,#7ab8ff,#a04dd4)}
+.ulp-scene-heading .ulp-kicker{display:block;font-size:8px;letter-spacing:1.7px}
+.ulp-scene-heading .ulp-kicker::before{display:none}
+.ulp-section-head p,.ulp-about>div>p{font-size:15px;line-height:1.7}
+
+/* --- поле поиска --- */
+.ulp-search{position:relative;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--u-panel) 85%,transparent);backdrop-filter:blur(10px);transition:box-shadow .35s,border-color .35s,width .5s var(--u-ease),transform .35s var(--u-ease)}
+@media(min-width:761px){.ulp-search{width:300px}.ulp-search:focus-within{width:370px}}
+.ulp-search:focus-within{transform:translateY(-2px);border-color:var(--u-accent);box-shadow:0 0 0 4px #a04dd426,0 16px 36px -12px #a04dd466}
+.ulp-search svg{transition:color .3s,transform .4s var(--u-ease)}
+.ulp-search:focus-within svg{color:var(--u-accent);transform:scale(1.15) rotate(-8deg)}
+.ulp-search input{font-size:14px;font-weight:500}
+.ulp-search::after{content:"/";flex-shrink:0;font:700 11px/1 monospace;color:var(--u-muted);border:1px solid var(--u-line);border-radius:7px;padding:4px 8px;background:var(--u-soft);transition:opacity .2s}
+.ulp-search:focus-within::after{opacity:0}
+@media(hover:none){.ulp-search::after{display:none}}
+
+/* --- карточки модулей --- */
+.ulp-module{border-radius:20px;font-weight:700;font-size:13px;letter-spacing:-.01em;isolation:isolate}
+.ulp-module::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),var(--card-tint),transparent 65%);transition:opacity .35s}
+.ulp-module:hover::before{opacity:1}
+.ulp-module::after{content:"";position:absolute;left:0;top:20%;bottom:20%;width:4px;border-radius:0 4px 4px 0;background:var(--card-color,var(--u-accent));transform:scaleY(0);transition:transform .45s var(--u-ease)}
+.ulp-module.is-active::after{transform:scaleY(1)}
+@media(min-width:761px){.ulp-module-icon{width:42px;height:42px;border-radius:14px}.ulp-module-icon svg{width:21px;height:21px}}
+.ulp-module>svg{transition:transform .35s var(--u-ease),color .3s}
+.ulp-module:hover>svg{transform:translateX(4px);color:var(--card-color,var(--u-accent))}
+.ulp-module-preview{border-radius:28px;border:1px solid color-mix(in srgb,var(--card-color,#a04dd4) 28%,var(--u-line));box-shadow:0 34px 70px -26px var(--card-tint,#a04dd455),0 18px 40px #7c57a710}
+.ulp-preview-copy h3{font-weight:800;letter-spacing:-.03em}
+@media(min-width:1051px){.ulp-preview-copy h3{font-size:30px}}
+
+/* --- путь, шаги --- */
+.ulp-path{position:relative;overflow:hidden;border:1px solid var(--u-line);border-radius:26px;background:color-mix(in srgb,var(--u-panel) 72%,transparent);backdrop-filter:blur(14px);box-shadow:0 26px 60px -26px #7a4fc055}
+@media(min-width:761px){.ulp-path{padding:28px 34px}}
+.ulp-path>div>span{font-weight:800;background:linear-gradient(135deg,var(--u-soft),var(--u-panel));box-shadow:0 8px 18px -8px #8a5ce099;transition:transform .5s var(--u-ease),background .3s,color .3s,border-color .3s}
+.ulp-path>div:hover>span{transform:rotate(-12deg) scale(1.14);background:linear-gradient(135deg,#8058e5,#e0589f);color:#fff;border-color:transparent}
+.ulp-path h3{font-weight:800;letter-spacing:-.01em}
+.ulp-steps li{border-radius:22px;align-items:flex-start}
+.ulp-steps li>span{flex-shrink:0;width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:13px;background:linear-gradient(135deg,#8058e5,#e0589f);color:#fff;font:800 13px 'Manrope',monospace;box-shadow:0 10px 20px -6px #9457e099}
+.ulp-steps h3{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.ulp-steps p{line-height:1.65}
+
+/* --- FAQ --- */
+.ulp-faq details{border-radius:18px;margin-bottom:12px;box-shadow:0 10px 26px -16px #7a4fc055;transition:background .3s,border-color .3s,box-shadow .3s,transform .35s var(--u-ease)}
+.ulp-faq details:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--u-accent) 55%,var(--u-line))}
+.ulp-faq details[open]{box-shadow:0 20px 44px -18px #8a5ce088}
+.ulp-faq summary{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.ulp-faq summary svg{box-sizing:content-box;padding:8px;border-radius:50%;background:var(--u-soft);transition:transform .45s var(--u-ease),background .3s,color .3s}
+.ulp-faq details[open] summary svg{background:var(--u-accent);color:#fff}
+.ulp-faq details p{line-height:1.7}
+@supports selector(::details-content){
+.ulp-faq details::details-content{block-size:0;overflow:clip;transition:block-size .5s var(--u-ease),content-visibility .5s allow-discrete}
+.ulp-faq details[open]::details-content{block-size:auto}}
+
+/* --- плавающие карточки, финал, подвал, диалог --- */
+.ulp-floating{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:color-mix(in srgb,var(--u-panel) 80%,transparent);border-radius:18px}
+.ulp-final{border-radius:32px;border:1px solid color-mix(in srgb,var(--u-accent) 35%,var(--u-line));box-shadow:0 40px 90px -30px #8a5ce088}
+.ulp-final h2{font-weight:800;letter-spacing:-.035em}
+@media(min-width:1051px){.ulp-final{padding:60px 64px}.ulp-final h2{font-size:clamp(30px,3.2vw,46px);line-height:1.1}}
+.ulp-footer{margin-top:60px;border-top:1px solid transparent;border-image:linear-gradient(90deg,transparent,var(--u-line) 20%,var(--u-accent) 50%,var(--u-line) 80%,transparent) 1}
+.ulp-footer button{position:relative}
+.ulp-footer button::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .35s var(--u-ease)}
+.ulp-footer button:hover::after{transform:scaleX(1)}
+.ulp-dialog{border-radius:30px;box-shadow:0 40px 120px #1a0b3a77;animation:wow-dialog .55s cubic-bezier(.16,1,.3,1) both}
+.ulp-dialog::backdrop{backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);background:#0f0a2399}
+.ulp-dialog h2{font-weight:800;letter-spacing:-.03em}
+@keyframes wow-dialog{from{opacity:0;transform:translateY(40px) scale(.92)}}
+
+/* --- кнопка «наверх» с кольцом прогресса --- */
+#wow-top{position:fixed;left:18px;bottom:18px;width:52px;height:52px;border-radius:50%;border:0;padding:0;cursor:pointer;z-index:55;display:grid;place-items:center;background:conic-gradient(#a04dd4 calc(var(--p,0)*1%),#a04dd433 0);opacity:0;transform:translateY(24px) scale(.8);pointer-events:none;transition:opacity .35s,transform .5s cubic-bezier(.16,1.4,.3,1);box-shadow:0 12px 30px -8px #8a5ce0aa}
+#wow-top.show{opacity:1;transform:none;pointer-events:auto}
+#wow-top::before{content:"";position:absolute;inset:4px;border-radius:50%;background:#fff;transition:background .3s}
+body.dark #wow-top::before{background:#1b1730}
+#wow-top svg{position:relative;width:20px;height:20px;color:#8058e5;transition:transform .35s cubic-bezier(.16,1.4,.3,1)}
+body.dark #wow-top svg{color:#c5a0ff}
+#wow-top:hover svg{transform:translateY(-3px)}
+
+@media (prefers-reduced-motion:no-preference){
+@keyframes wow-halo{0%{box-shadow:0 12px 32px -8px #9457e099,inset 0 1px 0 #ffffff55,inset 0 -3px 8px #5a1fb033,0 0 0 0 rgba(160,90,240,.55)}70%,100%{box-shadow:0 12px 32px -8px #9457e099,inset 0 1px 0 #ffffff55,inset 0 -3px 8px #5a1fb033,0 0 0 24px rgba(160,90,240,0)}}
+}
+
+body.ulp-wow-active{scrollbar-width:thin;scrollbar-color:#a04dd4 transparent}
+#wow-progress{pointer-events:none}
+#wow-top:not(.show){visibility:hidden}
