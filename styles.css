@@ -1551,3 +1551,75 @@ body.dark #wow-top svg{color:#c5a0ff}
 body.ulp-wow-active{scrollbar-width:thin;scrollbar-color:#a04dd4 transparent}
 #wow-progress{pointer-events:none}
 #wow-top:not(.show){visibility:hidden}
+
+/* =========================================================
+   Ultimate LMS — «Архитектура»
+   Fixed grid, moving light and softly pulsing points.
+   Uses the platform's existing body.dark theme switch.
+   ========================================================= */
+#meshCanvas { display: none !important; }
+body {
+  --architecture-base: #f1f2f8;
+  --architecture-line: rgba(113,103,150,.075);
+  --architecture-blue: rgba(66,132,184,.17);
+  --architecture-purple: rgba(139,100,200,.14);
+  --architecture-point: rgba(139,100,200,.55);
+  isolation: isolate;
+  background: var(--architecture-base);
+}
+body.dark {
+  --architecture-base: #101522;
+  --architecture-line: rgba(166,161,198,.085);
+  --architecture-blue: rgba(98,163,221,.18);
+  --architecture-purple: rgba(173,134,240,.15);
+  --architecture-point: rgba(173,134,240,.65);
+  background: var(--architecture-base);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--architecture-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--architecture-line) 1px, transparent 1px);
+  background-size: 70px 70px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, transparent 15%, #000 90%);
+  mask-image: radial-gradient(ellipse at 50% 45%, transparent 15%, #000 90%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 12% 23%, var(--architecture-point) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 16%, var(--architecture-point) 0 2px, transparent 3px),
+    radial-gradient(circle at 92% 72%, var(--architecture-point) 0 2px, transparent 3px),
+    radial-gradient(circle at 8% 81%, var(--architecture-point) 0 2px, transparent 3px),
+    radial-gradient(circle at 64% 93%, var(--architecture-point) 0 2px, transparent 3px),
+    radial-gradient(ellipse at 5% 12%, var(--architecture-blue), transparent 48%),
+    radial-gradient(ellipse at 93% 79%, var(--architecture-purple), transparent 50%);
+  animation: lms-architecture-drift 24s ease-in-out infinite alternate,
+             lms-architecture-breathe 7s ease-in-out infinite;
+}
+@keyframes lms-architecture-drift {
+  from { transform: translate3d(-1.5%, -1%, 0); }
+  to   { transform: translate3d(3%, 2.5%, 0); }
+}
+@keyframes lms-architecture-breathe {
+  0%, 100% { opacity: .72; }
+  50%      { opacity: 1; }
+}
+@media (max-width: 600px) {
+  body::before { background-size: 48px 48px; }
+  body::after { animation-duration: 30s, 9s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; transform: none; opacity: .85; }
+}
+@media print {
+  body::before, body::after { display: none; }
+}
