@@ -58,7 +58,7 @@ body.dark {
   z-index: -1;
   pointer-events: none;
   /* Резервный фон */
-  background: url('image_03ed04.png') no-repeat center center fixed;
+  background: none; /* Старое изображение удалено. */
   background-size: cover;
 }
 
@@ -1622,4 +1622,30 @@ body::after {
 }
 @media print {
   body::before, body::after { display: none; }
+}
+
+/* Исправление замены старого фона, включая обычные inline-стили. */
+html { background: #f1f2f8 !important; }
+html:has(body.dark) { background: #101522 !important; }
+body, body.dark {
+  background-color: var(--architecture-base) !important;
+  background-image: none !important;
+}
+#root {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+#meshCanvas {
+  display: none !important;
+  visibility: hidden !important;
+  background: none !important;
+}
+body::before {
+  /* Непрозрачная основа под сеткой вместо прозрачной маски. */
+  background-color: var(--architecture-base);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+@media print {
+  html, body, body.dark { background: white !important; }
 }
