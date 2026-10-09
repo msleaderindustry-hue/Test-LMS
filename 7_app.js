@@ -696,9 +696,7 @@ function App() {
   // UI
   // -----------------------------------------------------------------------
 
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LowPolyBackground, {
-    theme: theme
-  }), showLauncher && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
     className: "lms-menu-page-launcher",
     style: {
       position: "absolute",
