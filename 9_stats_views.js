@@ -229,53 +229,9 @@
 @keyframes usp-dot-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--up-accent) 60%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
 @keyframes usp-me{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 18px 2px color-mix(in srgb,var(--up-accent) 28%,transparent)}}
 @keyframes usp-glow-gold{0%,100%{box-shadow:0 0 0 0 #ffd76a00}50%{box-shadow:0 0 16px 2px #ffd76a88}}
-
-/* Исправления размеров и адаптивности. Исходное оформление v4 сохранено. */
-.usp button,.usp input,.usp select{height:auto;min-height:0;line-height:1.4;box-sizing:border-box}
-.usp .usp-btn{min-height:42px;height:auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1.35}
-.usp .usp-chip{min-height:38px;height:auto;line-height:1.35}
-.usp .usp-segment button{min-height:36px;height:auto;line-height:1.35}
-.usp .usp-icon-btn{height:40px;min-height:40px;flex-shrink:0}
-.usp .usp-tab{height:auto;flex:1 0 auto;min-width:max-content;line-height:1.35}
-.usp .usp-tabs{max-width:100%;overscroll-behavior-x:contain;scroll-padding:6px}
-.usp .usp-search input{height:48px;min-height:0;padding:0;border:0;box-shadow:none;background:transparent;line-height:normal}
-.usp .usp-select{height:50px;min-height:0;line-height:normal}
-.usp .usp-section-head>div,.usp .usp-record>div,.usp .usp-lb-row>div{min-width:0}
-.usp .usp-ring-center small{max-width:100px;text-align:center;line-height:1.3}
-.usp .usp-lb-value{overflow-wrap:anywhere}
-.usp .usp-confirm-text{min-width:0;overflow-wrap:anywhere}
-/* Рост графика через transform вместо пересчёта высоты каждый кадр. */
-@keyframes usp-rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-/* Блик сохраняет движение, не меняя layout-свойство left. */
-@keyframes usp-shine{0%{transform:translateX(0) skewX(-20deg)}60%,100%{transform:translateX(500%) skewX(-20deg)}}
-/* Появление всей страницы без размытия большого растрового слоя. */
-@keyframes usp-in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
-.usp .usp-shell:before,.usp .usp-shell:after{will-change:transform}
-@media(max-width:680px){
-.usp .usp-tab{min-height:46px;flex:1 0 auto}
-.usp .usp-lb-top .usp-tabs{width:0}
-.usp .usp-search input,.usp .usp-select{font-size:16px!important}
-.usp .usp-record{grid-template-columns:minmax(0,1fr) auto 36px}
-.usp .usp-record-title,.usp .usp-record-meta,.usp .usp-lb-name{overflow-wrap:anywhere}
-.usp .usp-ring-center small{max-width:80px;font-size:10px}
-.usp .usp-chart-head{flex-direction:column;align-items:stretch}
-.usp .usp-segment button{flex:1}
-}
-@media(max-width:480px){
-.usp .usp-tools{flex-wrap:wrap;gap:8px}
-.usp .usp-search{flex:1 1 100%}
-.usp .usp-select{width:100%;max-width:none}
-.usp .usp-filters{gap:6px}.usp .usp-chip{flex:1;padding:8px 6px}
-.usp .usp-lb-row{grid-template-columns:23px 35px minmax(0,1fr);gap:6px 9px}
-.usp .usp-lb-value{grid-column:3;text-align:left}
-.usp .usp-lb-value small{display:inline;max-width:none;margin-left:6px}
-.usp .usp-confirm-actions{width:100%}.usp .usp-confirm-actions>.usp-btn{flex:1}
-.usp .usp-pagination{flex-wrap:wrap}
-}
-@media(prefers-reduced-motion:reduce){.usp *,.usp *:before,.usp *:after{animation:none!important;transition:none!important}}
 `;
   function useStyles() {
-    useLayoutEffect(() => {
+    useEffect(() => {
       let node = document.getElementById('ultimate-progress-v3-styles');
       if (!node) {
         node = document.createElement('style');
@@ -294,31 +250,19 @@
     const dot = document.createElement('span');
     dot.className = 'usp-ripple';
     dot.setAttribute('aria-hidden', 'true');
-    dot.style.left = (e.detail === 0 ? rect.width / 2 : e.clientX - rect.left) + 'px';
-    dot.style.top = (e.detail === 0 ? rect.height / 2 : e.clientY - rect.top) + 'px';
+    dot.style.left = e.clientX - rect.left + 'px';
+    dot.style.top = e.clientY - rect.top + 'px';
     btn.appendChild(dot);
     setTimeout(() => dot.remove(), 700);
   }
-  // Один расчёт подсветки за кадр; touch-прокрутка не запускает hover.
-  let spotlightFrame = 0;
-  let spotlightPoint = null;
+  // Подсветка карточек, следующая за курсором.
   function trackSpotlight(e) {
-    if (e.pointerType === 'touch' || reducedMotion() || !window.matchMedia?.('(hover: hover)').matches) return;
     const el = e.target.closest?.('.usp-metric,.usp-card');
     if (!el) return;
-    spotlightPoint = {el, x: e.clientX, y: e.clientY};
-    if (spotlightFrame) return;
-    spotlightFrame = requestAnimationFrame(() => {
-      spotlightFrame = 0;
-      const point = spotlightPoint;
-      spotlightPoint = null;
-      if (!point?.el.isConnected) return;
-      const rect = point.el.getBoundingClientRect();
-      point.el.style.setProperty('--mx', point.x - rect.left + 'px');
-      point.el.style.setProperty('--my', point.y - rect.top + 'px');
-    });
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', e.clientX - rect.left + 'px');
+    el.style.setProperty('--my', e.clientY - rect.top + 'px');
   }
-
   function Empty({
     title,
     text,
@@ -409,17 +353,7 @@
         w
       });
     };
-    useLayoutEffect(() => {
-      measure();
-      const active = wrap.current?.querySelector('[aria-selected="true"]');
-      if (active && wrap.current) {
-        const box = wrap.current;
-        const left = active.offsetLeft - 6;
-        const right = active.offsetLeft + active.offsetWidth + 6;
-        if (left < box.scrollLeft) box.scrollLeft = left;
-        else if (right > box.scrollLeft + box.clientWidth) box.scrollLeft = right - box.clientWidth;
-      }
-    }, [value, tabs.length]);
+    useLayoutEffect(measure, [value, tabs.length]);
     useEffect(() => {
       window.addEventListener('resize', measure);
       const observer = typeof ResizeObserver === 'function' && wrap.current ? new ResizeObserver(measure) : null;
@@ -942,7 +876,7 @@
       icon: 'clock'
     }];
     const passRate = summary.total ? Math.round(summary.passed / summary.total * 100) : 0;
-    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения" onPointerMove={trackSpotlight} onClick={spawnRipple}><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
+    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения" onPointerMove={trackSpotlight} onPointerDown={spawnRipple}><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
   }
   function StatsView(props) {
     const uid = useUserId();
