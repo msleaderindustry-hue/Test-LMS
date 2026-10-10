@@ -362,7 +362,7 @@ async function exportUser(user, parts, allUsers = []) {
     .adm-root .adm-scope{border:1px solid var(--ad-line);background:var(--ad-soft);border-radius:12px;padding:11px;margin:12px 0;font-size:11px;color:var(--ad-muted)}
     .adm-root .adm-scope>div{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.adm-root .adm-scope .adm-btn{height:auto;min-height:36px;padding:7px 9px;font-size:11px}
     .adm-root .adm-seen{display:flex;align-items:center;gap:4px;color:var(--ad-muted);font-size:10px;font-weight:400;line-height:1.5;margin-top:5px;white-space:normal}.adm-root .adm-seen.recent{color:var(--ad-accent)}
-    .adm-root .adm-person{min-height:82px}.adm-root .adm-profile-seen{margin:-5px 0 18px}.adm-root .adm-profile-seen .adm-seen{font-size:12px}
+    .adm-root .adm-person{min-height:82px}.adm-root .adm-profile-seen{margin:14px 0 18px}.adm-root .adm-profile-seen .adm-seen{font-size:12px;margin-top:0}
     .adm-root .adm-tabs{overflow-x:auto;scrollbar-width:thin;max-width:100%;padding-bottom:4px}.adm-root .adm-tab{flex:0 0 auto;white-space:nowrap;height:auto;min-height:44px}
     .adm-root .adm-insight{border:1px solid var(--ad-line);border-radius:16px;padding:18px;background:var(--ad-soft);margin-bottom:24px;animation:adm-rise .4s var(--ad-ease) both}
     .adm-root .adm-period{display:flex;gap:4px;flex-shrink:0}.adm-root .adm-period-legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--ad-muted);font-size:11px;margin-bottom:14px}
