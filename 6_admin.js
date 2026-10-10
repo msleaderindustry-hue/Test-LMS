@@ -1,8 +1,15 @@
 // --- 6_admin.js — Ultimate LMS / обновлённая панель ---
 // Полная замена файла. React + существующий Firebase compat.
 // JSX подключается тем же способом, что и исходный 6_admin.js.
+// Обновление: серверные страницы по 24, активность, сравнение тестов, журнал.
+// Поиск/счётчики относятся к загруженным профилям; полный поиск загружает все страницы.
+// Активность читает существующий users/{uid}/activity и метки lastSeenAt.
+// adminAudit (последние 100 действий) сохраняется в профиле одной транзакцией с изменением.
+// Это журнал интерфейса, не защищённый от подделки серверный аудит; доступ задают Firestore Rules.
+// Для записи Rules должны разрешать администратору обновление поля adminAudit.
+// История тестов без корректных дат не участвует в сравнении периодов.
 (function () {
-    const { useState, useEffect, useRef, useMemo } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
     const ADMIN_ICON_PATHS = {
         chat: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
         chess: <><path d="M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8z"/><path d="M6 18h14v4H6z"/><circle cx="11" cy="8" r=".7"/></>,
@@ -55,7 +62,7 @@
         { id: 'stats', icon: 'user', label: 'Статистика', color: '#f59e0b' } 
     ];
 
-    const PAGE_SIZE = 12;
+    const PAGE_SIZE = 24;
     const userNameCollator = new Intl.Collator('ru', { sensitivity: 'base' });
     // Кэш живёт только в памяти страницы, привязан к администратору и базе.
     // Права по-прежнему проверяются перед каждым подключением списка.
@@ -350,6 +357,22 @@ async function exportUser(user, parts, allUsers = []) {
       .adm-root .adm-filter{gap:6px}
       .adm-root .adm-sort select{font-size:16px}
     }
+
+    /* Новые блоки наследуют палитру панели. */
+    .adm-root .adm-scope{border:1px solid var(--ad-line);background:var(--ad-soft);border-radius:12px;padding:11px;margin:12px 0;font-size:11px;color:var(--ad-muted)}
+    .adm-root .adm-scope>div{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.adm-root .adm-scope .adm-btn{height:auto;min-height:36px;padding:7px 9px;font-size:11px}
+    .adm-root .adm-seen{display:flex;align-items:center;gap:4px;color:var(--ad-muted);font-size:10px;font-weight:400;line-height:1.5;margin-top:5px;white-space:normal}.adm-root .adm-seen.recent{color:var(--ad-accent)}
+    .adm-root .adm-person{min-height:82px}.adm-root .adm-profile-seen{margin:-5px 0 18px}.adm-root .adm-profile-seen .adm-seen{font-size:12px}
+    .adm-root .adm-tabs{overflow-x:auto;scrollbar-width:thin;max-width:100%;padding-bottom:4px}.adm-root .adm-tab{flex:0 0 auto;white-space:nowrap;height:auto;min-height:44px}
+    .adm-root .adm-insight{border:1px solid var(--ad-line);border-radius:16px;padding:18px;background:var(--ad-soft);margin-bottom:24px;animation:adm-rise .4s var(--ad-ease) both}
+    .adm-root .adm-period{display:flex;gap:4px;flex-shrink:0}.adm-root .adm-period-legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--ad-muted);font-size:11px;margin-bottom:14px}
+    .adm-root .adm-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .adm-root .adm-compare-card{border:1px solid var(--ad-line);background:var(--ad-bg);padding:14px;border-radius:12px;min-width:0}
+    .adm-root .adm-compare-card>span{font-size:11px;color:var(--ad-muted)}.adm-root .adm-compare-card>div{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0;font-variant-numeric:tabular-nums}.adm-root .adm-compare-card strong{font-size:25px;color:var(--ad-accent);overflow-wrap:anywhere}.adm-root .adm-compare-card small{font-size:16px;color:var(--ad-muted)}.adm-root .adm-compare-card p{font-size:11px;color:var(--ad-muted)}.adm-root .adm-compare-card .up{color:var(--ad-green)}.adm-root .adm-compare-card .down{color:var(--ad-red)}
+    .adm-root .adm-fineprint{font-size:11px;color:var(--ad-muted);line-height:1.6;margin-top:14px}
+    .adm-root .adm-activity-summary{display:grid;gap:8px;padding:16px;background:var(--ad-soft);border:1px solid var(--ad-line);border-radius:13px;margin-bottom:20px}.adm-root .adm-activity-summary>span{font-size:12px;color:var(--ad-muted)}
+    .adm-root .adm-timeline article{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--ad-line);animation:adm-rise .3s var(--ad-ease) both}.adm-root .adm-timeline article>div{min-width:0;overflow-wrap:anywhere}.adm-root .adm-timeline strong{font-size:13px}.adm-root .adm-timeline p,.adm-root .adm-timeline time{display:block;font-size:11px;color:var(--ad-muted);margin-top:5px}.adm-root .adm-timeline-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--ad-accent);box-shadow:0 0 0 4px var(--ad-soft)}
+    @media(max-width:620px){.adm-root .adm-insight{padding:14px}.adm-root .adm-insight .adm-section-label{flex-wrap:wrap;gap:10px}.adm-root .adm-compare-card{padding:12px}.adm-root .adm-compare-card strong{font-size:22px}.adm-root .adm-person{min-height:88px}.adm-root .adm-count{font-size:10px;text-align:right}.adm-root .adm-pagination{flex-wrap:wrap;gap:8px}}
     `;
 
     // Keep dialogs mounted until their closing animation finishes.
@@ -478,7 +501,133 @@ async function exportUser(user, parts, allUsers = []) {
             </form>
         </Dialog>;
     }
-    function UserDetails({ user, allUsers, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport, onChatMode, onChatUser }) {
+    function activityTime(value) {
+        if (value == null || value === '') return null;
+        if (typeof value.toMillis === 'function') { const n=value.toMillis(); return Number.isFinite(n) ? n : null; }
+        if (typeof value.seconds === 'number') return value.seconds * 1000;
+        if (value instanceof Date) return Number.isFinite(+value) ? +value : null;
+        if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? value : null;
+        if (typeof value !== 'string') return null;
+        const ru=value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+        if (ru) { const d=new Date(+ru[3],+ru[2]-1,+ru[1],+(ru[4]||0),+(ru[5]||0),+(ru[6]||0)); return d.getFullYear()===+ru[3] && d.getMonth()===+ru[2]-1 && d.getDate()===+ru[1] ? +d : null; }
+        if (!/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(value)) return null;
+        const n=Date.parse(value); return Number.isFinite(n) ? n : null;
+    }
+    function lastActivity(user) {
+        return Math.max(0,...['lastSeenAt','lastActiveAt','lastVisitAt','lastLoginAt'].map(k=>activityTime(user?.[k]) || 0)) || null;
+    }
+    const dateText = value => { const n=activityTime(value); return n == null ? 'Нет данных' : new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'short'}).format(n); };
+    function Seen({user, now}) {
+        const time=lastActivity(user);
+        let label='Активность не записана';
+        if (time) {
+            const minutes=Math.max(0,Math.floor((now-time)/60000));
+            label=minutes<1 ? 'Активность только что' : minutes<60 ? `Активность ${minutes} мин назад` : minutes<1440 ? `Активность ${Math.floor(minutes/60)} ч назад` : `Был(а) ${new Date(time).toLocaleDateString('ru-RU')}`;
+        }
+        return <span className={`adm-seen ${time && now-time<300000 ? 'recent' : ''}`} title={time ? dateText(time) : label}><AdminIcon name="clock" size={11}/>{label}</span>;
+    }
+    // Серверные страницы по UID: не требуют полей сортировки во всех профилях.
+    function useUserPages(enabled, uid, retry) {
+        const [state,setState]=useState({rows:null,more:true,busy:false,scanning:false,error:''});
+        const control=useRef(null);
+        const publish=useCallback(c=>{
+            if(control.current!==c || c.dead)return;
+            setState({rows:c.rows,more:c.more,busy:c.busy,scanning:c.scanning,error:c.error});
+        },[]);
+        const load=useCallback(async(all=false)=>{
+            const c=control.current;
+            if(!c || c.dead || c.busy || !c.more)return;
+            c.busy=true;c.scanning=all;c.stop=false;c.error='';publish(c);
+            try {
+                do {
+                    let query=c.db.collection('users').orderBy(window.firebase?.firestore?.FieldPath?.documentId?.() || '__name__').limit(PAGE_SIZE);
+                    if(c.cursor)query=query.startAfter(c.cursor);
+                    const snap=await query.get({source:'server'});
+                    if(control.current!==c || c.dead || window.auth?.currentUser?.uid!==uid)return;
+                    const map=new Map(array(c.rows).map(u=>[u.id,u]));
+                    snap.docs.forEach(doc=>map.set(doc.id,{...doc.data(),id:doc.id}));
+                    c.rows=Array.from(map.values());c.more=snap.docs.length===PAGE_SIZE;
+                    if(snap.docs.length)c.cursor=snap.docs[snap.docs.length-1];
+                    directoryCache={uid,db:c.db,rows:c.rows,cursor:c.cursor,more:c.more,at:Date.now()};
+                    publish(c);
+                } while(all && !c.stop && c.more);
+            } catch(error) {
+                if(control.current===c && !c.dead){c.error=errorText(error);if(String(error.code).includes('permission-denied')){c.rows=null;directoryCache=null;}}
+            } finally {
+                if(control.current===c && !c.dead){c.busy=false;c.scanning=false;publish(c);}
+            }
+            return control.current===c && !c.dead ? {ok:!c.error,rows:c.rows,more:c.more} : null;
+        },[uid,publish]);
+        useEffect(()=>{
+            if(!enabled){setState({rows:null,more:true,busy:false,scanning:false,error:''});return;}
+            const cache=retry===0 && directoryCache?.uid===uid && directoryCache.db===window.db && Date.now()-directoryCache.at<DIRECTORY_CACHE_TTL ? directoryCache : null;
+            const c={db:window.db,rows:cache?.rows || null,cursor:cache?.cursor || null,more:cache ? cache.more : true,busy:false,scanning:false,stop:false,dead:false,error:''};
+            control.current=c;publish(c);
+            if(!cache)void load();
+            return()=>{c.dead=true;c.stop=true;if(control.current===c)control.current=null;};
+        },[enabled,uid,retry,load,publish]);
+        const update=useCallback((id,user)=>{
+            const c=control.current;if(!c || c.dead || !c.rows)return;
+            c.rows=user ? c.rows.map(row=>row.id===id?user:row) : c.rows.filter(row=>row.id!==id);
+            if(directoryCache?.uid===uid)directoryCache={...directoryCache,rows:c.rows};publish(c);
+        },[uid,publish]);
+        return {...state,load,update,snapshot:()=>control.current,stop:()=>{const c=control.current;if(c)c.stop=true;}};
+    }
+    function comparePeriods(history,days,end) {
+        const span=days*86400000, start=end-span, previous=start-span;
+        const bins=[[],[]];let skipped=0;
+        array(history).forEach(row=>{
+            if(!row || typeof row!=='object'){skipped++;return;}
+            const at=activityTime(firstDefined(row,['at','date','createdAt','timestamp']));
+            const raw=row.percent;
+            if(at==null || raw==null || raw==='' || !Number.isFinite(Number(raw)) || Number(raw)<0 || Number(raw)>100){skipped++;return;}
+            if(at>=previous && at<end)bins[at>=start?1:0].push({at,value:Number(raw)});
+        });
+        const metrics=bins.map(rows=>({count:rows.length,average:rows.length?Math.round(rows.reduce((sum,r)=>sum+r.value,0)/rows.length):null,best:rows.length?Math.max(...rows.map(r=>r.value)):null,days:new Set(rows.map(r=>new Date(r.at).toLocaleDateString('en-CA'))).size}));
+        return {metrics,skipped,start,previous,end};
+    }
+    function ProgressComparison({user}) {
+        const [days,setDays]=useState(7);const [end,setEnd]=useState(()=>Date.now());
+        const data=useMemo(()=>comparePeriods(user.testHistory,days,end),[user.testHistory,days,end]);
+        const [before,after]=data.metrics;
+        const value=(n,unit)=>n==null?'—':`${n}${unit}`;
+        const range=(a,b)=>`${new Date(a).toLocaleDateString('ru-RU')} — ${new Date(b-1).toLocaleDateString('ru-RU')}`;
+        return <div className="adm-insight"><div className="adm-section-label"><div><h3>Сравнение прогресса</h3><p>Тестирование · два последовательных периода</p></div><div className="adm-period" role="group" aria-label="Период сравнения">{[7,30].map(n=><button type="button" key={n} className={`adm-chip ${days===n?'active':''}`} aria-pressed={days===n} onClick={()=>{setDays(n);setEnd(Date.now());}}>{n} дней</button>)}</div></div><div className="adm-period-legend"><span>Раньше: {range(data.previous,data.start)}</span><span>Сейчас: {range(data.start,data.end)}</span></div><div className="adm-compare-grid">{[['count','Попытки',''],['average','Средний балл','%'],['best','Лучший результат','%'],['days','Дни с тестами','']].map(([key,label,unit])=>{const delta=before[key]==null || after[key]==null?null:Math.round((after[key]-before[key])*10)/10;return <div className="adm-compare-card" key={key}><span>{label}</span><div><small>{value(before[key],unit)}</small><span aria-hidden="true">→</span><strong>{value(after[key],unit)}</strong></div><p className={delta>0?'up':delta<0?'down':''}>{delta==null?'Недостаточно данных':delta===0?'Без изменений':`${delta>0?'+':''}${delta}${unit?' п. п.':''}`}</p></div>})}</div>{!before.count&&!after.count&&<div className="adm-note">За эти периоды нет результатов с датами. Они появятся после прохождения тестов.</div>}<p className="adm-fineprint">Периоды по {days} суток до момента открытия или переключения. {data.skipped>0?`Записей без корректной даты или оценки: ${data.skipped}. `:''}Для сравнения Excel и печати нужна история результатов по датам; общие рекорды не показывают недельный прогресс.</p></div>;
+    }
+    function UserActivity({user,now}) {
+        const [state,setState]=useState({items:[],loading:true,error:''});const [retry,setRetry]=useState(0);
+        useEffect(()=>{
+            let live=true;setState({items:[],loading:true,error:''});
+            window.db.collection('users').doc(user.id).collection('activity').orderBy('at','desc').limit(20).get().then(snap=>{
+                if(live)setState({items:snap.docs.map(d=>({...d.data(),id:d.id})),loading:false,error:''});
+            }).catch(e=>{if(live)setState({items:[],loading:false,error:errorText(e)});});
+            return()=>{live=false;};
+        },[user.id,retry]);
+        return <><div className="adm-section-label"><div><h3>Последняя активность</h3><p>Данные подключённого трекера платформы</p></div><Btn disabled={state.loading} onClick={()=>setRetry(n=>n+1)}>Обновить</Btn></div><div className="adm-activity-summary"><Seen user={user} now={now}/><strong>{dateText(lastActivity(user))}</strong><span>Последний вход: {dateText(firstDefined(user,['lastLoginAt','lastLogin']))}</span></div>{state.loading?<div className="adm-skeleton" role="status" aria-label="Загрузка активности"/>:state.error?<div className="adm-note" role="alert">{state.error} Метки последнего входа доступны выше.</div>:!state.items.length?<Empty compact title="Событий пока нет">Журнал заполнится, когда трекер начнёт сохранять действия ученика.</Empty>:<div className="adm-timeline">{state.items.map(item=><article key={item.id}><span className="adm-timeline-dot"/><div><strong>{str(item.label)||ACTIVITY_SECTIONS[item.section]||'Действие на платформе'}</strong><p>{ACTIVITY_SECTIONS[item.section]||str(item.section)}{item.action?` · ${str(item.action)}`:''}</p><time>{dateText(item.at)}</time></div></article>)}</div>}<p className="adm-fineprint">Показаны последние 20 событий. Время активности не является подтверждением, что пользователь сейчас онлайн.</p></>;
+    }
+    function AdminAudit({user}) {
+        const entries=array(user.adminAudit).filter(e=>e&&typeof e==='object').slice().reverse();
+        return <><div className="adm-section-label"><div><h3>История действий администратора</h3><p>Изменения этого профиля через обновлённую панель</p></div><span className="adm-badge accent">{entries.length}</span></div>{!entries.length?<Empty compact title="Пока без изменений">После первого сохранения здесь появятся действие, автор и время.</Empty>:<div className="adm-timeline">{entries.map((entry,i)=><article key={entry.id||i}><span className="adm-timeline-dot"/><div><strong>{str(entry.action)||'Профиль изменён'}</strong><p>{str(entry.actorName)||str(entry.actorUid)||'Администратор'}</p><p>{array(entry.changes).map(c=>str(c)).join(' · ')}</p><time>{dateText(entry.at)}</time></div></article>)}</div>}<p className="adm-fineprint">Последние 100 действий на профиль. Старые действия до установки не восстанавливаются. Время — по часам устройства администратора.</p></>;
+    }
+    function auditChanges(current,patch) {
+        const out=[];
+        if('role' in patch)out.push(`Роль: ${patch.role==='admin'?'администратор':'студент'}`);
+        if('isBanned' in patch)out.push(patch.isBanned?'Аккаунт заблокирован':'Блокировка снята');
+        if('allowedModules' in patch){const old=modulesOf(current),next=array(patch.allowedModules);out.push(...AVAILABLE_MODULES.filter(m=>old.includes(m.id)!==next.includes(m.id)).map(m=>`${m.label}: ${next.includes(m.id)?'открыт':'закрыт'}`));}
+        if('excelHintsEnabled' in patch)out.push(`Подсказки Excel: ${patch.excelHintsEnabled?'включены':'выключены'}`);
+        if('assignedTests' in patch){
+            const old=testsOf(current),next=array(patch.assignedTests);
+            out.push(`Назначенных тестов: ${old.length} → ${next.length}`);
+            next.filter(t=>!old.some(o=>o.id===t.id)).forEach(t=>out.push(`Назначен: ${str(t.title).slice(0,100)||'Без названия'}`));
+            old.filter(t=>!next.some(n=>n.id===t.id)).forEach(t=>out.push(`Удалён: ${str(t.title).slice(0,100)||'Без названия'}`));
+        }
+        if('chatContactMode' in patch)out.push(`Контакты: ${{all:'все',teachers:'преподаватели',selected:'выбранные'}[patch.chatContactMode]||'изменены'}`);
+        if('chatAllowedUsers' in patch)out.push(`Выбранных контактов: ${array(patch.chatAllowedUsers).length}`);
+        [['testHistory','Тесты'],['excelProgress','Excel'],['typingProgress','Печать'],['hotkeyProgress','Хоткеи']].forEach(([key,label])=>{if(key in patch)out.push(`${label}: статистика сброшена`)});
+        return out.slice(0,20);
+    }
+
+    function UserDetails({ user, allUsers, allLoaded, onLoadAll, loadingAll, now, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport, onChatMode, onChatUser }) {
         const [tab, setTab] = useState('access');
         const [picked, setPicked] = useState([]);
         const [contactSearch, setContactSearch] = useState('');
@@ -493,16 +642,19 @@ async function exportUser(user, parts, allUsers = []) {
         const contactQuery = contactSearch.trim().toLocaleLowerCase();
         const filteredContacts = contactCandidates.filter(item => !contactQuery || `${nameOf(item)} ${str(item.email)} ${item.id}`.toLocaleLowerCase().includes(contactQuery));
         const visibleContactCount = contactMode === 'all' ? contactCandidates.length : contactMode === 'teachers' ? contactCandidates.filter(item => item.role === 'admin').length : allowedContacts.filter(id => contactCandidates.some(item => item.id === id)).length;
-        const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['chat', 'chat', 'Чат'], ['account', 'shield', 'Аккаунт']];
+        const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['chat', 'chat', 'Чат'], ['activity', 'activity', 'Активность'], ['audit', 'clock', 'Журнал'], ['account', 'shield', 'Аккаунт']];
         const download = async parts => { if (exporting) return; setExporting(true); try { await onExport(parts); } finally { setExporting(false); } };
         return <section className="adm-detail" aria-label={`Пользователь ${nameOf(user)}`} aria-busy={busy}>
             <div className="adm-profile"><div className="adm-avatar large">{initials(user)}</div><div className="adm-profile-text"><h3>{nameOf(user)}</h3><p>{str(user.email) || 'Email не указан'}</p><div className="adm-badges"><span className={`adm-badge ${user.isBanned ? 'bad' : 'good'}`}>{user.isBanned ? 'Заблокирован' : 'Не заблокирован'}</span><span className="adm-badge">{user.role === 'admin' ? 'Администратор' : 'Студент'}</span>{self && <span className="adm-badge accent">Это вы</span>}</div></div>{busy && <div className="adm-saving" role="status"><i className="adm-spinner"/>Сохранение</div>}</div>
+            <div className="adm-profile-seen"><Seen user={user} now={now}/></div>
             <div className="adm-tabs" role="tablist" aria-label="Разделы пользователя">{tabs.map(([id, icon, label], index) => <button key={id} type="button" className={`adm-tab ${tab === id ? 'active' : ''}`} role="tab" id={`adm-tab-${id}`} aria-controls={`adm-pane-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)} onKeyDown={event => { const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1; if (next >= 0) { event.preventDefault(); setTab(tabs[next][0]); document.getElementById(`adm-tab-${tabs[next][0]}`)?.focus(); } }}><AdminIcon name={icon} size={14}/>{label}</button>)}</div>
             <div key={tab} className="adm-pane" role="tabpanel" id={`adm-pane-${tab}`} aria-labelledby={`adm-tab-${tab}`}>
             {tab === 'access' && <><div className="adm-section-label"><div><h3>Модули платформы</h3><p>Настройте доступ к каждому разделу.</p></div><span className="adm-count">{AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length} / {AVAILABLE_MODULES.length}</span></div><div className="adm-modules">{AVAILABLE_MODULES.map(module => { const on = modulesOf(user).includes(module.id); return <button key={module.id} type="button" role="switch" aria-checked={on} aria-label={`Доступ: ${module.label}`} disabled={busy} className={`adm-module ${on ? 'on' : ''}`} onClick={() => onModule(module.id, !on)}><AdminIcon name={module.icon} size={18}/><span className="adm-module-name">{module.label}<small>{on ? 'Доступ открыт' : 'Доступ закрыт'}</small></span><span className="adm-switch" aria-hidden="true"/></button>; })}</div><div className="adm-setting"><button type="button" role="switch" aria-label="Подсказки Excel" aria-checked={user.excelHintsEnabled !== false} disabled={busy} className={`adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`} onClick={() => onHints(user.excelHintsEnabled === false)}><AdminIcon name="lightbulb" size={19}/><span className="adm-module-name">Подсказки Excel<small>{user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены'}</small></span><span className="adm-switch" aria-hidden="true"/></button></div>{user.isBanned && <div className="adm-note"><AdminIcon name="lock" size={15}/>Аккаунт заблокирован. Настройка модулей не снимает общую блокировку.</div>}</>}
             {tab === 'tests' && <><div className="adm-section-label"><div><h3>Персональные тесты</h3><p>Задания, назначенные этому пользователю.</p></div><Btn variant="primary" onClick={onImport} disabled={busy}><AdminIcon name="cloud" size={14}/>Назначить</Btn></div>{!tests.length ? <Empty title="Пока нет назначенных тестов">Загрузите файл с вопросами, чтобы добавить первое задание.</Empty> : <div className="adm-test-list">{tests.map((test, index) => <div className="adm-test" key={`${test.id}-${index}`}><AdminIcon name="fileText" size={19}/><div className="adm-test-text"><strong>{str(test.title) || 'Без названия'}</strong><small>{array(test.data).length} вопросов</small></div><IconBtn label={`Удалить тест: ${str(test.title) || 'Без названия'}`} disabled={busy || test.id == null} onClick={() => onRemove(test)}/></div>)}</div>}</>}
-            {tab === 'stats' && <><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
-            {tab === 'chat' && <><div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{visibleContactCount} доступно</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
+            {tab === 'stats' && <><ProgressComparison user={user}/><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
+            {tab === 'chat' && <>{!allLoaded && <div className="adm-scope"><p>Для полного списка контактов загрузите остальных пользователей. Сохранённые контакты не сбрасываются.</p><Btn disabled={loadingAll} onClick={onLoadAll}>{loadingAll?'Загружаем…':'Загрузить всех'}</Btn></div>}<div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{allLoaded ? `${visibleContactCount} доступно` : `${visibleContactCount} среди загруженных`}</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
+            {tab === 'activity' && <UserActivity user={user} now={now}/>}
+            {tab === 'audit' && <AdminAudit user={user}/>}
             {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row"><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row"><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
             </div>
         </section>;
@@ -513,9 +665,6 @@ async function exportUser(user, parts, allUsers = []) {
         const [uid, setUid] = useState(window.auth?.currentUser?.uid || null);
         const [authReady, setAuthReady] = useState(!!window.auth?.currentUser || typeof window.auth?.onAuthStateChanged !== 'function');
         const [access, setAccess] = useState({ state: 'checking', uid: null, message: '' });
-        const [users, setUsers] = useState(null);
-        const [loadError, setLoadError] = useState('');
-        const [usersSynced, setUsersSynced] = useState(false);
         const [retry, setRetry] = useState(0);
         const [search, setSearch] = useState('');
         const [filter, setFilter] = useState('all');
@@ -531,6 +680,10 @@ async function exportUser(user, parts, allUsers = []) {
         const actor = useRef(uid), accessRef = useRef(access), kicked = useRef(null), onKickedRef = useRef(onKicked);
         actor.current = uid; accessRef.current = access; onKickedRef.current = onKicked;
         const ready = access.state === 'ready' && access.uid === uid;
+        const directory = useUserPages(ready, uid, retry);
+        const users = directory.rows, loadError = directory.error;
+        const [now,setNow] = useState(()=>Date.now());
+        useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
         useEffect(() => {
             alive.current = true;
             let style = document.getElementById('ultimate-admin-styles');
@@ -550,7 +703,7 @@ async function exportUser(user, parts, allUsers = []) {
         useEffect(() => {
             let live = true;
             if (directoryCache && (directoryCache.uid !== uid || directoryCache.db !== window.db)) directoryCache = null;
-            setUsers(null); setUsersSynced(false); setLoadError(''); setSelectedId(null);
+            setSelectedId(null);
             if (!window.auth) { setAccess({ state: 'error', uid, message: 'Авторизация не подключена. Перезагрузите страницу.' }); return; }
             if (!authReady) { setAccess({ state: 'checking', uid, message: '' }); return; }
             if (!window.db) { setAccess({ state: 'error', uid, message: 'База данных не подключена. Перезагрузите страницу.' }); return; }
@@ -562,14 +715,14 @@ async function exportUser(user, parts, allUsers = []) {
                 if (!user || user.role !== 'admin' || user.isBanned) {
                     setAccess({ state: 'denied', uid, message: user?.isBanned ? 'Аккаунт заблокирован.' : 'Для этой панели нужны права администратора.' });
                     directoryCache = null;
-                    setUsers(null); setConfirm(null); setImportUid(null);
+                    setConfirm(null); setImportUid(null);
                 } else setAccess({ state: 'ready', uid, message: '' });
             }, error => {
                 if (!live) return;
                 const denied = String(error.code).includes('permission-denied');
                 setAccess({ state: denied ? 'denied' : 'error', uid, message: denied ? 'Нет доступа к профилю администратора.' : 'Не удалось проверить права. Проверьте подключение и повторите.' });
                 directoryCache = null;
-                setUsers(null); setConfirm(null); setImportUid(null);
+                setConfirm(null); setImportUid(null);
             });
             return () => { live = false; unsubscribe(); };
         }, [uid, retry, authReady]);
@@ -581,63 +734,29 @@ async function exportUser(user, parts, allUsers = []) {
             }, 1400);
             return () => clearTimeout(timer);
         }, [access.state, access.message]);
-        useEffect(() => {
-            if (!ready || !window.db) return;
-            let live = true;
-            const db = window.db;
-            const cached = directoryCache && directoryCache.uid === uid && directoryCache.db === db &&
-                Date.now() - directoryCache.at < DIRECTORY_CACHE_TTL ? directoryCache.rows : null;
-            setUsers(cached);
-            setUsersSynced(false);
-            setLoadError('');
-            let initialized = false;
-            const profiles = new Map();
-            const unsubscribe = db.collection('users').onSnapshot({ includeMetadataChanges: true }, snapshot => {
-                if (!live || actor.current !== uid) return;
-                const fromCache = !!snapshot.metadata?.fromCache;
-                setUsersSynced(!fromCache);
-                // Неполный локальный снимок не заменяет недавно полученный полный список.
-                if (!initialized && fromCache && (cached || snapshot.empty)) return;
-                let changed = !initialized;
-                if (!initialized) {
-                    snapshot.docs.forEach(doc => profiles.set(doc.id, { ...doc.data(), id: doc.id }));
-                    initialized = true;
-                } else {
-                    snapshot.docChanges().forEach(change => {
-                        changed = true;
-                        if (change.type === 'removed') profiles.delete(change.doc.id);
-                        else profiles.set(change.doc.id, { ...change.doc.data(), id: change.doc.id });
-                    });
-                }
-                if (changed) {
-                    const rows = Array.from(profiles.values());
-                    setUsers(rows);
-                    if (!fromCache) directoryCache = { uid, db, rows, at: Date.now() };
-                } else if (!fromCache) {
-                    directoryCache = { uid, db, rows: Array.from(profiles.values()), at: Date.now() };
-                }
-                setLoadError('');
-            }, error => {
-                if (!live || actor.current !== uid) return;
-                directoryCache = null;
-                setUsers(null); setUsersSynced(false);
-                setLoadError(String(error.code).includes('permission-denied') ? 'Нет разрешения на чтение списка пользователей.' : 'Не удалось загрузить пользователей. Проверьте соединение и повторите.');
-            });
-            return () => { live = false; unsubscribe(); };
-        }, [ready, uid, retry]);
         useEffect(() => { setPage(1); setSelectedId(null); }, [search, filter, sort]);
         const list = useMemo(() => {
             const q = search.trim().toLocaleLowerCase();
-            return array(users).filter(user => (filter !== 'admins' || user.role === 'admin') && (filter !== 'banned' || user.isBanned) && (filter !== 'students' || user.role !== 'admin') && (!q || `${nameOf(user)} ${str(user.email)} ${user.id}`.toLocaleLowerCase().includes(q))).sort((a, b) => {
+            return array(users).filter(user => (filter !== 'admins' || user.role === 'admin') && (filter !== 'banned' || user.isBanned) && (filter !== 'students' || user.role !== 'admin') && (filter !== 'inactive' || (lastActivity(user)!=null && now-lastActivity(user)>=7*86400000)) && (!q || `${nameOf(user)} ${str(user.email)} ${user.id}`.toLocaleLowerCase().includes(q))).sort((a, b) => {
+                if (sort === 'activity') { const delta=(lastActivity(b)||0)-(lastActivity(a)||0);if(delta)return delta; }
                 if (sort === 'tests') { const delta = testsOf(b).length - testsOf(a).length; if (delta) return delta; }
                 if (sort === 'role') { const delta = Number(b.role === 'admin') - Number(a.role === 'admin'); if (delta) return delta; }
                 return userNameCollator.compare(nameOf(a), nameOf(b)) || a.id.localeCompare(b.id);
             });
-        }, [users, search, filter, sort]);
+        }, [users, search, filter, sort, now]);
         const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
         const currentPage = Math.min(page, pageCount);
         const visible = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
         const selected = list.find(user => user.id === selectedId) || visible[0] || null;
+        const selectedUid=selected?.id;
+        useEffect(()=>{
+            if(!ready || !selectedUid)return;
+            let live=true;
+            const stop=window.db.collection('users').doc(selectedUid).onSnapshot(snap=>{
+                if(live && actor.current===uid)directory.update(selectedUid,snap.exists?{...snap.data(),id:snap.id||selectedUid}:null);
+            },error=>{if(live && actor.current===uid)toast(errorText(error),'error');});
+            return()=>{live=false;stop();};
+        },[ready,uid,selectedUid,directory.update]);
         const importUser = array(users).find(user => user.id === importUid);
         const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
         function dismissToast(id) {
@@ -664,6 +783,7 @@ async function exportUser(user, parts, allUsers = []) {
             try {
                 const db = window.db;
                 if (!db?.runTransaction) throw problem('Не удалось подключить транзакции Firebase. Проверьте подключение базы данных.');
+                const auditId=window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
                 await db.runTransaction(async transaction => {
                     if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился. Откройте панель заново.');
                     const selfRef = db.collection('users').doc(actorUid), targetRef = db.collection('users').doc(targetUid);
@@ -675,7 +795,14 @@ async function exportUser(user, parts, allUsers = []) {
                     const current = targetSnapshot.data();
                     const patch = transform(current, actorUid);
                     if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился.');
-                    transaction.update(targetRef, patch);
+                    const changes=auditChanges(current,patch);
+                    const adminAudit=[...array(current.adminAudit).filter(e=>e&&typeof e==='object').slice(-99),{
+                        id:auditId, at:new Date().toISOString(), actorUid, actorName:nameOf(self).slice(0,120),
+                        action:message || 'Настройки изменены', changes
+                    }];
+                    const updated={...current,...patch,adminAudit};
+                    if(new TextEncoder().encode(JSON.stringify(updated)).length>850*1024)throw problem('Профиль слишком большой. Уменьшите объём назначенных тестов перед сохранением.');
+                    transaction.update(targetRef, {...patch,adminAudit});
                 });
                 if (alive.current && actor.current === actorUid && message) toast(message);
             } finally {
@@ -745,17 +872,18 @@ async function exportUser(user, parts, allUsers = []) {
             <AdminPresence immediate={!ready} show={!!(ready && confirm)}>{ready && confirm && <Dialog title={confirm.title} busy={pending.has(confirm.uid)} onClose={() => setConfirm(null)}><p>{confirm.message}</p>{dialogError && <p className="adm-error" role="alert">{dialogError}</p>}<div className="adm-dialog-actions"><Btn disabled={pending.has(confirm.uid)} onClick={() => setConfirm(null)}>Отмена</Btn><Btn variant={confirm.danger ? 'danger' : 'primary'} disabled={pending.has(confirm.uid)} onClick={confirmAction}>{pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label}</Btn></div></Dialog>}</AdminPresence>
             <AdminPresence immediate={!ready} show={!!(ready && importUser)}>{ready && importUser && <ImportDialog key={importUid} user={importUser} busy={pending.has(importUid)} onClose={() => setImportUid(null)} onSave={saveTest}/>}</AdminPresence>
             <main className="adm-shell" aria-label="Панель администратора">
-                <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>{usersSynced ? 'Автообновление' : 'Обновление…'}</div>}</header>
+                <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>{directory.busy?'Загрузка…':'Профиль обновляется'}</div>}</header>
                 {!ready ? <Empty title={access.state === 'checking' ? 'Проверяем права доступа…' : access.state === 'denied' ? 'Доступ ограничен' : 'Не удалось открыть панель'}><p role="status">{access.message}</p>{access.state === 'error' && <Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn>}</Empty> : <>
-                    <div className="adm-summary">{[['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
-                    {loadError ? <div className="adm-banner" role="alert"><AdminIcon name="alertTriangle" size={19}/><span>{loadError}</span><Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn></div> : <div className="adm-workspace">
-                        <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count" aria-live="polite">{users === null ? 'Загрузка…' : `${list.length} найдено${usersSynced ? '' : ' · обновляем…'}`}</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
-                            <div className="adm-filter" aria-label="Фильтр пользователей">{[['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы']].map(([id, label]) => <button type="button" key={id} className={`adm-chip ${filter === id ? 'active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div>
-                            <div className="adm-sort"><span>Сортировка</span><select aria-label="Сортировка пользователей" value={sort} onChange={event => setSort(event.target.value)}><option value="name">По имени</option><option value="role">Администраторы выше</option><option value="tests">Больше тестов</option></select></div>
-                            <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, index) => <button style={{'--ad-order': index}} type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
-                            {list.length > PAGE_SIZE && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}</span><Btn disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>Далее</Btn></nav>}
+                    <div className="adm-summary">{[[directory.more?'Загружено пользователей':'Пользователей', 'users'], ['Админов в списке', 'shield'], ['Блокировок в списке', 'ban'], ['Тестов в списке', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
+                    {loadError && users === null ? <div className="adm-banner" role="alert"><AdminIcon name="alertTriangle" size={19}/><span>{loadError}</span><Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn></div> : <div className="adm-workspace">
+                        <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count" aria-live="polite">{users === null ? 'Загрузка…' : `${list.length} ${directory.more?'среди загруженных':'найдено'}`}</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
+                            <div className="adm-filter" aria-label="Фильтр пользователей">{[['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы'],['inactive','Не заходили 7 дней']].map(([id, label]) => <button type="button" key={id} className={`adm-chip ${filter === id ? 'active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div>
+                            <div className="adm-sort"><span>Сортировка</span><select aria-label="Сортировка пользователей" value={sort} onChange={event => setSort(event.target.value)}><option value="name">По имени</option><option value="role">Администраторы выше</option><option value="tests">Больше тестов</option><option value="activity">Последняя активность</option></select></div>
+                            <div className="adm-scope"><p>{directory.more ? `Загружено ${array(users).length}. Поиск, сортировка и показатели относятся к этому списку.` : 'Загружены все пользователи на момент обновления.'}</p><div>{directory.more && <Btn disabled={directory.busy} onClick={()=>directory.load(true)}>{directory.scanning?'Загружаем…':'Загрузить всех для поиска'}</Btn>}{directory.scanning && <Btn onClick={directory.stop}>Остановить</Btn>}<Btn disabled={directory.busy} onClick={()=>setRetry(n=>n+1)}>Обновить список</Btn></div>{loadError && <p className="adm-error" role="alert">{loadError}</p>}</div>
+                            <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, index) => <button style={{'--ad-order': index}} type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small><Seen user={user} now={now}/></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
+                            {(list.length > PAGE_SIZE || directory.more) && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}{directory.more?'+':''}</span><Btn disabled={directory.busy || (currentPage === pageCount && !directory.more)} onClick={async()=>{if(currentPage<pageCount)changePage(currentPage+1);else {const result=await directory.load();if(result?.ok){setPage(currentPage+1);setSelectedId(null);}}}}>{directory.busy?'Загрузка…':currentPage<pageCount?'Далее':'Ещё 24'}</Btn></nav>}
                         </aside>
-                        {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { await exportUser(selected, parts, array(users)); toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
+                        {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} allLoaded={!directory.more} onLoadAll={()=>directory.load(true)} loadingAll={directory.busy} now={now} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { const exportUid=actor.current; if(directory.more)await directory.load(true); const snapshot=directory.snapshot(); if(!snapshot || snapshot.more || exportUid!==actor.current)throw problem('Для полного отчёта дождитесь загрузки всех пользователей.'); await exportUser(selected, parts, array(snapshot.rows)); if(alive.current && exportUid===actor.current)toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
                     </div>}
                 </>}
                 <footer className="adm-footer"><span>Ultimate LMS</span><span>Изменения сохраняются отдельно для каждого пользователя</span></footer>
