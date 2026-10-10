@@ -672,7 +672,7 @@
     return <div className="usp-ring" role="img" aria-label={`${label}: ${fmt(display ?? value)} ${unit}`}><svg viewBox="0 0 180 180" aria-hidden="true"><defs><linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" style={{
             stopColor: 'var(--up-accent)'
           }} /><stop offset="100%" style={{
-            stopColor: 'var(--up-green)'
+            stopColor: 'var(--up-accent)'
           }} /></linearGradient></defs><circle className="usp-ring-orbit" cx="90" cy="90" r="87" /><circle className="usp-ring-track" cx="90" cy="90" r="76" /><circle className="usp-ring-fill" cx="90" cy="90" r="76" style={{
           stroke: `url(#${gradientId})`
         }} strokeDasharray={circumference} strokeDashoffset={circumference * (1 - (visible ? ratio : 0))} /></svg><div className="usp-ring-center" aria-hidden="true"><strong><AnimatedNumber value={display ?? value} />{unit === '%' ? '%' : ''}</strong><small>{unit === '%' ? 'от всех попыток' : unit || label}</small></div></div>;
