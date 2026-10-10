@@ -1,4 +1,4 @@
-// Ultimate LMS · статистика v5 (адаптивный интерфейс). Только StatsView.
+// Ultimate LMS · статистика v4 (анимации). Только StatsView.
 // Полная замена файла статистики; модуль тестирования менять не нужно.
 (function () {
   'use strict';
@@ -102,37 +102,176 @@
 .usp .usp-bar.zero{box-shadow:none!important;animation:none;}
 .usp .usp-bar.zero:after{content:"";position:absolute;bottom:0;left:0;right:0;border-top:2px solid var(--up-accent);}
 
-/* Компактные элементы управления: не наследуют размеры кнопок платформы. */
-.usp{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5}
-.usp button,.usp input,.usp select{height:auto;min-height:0;max-width:100%;margin:0;line-height:1.35;text-transform:none;letter-spacing:normal;box-shadow:none}
-.usp button{touch-action:manipulation}.usp button:disabled{opacity:.45}
-.usp-shell{padding:28px;border-radius:24px;box-shadow:0 12px 40px #070b1914}
-.usp-heading{margin-bottom:24px}.usp h2{font-size:clamp(25px,3vw,32px);line-height:1.25;letter-spacing:-.8px;text-wrap:balance}.usp-subtitle{font-size:14px;max-width:600px}.usp-eyebrow{letter-spacing:1.3px;font-size:10px}.usp-mark{width:56px;height:56px;border-radius:18px;flex-shrink:0}
-.usp .usp-tabs{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:5px;overflow:visible;border-radius:15px;margin-bottom:22px;background:var(--up-bg)}
-.usp .usp-tabs-main{grid-template-columns:repeat(5,minmax(0,1fr))}
-.usp .usp-tab{position:relative;z-index:1;min-width:0;min-height:46px;padding:10px 8px;gap:7px;border-radius:10px;border:0;background:transparent;color:var(--up-muted)!important;font-size:13px!important;font-weight:650!important;white-space:nowrap;box-shadow:none;animation:none;transition:color .2s}
-.usp .usp-tab[aria-selected=true]{background:linear-gradient(120deg,#8a5ce7,#6d4ad1);color:#fff!important;box-shadow:none}.usp .usp-tabs[data-pill] .usp-tab[aria-selected=true]{background:transparent}
-.usp-tab-pill{position:absolute;top:0;left:0;pointer-events:none;border-radius:10px;background:linear-gradient(120deg,#8a5ce7,#6d4ad1);transition:transform .28s cubic-bezier(.2,.75,.25,1),width .28s,height .28s}
-.usp .usp-tab:active{transform:none}.usp .usp-tab svg{width:17px;height:17px}
-.usp-metrics{gap:12px;margin-bottom:18px}.usp-metric{padding:18px;border-radius:16px}.usp-metric-label{min-height:32px;font-size:12px}.usp-metric-value{font-size:30px;letter-spacing:-.8px;margin:9px 0 5px}.usp-metric-value small{font-size:12px}.usp-metric-note{font-size:12px}.usp-metric:hover{transform:none}
-.usp-card{padding:22px;border-radius:18px;margin-top:18px}.usp h3{font-size:18px;line-height:1.35;letter-spacing:-.3px}.usp-section-head{margin-bottom:18px}.usp-caption{font-size:12px;line-height:1.6}.usp-overview{gap:16px;grid-template-columns:minmax(0,1fr) 225px;margin-bottom:18px}
-.usp-ring-card{display:flex;text-align:center;gap:0}.usp-ring-card .usp-ring{width:160px;height:160px;margin:16px auto}.usp-ring-center strong{font-size:30px}.usp-ring-center small{max-width:110px;font-size:11px;text-align:center}.usp-ring-orbit{fill:none;stroke:var(--up-line);stroke-width:1;stroke-dasharray:3 8;transform-origin:center;animation:usp-orbit 48s linear infinite}.usp-ring-fill{filter:none}
-.usp .usp-btn,.usp .usp-chip,.usp .usp-segment button,.usp .usp-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 14px;border:1px solid var(--up-line);border-radius:10px;background:var(--up-soft);font-size:13px!important;font-weight:600;line-height:1.3;overflow:hidden;transition:background .18s,border-color .18s,transform .18s}
-.usp .usp-icon-btn{width:44px;height:44px;flex:0 0 44px;padding:0;background:transparent;color:var(--up-muted)}.usp .danger{color:var(--up-red)}
-.usp .usp-btn:active,.usp .usp-chip:active,.usp .usp-icon-btn:active{transform:scale(.97)}
-.usp .usp-segment{padding:3px;gap:3px;border-radius:12px;flex-shrink:0}.usp .usp-segment button{min-height:38px;padding:8px 12px;border:0;background:transparent;font-size:12px!important}.usp .usp-segment button[aria-pressed=true]{background:var(--up-surface);color:var(--up-text)}
-.usp-tools{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}.usp-search{min-height:48px;border-radius:11px;padding:0 12px}.usp .usp-search input{height:46px;padding:0;border:0;background:transparent;border-radius:0;font-size:16px;color:var(--up-text);box-shadow:none;outline:none}.usp .usp-select{width:100%;max-width:none;height:48px;padding:0 12px;border-radius:11px;font-size:14px!important}
-.usp-filters{gap:8px;margin:12px 0 4px}.usp .usp-chip{min-height:38px;padding:8px 14px;font-size:12px!important;background:transparent}.usp .usp-chip[aria-pressed=true]{background:var(--up-tint);border-color:var(--up-accent);color:var(--up-accent)!important}
-.usp-record{grid-template-columns:36px minmax(0,1fr) auto 44px;gap:12px;padding:16px 0}.usp-record-icon{width:36px;height:36px;border-radius:10px}.usp-record-title{font-size:14px;line-height:1.45}.usp-record-meta{font-size:12px}.usp-record-score{font-size:21px}.usp-record-score small{font-size:12px}
-.usp-chart-detail{border-radius:10px}.usp-chart-detail strong{font-size:13px}.usp .usp-chart{--up-plot-height:170px;height:219px;min-height:219px}.usp-bar-tip{font-size:10px}.usp-bars{gap:9px}.usp-bar{border-radius:5px 5px 2px 2px}.usp-bar-col[aria-pressed=true] .usp-bar{box-shadow:0 0 0 1px var(--up-accent)}
-.usp-lb-top{align-items:stretch;gap:10px}.usp-lb-top .usp-tabs{margin:0;flex:1}.usp-lb-top>.usp-icon-btn{align-self:center}.usp-lb-row{padding:15px 10px;gap:12px;grid-template-columns:26px 40px minmax(0,1fr) auto;border-radius:12px}.usp-avatar{width:40px;height:40px;border-radius:12px;font-size:13px}.usp-lb-name{font-size:14px}.usp-lb-value{font-size:22px;overflow-wrap:anywhere}.usp-lb-value small{max-width:140px}.usp-rank{font-size:14px}.usp-rank.r1{color:#f5c969;background:#b7881a22}
-.usp-training-hero{padding:24px;gap:24px;grid-template-columns:minmax(0,1fr) 210px}.usp-training-copy h3{font-size:26px;line-height:1.3;text-wrap:balance}.usp-training-copy p{font-size:14px}.usp-training-ring .usp-ring{width:170px;height:170px}.usp-dots{gap:6px}.usp-hint{font-size:13px;line-height:1.6}.usp-badge{white-space:normal;line-height:1.4}.usp-empty{padding:32px 8px}.usp-empty h3{font-size:17px}.usp-empty p{font-size:13px}.usp-confirm-text{min-width:0;overflow-wrap:anywhere}.usp-pagination{flex-wrap:wrap}
-.usp-ripple{position:absolute;width:12px;height:12px;border-radius:50%;background:currentColor;pointer-events:none;opacity:0;animation:usp-ripple-wave .55s ease-out}
-@keyframes usp-ripple-wave{from{transform:translate(-50%,-50%) scale(0);opacity:.18}to{transform:translate(-50%,-50%) scale(24);opacity:0}}
-@keyframes usp-orbit{to{transform:rotate(360deg)}}
-@media(hover:hover){.usp .usp-btn:hover,.usp .usp-chip:hover,.usp .usp-icon-btn:hover{border-color:var(--up-accent);background:var(--up-tint)}.usp .usp-tab:hover{color:var(--up-text)!important}.usp .usp-tab[aria-selected=true]:hover{color:#fff!important}}
-@media(max-width:760px){.usp-overview{grid-template-columns:1fr}.usp-shell{padding:20px}.usp-card{padding:18px}.usp-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.usp-chart-head{align-items:flex-start;flex-direction:column}.usp-training-hero{grid-template-columns:1fr}.usp-training-copy{text-align:center}.usp-training-copy h3,.usp-training-copy p{margin-left:auto;margin-right:auto}.usp-metric:last-child:nth-child(3){grid-column:1/-1}}
-@media(max-width:540px){.usp-shell{padding:14px;border-radius:20px}.usp-heading{justify-content:center;text-align:center;margin-bottom:22px}.usp-heading>div{min-width:0}.usp-heading>.usp-mark{display:none}.usp-eyebrow{justify-content:center;letter-spacing:1px}.usp h2{font-size:25px}.usp-subtitle{font-size:13px;margin-top:10px!important}.usp .usp-tabs-main{grid-template-columns:repeat(6,minmax(0,1fr))}.usp-tabs-main .usp-tab{grid-column:span 2}.usp-tabs-main .usp-tab:nth-last-child(-n+2){grid-column:span 3}.usp .usp-tabs:not(.usp-tabs-main){grid-template-columns:repeat(2,minmax(0,1fr))}.usp .usp-tab{font-size:12px!important;padding:10px 5px;gap:5px}.usp-metrics{gap:10px}.usp-metric{padding:14px 12px}.usp-metric-label{font-size:12px;align-items:flex-start;min-height:36px;line-height:1.45}.usp-metric-label svg{margin-top:1px}.usp-metric-value{font-size:27px}.usp-metric-note{font-size:11px}.usp-card{padding:16px;border-radius:15px}.usp h3{font-size:17px}.usp-tools{grid-template-columns:1fr;gap:8px}.usp .usp-select{font-size:16px!important}.usp-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.usp .usp-chip{padding:8px 4px;min-height:40px;font-size:11px!important}.usp-record{grid-template-columns:minmax(0,1fr) auto 40px;gap:8px}.usp-record-icon{display:none}.usp-record-title{font-size:13px}.usp-record-meta{font-size:11px}.usp-record-score{font-size:19px}.usp-record .usp-icon-btn{width:40px;height:44px;min-height:44px}.usp-ring-card{display:flex;flex-direction:column;text-align:center}.usp-ring-card h3,.usp-ring-card .usp-caption{align-self:auto}.usp-ring-card .usp-ring{width:166px;height:166px;margin:14px auto}.usp-ring-card .usp-caption{margin:0;max-width:240px}.usp-chart-head{gap:12px}.usp-segment{width:100%}.usp-segment button{flex:1}.usp-bars{gap:6px}.usp-bar-tip{font-size:9px}.usp-chart-detail{padding:10px}.usp-chart-detail>b{font-size:20px}.usp-lb-row{grid-template-columns:24px 34px minmax(0,1fr);gap:6px 9px;padding:14px 6px}.usp-avatar{width:34px;height:34px;border-radius:10px;font-size:12px}.usp-lb-value{grid-column:3;text-align:left;font-size:22px}.usp-lb-value small{display:inline;margin-left:6px;font-size:11px}.usp-lb-name{font-size:13px}.usp-lb-row>.usp-rank,.usp-lb-row>.usp-avatar{align-self:start}.usp-training-hero{padding:18px}.usp-training-copy h3{font-size:23px}.usp-section-head{gap:12px}.usp-section-head>div{min-width:0}.usp-section-head>.usp-btn{flex-shrink:0;padding:9px 11px}.usp-confirm{padding:14px}.usp-confirm-text{flex-basis:100%}.usp-confirm-actions{width:100%}.usp-confirm-actions button{flex:1}.usp-dots{grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}.usp-badge{font-size:11px}}
+/* ================================================================
+   АНИМАЦИИ v4
+   ================================================================ */
+
+/* 1. Оболочка: «северное сияние» из двух дрейфующих световых пятен */
+.usp .usp-shell{position:relative;overflow:hidden}
+.usp .usp-shell>*{position:relative;z-index:1}
+.usp .usp-shell:before,.usp .usp-shell:after{content:"";position:absolute;z-index:0;border-radius:50%;filter:blur(70px);pointer-events:none;opacity:.55}
+.usp .usp-shell:before{width:340px;height:340px;top:-130px;right:-90px;background:#8a5ce766;animation:usp-drift-a 14s ease-in-out infinite alternate}
+.usp .usp-shell:after{width:300px;height:300px;bottom:-130px;left:-100px;background:#3fd5b333;animation:usp-drift-b 18s ease-in-out infinite alternate}
+.usp.theme-light .usp-shell:before,.usp.theme-light .usp-shell:after{opacity:.3}
+
+/* 2. Заголовок: последовательное появление, переливающийся градиент, плавающий значок */
+.usp .usp-enter{animation:usp-in .5s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-eyebrow{animation:usp-in .6s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-eyebrow svg{animation:usp-twinkle 2.6s ease-in-out infinite}
+.usp .usp-heading h2{animation:usp-in .7s .08s cubic-bezier(.2,.75,.25,1) backwards,usp-title 7s ease-in-out .9s infinite;background:linear-gradient(100deg,var(--up-text) 35%,var(--up-accent) 50%,var(--up-text) 65%) 100% 0/260% 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.usp .usp-subtitle{animation:usp-in .7s .18s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-heading .usp-mark{position:relative;animation:usp-float 5.5s ease-in-out infinite}
+.usp .usp-heading .usp-mark:after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid var(--up-accent);pointer-events:none;animation:usp-pulse-ring 2.8s ease-out infinite}
+.usp .usp-empty .usp-mark{animation:usp-bob 3.2s ease-in-out infinite}
+
+/* 3. Вкладки: скользящая «пилюля» с блеском, подпрыгивающие иконки */
+.usp .usp-tabs{position:relative}
+.usp .usp-tab-pill{position:absolute;top:6px;left:0;height:calc(100% - 12px);border-radius:13px;overflow:hidden;background:linear-gradient(130deg,#8a5ce7,#6d4ad1);border:1px solid #ac89ef70;box-shadow:0 6px 18px #6336b640;pointer-events:none;z-index:0;transition:transform .5s cubic-bezier(.34,1.35,.64,1),width .5s cubic-bezier(.34,1.35,.64,1)}
+.usp .usp-tab-pill:after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff33,transparent);transform:skewX(-20deg);animation:usp-shine 3.8s ease-in-out 1s infinite}
+.usp .usp-tab{position:relative;z-index:1;overflow:hidden}
+.usp .usp-tabs[data-pill] .usp-tab[aria-selected=true]{background:transparent;border-color:transparent;box-shadow:none;animation:none}
+.usp .usp-tab[aria-selected=true] svg{animation:usp-pop .55s cubic-bezier(.2,.75,.25,1)}
+.usp .usp-tab:not([aria-selected=true]):hover svg{animation:usp-wiggle .5s}
+
+/* 4. Карточки и метрики: подсветка, следующая за курсором, блик, виляющие иконки */
+.usp .usp-card,.usp .usp-metric{position:relative;isolation:isolate}
+.usp .usp-card:before,.usp .usp-metric:before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--up-accent) 16%,transparent),transparent 70%)}
+.usp .usp-card:hover:before,.usp .usp-metric:hover:before{opacity:1}
+.usp .usp-metric{overflow:hidden;animation:usp-in .55s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-metric:after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff1f,transparent);transform:skewX(-20deg);pointer-events:none}
+.usp .usp-metric:hover:after{animation:usp-shine .9s ease}
+.usp .usp-metric:hover .usp-metric-label svg{animation:usp-wiggle .6s}
+.usp .usp-metric-value{animation:usp-pop-in .7s .15s cubic-bezier(.2,.75,.25,1) backwards}
+
+/* 5. График: рост столбцов с пружинкой, глянец, подпись, ореол выбранного столбца */
+.usp .usp-bar{animation:usp-rise .95s cubic-bezier(.34,1.3,.64,1) both;transition:transform .25s,filter .2s}
+.usp .usp-bar:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,#ffffff4d,transparent 45%);pointer-events:none}
+.usp .usp-bar.zero:after{background:none}
+.usp .usp-bar-tip{animation:usp-tip .45s .75s ease backwards}
+.usp .usp-bar-col:hover .usp-bar{transform:scaleX(1.12)}
+.usp .usp-bar-col[aria-pressed=true] .usp-bar-track:before{content:"";position:absolute;left:-20%;width:140%;bottom:0;height:100%;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--up-accent) 28%,transparent),transparent 70%);animation:usp-breathe 2.2s ease-in-out infinite}
+.usp .usp-bar-label{transition:color .25s}
+.usp .usp-bar-col[aria-pressed=true] .usp-bar-label{color:var(--up-accent);font-weight:750}
+.usp .usp-chart-detail>div{animation:usp-in .4s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-chart-detail>b{animation:usp-pop-in .5s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-chip[aria-pressed=true],.usp .usp-segment button[aria-pressed=true]{animation:usp-pop-soft .35s cubic-bezier(.2,.75,.25,1)}
+
+/* 6. Кольцо: градиентная дуга, дышащее свечение, вращающаяся орбита */
+.usp .usp-ring{isolation:isolate}
+.usp .usp-ring:before{content:"";position:absolute;inset:16px;border-radius:50%;z-index:-1;background:radial-gradient(circle,color-mix(in srgb,var(--up-accent) 24%,transparent),transparent 68%);animation:usp-breathe 3.6s ease-in-out infinite}
+.usp .usp-ring-fill{transition:stroke-dashoffset 1.5s cubic-bezier(.16,1,.3,1) .15s}
+.usp .usp-ring-orbit{fill:none;stroke:var(--up-accent);stroke-opacity:.38;stroke-width:2;stroke-linecap:round;stroke-dasharray:1 11;transform-origin:center;animation:usp-spin 40s linear infinite}
+.usp .usp-ring-center strong{animation:usp-pop-in .8s .3s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-training-ring .usp-ring{animation:usp-bob 6s ease-in-out infinite}
+
+/* 7. История: поочерёдный выезд строк, сдвиг по наведению, подпрыгивающая оценка */
+.usp .usp-record{animation:usp-slide .5s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s,background .25s}
+.usp .usp-record:hover{transform:translateX(5px)}
+.usp .usp-record-icon{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.usp .usp-record:hover .usp-record-icon{transform:rotate(-10deg) scale(1.12)}
+.usp .usp-record-score{animation:usp-pop-in .55s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms + 150ms)}
+.usp .usp-confirm{animation:usp-in .35s cubic-bezier(.2,.75,.25,1) backwards}
+.usp .usp-error{animation:usp-shake .45s}
+.usp .usp-notice{animation:usp-notice 3s ease forwards}
+
+/* 8. Кнопки: волна при нажатии, движение иконок */
+.usp .usp-btn,.usp .usp-chip,.usp .usp-segment button{position:relative;overflow:hidden}
+.usp .usp-ripple{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:currentColor;opacity:.28;pointer-events:none;animation:usp-ripple .65s ease-out forwards}
+.usp .usp-btn:hover:not(:disabled) svg{animation:usp-nudge .6s ease}
+.usp .usp-icon-btn:hover:not(:disabled) svg{animation:usp-spin-once .6s ease}
+.usp .usp-icon-btn.danger:hover:not(:disabled) svg{animation:usp-wiggle .5s}
+.usp .usp-icon-btn[data-loading=true] svg{animation:usp-spin 1s linear infinite}
+
+/* 9. Рейтинг: каскад строк, медали, пульс собственной строки */
+.usp .usp-lb-row{animation:usp-lb-in .55s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms);transition:background .2s,transform .25s}
+.usp .usp-lb-row:hover{transform:translateX(4px)}
+.usp .usp-lb-row.me{animation:usp-lb-in .55s cubic-bezier(.2,.75,.25,1) backwards,usp-me 2.6s ease-in-out 1s infinite;animation-delay:calc(var(--i,0)*45ms)}
+.usp .usp-avatar{animation:usp-pop-in .5s cubic-bezier(.2,.75,.25,1) backwards;animation-delay:calc(var(--i,0)*45ms + 120ms);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.usp .usp-lb-row:hover .usp-avatar{transform:rotate(-8deg) scale(1.1)}
+.usp .usp-rank.top.r1{background:linear-gradient(135deg,#ffd76a,#f0a93a);color:#4a3000;animation:usp-glow-gold 2.4s ease-in-out infinite}
+.usp .usp-rank.top.r2{background:linear-gradient(135deg,#e6ebf5,#aab4c8);color:#2c3446}
+.usp .usp-rank.top.r3{background:linear-gradient(135deg,#e8ac7e,#b9733f);color:#3b1f08}
+
+/* 10. Тренировки: волна точек, пульс последней, мерцание подсказки */
+.usp .usp-dot{animation:usp-dot-in .55s cubic-bezier(.2,.75,.25,1) backwards;transition:transform .2s}
+.usp .usp-dot:not(.off):hover{transform:scale(1.3) rotate(8deg)}
+.usp .usp-dot.last{animation:usp-dot-in .55s cubic-bezier(.2,.75,.25,1) backwards,usp-dot-pulse 1.9s ease-out infinite}
+.usp .usp-hint svg{animation:usp-twinkle 2.8s ease-in-out infinite}
+.usp .usp-training-hero{overflow:hidden}
+.usp .usp-training-hero:after{content:"";position:absolute;z-index:-1;width:230px;height:230px;right:-60px;top:-80px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#9b7aff40,transparent 70%);animation:usp-drift-a 9s ease-in-out infinite alternate}
+
+/* Ключевые кадры */
+@keyframes usp-in{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes usp-rise{from{height:0}}
+@keyframes usp-tip{from{opacity:0;transform:translate(-50%,6px)}}
+@keyframes usp-breathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes usp-drift-a{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,50px) scale(1.2)}}
+@keyframes usp-drift-b{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,-40px) scale(1.15)}}
+@keyframes usp-title{0%,100%{background-position:100% 0}50%{background-position:0 0}}
+@keyframes usp-twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.35) rotate(90deg)}}
+@keyframes usp-float{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-8px)}}
+@keyframes usp-pulse-ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.55)}}
+@keyframes usp-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes usp-pop{0%{transform:scale(.5) rotate(-25deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}
+@keyframes usp-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+@keyframes usp-shine{0%{left:-60%}60%,100%{left:140%}}
+@keyframes usp-slide{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes usp-lb-in{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes usp-pop-in{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes usp-pop-soft{0%{transform:scale(.88)}60%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes usp-notice{0%{opacity:0;transform:translateY(-10px) scale(.96)}10%{opacity:1;transform:none}88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes usp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes usp-spin{to{transform:rotate(360deg)}}
+@keyframes usp-spin-once{to{transform:rotate(360deg)}}
+@keyframes usp-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes usp-ripple{to{transform:scale(28);opacity:0}}
+@keyframes usp-dot-in{from{opacity:0;transform:scale(0) rotate(-90deg)}60%{opacity:1;transform:scale(1.25) rotate(8deg)}to{opacity:1;transform:none}}
+@keyframes usp-dot-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--up-accent) 60%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+@keyframes usp-me{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 18px 2px color-mix(in srgb,var(--up-accent) 28%,transparent)}}
+@keyframes usp-glow-gold{0%,100%{box-shadow:0 0 0 0 #ffd76a00}50%{box-shadow:0 0 16px 2px #ffd76a88}}
+
+/* Исправления размеров и адаптивности. Исходное оформление v4 сохранено. */
+.usp button,.usp input,.usp select{height:auto;min-height:0;line-height:1.4;box-sizing:border-box}
+.usp .usp-btn{min-height:42px;height:auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1.35}
+.usp .usp-chip{min-height:38px;height:auto;line-height:1.35}
+.usp .usp-segment button{min-height:36px;height:auto;line-height:1.35}
+.usp .usp-icon-btn{height:40px;min-height:40px;flex-shrink:0}
+.usp .usp-tab{height:auto;flex:1 0 auto;min-width:max-content;line-height:1.35}
+.usp .usp-tabs{max-width:100%;overscroll-behavior-x:contain;scroll-padding:6px}
+.usp .usp-search input{height:48px;min-height:0;padding:0;border:0;box-shadow:none;background:transparent;line-height:normal}
+.usp .usp-select{height:50px;min-height:0;line-height:normal}
+.usp .usp-section-head>div,.usp .usp-record>div,.usp .usp-lb-row>div{min-width:0}
+.usp .usp-ring-center small{max-width:100px;text-align:center;line-height:1.3}
+.usp .usp-lb-value{overflow-wrap:anywhere}
+.usp .usp-confirm-text{min-width:0;overflow-wrap:anywhere}
+/* Рост графика через transform вместо пересчёта высоты каждый кадр. */
+@keyframes usp-rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+/* Блик сохраняет движение, не меняя layout-свойство left. */
+@keyframes usp-shine{0%{transform:translateX(0) skewX(-20deg)}60%,100%{transform:translateX(500%) skewX(-20deg)}}
+/* Появление всей страницы без размытия большого растрового слоя. */
+@keyframes usp-in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.usp .usp-shell:before,.usp .usp-shell:after{will-change:transform}
+@media(max-width:680px){
+.usp .usp-tab{min-height:46px;flex:1 0 auto}
+.usp .usp-lb-top .usp-tabs{width:0}
+.usp .usp-search input,.usp .usp-select{font-size:16px!important}
+.usp .usp-record{grid-template-columns:minmax(0,1fr) auto 36px}
+.usp .usp-record-title,.usp .usp-record-meta,.usp .usp-lb-name{overflow-wrap:anywhere}
+.usp .usp-ring-center small{max-width:80px;font-size:10px}
+.usp .usp-chart-head{flex-direction:column;align-items:stretch}
+.usp .usp-segment button{flex:1}
+}
+@media(max-width:480px){
+.usp .usp-tools{flex-wrap:wrap;gap:8px}
+.usp .usp-search{flex:1 1 100%}
+.usp .usp-select{width:100%;max-width:none}
+.usp .usp-filters{gap:6px}.usp .usp-chip{flex:1;padding:8px 6px}
+.usp .usp-lb-row{grid-template-columns:23px 35px minmax(0,1fr);gap:6px 9px}
+.usp .usp-lb-value{grid-column:3;text-align:left}
+.usp .usp-lb-value small{display:inline;max-width:none;margin-left:6px}
+.usp .usp-confirm-actions{width:100%}.usp .usp-confirm-actions>.usp-btn{flex:1}
+.usp .usp-pagination{flex-wrap:wrap}
+}
 @media(prefers-reduced-motion:reduce){.usp *,.usp *:before,.usp *:after{animation:none!important;transition:none!important}}
 `;
   function useStyles() {
@@ -160,7 +299,25 @@
     btn.appendChild(dot);
     setTimeout(() => dot.remove(), 700);
   }
-
+  // Один расчёт подсветки за кадр; touch-прокрутка не запускает hover.
+  let spotlightFrame = 0;
+  let spotlightPoint = null;
+  function trackSpotlight(e) {
+    if (e.pointerType === 'touch' || reducedMotion() || !window.matchMedia?.('(hover: hover)').matches) return;
+    const el = e.target.closest?.('.usp-metric,.usp-card');
+    if (!el) return;
+    spotlightPoint = {el, x: e.clientX, y: e.clientY};
+    if (spotlightFrame) return;
+    spotlightFrame = requestAnimationFrame(() => {
+      spotlightFrame = 0;
+      const point = spotlightPoint;
+      spotlightPoint = null;
+      if (!point?.el.isConnected) return;
+      const rect = point.el.getBoundingClientRect();
+      point.el.style.setProperty('--mx', point.x - rect.left + 'px');
+      point.el.style.setProperty('--my', point.y - rect.top + 'px');
+    });
+  }
 
   function Empty({
     title,
@@ -245,12 +402,24 @@
     const measure = () => {
       const el = wrap.current?.querySelector('[role="tab"][aria-selected="true"]');
       if (!el) return;
-      const x = el.offsetLeft, y = el.offsetTop, w = el.offsetWidth, h = el.offsetHeight;
-      setPill(prev => prev && prev.x === x && prev.y === y && prev.w === w && prev.h === h ? prev : {
-        x, y, w, h
+      const x = el.offsetLeft,
+        w = el.offsetWidth;
+      setPill(prev => prev && prev.x === x && prev.w === w ? prev : {
+        x,
+        w
       });
     };
-    useLayoutEffect(measure, [value, tabs.length]);
+    useLayoutEffect(() => {
+      measure();
+      const active = wrap.current?.querySelector('[aria-selected="true"]');
+      if (active && wrap.current) {
+        const box = wrap.current;
+        const left = active.offsetLeft - 6;
+        const right = active.offsetLeft + active.offsetWidth + 6;
+        if (left < box.scrollLeft) box.scrollLeft = left;
+        else if (right > box.scrollLeft + box.clientWidth) box.scrollLeft = right - box.clientWidth;
+      }
+    }, [value, tabs.length]);
     useEffect(() => {
       window.addEventListener('resize', measure);
       const observer = typeof ResizeObserver === 'function' && wrap.current ? new ResizeObserver(measure) : null;
@@ -260,9 +429,9 @@
         if (observer) observer.disconnect();
       };
     }, []);
-    return <div ref={wrap} className={`usp-tabs${tabs.length === 5 ? " usp-tabs-main" : ""}`} role="tablist" aria-label={label} data-pill={pill ? '' : undefined}>{pill && <span className="usp-tab-pill" aria-hidden="true" style={{
-        width: pill.w, height: pill.h,
-        transform: `translate(${pill.x}px, ${pill.y}px)`
+    return <div ref={wrap} className="usp-tabs" role="tablist" aria-label={label} data-pill={pill ? '' : undefined}>{pill && <span className="usp-tab-pill" aria-hidden="true" style={{
+        width: pill.w,
+        transform: `translateX(${pill.x}px)`
       }} />}{tabs.map((tab, index) => <button type="button" key={tab.id} id={`${id}-${tab.id}`} role="tab" aria-selected={value === tab.id} aria-controls={`${id}-panel-${tab.id}`} tabIndex={value === tab.id ? 0 : -1} className="usp-tab" onClick={() => onChange(tab.id)} onKeyDown={e => {
         let next = index;
         if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;else if (e.key === 'Home') next = 0;else if (e.key === 'End') next = tabs.length - 1;else return;
@@ -773,7 +942,7 @@
       icon: 'clock'
     }];
     const passRate = summary.total ? Math.round(summary.passed / summary.total * 100) : 0;
-    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения" onClick={spawnRipple}><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
+    return <section className={`usp ${theme === 'light' ? 'theme-light' : theme === 'dark' ? 'theme-dark' : ''}`} aria-label="Статистика обучения" onPointerMove={trackSpotlight} onClick={spawnRipple}><div className="usp-shell usp-enter"><header className="usp-heading"><div><div className="usp-eyebrow"><Icon name="spark" size={15} />Ultimate LMS · Личный прогресс</div><h2>Маленькие шаги. Большие результаты.</h2><p className="usp-subtitle">Твои достижения, рекорды и следующий повод гордиться собой.</p></div><div className="usp-mark" aria-hidden="true"><Icon name="excel" size={30} /></div></header><Tabs value={activeTab} onChange={setActiveTab} tabs={TABS} label="Раздел статистики" id={id} /><div key={`${uid}:${activeTab}`} className="usp-enter" role="tabpanel" id={`${id}-panel-${activeTab}`} aria-labelledby={`${id}-${activeTab}`}>{activeTab === 'tests' ? <><Metrics items={metrics} /><div className="usp-overview"><BestChart rows={rows} /><div className="usp-card usp-ring-card"><h3>Уверенный результат</h3><Ring value={passRate} unit="%" label="Доля результатов от 50 процентов" /><p className="usp-caption">{summary.total ? `${summary.passed} из ${summary.total} попыток с результатом от 50%.` : 'Пройди первый тест, чтобы начать заполнять кольцо.'}</p></div></div><HistoryList rows={rows} onRemove={removeEntry} canRemove={!!uid || typeof setHistory === 'function'} /></> : activeTab === 'leaderboard' ? <Leaderboard uid={uid} /> : <Training type={activeTab} userData={userData} />}</div></div></section>;
   }
   function StatsView(props) {
     const uid = useUserId();
