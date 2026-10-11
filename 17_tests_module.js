@@ -1883,18 +1883,29 @@
       type: "button",
       className: "tx-nav-toggle",
       "aria-expanded": isNavOpen,
+      "aria-controls": "tx-question-map",
       onClick: () => setIsNavOpen(v => !v)
-    }, "\u041A\u0430\u0440\u0442\u0430 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432", /*#__PURE__*/React.createElement("span", null, isNavOpen ? '−' : '+')), isNavOpen && /*#__PURE__*/React.createElement("div", {
+    }, "\u041A\u0430\u0440\u0442\u0430 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432", /*#__PURE__*/React.createElement("span", null, isNavOpen ? '−' : '+')), /*#__PURE__*/React.createElement(motion.div, {
+      id: "tx-question-map",
+      initial: false,
+      animate: { height: isNavOpen ? 'auto' : 0, opacity: isNavOpen ? 1 : 0 },
+      transition: {
+        duration: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 0.3,
+        ease: [0.22, 1, 0.36, 1]
+      },
+      "aria-hidden": !isNavOpen,
+      style: { overflow: 'hidden', pointerEvents: isNavOpen ? 'auto' : 'none' }
+    }, /*#__PURE__*/React.createElement("div", {
       className: "tx-map"
     }, testSession.questions.map((q, i) => /*#__PURE__*/React.createElement("button", {
       type: "button",
       key: i,
       "aria-label": `Вопрос ${i + 1}${testSession.answers[i] == null ? ', без ответа' : testSession.answers[i] === q.correctIndex ? ', верно' : ', ошибка'}`,
       "aria-current": i === testSession.currentIdx ? 'step' : undefined,
-      disabled: isAnimating,
+      disabled: isAnimating || !isNavOpen,
       className: `${testSession.answers[i] == null ? '' : testSession.answers[i] === q.correctIndex ? 'correct' : 'wrong'}`,
       onClick: () => handleNavClick(i)
-    }, i + 1))), /*#__PURE__*/React.createElement("div", {
+    }, i + 1)))), /*#__PURE__*/React.createElement("div", {
       className: "tx-sidebar-progress"
     }, /*#__PURE__*/React.createElement("span", null, "\u041E\u0442\u0432\u0435\u0442\u043E\u0432 ", /*#__PURE__*/React.createElement("b", null, testSession.answers.filter(a => a !== null).length, " / ", testSession.questions.length)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("i", {
       style: {
