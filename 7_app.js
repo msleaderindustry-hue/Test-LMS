@@ -16,7 +16,6 @@ const {
   HotkeyTrainer,
   CodePlayground,
   FlashcardsLMS,
-  ExcelTrainerLMS,
   ChessLMS,
   LandingView,
   SidebarMenu,
@@ -101,6 +100,50 @@ const SidebarLauncher = ({
   x2: "20",
   y2: "18"
 }))));
+
+// Excel загружается только при первом открытии раздела.
+let excelModulePromise = null;
+function loadExcelModule() {
+  if (window.ExcelTrainerLMS) return Promise.resolve(window.ExcelTrainerLMS);
+  if (excelModulePromise) return excelModulePromise;
+  excelModulePromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    let settled = false;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      script.onload = script.onerror = null;
+      if (error) { script.remove(); reject(error); }
+      else resolve(window.ExcelTrainerLMS);
+    };
+    const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
+    script.src = new URL('15_excel_trainer.js?v=selected-181', document.baseURI).href;
+    script.async = true;
+    script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
+    script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
+    document.head.appendChild(script);
+  }).catch(error => { excelModulePromise = null; throw error; });
+  return excelModulePromise;
+}
+function LazyExcelTrainer(props) {
+  const [Component, setComponent] = React.useState(() => window.ExcelTrainerLMS || null);
+  const [error, setError] = React.useState('');
+  const [attempt, setAttempt] = React.useState(0);
+  React.useEffect(() => {
+    let active = true;
+    setError('');
+    loadExcelModule().then(value => { if (active) setComponent(() => value); }, reason => { if (active) setError(reason.message); });
+    return () => { active = false; };
+  }, [attempt]);
+  if (Component) return React.createElement(Component, props);
+  return React.createElement('div', {
+    role: error ? 'alert' : 'status', 'aria-live': 'polite',
+    style: {padding:'28px',textAlign:'center',border:'1px solid #8b5cf640',borderRadius:'18px',width:'100%'}
+  }, React.createElement('p', null, error || 'Загружаем тренажёр Excel…'),
+  error && React.createElement('button', {type:'button',onClick:()=>setAttempt(value=>value+1)}, 'Повторить'),
+  React.createElement('button', {type:'button',onClick:props.onBack,style:{margin:'12px'}}, 'Назад'));
+}
 
 // --- APP ---
 function App() {
@@ -804,7 +847,7 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       width: '100%',
       maxWidth: '1000px'
     }
-  }, /*#__PURE__*/React.createElement(ExcelTrainerLMS, {
+  }, /*#__PURE__*/React.createElement(LazyExcelTrainer, {
     onBack: () => setView('menu')
   }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(window.AIChatWidget, null)));
 }
