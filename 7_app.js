@@ -137,12 +137,43 @@ function LazyExcelTrainer(props) {
     return () => { active = false; };
   }, [attempt]);
   if (Component) return React.createElement(Component, props);
-  return React.createElement('div', {
-    role: error ? 'alert' : 'status', 'aria-live': 'polite',
-    style: {padding:'28px',textAlign:'center',border:'1px solid #8b5cf640',borderRadius:'18px',width:'100%'}
-  }, React.createElement('p', null, error || 'Загружаем тренажёр Excel…'),
-  error && React.createElement('button', {type:'button',onClick:()=>setAttempt(value=>value+1)}, 'Повторить'),
-  React.createElement('button', {type:'button',onClick:props.onBack,style:{margin:'12px'}}, 'Назад'));
+  return React.createElement(React.Fragment, null,
+    React.createElement('style', null, `
+.lms-excel-loading{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;width:100%!important;max-width:520px!important;min-width:0!important;margin:24px auto!important;padding:40px 28px!important;border:1px solid #a78bfa38!important;border-radius:26px!important;background:linear-gradient(145deg,#211934,#151322)!important;color:#f4efff!important;text-align:center!important;box-shadow:0 18px 55px #09061730;animation:lms-excel-enter .35s ease-out both}
+.lms-excel-loading *{box-sizing:border-box}
+.lms-excel-loading .lel-icon{position:relative;display:grid;place-items:center;width:74px;height:74px;margin:0 0 24px;border-radius:23px;background:#a78bfa12;color:#c4b5fd}
+.lms-excel-loading .lel-icon:before{content:'';position:absolute;inset:-5px;border:2px solid #a78bfa1c;border-top-color:#b69afa;border-right-color:#8b5cf6;border-radius:50%;animation:lms-excel-spin 1.8s linear infinite}
+.lms-excel-loading .lel-icon svg{display:block;width:30px;height:30px}
+.lms-excel-loading .lel-label{margin:0 0 10px!important;font:600 10px/1.5 inherit;letter-spacing:2px;font-size:10px;font-weight:600;color:#b9a3eb!important}
+.lms-excel-loading h2{display:block!important;width:100%!important;margin:0!important;padding:0!important;font-size:22px!important;font-weight:700!important;line-height:1.4!important;letter-spacing:-.4px!important;text-align:center!important;color:#f4efff!important}
+.lms-excel-loading p.lel-copy{display:block!important;width:100%!important;max-width:340px!important;margin:12px 0 24px!important;padding:0!important;font-size:13px!important;line-height:1.7!important;text-align:center!important;color:#b5aec6!important;overflow-wrap:anywhere}
+.lms-excel-loading .lel-track{width:150px;height:3px;overflow:hidden;border-radius:10px;background:#a78bfa20;margin:0 0 28px}
+.lms-excel-loading .lel-track span{display:block;width:50%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#d8b4fe);animation:lms-excel-slide 1.6s ease-in-out infinite alternate}
+.lms-excel-loading .lel-actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
+.lms-excel-loading .lel-actions button{appearance:none!important;position:static!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;float:none!important;width:auto!important;min-width:130px!important;max-width:100%!important;height:auto!important;min-height:44px!important;margin:0!important;padding:11px 18px!important;border:1px solid #a78bfa40!important;border-radius:12px!important;background:#a78bfa0c!important;color:#ded3f5!important;font:inherit!important;font-size:13px!important;font-weight:600!important;line-height:1.5!important;letter-spacing:normal!important;text-align:center!important;box-shadow:none!important;cursor:pointer!important;transform:none;transition:background .2s,border-color .2s,transform .2s;animation:none!important}
+.lms-excel-loading .lel-actions button:before,.lms-excel-loading .lel-actions button:after{display:none!important}
+.lms-excel-loading .lel-actions button:hover{background:#a78bfa20!important;border-color:#c4b5fd80!important;transform:translateY(-1px)}
+.lms-excel-loading .lel-actions button:focus-visible{outline:2px solid #c4b5fd!important;outline-offset:4px}
+.lms-excel-loading .lel-actions button.lel-retry{background:#7952c8!important;color:white!important}
+.lms-excel-loading.is-error .lel-icon:before{animation:none;border-color:#c4b5fd50}
+@keyframes lms-excel-spin{to{transform:rotate(360deg)}}
+@keyframes lms-excel-slide{from{transform:translateX(-60%)}to{transform:translateX(160%)}}
+@keyframes lms-excel-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){.lms-excel-loading{margin:16px auto!important;padding:32px 20px!important;border-radius:22px!important}.lms-excel-loading h2{font-size:20px!important}}
+@media(prefers-reduced-motion:reduce){.lms-excel-loading,.lms-excel-loading .lel-icon:before,.lms-excel-loading .lel-track span{animation:none!important}.lms-excel-loading .lel-actions button{transition:none!important}}
+`),
+    React.createElement('section', {className:'lms-excel-loading'+(error?' is-error':''),'aria-busy':!error},
+      React.createElement('div', {className:'lel-icon','aria-hidden':true},
+        React.createElement('svg', {viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round'},
+          React.createElement('rect',{x:3,y:3,width:18,height:18,rx:4}),
+          React.createElement('path',{d:'M3 9h18M3 15h18M9 3v18M15 9v12'}))),
+      React.createElement('div',{className:'lel-label'},'EXCEL • ПРАКТИКА'),
+      React.createElement('h2',null,error?'Не удалось загрузить':'Открываем Excel'),
+      React.createElement('p',{className:'lel-copy',role:error?'alert':'status'},error || 'Подготавливаем тренажёр. Скоро можно будет приступить к практике.'),
+      !error && React.createElement('div',{className:'lel-track','aria-hidden':true},React.createElement('span')),
+      React.createElement('div',{className:'lel-actions'},
+        error && React.createElement('button',{type:'button',className:'lel-retry',onClick:()=>setAttempt(value=>value+1)},'Повторить'),
+        React.createElement('button',{type:'button',onClick:props.onBack},'Вернуться в меню'))));
 }
 
 // --- APP ---
