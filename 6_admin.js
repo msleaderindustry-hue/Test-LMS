@@ -1,8 +1,8 @@
 // --- 6_admin.js — Ultimate LMS / обновлённая панель ---
 // Полная замена файла. React + существующий Firebase compat.
 // JSX подключается тем же способом, что и исходный 6_admin.js.
-// Обновление: серверные страницы по 24, активность, сравнение тестов, журнал.
-// Поиск/счётчики относятся к загруженным профилям; полный поиск загружает все страницы.
+// Обновление: все пользователи загружаются автоматически, поиск работает по всему списку.
+// Страницы по 24 строки используются только для отображения, без дополнительных запросов.
 // Активность читает существующий users/{uid}/activity и метки lastSeenAt.
 // adminAudit (последние 100 действий) сохраняется в профиле одной транзакцией с изменением.
 // Это журнал интерфейса, не защищённый от подделки серверный аудит; доступ задают Firestore Rules.
@@ -359,8 +359,6 @@ async function exportUser(user, parts, allUsers = []) {
     }
 
     /* Новые блоки наследуют палитру панели. */
-    .adm-root .adm-scope{border:1px solid var(--ad-line);background:var(--ad-soft);border-radius:12px;padding:11px;margin:12px 0;font-size:11px;color:var(--ad-muted)}
-    .adm-root .adm-scope>div{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.adm-root .adm-scope .adm-btn{height:auto;min-height:36px;padding:7px 9px;font-size:11px}
     .adm-root .adm-seen{display:flex;align-items:center;gap:4px;color:var(--ad-muted);font-size:10px;font-weight:400;line-height:1.5;margin-top:5px;white-space:normal}.adm-root .adm-seen.recent{color:var(--ad-accent)}
     .adm-root .adm-person{min-height:82px}.adm-root .adm-profile-seen{margin:14px 0 18px}.adm-root .adm-profile-seen .adm-seen{font-size:12px;margin-top:0}
     .adm-root .adm-tabs{overflow-x:auto;scrollbar-width:thin;max-width:100%;padding-bottom:4px}.adm-root .adm-tab{flex:0 0 auto;white-space:nowrap;height:auto;min-height:44px}
@@ -526,52 +524,45 @@ async function exportUser(user, parts, allUsers = []) {
         }
         return <span className={`adm-seen ${time && now-time<300000 ? 'recent' : ''}`} title={time ? dateText(time) : label}><AdminIcon name="clock" size={11}/>{label}</span>;
     }
-    // Серверные страницы по UID: не требуют полей сортировки во всех профилях.
-    function useUserPages(enabled, uid, retry) {
-        const [state,setState]=useState({rows:null,more:true,busy:false,scanning:false,error:''});
-        const control=useRef(null);
-        const publish=useCallback(c=>{
-            if(control.current!==c || c.dead)return;
-            setState({rows:c.rows,more:c.more,busy:c.busy,scanning:c.scanning,error:c.error});
-        },[]);
-        const load=useCallback(async(all=false)=>{
-            const c=control.current;
-            if(!c || c.dead || c.busy || !c.more)return;
-            c.busy=true;c.scanning=all;c.stop=false;c.error='';publish(c);
-            try {
-                do {
-                    let query=c.db.collection('users').orderBy(window.firebase?.firestore?.FieldPath?.documentId?.() || '__name__').limit(PAGE_SIZE);
-                    if(c.cursor)query=query.startAfter(c.cursor);
-                    const snap=await query.get({source:'server'});
-                    if(control.current!==c || c.dead || window.auth?.currentUser?.uid!==uid)return;
-                    const map=new Map(array(c.rows).map(u=>[u.id,u]));
-                    snap.docs.forEach(doc=>map.set(doc.id,{...doc.data(),id:doc.id}));
-                    c.rows=Array.from(map.values());c.more=snap.docs.length===PAGE_SIZE;
-                    if(snap.docs.length)c.cursor=snap.docs[snap.docs.length-1];
-                    directoryCache={uid,db:c.db,rows:c.rows,cursor:c.cursor,more:c.more,at:Date.now()};
-                    publish(c);
-                } while(all && !c.stop && c.more);
-            } catch(error) {
-                if(control.current===c && !c.dead){c.error=errorText(error);if(String(error.code).includes('permission-denied')){c.rows=null;directoryCache=null;}}
-            } finally {
-                if(control.current===c && !c.dead){c.busy=false;c.scanning=false;publish(c);}
-            }
-            return control.current===c && !c.dead ? {ok:!c.error,rows:c.rows,more:c.more} : null;
-        },[uid,publish]);
+    // Один живой список всех пользователей. Страницы ниже — только отображение.
+    function useAllUsers(enabled, uid, retry) {
+        const [state,setState]=useState({rows:null,busy:true,error:''});
         useEffect(()=>{
-            if(!enabled){setState({rows:null,more:true,busy:false,scanning:false,error:''});return;}
-            const cache=retry===0 && directoryCache?.uid===uid && directoryCache.db===window.db && Date.now()-directoryCache.at<DIRECTORY_CACHE_TTL ? directoryCache : null;
-            const c={db:window.db,rows:cache?.rows || null,cursor:cache?.cursor || null,more:cache ? cache.more : true,busy:false,scanning:false,stop:false,dead:false,error:''};
-            control.current=c;publish(c);
-            if(!cache)void load();
-            return()=>{c.dead=true;c.stop=true;if(control.current===c)control.current=null;};
-        },[enabled,uid,retry,load,publish]);
-        const update=useCallback((id,user)=>{
-            const c=control.current;if(!c || c.dead || !c.rows)return;
-            c.rows=user ? c.rows.map(row=>row.id===id?user:row) : c.rows.filter(row=>row.id!==id);
-            if(directoryCache?.uid===uid)directoryCache={...directoryCache,rows:c.rows};publish(c);
-        },[uid,publish]);
-        return {...state,load,update,snapshot:()=>control.current,stop:()=>{const c=control.current;if(c)c.stop=true;}};
+            if(!enabled){setState({rows:null,busy:false,error:''});return;}
+            const db=window.db;
+            const cache=directoryCache?.uid===uid && directoryCache.db===db && Date.now()-directoryCache.at<DIRECTORY_CACHE_TTL ? directoryCache.rows : null;
+            let live=true, initialized=false;
+            const profiles=new Map();
+            setState({rows:cache,busy:true,error:''});
+            const stop=db.collection('users').onSnapshot({includeMetadataChanges:true},snapshot=>{
+                if(!live || window.auth?.currentUser?.uid!==uid)return;
+                const fromCache=!!snapshot.metadata?.fromCache;
+                if(!initialized && fromCache && (cache || snapshot.empty))return;
+                let changed=!initialized;
+                if(!initialized){
+                    snapshot.docs.forEach(doc=>profiles.set(doc.id,{...doc.data(),id:doc.id}));
+                    initialized=true;
+                }else snapshot.docChanges().forEach(change=>{
+                    changed=true;
+                    if(change.type==='removed')profiles.delete(change.doc.id);
+                    else profiles.set(change.doc.id,{...change.doc.data(),id:change.doc.id});
+                });
+                if(changed){
+                    const rows=Array.from(profiles.values());
+                    if(!fromCache)directoryCache={uid,db,rows,at:Date.now()};
+                    setState({rows,busy:fromCache,error:''});
+                }else{
+                    if(!fromCache)directoryCache={uid,db,rows:Array.from(profiles.values()),at:Date.now()};
+                    setState(previous=>({...previous,busy:fromCache,error:''}));
+                }
+            },error=>{
+                if(!live)return;
+                directoryCache=null;
+                setState({rows:null,busy:false,error:errorText(error)});
+            });
+            return()=>{live=false;stop();};
+        },[enabled,uid,retry]);
+        return state;
     }
     function comparePeriods(history,days,end) {
         const span=days*86400000, start=end-span, previous=start-span;
@@ -627,7 +618,7 @@ async function exportUser(user, parts, allUsers = []) {
         return out.slice(0,20);
     }
 
-    function UserDetails({ user, allUsers, allLoaded, onLoadAll, loadingAll, now, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport, onChatMode, onChatUser }) {
+    function UserDetails({ user, allUsers, now, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport, onChatMode, onChatUser }) {
         const [tab, setTab] = useState('access');
         const [picked, setPicked] = useState([]);
         const [contactSearch, setContactSearch] = useState('');
@@ -652,7 +643,7 @@ async function exportUser(user, parts, allUsers = []) {
             {tab === 'access' && <><div className="adm-section-label"><div><h3>Модули платформы</h3><p>Настройте доступ к каждому разделу.</p></div><span className="adm-count">{AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length} / {AVAILABLE_MODULES.length}</span></div><div className="adm-modules">{AVAILABLE_MODULES.map(module => { const on = modulesOf(user).includes(module.id); return <button key={module.id} type="button" role="switch" aria-checked={on} aria-label={`Доступ: ${module.label}`} disabled={busy} className={`adm-module ${on ? 'on' : ''}`} onClick={() => onModule(module.id, !on)}><AdminIcon name={module.icon} size={18}/><span className="adm-module-name">{module.label}<small>{on ? 'Доступ открыт' : 'Доступ закрыт'}</small></span><span className="adm-switch" aria-hidden="true"/></button>; })}</div><div className="adm-setting"><button type="button" role="switch" aria-label="Подсказки Excel" aria-checked={user.excelHintsEnabled !== false} disabled={busy} className={`adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`} onClick={() => onHints(user.excelHintsEnabled === false)}><AdminIcon name="lightbulb" size={19}/><span className="adm-module-name">Подсказки Excel<small>{user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены'}</small></span><span className="adm-switch" aria-hidden="true"/></button></div>{user.isBanned && <div className="adm-note"><AdminIcon name="lock" size={15}/>Аккаунт заблокирован. Настройка модулей не снимает общую блокировку.</div>}</>}
             {tab === 'tests' && <><div className="adm-section-label"><div><h3>Персональные тесты</h3><p>Задания, назначенные этому пользователю.</p></div><Btn variant="primary" onClick={onImport} disabled={busy}><AdminIcon name="cloud" size={14}/>Назначить</Btn></div>{!tests.length ? <Empty title="Пока нет назначенных тестов">Загрузите файл с вопросами, чтобы добавить первое задание.</Empty> : <div className="adm-test-list">{tests.map((test, index) => <div className="adm-test" key={`${test.id}-${index}`}><AdminIcon name="fileText" size={19}/><div className="adm-test-text"><strong>{str(test.title) || 'Без названия'}</strong><small>{array(test.data).length} вопросов</small></div><IconBtn label={`Удалить тест: ${str(test.title) || 'Без названия'}`} disabled={busy || test.id == null} onClick={() => onRemove(test)}/></div>)}</div>}</>}
             {tab === 'stats' && <><ProgressComparison user={user}/><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
-            {tab === 'chat' && <>{!allLoaded && <div className="adm-scope"><p>Для полного списка контактов загрузите остальных пользователей. Сохранённые контакты не сбрасываются.</p><Btn disabled={loadingAll} onClick={onLoadAll}>{loadingAll?'Загружаем…':'Загрузить всех'}</Btn></div>}<div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{allLoaded ? `${visibleContactCount} доступно` : `${visibleContactCount} среди загруженных`}</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
+            {tab === 'chat' && <><div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{visibleContactCount} доступно</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
             {tab === 'activity' && <UserActivity user={user} now={now}/>}
             {tab === 'audit' && <AdminAudit user={user}/>}
             {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row"><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row"><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
@@ -680,7 +671,7 @@ async function exportUser(user, parts, allUsers = []) {
         const actor = useRef(uid), accessRef = useRef(access), kicked = useRef(null), onKickedRef = useRef(onKicked);
         actor.current = uid; accessRef.current = access; onKickedRef.current = onKicked;
         const ready = access.state === 'ready' && access.uid === uid;
-        const directory = useUserPages(ready, uid, retry);
+        const directory = useAllUsers(ready, uid, retry);
         const users = directory.rows, loadError = directory.error;
         const [now,setNow] = useState(()=>Date.now());
         useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
@@ -748,15 +739,6 @@ async function exportUser(user, parts, allUsers = []) {
         const currentPage = Math.min(page, pageCount);
         const visible = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
         const selected = list.find(user => user.id === selectedId) || visible[0] || null;
-        const selectedUid=selected?.id;
-        useEffect(()=>{
-            if(!ready || !selectedUid)return;
-            let live=true;
-            const stop=window.db.collection('users').doc(selectedUid).onSnapshot(snap=>{
-                if(live && actor.current===uid)directory.update(selectedUid,snap.exists?{...snap.data(),id:snap.id||selectedUid}:null);
-            },error=>{if(live && actor.current===uid)toast(errorText(error),'error');});
-            return()=>{live=false;stop();};
-        },[ready,uid,selectedUid,directory.update]);
         const importUser = array(users).find(user => user.id === importUid);
         const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
         function dismissToast(id) {
@@ -872,18 +854,17 @@ async function exportUser(user, parts, allUsers = []) {
             <AdminPresence immediate={!ready} show={!!(ready && confirm)}>{ready && confirm && <Dialog title={confirm.title} busy={pending.has(confirm.uid)} onClose={() => setConfirm(null)}><p>{confirm.message}</p>{dialogError && <p className="adm-error" role="alert">{dialogError}</p>}<div className="adm-dialog-actions"><Btn disabled={pending.has(confirm.uid)} onClick={() => setConfirm(null)}>Отмена</Btn><Btn variant={confirm.danger ? 'danger' : 'primary'} disabled={pending.has(confirm.uid)} onClick={confirmAction}>{pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label}</Btn></div></Dialog>}</AdminPresence>
             <AdminPresence immediate={!ready} show={!!(ready && importUser)}>{ready && importUser && <ImportDialog key={importUid} user={importUser} busy={pending.has(importUid)} onClose={() => setImportUid(null)} onSave={saveTest}/>}</AdminPresence>
             <main className="adm-shell" aria-label="Панель администратора">
-                <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>{directory.busy?'Загрузка…':'Профиль обновляется'}</div>}</header>
+                <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>{directory.busy?'Обновление…':'Автообновление'}</div>}</header>
                 {!ready ? <Empty title={access.state === 'checking' ? 'Проверяем права доступа…' : access.state === 'denied' ? 'Доступ ограничен' : 'Не удалось открыть панель'}><p role="status">{access.message}</p>{access.state === 'error' && <Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn>}</Empty> : <>
-                    <div className="adm-summary">{[[directory.more?'Загружено пользователей':'Пользователей', 'users'], ['Админов в списке', 'shield'], ['Блокировок в списке', 'ban'], ['Тестов в списке', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
+                    <div className="adm-summary">{[['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
                     {loadError && users === null ? <div className="adm-banner" role="alert"><AdminIcon name="alertTriangle" size={19}/><span>{loadError}</span><Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn></div> : <div className="adm-workspace">
-                        <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count" aria-live="polite">{users === null ? 'Загрузка…' : `${list.length} ${directory.more?'среди загруженных':'найдено'}`}</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
+                        <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count" aria-live="polite">{users === null ? 'Загрузка…' : `${list.length} найдено`}</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
                             <div className="adm-filter" aria-label="Фильтр пользователей">{[['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы'],['inactive','Не заходили 7 дней']].map(([id, label]) => <button type="button" key={id} className={`adm-chip ${filter === id ? 'active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div>
                             <div className="adm-sort"><span>Сортировка</span><select aria-label="Сортировка пользователей" value={sort} onChange={event => setSort(event.target.value)}><option value="name">По имени</option><option value="role">Администраторы выше</option><option value="tests">Больше тестов</option><option value="activity">Последняя активность</option></select></div>
-                            <div className="adm-scope"><p>{directory.more ? `Загружено ${array(users).length}. Поиск, сортировка и показатели относятся к этому списку.` : 'Загружены все пользователи на момент обновления.'}</p><div>{directory.more && <Btn disabled={directory.busy} onClick={()=>directory.load(true)}>{directory.scanning?'Загружаем…':'Загрузить всех для поиска'}</Btn>}{directory.scanning && <Btn onClick={directory.stop}>Остановить</Btn>}<Btn disabled={directory.busy} onClick={()=>setRetry(n=>n+1)}>Обновить список</Btn></div>{loadError && <p className="adm-error" role="alert">{loadError}</p>}</div>
                             <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, index) => <button style={{'--ad-order': index}} type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small><Seen user={user} now={now}/></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
-                            {(list.length > PAGE_SIZE || directory.more) && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}{directory.more?'+':''}</span><Btn disabled={directory.busy || (currentPage === pageCount && !directory.more)} onClick={async()=>{if(currentPage<pageCount)changePage(currentPage+1);else {const result=await directory.load();if(result?.ok){setPage(currentPage+1);setSelectedId(null);}}}}>{directory.busy?'Загрузка…':currentPage<pageCount?'Далее':'Ещё 24'}</Btn></nav>}
+                            {list.length > PAGE_SIZE && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}</span><Btn disabled={currentPage === pageCount} onClick={()=>changePage(currentPage+1)}>Далее</Btn></nav>}
                         </aside>
-                        {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} allLoaded={!directory.more} onLoadAll={()=>directory.load(true)} loadingAll={directory.busy} now={now} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { const exportUid=actor.current; if(directory.more)await directory.load(true); const snapshot=directory.snapshot(); if(!snapshot || snapshot.more || exportUid!==actor.current)throw problem('Для полного отчёта дождитесь загрузки всех пользователей.'); await exportUser(selected, parts, array(snapshot.rows)); if(alive.current && exportUid===actor.current)toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
+                        {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} now={now} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { const exportUid=actor.current; await exportUser(selected, parts, array(users)); if(alive.current && exportUid===actor.current)toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
                     </div>}
                 </>}
                 <footer className="adm-footer"><span>Ultimate LMS</span><span>Изменения сохраняются отдельно для каждого пользователя</span></footer>
