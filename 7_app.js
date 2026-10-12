@@ -176,6 +176,21 @@ function LazyExcelTrainer(props) {
         React.createElement('button',{type:'button',onClick:props.onBack},'Вернуться в меню'))));
 }
 
+// Keep the floating assistant out of the page layout and wait for its mount styles.
+function AppAssistantHost() {
+  const [visible, setVisible] = React.useState(false);
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return ReactDOM.createPortal(React.createElement('div', {
+    style: {display:'contents',visibility:visible?'visible':'hidden'},
+    className:'lms-assistant-host'
+  }, React.createElement('style', null, `
+.lms-assistant-host .ula-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+`), React.createElement(window.AIChatWidget)), document.body);
+}
+
 // --- APP ---
 function App() {
   const DEFAULT_MODULES = ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'chess', 'stats'];
@@ -651,15 +666,16 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       boxSizing: 'border-box',
+      width: '100%',
+      minWidth: 0,
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px 10px',
       paddingTop: showLauncher ? CONTENT_TOP_WITH_LAUNCHER : '20px'
     }
-  }, /*#__PURE__*/React.createElement(AnimatePresence, {
-    mode: "wait"
   }, isAuthLoading && /*#__PURE__*/React.createElement(motion.div, {
     key: "loading",
     initial: {
@@ -713,7 +729,9 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       fontSize: '13px',
       lineHeight: 1.6
     }
-  }, "Проверяем аккаунт и загружаем актуальные настройки…")), !isAuthLoading && authError && /*#__PURE__*/React.createElement(motion.div, {
+  }, "Проверяем аккаунт и загружаем актуальные настройки…")), /*#__PURE__*/React.createElement(AnimatePresence, {
+    mode: "wait"
+  }, !isAuthLoading && authError && /*#__PURE__*/React.createElement(motion.div, {
     key: "auth-error",
     initial: {
       opacity: 0,
@@ -777,7 +795,8 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
     }
   }, /*#__PURE__*/React.createElement(LandingView, {
     onLogin: handleDirectLogin
-  })), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, null), appReady && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && /*#__PURE__*/React.createElement(TestsLMS, {
+  })), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, {key:"admin-view"}), appReady && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && /*#__PURE__*/React.createElement(TestsLMS, {
+    key: "tests-view",
     view: view,
     setView: setView,
     currentSet: currentSet,
@@ -795,6 +814,7 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
     openTeacherAssignedTest: openTeacherAssignedTest,
     removeTeacherTestStudent: removeTeacherTestStudent
   }), appReady && view === 'stats' && allowedModules.includes('stats') && /*#__PURE__*/React.createElement(StatsView, {
+    key: "stats-view",
     history: history,
     setHistory: setHistory,
     userData: userData
@@ -880,7 +900,7 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
     }
   }, /*#__PURE__*/React.createElement(LazyExcelTrainer, {
     onBack: () => setView('menu')
-  }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(window.AIChatWidget, null)));
+  }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(/*#__PURE__*/React.createElement(App, null));
