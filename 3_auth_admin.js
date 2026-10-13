@@ -95,127 +95,61 @@
     // как вообще разрешить отрисовку LMS.
     // ---------------------------------------------------------------------
 
-    async function ensureLmsUserProfile(authUser) {
-        if (!authUser?.uid) {
-            const error = new Error('Firebase не вернул пользователя.');
-            error.code = 'lms/user-missing';
-            throw error;
-        }
-
-        if (!window.firebase || !window.db?.runTransaction) {
-            const error = new Error('Firestore не подключён.');
-            error.code = 'firestore/unavailable';
-            throw error;
-        }
-
-        const ref = window.db
-            .collection('users')
-            .doc(authUser.uid);
-
-        const serverTimestamp =
-            window.firebase.firestore.FieldValue.serverTimestamp();
-
+    // Чтение только подтверждённого сервером профиля, без ожидания записи посещения.
+    async function ensureLmsUserProfile(authUser, { signal } = {}) {
+        const fail = (code, message) => Object.assign(new Error(message), { code });
+        const checkActive = () => {
+            if (signal?.aborted || window.auth.currentUser?.uid !== authUser?.uid)
+                throw fail('lms/cancelled', 'Загрузка отменена');
+        };
+        checkActive();
+        if (!authUser?.uid || !window.db) throw fail('lms/config', 'Firebase не подключён');
+        const ref = window.db.collection('users').doc(authUser.uid);
+        const snapshot = await new Promise((resolve, reject) => {
+            let stop = null, done = false;
+            const finish = (error, value) => {
+                if (done) return;
+                done = true;
+                clearTimeout(timeout);
+                signal?.removeEventListener('abort', abort);
+                stop?.();
+                error ? reject(error) : resolve(value);
+            };
+            const abort = () => finish(fail('lms/cancelled', 'Загрузка отменена'));
+            const timeout = setTimeout(() => finish(fail('deadline-exceeded', 'Сервер не ответил вовремя')), 12000);
+            signal?.addEventListener('abort', abort, { once: true });
+            if (signal?.aborted) { abort(); return; }
+            try {
+                stop = ref.onSnapshot({ includeMetadataChanges: true }, value => {
+                    if (value.metadata?.fromCache || value.metadata?.hasPendingWrites) return;
+                    finish(null, value);
+                }, error => finish(error));
+                if (done) stop?.();
+            } catch (error) { finish(error); }
+        });
+        checkActive();
+        const checked = data => {
+            if (data.isBanned === true) throw fail('lms/account-banned', 'Аккаунт заблокирован');
+            return { ...data, uid: authUser.uid };
+        };
+        if (snapshot.exists) return checked(snapshot.data() || {});
+        // Создание атомарно: параллельная вкладка не перезапишет существующий профиль.
         return window.db.runTransaction(async transaction => {
-            const snapshot = await transaction.get(ref);
-
-            // Новый пользователь.
-            if (!snapshot.exists) {
-                const profile = {
-                    email: authUser.email || '',
-                    nickname:
-                        authUser.displayName ||
-                        authUser.email?.split('@')[0] ||
-                        'Студент',
-                    displayName: authUser.displayName || '',
-                    photoURL: authUser.photoURL || '',
-
-                    role: 'student',
-                    isBanned: false,
-
-                    allowedModules: DEFAULT_MODULES,
-
-                    excelHintsEnabled: true,
-
-                    chatContactMode: 'all',
-                    chatAllowedUsers: [],
-
-                    assignedTests: [],
-
-                    registeredAt: serverTimestamp,
-                    lastLoginAt: serverTimestamp,
-                    lastSeenAt: serverTimestamp,
-                    loginCount: 1,
-
-                    profileVersion: 3
-                };
-
-                transaction.set(ref, profile);
-
-                return {
-                    ...profile,
-                    uid: authUser.uid,
-                    isNewUser: true
-                };
-            }
-
-            const current = snapshot.data() || {};
-
-            if (current.isBanned === true) {
-                const error = new Error('Аккаунт заблокирован.');
-                error.code = 'lms/account-banned';
-                throw error;
-            }
-
-            // ВАЖНО:
-            // здесь нет role, isBanned, allowedModules,
-            // assignedTests, chatAllowedUsers, excelHintsEnabled.
-            // Настройки администратора не перезаписываются.
-            const patch = {
-                email:
-                    authUser.email ||
-                    current.email ||
-                    '',
-                displayName:
-                    authUser.displayName ||
-                    current.displayName ||
-                    '',
-                photoURL:
-                    authUser.photoURL ||
-                    current.photoURL ||
-                    '',
-                lastLoginAt:
-                    serverTimestamp,
-                lastSeenAt:
-                    serverTimestamp,
-                loginCount:
-                    (Number(current.loginCount) || 0) + 1,
-                profileVersion: 3
+            checkActive();
+            const latest = await transaction.get(ref);
+            checkActive();
+            if (latest.exists) return checked(latest.data() || {});
+            const profile = {
+                email: authUser.email || '',
+                nickname: authUser.displayName || authUser.email?.split('@')[0] || 'Студент',
+                displayName: authUser.displayName || '', photoURL: authUser.photoURL || '',
+                role: 'student', isBanned: false, allowedModules: DEFAULT_MODULES,
+                excelHintsEnabled: true, chatContactMode: 'all', chatAllowedUsers: [],
+                assignedTests: [], registeredAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount: 0, profileVersion: 3
             };
-
-            // Мягкая миграция старых аккаунтов.
-            if (!current.nickname) {
-                patch.nickname =
-                    authUser.displayName ||
-                    authUser.email?.split('@')[0] ||
-                    'Студент';
-            }
-
-            if (!current.chatContactMode) {
-                patch.chatContactMode = 'all';
-            }
-
-            if (!Array.isArray(current.chatAllowedUsers)) {
-                patch.chatAllowedUsers = [];
-            }
-
-            transaction.update(ref, patch);
-
-            return {
-                uid: authUser.uid,
-                ...current,
-                ...patch,
-                isNewUser: false
-            };
+            transaction.set(ref, profile);
+            return checked(profile);
         });
     }
 
