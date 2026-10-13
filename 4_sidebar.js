@@ -1,3 +1,39 @@
+// Общая блокировка прокрутки: каждый открытый слой получает свою функцию освобождения.
+(function () {
+  if (window.lmsAcquireScrollLock) return;
+  const locks = new Set();
+  let saved = null;
+  window.lmsAcquireScrollLock = function () {
+    const token = {};
+    const body = document.body;
+    if (!locks.size) {
+      saved = { body, styles: ['overflow-x', 'overflow-y', 'padding-right'].map(name => ({
+        name, value: body.style.getPropertyValue(name),
+        priority: body.style.getPropertyPriority(name)
+      })) };
+      const width = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+      const padding = parseFloat(getComputedStyle(body).paddingRight) || 0;
+      if (width > 0) body.style.setProperty('padding-right', `${padding + width}px`);
+      body.style.setProperty('overflow-x', 'hidden');
+      body.style.setProperty('overflow-y', 'hidden');
+    }
+    locks.add(token);
+    let released = false;
+    return function releaseScrollLock() {
+      if (released) return;
+      released = true;
+      locks.delete(token);
+      if (locks.size || !saved) return;
+      const snapshot = saved;
+      saved = null;
+      snapshot.styles.forEach(({ name, value, priority }) => {
+        if (value) snapshot.body.style.setProperty(name, value, priority);
+        else snapshot.body.style.removeProperty(name);
+      });
+    };
+  };
+})();
+
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 (function () {
   const {
@@ -817,24 +853,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, [isOpen, reduced]);
     const scrollLock = useRef(null);
     const lockScroll = () => {
-      if (scrollLock.current) return;
-      const b = document.body,
-        sw = window.innerWidth - document.documentElement.clientWidth;
-      scrollLock.current = {
-        overflow: b.style.overflow,
-        paddingRight: b.style.paddingRight
-      };
-      if (sw > 0) b.style.paddingRight = `${(parseFloat(getComputedStyle(b).paddingRight) || 0) + sw}px`;
-      b.style.overflow = 'hidden';
+      if (!scrollLock.current) scrollLock.current = window.lmsAcquireScrollLock();
     };
     const unlockScroll = () => {
-      const s = scrollLock.current;
-      if (!s) return;
+      const release = scrollLock.current;
       scrollLock.current = null;
-      document.body.style.overflow = s.overflow;
-      document.body.style.paddingRight = s.paddingRight;
+      release?.();
     };
-    useEffect(() => unlockScroll, []);
+    useEffect(() => () => unlockScroll(), []);
     const [signingOut, setSigningOut] = useState(false),
       [error, setError] = useState('');
     const [scrolled, setScrolled] = useState(false);
@@ -944,7 +970,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       return () => {
         cancelAnimationFrame(frame);
         document.removeEventListener('keydown', onKey);
-
+        unlockScroll();
       };
     }, [show]);
     const go = id => {
