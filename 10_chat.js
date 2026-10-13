@@ -171,15 +171,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         document.head.append(tag);
       }
       tag.textContent = CSS;
-      const old = document.activeElement,
-        overflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+      const old = document.activeElement;
+      const releaseScroll = window.lmsAcquireScrollLock();
       return () => {
-        document.body.style.overflow = overflow;
+        releaseScroll();
         alive.current = false;
         clearTimeout(closeTimer.current);
         clearTimeout(toastTimer.current);
-        if (old?.isConnected) old.focus?.();
+        if (old?.isConnected) old.focus?.({ preventScroll: true });
       };
     }, []);
     useEffect(() => {
