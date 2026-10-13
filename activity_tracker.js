@@ -4,13 +4,15 @@
   'use strict';
   if (window.__lmsActivityTrackerInstalled) return;
   window.__lmsActivityTrackerInstalled = true;
-  const SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование'};
+  const SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование',chess:'Шахматы'};
   const ALIASES = {home:'menu',timer_setup:'tests',review:'tests',test:'tests',set_menu:'tests',quiz:'tests',testing:'tests',test_setup:'tests',test_result:'tests',results:'tests',result:'tests',school:'code',statistics:'stats'};
   const short = v => String(v ?? '').trim().slice(0,500);
   const sectionOf = v => {const s=short(v).toLowerCase();return ALIASES[s] || s || 'platform';};
   const serverTime = () => window.firebase?.firestore?.FieldValue?.serverTimestamp?.() || new Date().toISOString();
   const path = () => `${location.pathname || '/'}${location.search || ''}${location.hash || ''}`;
   let uid=null, timer=null, lastKey='', explicit=false;
+  let sessionUid=null;
+  const presencePending = new Set();
   let screen=window.__lmsCurrentSection || null;
   if(screen) explicit=true;
 
@@ -27,9 +29,18 @@
     catch(e){console.warn('[activity] event:',e);return {ok:false};}
   }
   async function seen(targetUid=uid,visit=false) {
-    if(!targetUid || !window.db)return;
-    try {await window.db.collection('users').doc(targetUid).set({lastSeenAt:serverTime(),...(visit ? {lastVisitAt:serverTime()} : {})},{merge:true});}
-    catch(e){console.warn('[activity] presence:',e);}
+    if(!targetUid || targetUid!==uid || !window.db || presencePending.has(targetUid))return;
+    presencePending.add(targetUid);
+    try {
+      const patch={lastSeenAt:serverTime()};
+      if(visit) Object.assign(patch,{
+        lastVisitAt:serverTime(),lastLoginAt:serverTime(),
+        loginCount:window.firebase.firestore.FieldValue.increment(1)
+      });
+      // update не создаст случайно неполный профиль, если его удалили.
+      await window.db.collection('users').doc(targetUid).update(patch);
+    } catch(e){console.warn('[activity] presence:',e);}
+    finally {presencePending.delete(targetUid);}
   }
   function recordScreen(reason='open') {
     if(!uid || !screen)return;
@@ -70,15 +81,25 @@
   document.addEventListener('visibilitychange',()=>{void seen();if(document.visibilityState==='visible') {if(explicit)recordScreen('return');else trackRoute();}});
   const auth=window.auth;
   if(!auth?.onAuthStateChanged){console.warn('[activity] Подключите трекер после Firebase Auth.');return;}
-  auth.onAuthStateChanged(user=>{
-    const next=user?.uid || null;
+  function syncReady() {
+    const current=auth.currentUser?.uid || null;
+    const next=current && window.__lmsProfileReady?.uid===current ? current : null;
     if(next===uid)return;
     clearInterval(timer);timer=null;uid=next;lastKey='';
     if(!uid || !window.db)return;
     const targetUid=uid;
-    void seen(targetUid,true);
-    void writeFor(targetUid,'session','platform',{action:'start',label:'Запуск платформы'});
-    if(explicit)recordScreen('open');else trackRoute();
+    const first=sessionUid!==uid;
+    sessionUid=uid;
+    void seen(targetUid,first);
+    if(first) void writeFor(targetUid,'session','platform',{action:'start',label:'Запуск платформы'});
+    // Начальный экран возьмём из следующего события React, без экрана старого аккаунта.
+    screen=null;
     timer=setInterval(()=>{if(document.visibilityState!=='hidden')void seen(targetUid);},180000);
+  }
+  window.addEventListener('lms:profile-ready',syncReady);
+  auth.onAuthStateChanged(user=>{
+    if(!user || (sessionUid && sessionUid!==user.uid)) sessionUid=null;
+    syncReady();
   });
+  syncReady();
 })();
