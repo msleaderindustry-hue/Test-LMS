@@ -215,6 +215,7 @@ function App() {
   const [allowedModules, setAllowedModules] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [profileRetry, setProfileRetry] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isAdmin = userRole === 'admin';
@@ -275,6 +276,11 @@ function App() {
     let active = true;
     let profileUnsubscribe = null;
     let authSequence = 0;
+    let controller = null;
+    const publishReady = value => {
+      window.__lmsProfileReady = value;
+      window.dispatchEvent(new CustomEvent('lms:profile-ready', { detail: value }));
+    };
     const clearProfileListener = () => {
       if (typeof profileUnsubscribe === 'function') {
         profileUnsubscribe();
@@ -293,6 +299,10 @@ function App() {
     };
     const unsubscribeAuth = window.auth.onAuthStateChanged(async currentUser => {
       const sequence = ++authSequence;
+      controller?.abort();
+      controller = new AbortController();
+      const signal = controller.signal;
+      publishReady(null);
       clearProfileListener();
       setAuthError('');
       setIsAuthLoading(true);
@@ -306,36 +316,25 @@ function App() {
       }
       const profileRef = window.db.collection('users').doc(currentUser.uid);
       try {
-        let initialData = null;
-        if (typeof window.ensureLmsUserProfile === 'function') {
-          initialData = await window.ensureLmsUserProfile(currentUser);
-        } else {
-          const serverSnapshot = await profileRef.get({
-            source: 'server'
-          });
-          if (!serverSnapshot.exists) {
-            const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp();
-            const newProfile = {
-              email: currentUser.email || '',
-              nickname: currentUser.displayName || currentUser.email?.split('@')[0] || 'Студент',
-              displayName: currentUser.displayName || '',
-              photoURL: currentUser.photoURL || '',
-              role: 'student',
-              isBanned: false,
-              allowedModules: DEFAULT_MODULES,
-              excelHintsEnabled: true,
-              chatContactMode: 'all',
-              chatAllowedUsers: [],
-              registeredAt: serverTimestamp,
-              lastLoginAt: serverTimestamp,
-              lastSeenAt: serverTimestamp,
-              loginCount: 1,
-              profileVersion: 2
-            };
-            await profileRef.set(newProfile);
-            initialData = newProfile;
-          } else {
-            initialData = serverSnapshot.data() || {};
+        if (typeof window.ensureLmsUserProfile !== 'function') {
+          throw new Error('Модуль 3_auth_admin.js не загружен');
+        }
+        let initialData;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            initialData = await window.ensureLmsUserProfile(currentUser, { signal });
+            break;
+          } catch (error) {
+            const code = String(error?.code || '').split('/').pop();
+            const temporary = ['unavailable', 'deadline-exceeded', 'aborted', 'network-request-failed'].includes(code);
+            if (!temporary || attempt === 2 || signal.aborted) throw error;
+            await new Promise(resolve => {
+              const finish = () => { clearTimeout(timer); signal.removeEventListener('abort', finish); resolve(); };
+              const timer = setTimeout(finish, 700 * (attempt + 1));
+              signal.addEventListener('abort', finish, { once: true });
+              if (signal.aborted) finish();
+            });
+            if (signal.aborted) throw error;
           }
         }
         if (!active || sequence !== authSequence) return;
@@ -348,16 +347,22 @@ function App() {
         applyProfile(currentUser, initialData);
         setView('menu');
         setIsAuthLoading(false);
+        publishReady({ uid: currentUser.uid });
 
         profileUnsubscribe = profileRef.onSnapshot({
           includeMetadataChanges: true
         }, async snapshot => {
           if (!active || sequence !== authSequence) return;
-          if (!snapshot.exists) return;
-
-          if (snapshot.metadata?.fromCache) return;
+          if (snapshot.metadata?.fromCache || snapshot.metadata?.hasPendingWrites) return;
+          if (!snapshot.exists) {
+            publishReady(null);
+            resetProfile();
+            setAuthError('Профиль отсутствует. Обратитесь к преподавателю.');
+            return;
+          }
           const data = snapshot.data() || {};
           if (data.isBanned === true) {
+            publishReady(null);
             setIsSidebarOpen(false);
             setIsChatOpen(false);
             resetProfile();
@@ -372,10 +377,15 @@ function App() {
           applyProfile(currentUser, data);
         }, error => {
           console.error('[Ultimate LMS Profile Snapshot]', error);
+          if (!active || sequence !== authSequence) return;
+          publishReady(null);
+          resetProfile();
+          setAuthError('Не удалось обновить профиль (' + (error.code || 'unknown') + '). Нажмите «Повторить».');
         });
       } catch (error) {
         console.error('[Ultimate LMS Profile Bootstrap]', error);
         if (!active || sequence !== authSequence) return;
+        publishReady(null);
         resetProfile();
         if (error?.code === 'lms/account-banned') {
           setAuthError('Ваш аккаунт заблокирован. Обратитесь к преподавателю.');
@@ -387,7 +397,7 @@ function App() {
         } else if (String(error?.code || '').includes('permission-denied')) {
           setAuthError('Нет доступа к профилю пользователя. Проверьте правила Firestore.');
         } else {
-          setAuthError('Не удалось загрузить профиль пользователя. Попробуйте обновить страницу.');
+          setAuthError('Не удалось загрузить профиль пользователя. Нажмите «Повторить».');
         }
         setIsAuthLoading(false);
       }
@@ -395,10 +405,12 @@ function App() {
     return () => {
       active = false;
       authSequence++;
+      controller?.abort();
+      publishReady(null);
       clearProfileListener();
       unsubscribeAuth?.();
     };
-  }, []);
+  }, [profileRetry]);
 
   // -----------------------------------------------------------------------
   // ЕСЛИ АДМИН ОТКЛЮЧИЛ МОДУЛЬ, ПОКА УЧЕНИК НАХОДИТСЯ В НЁМ
@@ -777,7 +789,7 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       lineHeight: 1.6
     }
   }, authError), /*#__PURE__*/React.createElement(Button, {
-    onClick: () => window.location.reload(),
+    onClick: () => { setAuthError(''); setIsAuthLoading(true); setProfileRetry(value => value + 1); },
     style: {
       minHeight: 48
     }
