@@ -156,13 +156,24 @@ function LazyExcelTrainer(props) {
 .lms-excel-loading .lel-actions button:focus-visible{outline:2px solid #c4b5fd!important;outline-offset:4px}
 .lms-excel-loading .lel-actions button.lel-retry{background:#7952c8!important;color:white!important}
 .lms-excel-loading.is-error .lel-icon:before{animation:none;border-color:#c4b5fd50}
+.lms-excel-loading.theme-light{background:linear-gradient(145deg,#ffffff,#f0edf9)!important;color:#29213c!important;border-color:#d8cee9!important;box-shadow:0 18px 55px #45325f18}
+.lms-excel-loading.theme-light .lel-icon{background:#8252d910;color:#7751b6}
+.lms-excel-loading.theme-light .lel-icon:before{border-color:#8252d922;border-top-color:#8054cb;border-right-color:#9c79d9}
+.lms-excel-loading.theme-light .lel-label{color:#7751a5!important}
+.lms-excel-loading.theme-light h2{color:#29213c!important}
+.lms-excel-loading.theme-light p.lel-copy{color:#665d78!important}
+.lms-excel-loading.theme-light .lel-track{background:#8252d920}
+.lms-excel-loading.theme-light .lel-actions button{background:#ffffffb8!important;color:#584170!important;border-color:#cfc0e4!important}
+.lms-excel-loading.theme-light .lel-actions button:hover{background:#ebe2f8!important;border-color:#ab8bd3!important}
+.lms-excel-loading.theme-light .lel-actions button:focus-visible{outline-color:#8054cb!important}
+.lms-excel-loading.theme-light .lel-actions button.lel-retry{background:#7952c8!important;color:#fff!important}
 @keyframes lms-excel-spin{to{transform:rotate(360deg)}}
 @keyframes lms-excel-slide{from{transform:translateX(-60%)}to{transform:translateX(160%)}}
 @keyframes lms-excel-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.lms-excel-loading{margin:16px auto!important;padding:32px 20px!important;border-radius:22px!important}.lms-excel-loading h2{font-size:20px!important}}
 @media(prefers-reduced-motion:reduce){.lms-excel-loading,.lms-excel-loading .lel-icon:before,.lms-excel-loading .lel-track span{animation:none!important}.lms-excel-loading .lel-actions button{transition:none!important}}
 `),
-    React.createElement('section', {className:'lms-excel-loading'+(error?' is-error':''),'aria-busy':!error},
+    React.createElement('section', {className:'lms-excel-loading theme-'+(props.theme === 'dark' ? 'dark' : 'light')+(error?' is-error':''),'aria-busy':!error},
       React.createElement('div', {className:'lel-icon','aria-hidden':true},
         React.createElement('svg', {viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round'},
           React.createElement('rect',{x:3,y:3,width:18,height:18,rx:4}),
@@ -911,6 +922,7 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       maxWidth: '1000px'
     }
   }, /*#__PURE__*/React.createElement(LazyExcelTrainer, {
+    theme: theme,
     onBack: () => setView('menu')
   }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
 }
