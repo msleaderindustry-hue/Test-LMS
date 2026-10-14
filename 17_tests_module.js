@@ -379,6 +379,28 @@
       onClick: onFinish
     }, "\u0414\u0430, \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C")));
   };
+  const ANSWER_SHEETS_CSS = "\n/* Answer sheets: isolated decoration for the tests folder header. */\n.tx-tests .tx-hero.tx-answer-hero{grid-template-columns:minmax(0,1fr) minmax(300px,1.05fr);gap:clamp(16px,3vw,48px);align-items:center}\n.tx-tests .tx-answer-hero>.tx-answer-art{display:block;position:relative;width:100%;max-width:650px;min-width:0;justify-self:end;aspect-ratio:580/300;pointer-events:none;user-select:none;isolation:isolate}\n.tx-answer-art .tx-as-svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:none}\n.tx-answer-art .tx-as-svg text{font-family:inherit;stroke:none}\n.tx-answer-art .tx-as-sheet{fill:var(--tx-panel,#f8f7fc);stroke:var(--tx-line,rgba(114,90,159,.2));stroke-width:1}\n.tx-answer-art .tx-as-line-ink{fill:var(--tx-muted,#8d85a3);opacity:.24}\n.tx-answer-art .tx-as-accent-ink{fill:var(--tx-accent,#9670d8)}\n.tx-answer-art .tx-as-outline{stroke:var(--tx-accent,#9670d8);stroke-width:1.5;fill:none}\n.tx-answer-art .tx-as-soft{fill:var(--tx-accent,#9670d8);opacity:.075}\n.tx-answer-art .tx-as-svg-float{animation:tx-as-drift 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}\n.tx-answer-art .tx-as-slow{animation-delay:-2.5s;animation-duration:8s}\n.tx-answer-art .tx-as-tick{stroke:var(--tx-accent,#9670d8);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none;stroke-dasharray:30;stroke-dashoffset:30;animation:tx-as-tick 6s ease-in-out infinite}\n.tx-answer-art .tx-as-orbit-dot{animation:tx-as-orbit 16s linear infinite;transform-origin:300px 150px}\n.tx-answer-art[data-paused=true] *{animation-play-state:paused!important}\n@keyframes tx-as-drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}\n@keyframes tx-as-tick{0%,20%{stroke-dashoffset:30;opacity:.2}40%,85%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:30;opacity:.2}}\n@keyframes tx-as-orbit{to{transform:rotate(360deg)}}\n@media(max-width:900px){.tx-tests .tx-hero.tx-answer-hero{grid-template-columns:minmax(0,1.05fr) minmax(240px,1fr);gap:16px}}\n@media(max-width:640px){.tx-tests .tx-hero.tx-answer-hero{grid-template-columns:minmax(0,1fr);gap:8px}.tx-tests .tx-answer-hero>.tx-answer-art{width:min(100%,420px);justify-self:center;margin-top:0}}\n@media(prefers-reduced-motion:reduce){.tx-answer-art .tx-as-svg *{animation:none!important}.tx-answer-art .tx-as-tick{stroke-dashoffset:0;opacity:1}}\n";
+  const ANSWER_SHEETS_SVG = "<svg class=\"tx-as-svg\" viewBox=\"0 0 580 300\" aria-hidden=\"true\" focusable=\"false\"><ellipse cx=\"305\" cy=\"156\" rx=\"225\" ry=\"116\" class=\"tx-as-outline\" opacity=\".10\"/><path d=\"M60 200Q250 295 515 90\" class=\"tx-as-outline\" opacity=\".13\" stroke-dasharray=\"4 8\"/><g class=\"tx-as-svg-float tx-as-slow\"><g transform=\"translate(106 45) rotate(-12 95 100)\"><rect width=\"174\" height=\"210\" rx=\"20\" class=\"tx-as-sheet\"/><rect x=\"23\" y=\"25\" width=\"66\" height=\"7\" rx=\"3\" class=\"tx-as-line-ink\"/><circle cx=\"29\" cy=\"65\" r=\"7\" class=\"tx-as-outline\" opacity=\".4\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"60\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"72\" width=\"70\" height=\"4\" rx=\"2\"/><circle cx=\"29\" cy=\"105\" r=\"7\" class=\"tx-as-outline\" opacity=\".4\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"100\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"112\" width=\"70\" height=\"4\" rx=\"2\"/><circle cx=\"29\" cy=\"145\" r=\"7\" class=\"tx-as-outline\" opacity=\".4\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"140\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"47\" y=\"152\" width=\"70\" height=\"4\" rx=\"2\"/></g></g><g class=\"tx-as-svg-float\"><g transform=\"translate(242 38) rotate(5 95 100)\"><rect width=\"182\" height=\"218\" rx=\"20\" class=\"tx-as-sheet\"/><text x=\"22\" y=\"31\" font-size=\"10\" font-weight=\"700\" class=\"tx-as-accent-ink\">ТЕСТИРОВАНИЕ</text><rect x=\"16\" y=\"49\" width=\"150\" height=\"34\" rx=\"9\" class=\"tx-as-soft\"/><circle cx=\"31\" cy=\"66\" r=\"7\" class=\"tx-as-outline\"/><path d=\"m26 66 4 4 7-8\" class=\"tx-as-tick\" style=\"animation-delay:0.0s\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"60\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"72\" width=\"70\" height=\"4\" rx=\"2\"/><rect x=\"16\" y=\"91\" width=\"150\" height=\"34\" rx=\"9\" class=\"tx-as-soft\"/><circle cx=\"31\" cy=\"108\" r=\"7\" class=\"tx-as-outline\"/><path d=\"m26 108 4 4 7-8\" class=\"tx-as-tick\" style=\"animation-delay:0.65s\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"102\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"114\" width=\"70\" height=\"4\" rx=\"2\"/><rect x=\"16\" y=\"133\" width=\"150\" height=\"34\" rx=\"9\" class=\"tx-as-soft\"/><circle cx=\"31\" cy=\"150\" r=\"7\" class=\"tx-as-outline\"/><path d=\"m26 150 4 4 7-8\" class=\"tx-as-tick\" style=\"animation-delay:1.3s\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"144\" width=\"107\" height=\"5\" rx=\"2.5\"/><rect class=\"tx-as-line-ink\" x=\"48\" y=\"156\" width=\"70\" height=\"4\" rx=\"2\"/><rect x=\"20\" y=\"190\" width=\"140\" height=\"4\" rx=\"2\" class=\"tx-as-line-ink\"/></g></g><g class=\"tx-as-svg-float tx-as-slow\"><g transform=\"translate(482 145) rotate(10)\"><rect x=\"-57\" y=\"-67\" width=\"114\" height=\"134\" rx=\"24\" fill=\"#9364d8\"/><rect x=\"-22\" y=\"-29\" width=\"44\" height=\"58\" rx=\"9\" stroke=\"white\" stroke-width=\"4\"/><path d=\"M-11-13H11M-11 0H11M-11 13H3\" stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\"/></g></g><circle cx=\"83\" cy=\"102\" r=\"4\" fill=\"#aa86e9\" class=\"tx-as-orbit-dot\"/></svg>";
+  // Decorative SVG only; does not request or modify test data.
+  const AnswerSheetsArt = memo(function AnswerSheetsArt() {
+    const artRef = useRef(null);
+    useEffect(() => {
+      const node = artRef.current;
+      if (!node) return;
+      let visible = true;
+      const sync = () => { node.dataset.paused = String(!visible || document.hidden); };
+      const observer = typeof IntersectionObserver === 'function'
+        ? new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }) : null;
+      if (observer) observer.observe(node);
+      document.addEventListener('visibilitychange', sync);
+      sync();
+      return () => { if (observer) observer.disconnect(); document.removeEventListener('visibilitychange', sync); };
+    }, []);
+    return React.createElement('div', { className: 'tx-answer-art', ref: artRef, 'aria-hidden': 'true' },
+      React.createElement('style', null, ANSWER_SHEETS_CSS),
+      React.createElement('div', { style: { width: '100%', height: '100%' }, dangerouslySetInnerHTML: { __html: ANSWER_SHEETS_SVG } })
+    );
+  });
   const AnimatedHeader = () => {
     const stageRef = useRef(null);
     const tagOldRef = useRef(null);
@@ -503,7 +525,7 @@
       };
     }, []);
     return /*#__PURE__*/React.createElement("header", {
-      className: "tx-hero"
+      className: "tx-hero tx-answer-hero"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       className: "tx-eyebrow"
     }, "ULTIMATE LMS \xB7 \u0422\u0415\u0421\u0422\u0418\u0420\u041E\u0412\u0410\u041D\u0418\u0415"), /*#__PURE__*/React.createElement("h1", null, "\u041F\u0440\u043E\u0432\u0435\u0440\u044C \u0437\u043D\u0430\u043D\u0438", /*#__PURE__*/React.createElement("span", {
@@ -561,13 +583,7 @@
       fill: "currentColor"
     }, /*#__PURE__*/React.createElement("path", {
       d: "M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2z"
-    }))))), /*#__PURE__*/React.createElement("p", null, "\u0412\u044B\u0431\u0435\u0440\u0438 \u043D\u0430\u0431\u043E\u0440, \u043D\u0430\u0441\u0442\u0440\u043E\u0439 \u0432\u0440\u0435\u043C\u044F \u0438 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438 \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C.")), /*#__PURE__*/React.createElement("div", {
-      className: "tx-hero-art",
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(TestIcon, {
-      name: "list",
-      size: 48
-    }))));
+    }))))), /*#__PURE__*/React.createElement("p", null, "\u0412\u044B\u0431\u0435\u0440\u0438 \u043D\u0430\u0431\u043E\u0440, \u043D\u0430\u0441\u0442\u0440\u043E\u0439 \u0432\u0440\u0435\u043C\u044F \u0438 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438 \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C.")), React.createElement(AnswerSheetsArt, null));
   };
 
   // --- КОМПОНЕНТ SWIPE-TO-DELETE ---
