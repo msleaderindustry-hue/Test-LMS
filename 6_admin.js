@@ -1,3 +1,4 @@
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 // --- 6_admin.js — Ultimate LMS / обновлённая панель ---
 // Полная замена файла. React + существующий Firebase compat.
 // JSX подключается тем же способом, что и исходный 6_admin.js.
@@ -9,126 +10,441 @@
 // Для записи Rules должны разрешать администратору обновление поля adminAudit.
 // История тестов без корректных дат не участвует в сравнении периодов.
 (function () {
-    const { useState, useEffect, useRef, useMemo, useCallback } = React;
-    const ADMIN_ICON_PATHS = {
-        chat: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
-        chess: <><path d="M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8z"/><path d="M6 18h14v4H6z"/><circle cx="11" cy="8" r=".7"/></>,
-        keyboard: <><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" /></>,
-        zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />,
-        code: <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>,
-        layers: <><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></>,
-        barChart: <><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></>,
-        user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
-        users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
-        settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>,
-        fileText: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></>,
-        ban: <><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></>,
-        alertTriangle: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
-        checkCircle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
-        lock: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
-        info: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>,
-        folder: <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />,
-        cloud: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />,
-        x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
-        search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
-        star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
-        inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
-        shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-        lightbulb: <><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></>,
-        check: <polyline points="20 6 9 17 4 12" />,
-        download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
-        trash: <><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6M9 6V4h6v2" /></>,
-        sparkle: <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>,
-        clock: <><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></>,
-        eye: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></>,
-        activity: <><polyline points="3 12 7 12 10 5 14 19 17 12 21 12"/></>
-    };
-
-    const AdminIcon = ({ name, size = 16, color = 'currentColor', style = {}, strokeWidth = 2 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0, ...style }}>
-            {ADMIN_ICON_PATHS[name] || null}
-        </svg>
-    );
-
-    const AVAILABLE_MODULES = [
-        { id: 'chat', icon: 'chat', label: 'Чат', color: '#06b6d4' },
-        { id: 'ai_chat', icon: 'sparkle', label: 'ИИ Ассистент', color: '#a855f7' },
-        { id: 'typing', icon: 'keyboard', label: 'Печать', color: '#818cf8' },
-        { id: 'hotkeys', icon: 'zap', label: 'Хоткеи', color: '#fbbf24' },
-        { id: 'code', icon: 'code', label: 'VS School', color: '#2dd4bf' },
-        { id: 'flashcards', icon: 'layers', label: 'Карточки', color: '#3b82f6' },
-        { id: 'excel', icon: 'barChart', label: 'Excel', color: '#10b981' },
-        { id: 'chess', icon: 'chess', label: 'Шахматы', color: '#7dd3fc' },
-        { id: 'stats', icon: 'user', label: 'Статистика', color: '#f59e0b' } 
-    ];
-
-    const PAGE_SIZE = 24;
-    const userNameCollator = new Intl.Collator('ru', { sensitivity: 'base' });
-    // Кэш живёт только в памяти страницы, привязан к администратору и базе.
-    // Права по-прежнему проверяются перед каждым подключением списка.
-    let directoryCache = null;
-    const DIRECTORY_CACHE_TTL = 60 * 1000;
-    const MAX_FILE = 350 * 1024;
-    const array = value => Array.isArray(value) ? value : [];
-    const str = value => typeof value === 'string' ? value : '';
-    const number = (value, fallback = 0) => value !== null && value !== '' && Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : fallback;
-    const nameOf = user => str(user.nickname) || str(user.email) || 'Без имени';
-    const testsOf = user => array(user.assignedTests).filter(test => test && typeof test === 'object');
-    const modulesOf = user => user.allowedModules == null ? AVAILABLE_MODULES.map(module => module.id) : array(user.allowedModules);
-    const chatModeOf = user => ['all', 'teachers', 'selected'].includes(user?.chatContactMode) ? user.chatContactMode : 'all';
-    const chatAllowedOf = user => [...new Set(array(user?.chatAllowedUsers).filter(Boolean).map(String))];
-    const firstDefined = (obj, keys) => { for (const key of keys) if (obj?.[key] !== undefined && obj?.[key] !== null && obj?.[key] !== '') return obj[key]; return null; };
-    const initials = user => nameOf(user).split('@')[0].split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
-    const average = user => {
-        const values = array(user.testHistory).map(entry => entry?.percent).filter(value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))).map(value => Math.min(100, Math.max(0, Number(value))));
-        return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
-    };
-    function problem(message) { const error = new Error(message); error.userMessage = message; return error; }
-    function errorText(error) {
-        if (error?.userMessage) return error.userMessage;
-        if (String(error?.code).includes('permission-denied')) return 'Недостаточно прав для этого действия. Проверьте доступ администратора.';
-        if (String(error?.code).includes('unavailable')) return 'Нет связи с базой данных. Проверьте интернет и повторите.';
-        if (String(error?.code).includes('resource-exhausted')) return 'Достигнут лимит базы данных. Попробуйте позже.';
-        return 'Не удалось сохранить изменения. Попробуйте ещё раз.';
+  const {
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useCallback
+  } = React;
+  const ADMIN_ICON_PATHS = {
+    chat: /*#__PURE__*/React.createElement("path", {
+      d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+    }),
+    chess: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M6 18h14v4H6z"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "11",
+      cy: "8",
+      r: ".7"
+    })),
+    keyboard: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "2",
+      y: "6",
+      width: "20",
+      height: "12",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"
+    })),
+    zap: /*#__PURE__*/React.createElement("path", {
+      d: "M13 2 3 14h9l-1 8 10-12h-9l1-8z"
+    }),
+    code: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "16 18 22 12 16 6"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "8 6 2 12 8 18"
+    })),
+    layers: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polygon", {
+      points: "12 2 2 7 12 12 22 7 12 2"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "2 17 12 22 22 17"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "2 12 12 17 22 12"
+    })),
+    barChart: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "20",
+      x2: "12",
+      y2: "10"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "18",
+      y1: "20",
+      x2: "18",
+      y2: "4"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "6",
+      y1: "20",
+      x2: "6",
+      y2: "16"
+    })),
+    user: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "7",
+      r: "4"
+    })),
+    users: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "9",
+      cy: "7",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M23 21v-2a4 4 0 0 0-3-3.87"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 3.13a4 4 0 0 1 0 7.75"
+    })),
+    settings: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+    })),
+    fileText: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "14 2 14 8 20 8"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "16",
+      y1: "13",
+      x2: "8",
+      y2: "13"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "16",
+      y1: "17",
+      x2: "8",
+      y2: "17"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "10 9 9 9 8 9"
+    })),
+    ban: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "10"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "4.93",
+      y1: "4.93",
+      x2: "19.07",
+      y2: "19.07"
+    })),
+    alertTriangle: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "9",
+      x2: "12",
+      y2: "13"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "17",
+      x2: "12.01",
+      y2: "17"
+    })),
+    checkCircle: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M22 11.08V12a10 10 0 1 1-5.93-9.14"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "22 4 12 14.01 9 11.01"
+    })),
+    lock: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "11",
+      width: "18",
+      height: "11",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M7 11V7a5 5 0 0 1 10 0v4"
+    })),
+    info: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "10"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "16",
+      x2: "12",
+      y2: "12"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "8",
+      x2: "12.01",
+      y2: "8"
+    })),
+    folder: /*#__PURE__*/React.createElement("path", {
+      d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+    }),
+    cloud: /*#__PURE__*/React.createElement("path", {
+      d: "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"
+    }),
+    x: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+      x1: "18",
+      y1: "6",
+      x2: "6",
+      y2: "18"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "6",
+      y1: "6",
+      x2: "18",
+      y2: "18"
+    })),
+    search: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "11",
+      cy: "11",
+      r: "8"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "21",
+      y1: "21",
+      x2: "16.65",
+      y2: "16.65"
+    })),
+    star: /*#__PURE__*/React.createElement("polygon", {
+      points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+    }),
+    inbox: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "22 12 16 12 14 15 10 15 8 12 2 12"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+    })),
+    shield: /*#__PURE__*/React.createElement("path", {
+      d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+    }),
+    lightbulb: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M9 18h6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M10 22h4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"
+    })),
+    check: /*#__PURE__*/React.createElement("polyline", {
+      points: "20 6 9 17 4 12"
+    }),
+    download: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "7 10 12 15 17 10"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "15",
+      x2: "12",
+      y2: "3"
+    })),
+    trash: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "3 6 5 6 21 6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M10 11v6M14 11v6M9 6V4h6v2"
+    })),
+    sparkle: /*#__PURE__*/React.createElement("path", {
+      d: "M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"
+    }),
+    clock: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "9"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "12 7 12 12 15.5 14"
+    })),
+    eye: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "2.5"
+    })),
+    activity: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "3 12 7 12 10 5 14 19 17 12 21 12"
+    }))
+  };
+  const AdminIcon = ({
+    name,
+    size = 16,
+    color = 'currentColor',
+    style = {},
+    strokeWidth = 2
+  }) => /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: color,
+    strokeWidth: strokeWidth,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    style: {
+      display: 'block',
+      flexShrink: 0,
+      ...style
     }
-    function normalizeTest(data) {
-        if (!Array.isArray(data) || !data.length) throw problem('JSON должен содержать непустой массив вопросов.');
-        if (data.length > 300) throw problem('В одном тесте допускается до 300 вопросов.');
-        const image = (value, at) => {
-            if (value == null || value === '') return null;
-            if (typeof value !== 'string' || !/^(https?:\/\/|data:image\/(png|jpeg|jpg|gif|webp);base64,)/i.test(value)) throw problem(`${at}: изображение должно быть HTTP(S)-ссылкой или PNG/JPEG/GIF/WebP в base64.`);
-            return value;
+  }, ADMIN_ICON_PATHS[name] || null);
+  const AVAILABLE_MODULES = [{
+    id: 'chat',
+    icon: 'chat',
+    label: 'Чат',
+    color: '#06b6d4'
+  }, {
+    id: 'ai_chat',
+    icon: 'sparkle',
+    label: 'ИИ Ассистент',
+    color: '#a855f7'
+  }, {
+    id: 'typing',
+    icon: 'keyboard',
+    label: 'Печать',
+    color: '#818cf8'
+  }, {
+    id: 'hotkeys',
+    icon: 'zap',
+    label: 'Хоткеи',
+    color: '#fbbf24'
+  }, {
+    id: 'code',
+    icon: 'code',
+    label: 'VS School',
+    color: '#2dd4bf'
+  }, {
+    id: 'flashcards',
+    icon: 'layers',
+    label: 'Карточки',
+    color: '#3b82f6'
+  }, {
+    id: 'excel',
+    icon: 'barChart',
+    label: 'Excel',
+    color: '#10b981'
+  }, {
+    id: 'chess',
+    icon: 'chess',
+    label: 'Шахматы',
+    color: '#7dd3fc'
+  }, {
+    id: 'stats',
+    icon: 'user',
+    label: 'Статистика',
+    color: '#f59e0b'
+  }];
+  const PAGE_SIZE = 24;
+  const userNameCollator = new Intl.Collator('ru', {
+    sensitivity: 'base'
+  });
+  // Кэш живёт только в памяти страницы, привязан к администратору и базе.
+  // Права по-прежнему проверяются перед каждым подключением списка.
+  let directoryCache = null;
+  const DIRECTORY_CACHE_TTL = 60 * 1000;
+  const MAX_FILE = 350 * 1024;
+  const array = value => Array.isArray(value) ? value : [];
+  const str = value => typeof value === 'string' ? value : '';
+  const number = (value, fallback = 0) => value !== null && value !== '' && Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : fallback;
+  const nameOf = user => str(user.nickname) || str(user.email) || 'Без имени';
+  const testsOf = user => array(user.assignedTests).filter(test => test && typeof test === 'object');
+  const modulesOf = user => user.allowedModules == null ? AVAILABLE_MODULES.map(module => module.id) : array(user.allowedModules);
+  const chatModeOf = user => ['all', 'teachers', 'selected'].includes(user?.chatContactMode) ? user.chatContactMode : 'all';
+  const chatAllowedOf = user => [...new Set(array(user?.chatAllowedUsers).filter(Boolean).map(String))];
+  const firstDefined = (obj, keys) => {
+    for (const key of keys) if (obj?.[key] !== undefined && obj?.[key] !== null && obj?.[key] !== '') return obj[key];
+    return null;
+  };
+  const initials = user => nameOf(user).split('@')[0].split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  const average = user => {
+    const values = array(user.testHistory).map(entry => entry?.percent).filter(value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))).map(value => Math.min(100, Math.max(0, Number(value))));
+    return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+  };
+  function problem(message) {
+    const error = new Error(message);
+    error.userMessage = message;
+    return error;
+  }
+  function errorText(error) {
+    if (error?.userMessage) return error.userMessage;
+    if (String(error?.code).includes('permission-denied')) return 'Недостаточно прав для этого действия. Проверьте доступ администратора.';
+    if (String(error?.code).includes('unavailable')) return 'Нет связи с базой данных. Проверьте интернет и повторите.';
+    if (String(error?.code).includes('resource-exhausted')) return 'Достигнут лимит базы данных. Попробуйте позже.';
+    return 'Не удалось сохранить изменения. Попробуйте ещё раз.';
+  }
+  function normalizeTest(data) {
+    if (!Array.isArray(data) || !data.length) throw problem('JSON должен содержать непустой массив вопросов.');
+    if (data.length > 300) throw problem('В одном тесте допускается до 300 вопросов.');
+    const image = (value, at) => {
+      if (value == null || value === '') return null;
+      if (typeof value !== 'string' || !/^(https?:\/\/|data:image\/(png|jpeg|jpg|gif|webp);base64,)/i.test(value)) throw problem(`${at}: изображение должно быть HTTP(S)-ссылкой или PNG/JPEG/GIF/WebP в base64.`);
+      return value;
+    };
+    return data.map((item, index) => {
+      const at = `Вопрос ${index + 1}`;
+      if (!item || typeof item !== 'object' || Array.isArray(item)) throw problem(`${at}: некорректная структура.`);
+      const question = str(item.question).trim();
+      const questionImg = image(item.questionImg, at);
+      if (!question && !questionImg) throw problem(`${at}: добавьте текст или изображение.`);
+      if (question.length > 10000) throw problem(`${at}: текст слишком длинный.`);
+      if (!Array.isArray(item.variants) || item.variants.length < 2 || item.variants.length > 12) throw problem(`${at}: нужно от 2 до 12 вариантов ответа.`);
+      const variants = item.variants.map((variant, vi) => {
+        const object = variant && typeof variant === 'object' && !Array.isArray(variant);
+        const text = object ? str(variant.text).trim() : typeof variant === 'string' || typeof variant === 'number' ? String(variant).trim() : '';
+        const img = object ? image(variant.img, `${at}, вариант ${vi + 1}`) : null;
+        if (!text && !img) throw problem(`${at}: вариант ${vi + 1} пуст.`);
+        if (text.length > 5000) throw problem(`${at}: вариант ${vi + 1} слишком длинный.`);
+        return {
+          text,
+          img
         };
-        return data.map((item, index) => {
-            const at = `Вопрос ${index + 1}`;
-            if (!item || typeof item !== 'object' || Array.isArray(item)) throw problem(`${at}: некорректная структура.`);
-            const question = str(item.question).trim();
-            const questionImg = image(item.questionImg, at);
-            if (!question && !questionImg) throw problem(`${at}: добавьте текст или изображение.`);
-            if (question.length > 10000) throw problem(`${at}: текст слишком длинный.`);
-            if (!Array.isArray(item.variants) || item.variants.length < 2 || item.variants.length > 12) throw problem(`${at}: нужно от 2 до 12 вариантов ответа.`);
-            const variants = item.variants.map((variant, vi) => {
-                const object = variant && typeof variant === 'object' && !Array.isArray(variant);
-                const text = object ? str(variant.text).trim() : typeof variant === 'string' || typeof variant === 'number' ? String(variant).trim() : '';
-                const img = object ? image(variant.img, `${at}, вариант ${vi + 1}`) : null;
-                if (!text && !img) throw problem(`${at}: вариант ${vi + 1} пуст.`);
-                if (text.length > 5000) throw problem(`${at}: вариант ${vi + 1} слишком длинный.`);
-                return { text, img };
-            });
-            const validIndex = typeof item.correctIndex === 'number' || typeof item.correctIndex === 'string' && /^\d+$/.test(item.correctIndex);
-            const correctIndex = Number(item.correctIndex);
-            if (!validIndex || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= variants.length) throw problem(`${at}: correctIndex должен быть индексом ответа от 0 до ${variants.length - 1}.`);
-            return { question, questionImg, variants, correctIndex };
-        });
-    }
-const SUBJECTS = [
-    { id: 'tests', label: 'Тесты', icon: 'fileText' },
-    { id: 'hotkeys', label: 'Горячие клавиши', icon: 'zap' },
-    { id: 'typing', label: 'Печать', icon: 'keyboard' },
-    { id: 'excel', label: 'Excel', icon: 'barChart' }
-];
-const KEY_LABELS = { level: 'Уровень', xp: 'Опыт (XP)', completedLessons: 'Пройдено уроков', streak: 'Серия', maxWpm: 'Лучшая скорость (WPM)', maxCombo: 'Лучшее комбо', testsCompleted: 'Завершено тренировок', totalScore: 'Всего очков', maxScore: 'Лучший результат за подход', sessionsPlayed: 'Сессий', topic: 'Тема', student: 'Ученик', date: 'Дата', at: 'Дата и время', createdAt: 'Создано', updatedAt: 'Обновлено', percent: 'Результат, %', score: 'Очков', total: 'Заданий', id: 'ID', title: 'Название', questions: 'Вопросов', history: 'История', type: 'Тип события', section: 'Раздел', action: 'Действие', label: 'Описание', path: 'Страница / путь', details: 'Детали', duration: 'Длительность', device: 'Устройство', view: 'Экран' };
-function cellValue(v) {
+      });
+      const validIndex = typeof item.correctIndex === 'number' || typeof item.correctIndex === 'string' && /^\d+$/.test(item.correctIndex);
+      const correctIndex = Number(item.correctIndex);
+      if (!validIndex || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= variants.length) throw problem(`${at}: correctIndex должен быть индексом ответа от 0 до ${variants.length - 1}.`);
+      return {
+        question,
+        questionImg,
+        variants,
+        correctIndex
+      };
+    });
+  }
+  const SUBJECTS = [{
+    id: 'tests',
+    label: 'Тесты',
+    icon: 'fileText'
+  }, {
+    id: 'hotkeys',
+    label: 'Горячие клавиши',
+    icon: 'zap'
+  }, {
+    id: 'typing',
+    label: 'Печать',
+    icon: 'keyboard'
+  }, {
+    id: 'excel',
+    label: 'Excel',
+    icon: 'barChart'
+  }];
+  const KEY_LABELS = {
+    level: 'Уровень',
+    xp: 'Опыт (XP)',
+    completedLessons: 'Пройдено уроков',
+    streak: 'Серия',
+    maxWpm: 'Лучшая скорость (WPM)',
+    maxCombo: 'Лучшее комбо',
+    testsCompleted: 'Завершено тренировок',
+    totalScore: 'Всего очков',
+    maxScore: 'Лучший результат за подход',
+    sessionsPlayed: 'Сессий',
+    topic: 'Тема',
+    student: 'Ученик',
+    date: 'Дата',
+    at: 'Дата и время',
+    createdAt: 'Создано',
+    updatedAt: 'Обновлено',
+    percent: 'Результат, %',
+    score: 'Очков',
+    total: 'Заданий',
+    id: 'ID',
+    title: 'Название',
+    questions: 'Вопросов',
+    history: 'История',
+    type: 'Тип события',
+    section: 'Раздел',
+    action: 'Действие',
+    label: 'Описание',
+    path: 'Страница / путь',
+    details: 'Детали',
+    duration: 'Длительность',
+    device: 'Устройство',
+    view: 'Экран'
+  };
+  function cellValue(v) {
     if (v == null) return '';
     if (typeof v === 'number') return v > 1e12 && v < 1e14 ? new Date(v).toLocaleString('ru-RU') : v;
     if (typeof v === 'boolean') return v ? 'Да' : 'Нет';
@@ -136,139 +452,239 @@ function cellValue(v) {
     if (typeof v.toMillis === 'function') return new Date(v.toMillis()).toLocaleString('ru-RU');
     if (Number.isFinite(v.seconds)) return new Date(v.seconds * 1000).toLocaleString('ru-RU');
     if (Array.isArray(v)) return v.map(cellValue).join(', ');
-    try { return JSON.stringify(v); } catch { return ''; }
-}
-function tableSheet(name, items) {
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return '';
+    }
+  }
+  function tableSheet(name, items) {
     const list = array(items).filter(x => x && typeof x === 'object');
-    if (!list.length) return { name, rows: [['Данных пока нет']] };
+    if (!list.length) return {
+      name,
+      rows: [['Данных пока нет']]
+    };
     const first = ['topic', 'student', 'date', 'percent'];
-    const keys = [...new Set(list.flatMap(x => Object.keys(x)))].sort((a, b) => { const i = first.indexOf(a), j = first.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
-    return { name, rows: [['№', ...keys.map(k => KEY_LABELS[k] || k)], ...list.map((x, i) => [i + 1, ...keys.map(k => cellValue(x[k]))])] };
-}
-function objectSheets(label, obj) {
-    const rows = [['Параметр', 'Значение']], extra = [];
+    const keys = [...new Set(list.flatMap(x => Object.keys(x)))].sort((a, b) => {
+      const i = first.indexOf(a),
+        j = first.indexOf(b);
+      return (i < 0 ? 99 : i) - (j < 0 ? 99 : j);
+    });
+    return {
+      name,
+      rows: [['№', ...keys.map(k => KEY_LABELS[k] || k)], ...list.map((x, i) => [i + 1, ...keys.map(k => cellValue(x[k]))])]
+    };
+  }
+  function objectSheets(label, obj) {
+    const rows = [['Параметр', 'Значение']],
+      extra = [];
     Object.entries(obj && typeof obj === 'object' ? obj : {}).forEach(([k, v]) => {
-        const name = KEY_LABELS[k] || k;
-        if (Array.isArray(v) && v.length && v.every(x => x && typeof x === 'object')) { extra.push(tableSheet(`${label} · ${name}`, v)); rows.push([name, `${v.length} записей`]); }
-        else rows.push([name, cellValue(v)]);
+      const name = KEY_LABELS[k] || k;
+      if (Array.isArray(v) && v.length && v.every(x => x && typeof x === 'object')) {
+        extra.push(tableSheet(`${label} · ${name}`, v));
+        rows.push([name, `${v.length} записей`]);
+      } else rows.push([name, cellValue(v)]);
     });
     if (rows.length === 1) rows.push(['Данных пока нет', '']);
-    return [{ name: label, rows }, ...extra];
-}
-function colName(i) { let s = ''; for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; }
-function buildXlsx(sheets) {
+    return [{
+      name: label,
+      rows
+    }, ...extra];
+  }
+  function colName(i) {
+    let s = '';
+    for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s;
+    return s;
+  }
+  function buildXlsx(sheets) {
     const xml = v => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const used = new Set();
-    const named = sheets.map(s => { const base = (s.name.replace(/[\[\]:*?\/\\]/g, ' ').trim() || 'Лист').slice(0, 31); let n = base, k = 2; while (used.has(n.toLowerCase())) { const suf = ' ' + k++; n = base.slice(0, 31 - suf.length) + suf; } used.add(n.toLowerCase()); return { ...s, name: n }; });
+    const named = sheets.map(s => {
+      const base = (s.name.replace(/[\[\]:*?\/\\]/g, ' ').trim() || 'Лист').slice(0, 31);
+      let n = base,
+        k = 2;
+      while (used.has(n.toLowerCase())) {
+        const suf = ' ' + k++;
+        n = base.slice(0, 31 - suf.length) + suf;
+      }
+      used.add(n.toLowerCase());
+      return {
+        ...s,
+        name: n
+      };
+    });
     const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
     const sheetXml = s => {
-        const widths = [];
-        const rowsXml = s.rows.map((row, r) => `<row r="${r + 1}">${row.map((v, c) => {
-            const ref = colName(c) + (r + 1), style = r === 0 ? 1 : 0;
-            widths[c] = Math.min(60, Math.max(widths[c] || 10, String(v ?? '').length + 2));
-            return typeof v === 'number' && Number.isFinite(v) && r > 0 ? `<c r="${ref}" s="${style}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xml(String(v ?? '').slice(0, 32767))}</t></is></c>`;
-        }).join('')}</row>`).join('');
-        return `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="${ns}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${rowsXml}</sheetData></worksheet>`;
+      const widths = [];
+      const rowsXml = s.rows.map((row, r) => `<row r="${r + 1}">${row.map((v, c) => {
+        const ref = colName(c) + (r + 1),
+          style = r === 0 ? 1 : 0;
+        widths[c] = Math.min(60, Math.max(widths[c] || 10, String(v ?? '').length + 2));
+        return typeof v === 'number' && Number.isFinite(v) && r > 0 ? `<c r="${ref}" s="${style}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xml(String(v ?? '').slice(0, 32767))}</t></is></c>`;
+      }).join('')}</row>`).join('');
+      return `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="${ns}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${rowsXml}</sheetData></worksheet>`;
     };
     const files = {
-        '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${named.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`,
-        '_rels/.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
-        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${named.map((s, i) => `<sheet name="${xml(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
-        'xl/_rels/workbook.xml.rels': `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${named.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${named.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
-        'xl/styles.xml': `<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="${ns}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF7048D1"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`
+      '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${named.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`,
+      '_rels/.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+      'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${named.map((s, i) => `<sheet name="${xml(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
+      'xl/_rels/workbook.xml.rels': `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${named.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${named.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+      'xl/styles.xml': `<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="${ns}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF7048D1"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`
     };
-    named.forEach((s, i) => { files[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(s); });
-    const encoder = new TextEncoder(), chunks = [], directory = []; let offset = 0;
-    const crc32 = bytes => { let crc = 0xffffffff; for (const b of bytes) { crc ^= b; for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0); } return (crc ^ 0xffffffff) >>> 0; };
+    named.forEach((s, i) => {
+      files[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(s);
+    });
+    const encoder = new TextEncoder(),
+      chunks = [],
+      directory = [];
+    let offset = 0;
+    const crc32 = bytes => {
+      let crc = 0xffffffff;
+      for (const b of bytes) {
+        crc ^= b;
+        for (let i = 0; i < 8; i++) crc = crc >>> 1 ^ (crc & 1 ? 0xedb88320 : 0);
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    };
     for (const [name, content] of Object.entries(files)) {
-        const filename = encoder.encode(name), data = encoder.encode(content), crc = crc32(data);
-        const local = new Uint8Array(30 + filename.length), lv = new DataView(local.buffer);
-        lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x800, true); lv.setUint16(12, 33, true); lv.setUint32(14, crc, true); lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, filename.length, true); local.set(filename, 30);
-        const central = new Uint8Array(46 + filename.length), cv = new DataView(central.buffer);
-        cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x800, true); cv.setUint16(14, 33, true); cv.setUint32(16, crc, true); cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true); cv.setUint16(28, filename.length, true); cv.setUint32(42, offset, true); central.set(filename, 46);
-        chunks.push(local, data); directory.push(central); offset += local.length + data.length;
+      const filename = encoder.encode(name),
+        data = encoder.encode(content),
+        crc = crc32(data);
+      const local = new Uint8Array(30 + filename.length),
+        lv = new DataView(local.buffer);
+      lv.setUint32(0, 0x04034b50, true);
+      lv.setUint16(4, 20, true);
+      lv.setUint16(6, 0x800, true);
+      lv.setUint16(12, 33, true);
+      lv.setUint32(14, crc, true);
+      lv.setUint32(18, data.length, true);
+      lv.setUint32(22, data.length, true);
+      lv.setUint16(26, filename.length, true);
+      local.set(filename, 30);
+      const central = new Uint8Array(46 + filename.length),
+        cv = new DataView(central.buffer);
+      cv.setUint32(0, 0x02014b50, true);
+      cv.setUint16(4, 20, true);
+      cv.setUint16(6, 20, true);
+      cv.setUint16(8, 0x800, true);
+      cv.setUint16(14, 33, true);
+      cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true);
+      cv.setUint32(24, data.length, true);
+      cv.setUint16(28, filename.length, true);
+      cv.setUint32(42, offset, true);
+      central.set(filename, 46);
+      chunks.push(local, data);
+      directory.push(central);
+      offset += local.length + data.length;
     }
-    const end = new Uint8Array(22), ev = new DataView(end.buffer); ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, directory.length, true); ev.setUint16(10, directory.length, true); ev.setUint32(12, directory.reduce((s, x) => s + x.length, 0), true); ev.setUint32(16, offset, true);
-    return new Blob([...chunks, ...directory, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-}
-const ACTIVITY_SECTIONS = {platform:'Платформа',menu:'Главная',tests:'Тестирование',typing:'Тренажёр печати',hotkeys:'Горячие клавиши',flashcards:'Карточки',code:'VS School',excel:'Excel',chess:'Шахматы',chat:'Чат',ai_chat:'ИИ-ассистент',stats:'Статистика',admin:'Администрирование'};
-function activitySheet(items) {
+    const end = new Uint8Array(22),
+      ev = new DataView(end.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(8, directory.length, true);
+    ev.setUint16(10, directory.length, true);
+    ev.setUint32(12, directory.reduce((s, x) => s + x.length, 0), true);
+    ev.setUint32(16, offset, true);
+    return new Blob([...chunks, ...directory, end], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+  }
+  const ACTIVITY_SECTIONS = {
+    platform: 'Платформа',
+    menu: 'Главная',
+    tests: 'Тестирование',
+    typing: 'Тренажёр печати',
+    hotkeys: 'Горячие клавиши',
+    flashcards: 'Карточки',
+    code: 'VS School',
+    excel: 'Excel',
+    chess: 'Шахматы',
+    chat: 'Чат',
+    ai_chat: 'ИИ-ассистент',
+    stats: 'Статистика',
+    admin: 'Администрирование'
+  };
+  function activitySheet(items) {
     const rows = array(items).map(item => ({
-        at: firstDefined(item, ['at', 'date', 'createdAt', 'time']),
-        type: str(item?.type) || str(item?.kind),
-        section: str(item?.sectionLabel) || ACTIVITY_SECTIONS[str(item?.section) || str(item?.module)] || str(item?.section) || str(item?.module),
-        view: str(item?.view) || str(item?.details?.view),
-        action: str(item?.action),
-        label: str(item?.label) || str(item?.title) || str(item?.name),
-        path: str(item?.path) || str(item?.route),
-        details: item?.details ?? item?.meta ?? '',
-        duration: item?.duration ?? item?.durationMs ?? '',
-        device: str(item?.device)
+      at: firstDefined(item, ['at', 'date', 'createdAt', 'time']),
+      type: str(item?.type) || str(item?.kind),
+      section: str(item?.sectionLabel) || ACTIVITY_SECTIONS[str(item?.section) || str(item?.module)] || str(item?.section) || str(item?.module),
+      view: str(item?.view) || str(item?.details?.view),
+      action: str(item?.action),
+      label: str(item?.label) || str(item?.title) || str(item?.name),
+      path: str(item?.path) || str(item?.route),
+      details: item?.details ?? item?.meta ?? '',
+      duration: item?.duration ?? item?.durationMs ?? '',
+      device: str(item?.device)
     }));
     return tableSheet('Активность', rows);
-}
-async function loadActivity(user) {
+  }
+  async function loadActivity(user) {
     const local = array(user?.activityLog);
     if (!window.db || !user?.id) return local;
     try {
-        const snap = await window.db.collection('users').doc(user.id).collection('activity').orderBy('at', 'desc').limit(500).get();
-        const remote = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return remote.length ? remote : local;
+      const snap = await window.db.collection('users').doc(user.id).collection('activity').orderBy('at', 'desc').limit(500).get();
+      const remote = snap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      return remote.length ? remote : local;
     } catch {
-        return local;
+      return local;
     }
-}
-async function exportUser(user, parts, allUsers = []) {
+  }
+  async function exportUser(user, parts, allUsers = []) {
     const chosen = parts?.length ? parts : SUBJECTS.map(s => s.id);
     const names = SUBJECTS.filter(s => chosen.includes(s.id)).map(s => s.label);
     const activity = await loadActivity(user);
-    const excel = user.excelProgress || {}, typing = user.typingProgress || {}, hotkeys = user.hotkeyProgress || {};
+    const excel = user.excelProgress || {},
+      typing = user.typingProgress || {},
+      hotkeys = user.hotkeyProgress || {};
     const avg = average(user);
     const mode = chatModeOf(user);
     const allowedIds = chatAllowedOf(user);
     const allowedNames = allowedIds.map(id => {
-        const found = array(allUsers).find(item => item.id === id || item.uid === id);
-        return found ? `${nameOf(found)} (${id})` : id;
+      const found = array(allUsers).find(item => item.id === id || item.uid === id);
+      return found ? `${nameOf(found)} (${id})` : id;
     });
     const registered = firstDefined(user, ['createdAt', 'registeredAt', 'registrationDate', 'created']);
     const lastLogin = firstDefined(user, ['lastLoginAt', 'lastLogin', 'lastSignInAt']);
     const lastVisit = firstDefined(user, ['lastVisitAt', 'lastSessionAt', 'lastSeenAt', 'lastActiveAt']);
     const lastSeen = firstDefined(user, ['lastSeenAt', 'lastActiveAt']);
-    const sheets = [
-        { name: 'Профиль', rows: [
-            ['Параметр', 'Значение'], ['Ученик', nameOf(user)], ['UID', user.id || user.uid || ''], ['Email', str(user.email)],
-            ['Роль', user.role === 'admin' ? 'Администратор' : 'Студент'], ['Статус', user.isBanned ? 'Заблокирован' : 'Активен'],
-            ['Регистрация', registered ? cellValue(registered) : 'Нет данных'], ['Последний вход', lastLogin ? cellValue(lastLogin) : 'Нет данных'],
-            ['Последний запуск платформы', lastVisit ? cellValue(lastVisit) : 'Нет данных'], ['Последняя активность', lastSeen ? cellValue(lastSeen) : 'Нет данных'],
-            ['Выгружено', new Date().toLocaleString('ru-RU')], ['Разделы отчёта', names.join(', ')]
-        ]},
-        { name: 'Доступы', rows: [
-            ['Настройка', 'Значение'], ...AVAILABLE_MODULES.map(module => [`Модуль · ${module.label}`, modulesOf(user).includes(module.id) ? 'Открыт' : 'Закрыт']),
-            ['Подсказки Excel', user.excelHintsEnabled !== false ? 'Включены' : 'Отключены'],
-            ['Контакты чата', mode === 'all' ? 'Все пользователи' : mode === 'teachers' ? 'Только преподаватели' : 'Только выбранные'],
-            ['Разрешённые контакты', mode === 'selected' ? (allowedNames.join(', ') || 'Никто') : 'Определяются режимом']
-        ]},
-        { name: 'Сводка статистики', rows: [
-            ['Показатель', 'Значение'], ['Тесты · попыток', array(user.testHistory).length], ['Тесты · средний результат', avg === null ? 'Нет данных' : `${avg}%`],
-            ['Тесты · назначено', testsOf(user).length], ['Excel · уровень', number(excel.level, 1)], ['Excel · XP', number(excel.xp)],
-            ['Excel · пройдено', Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)], ['Excel · серия', number(excel.streak)],
-            ['Печать · лучшая скорость WPM', number(typing.maxWpm)], ['Печать · лучшее комбо', number(typing.maxCombo)], ['Печать · тренировок', number(typing.testsCompleted)],
-            ['Горячие клавиши · очков', number(hotkeys.totalScore)], ['Горячие клавиши · лучший результат', number(hotkeys.maxScore)], ['Горячие клавиши · сессий', number(hotkeys.sessionsPlayed)],
-            ['Событий активности в отчёте', activity.length]
-        ]}, activitySheet(activity)
-    ];
-    if (chosen.includes('tests')) sheets.push(tableSheet('Тесты · история', user.testHistory), tableSheet('Тесты · назначенные', testsOf(user).map(t => ({ id: String(t.id), title: t.title, questions: array(t.data).length }))));
+    const sheets = [{
+      name: 'Профиль',
+      rows: [['Параметр', 'Значение'], ['Ученик', nameOf(user)], ['UID', user.id || user.uid || ''], ['Email', str(user.email)], ['Роль', user.role === 'admin' ? 'Администратор' : 'Студент'], ['Статус', user.isBanned ? 'Заблокирован' : 'Активен'], ['Регистрация', registered ? cellValue(registered) : 'Нет данных'], ['Последний вход', lastLogin ? cellValue(lastLogin) : 'Нет данных'], ['Последний запуск платформы', lastVisit ? cellValue(lastVisit) : 'Нет данных'], ['Последняя активность', lastSeen ? cellValue(lastSeen) : 'Нет данных'], ['Выгружено', new Date().toLocaleString('ru-RU')], ['Разделы отчёта', names.join(', ')]]
+    }, {
+      name: 'Доступы',
+      rows: [['Настройка', 'Значение'], ...AVAILABLE_MODULES.map(module => [`Модуль · ${module.label}`, modulesOf(user).includes(module.id) ? 'Открыт' : 'Закрыт']), ['Подсказки Excel', user.excelHintsEnabled !== false ? 'Включены' : 'Отключены'], ['Подсказки горячих клавиш', user.hotkeyHintsEnabled !== false ? 'Включены' : 'Отключены'], ['Контакты чата', mode === 'all' ? 'Все пользователи' : mode === 'teachers' ? 'Только преподаватели' : 'Только выбранные'], ['Разрешённые контакты', mode === 'selected' ? allowedNames.join(', ') || 'Никто' : 'Определяются режимом']]
+    }, {
+      name: 'Сводка статистики',
+      rows: [['Показатель', 'Значение'], ['Тесты · попыток', array(user.testHistory).length], ['Тесты · средний результат', avg === null ? 'Нет данных' : `${avg}%`], ['Тесты · назначено', testsOf(user).length], ['Excel · уровень', number(excel.level, 1)], ['Excel · XP', number(excel.xp)], ['Excel · пройдено', Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)], ['Excel · серия', number(excel.streak)], ['Печать · лучшая скорость WPM', number(typing.maxWpm)], ['Печать · лучшее комбо', number(typing.maxCombo)], ['Печать · тренировок', number(typing.testsCompleted)], ['Горячие клавиши · очков', number(hotkeys.totalScore)], ['Горячие клавиши · лучший результат', number(hotkeys.maxScore)], ['Горячие клавиши · сессий', number(hotkeys.sessionsPlayed)], ['Событий активности в отчёте', activity.length]]
+    }, activitySheet(activity)];
+    if (chosen.includes('tests')) sheets.push(tableSheet('Тесты · история', user.testHistory), tableSheet('Тесты · назначенные', testsOf(user).map(t => ({
+      id: String(t.id),
+      title: t.title,
+      questions: array(t.data).length
+    }))));
     if (chosen.includes('hotkeys')) sheets.push(...objectSheets('Горячие клавиши', user.hotkeyProgress));
     if (chosen.includes('typing')) sheets.push(...objectSheets('Печать', user.typingProgress));
     if (chosen.includes('excel')) sheets.push(...objectSheets('Excel', user.excelProgress));
-    const url = URL.createObjectURL(buildXlsx(sheets)), link = document.createElement('a');
+    const url = URL.createObjectURL(buildXlsx(sheets)),
+      link = document.createElement('a');
     const who = nameOf(user).split('@')[0].replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40) || 'user';
-    link.href = url; link.download = `LMS_${who}_${chosen.length === SUBJECTS.length ? 'полный_отчёт' : chosen.join('-')}.xlsx`;
+    link.href = url;
+    link.download = `LMS_${who}_${chosen.length === SUBJECTS.length ? 'полный_отчёт' : chosen.join('-')}.xlsx`;
     document.body.appendChild(link);
-    try { link.click(); } finally { link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-}
+    try {
+      link.click();
+    } finally {
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+  const STYLES = `
+.adm-maint{margin:0 30px 24px;border:1px solid var(--ad-line);border-radius:20px;background:var(--ad-panel);overflow:hidden}.adm-maint-toggle{display:flex;align-items:center;gap:13px;width:100%;padding:18px 20px;border:0;background:transparent;color:var(--ad-text);text-align:left}.adm-maint-toggle strong{display:block;font-size:15px}.adm-maint-toggle small{display:block;color:var(--ad-muted);font-size:12px;margin-top:3px}.adm-maint-symbol{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--ad-soft);color:var(--ad-accent);flex-shrink:0}.adm-maint-chevron{margin-left:auto;transition:transform .25s;font-size:21px}.adm-maint-chevron.open{transform:rotate(180deg)}.adm-maint-body{padding:0 20px 20px;animation:admMaintIn .28s ease both}.adm-maint-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.adm-maint-grid article{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.adm-maint-grid article>svg{color:var(--ad-accent)}.adm-maint-grid h3,.adm-maint-confirm h3{font-size:16px}.adm-maint-grid p,.adm-maint-confirm p{color:var(--ad-muted);font-size:13px;line-height:1.6}.adm-maint-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}.adm-maint-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}.adm-maint-confirm{margin-top:16px;padding:20px;border-radius:15px;border:1px solid var(--ad-line);background:var(--ad-bg);display:grid;gap:12px;animation:admMaintIn .25s ease}.adm-maint-confirm label{display:grid;gap:7px;color:var(--ad-muted);font-size:12px}.adm-maint-confirm input{max-width:300px}.adm-maint-status{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--ad-accent);font-size:13px}.adm-maint-progress{display:grid;gap:6px;margin:12px 0;color:var(--ad-muted);font-size:12px}.adm-maint-progress progress{width:100%;height:8px;accent-color:var(--ad-accent)}@keyframes admMaintIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}@media(max-width:640px){.adm-maint{margin:0 14px 18px}.adm-maint-grid{grid-template-columns:1fr}.adm-maint-body{padding:0 12px 14px}.adm-maint-toggle{padding:15px 12px}.adm-maint-actions{width:100%}.adm-maint-actions button{flex:1}}@media(prefers-reduced-motion:reduce){.adm-maint *{animation:none!important;transition:none!important}}
 
-    const STYLES = `
     .adm-root{--ad-bg:var(--bg-body,#111620);--ad-panel:var(--bg-panel,#191f2d);--ad-text:var(--text-main,#edf1fa);--ad-muted:var(--text-sec,#a1abc0);--ad-line:var(--glass-border,#2d3546);--ad-accent:#a89aff;--ad-soft:rgba(154,132,255,.12);--ad-green:#55cfa3;--ad-red:#f2929e;--ad-shadow:0 22px 65px #0003;color:var(--ad-text);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:left;color-scheme:dark;width:100%;min-width:0}
     html.light .adm-root,body.light .adm-root,.theme-light .adm-root,[data-theme="light"] .adm-root{--ad-bg:#fff;--ad-panel:#f6f7fb;--ad-text:#232a3b;--ad-muted:#69758a;--ad-line:#e3e7f0;--ad-accent:#6c53ce;--ad-soft:#f0ecfc;--ad-green:#157653;--ad-red:#bd3e52;--ad-shadow:0 18px 60px #34415b12;color-scheme:light}
     .adm-root *{box-sizing:border-box}.adm-root button,.adm-root input,.adm-root select{font:inherit}.adm-root button{cursor:pointer}.adm-root button:disabled{opacity:.45;cursor:not-allowed}.adm-root :is(button,input,select):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}.adm-root h2,.adm-root h3,.adm-root p{margin:0}.adm-root button{text-transform:none;letter-spacing:normal}.adm-shell{width:100%;max-width:1180px;margin:0 auto;background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:24px;box-shadow:var(--ad-shadow);max-height:90vh;max-height:90dvh;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
@@ -373,503 +789,2001 @@ async function exportUser(user, parts, allUsers = []) {
     @media(max-width:620px){.adm-root .adm-insight{padding:14px}.adm-root .adm-insight .adm-section-label{flex-wrap:wrap;gap:10px}.adm-root .adm-compare-card{padding:12px}.adm-root .adm-compare-card strong{font-size:22px}.adm-root .adm-person{min-height:88px}.adm-root .adm-count{font-size:10px;text-align:right}.adm-root .adm-pagination{flex-wrap:wrap;gap:8px}}
     `;
 
-    // Keep dialogs mounted until their closing animation finishes.
-    function AdminPresence({ show, children, immediate = false }) {
-        const [retained, setRetained] = useState(show);
-        const last = useRef(children);
-        if (show) last.current = children;
-        useEffect(() => {
-            if (show) { setRetained(true); return; }
-            const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
-            const timer = setTimeout(() => setRetained(false), delay);
-            return () => clearTimeout(timer);
-        }, [show]);
-        if (immediate || (!show && !retained)) return null;
-        return <div className={`adm-presence ${show ? '' : 'leaving'}`} ref={el => { if (el) el.inert = !show; }} aria-hidden={show ? undefined : true}>{show ? children : last.current}</div>;
-    }
-    function AdminNumber({ value }) {
-        const [display, setDisplay] = useState(typeof value === 'number' ? 0 : value);
-        const current = useRef(typeof value === 'number' ? 0 : value);
-        useEffect(() => {
-            if (typeof value !== 'number' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-                current.current = value; setDisplay(value); return;
-            }
-            const from = typeof current.current === 'number' ? current.current : 0;
-            if (from === value) { current.current = value; setDisplay(value); return; }
-            let frame, start;
-            const tick = now => {
-                if (start === undefined) start = now;
-                const t = Math.min(1, (now - start) / 550);
-                const next = Math.round(from + (value - from) * (1 - Math.pow(1 - t, 3)));
-                current.current = next; setDisplay(next);
-                if (t < 1) frame = requestAnimationFrame(tick);
-            };
-            frame = requestAnimationFrame(tick);
-            return () => cancelAnimationFrame(frame);
-        }, [value]);
-        return <><span aria-hidden="true">{display}</span><span className="adm-hidden">{value}</span></>;
-    }
-    // The ripple is decorative and never intercepts clicks or writes to Firebase.
-    function useAdminRipples(ref) {
-        useEffect(() => {
-            const root = ref.current;
-            if (!root) return;
-            const nodes = new Set();
-            const handle = event => {
-                if (event.button !== 0 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-                const target = event.target.closest('button');
-                if (!target || target.disabled || !root.contains(target) || target.closest('.leaving')) return;
-                const ripple = document.createElement('i');
-                ripple.className = 'adm-ripple'; ripple.setAttribute('aria-hidden', 'true');
-                const size = Math.min(72, Math.max(36, target.offsetHeight));
-                Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${event.clientX-size/2}px`, top: `${event.clientY-size/2}px` });
-                root.appendChild(ripple); nodes.add(ripple);
-                const done = () => { clearTimeout(ripple._admTimer); nodes.delete(ripple); ripple.remove(); };
-                ripple.addEventListener('animationend', done, { once: true });
-                ripple.addEventListener('animationcancel', done, { once: true });
-                // Bounded fallback also covers a motion preference change mid-animation.
-                const timer = setTimeout(done, 650); ripple._admTimer = timer;
-            };
-            root.addEventListener('pointerdown', handle);
-            return () => { root.removeEventListener('pointerdown', handle); nodes.forEach(node => { clearTimeout(node._admTimer); node.remove(); }); };
-        }, [ref]);
-    }
-
-    const Btn = ({ children, variant = '', ...props }) => <button type="button" className={`adm-btn ${variant}`} {...props}>{children}</button>;
-    const IconBtn = ({ icon = 'x', label, ...props }) => <button type="button" className="adm-icon-btn" title={label} aria-label={label} {...props}><AdminIcon name={icon} size={15}/></button>;
-    const Empty = ({ title, children, compact = false }) => <div className={`adm-empty ${compact ? 'compact' : ''}`}><AdminIcon name="inbox" size={26}/><strong>{title}</strong>{children}</div>;
-    function Dialog({ title, children, onClose, busy }) {
-        const ref = useRef(null);
-        const busyRef = useRef(busy); busyRef.current = busy;
-        const closeRef = useRef(onClose); closeRef.current = onClose;
-        useEffect(() => {
-            const prior = document.activeElement;
-            ref.current?.focus();
-            const handle = event => {
-                if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if (!busyRef.current) closeRef.current(); }
-                if (event.key !== 'Tab') return;
-                const nodes = Array.from(ref.current?.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]') || []).filter(node => node.getClientRects().length);
-                if (!nodes.length) { event.preventDefault(); ref.current?.focus(); return; }
-                const first = nodes[0], last = nodes[nodes.length - 1];
-                if (event.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) { event.preventDefault(); last.focus(); }
-                else if (!event.shiftKey && (document.activeElement === last || !ref.current?.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
-            };
-            document.addEventListener('keydown', handle, true);
-            return () => { document.removeEventListener('keydown', handle, true); if (prior?.isConnected) prior.focus(); };
-        }, []);
-        return <div className="adm-overlay" onMouseDown={event => { if (event.target === event.currentTarget && !busy) onClose(); }}><section className="adm-dialog" ref={ref} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}><AdminIcon name="shield" size={24}/><h3>{title}</h3>{children}</section></div>;
-    }
-    function ImportDialog({ user, onClose, onSave, busy }) {
-        const [title, setTitle] = useState('');
-        const [data, setData] = useState(null);
-        const [fileName, setFileName] = useState('');
-        const [error, setError] = useState('');
-        const [reading, setReading] = useState(false);
-        const fileRef = useRef(null), sequence = useRef(0), alive = useRef(true);
-        useEffect(() => { alive.current = true; return () => { alive.current = false; sequence.current++; }; }, []);
-        async function read(file) {
-            if (!file) return;
-            const seq = ++sequence.current;
-            setData(null); setError(''); setFileName(file.name); setReading(true);
-            try {
-                if (file.size > MAX_FILE) throw problem('Файл больше 350 КБ. Уменьшите тест или используйте ссылки на изображения.');
-                let parsed;
-                try { parsed = JSON.parse((await file.text()).replace(/^\uFEFF/, '')); } catch { throw problem('Не удалось прочитать JSON. Проверьте формат файла.'); }
-                const normalized = normalizeTest(parsed);
-                if (!alive.current || sequence.current !== seq) return;
-                setData(normalized); setTitle(previous => previous || file.name.replace(/\.json$/i, '').slice(0, 100));
-            } catch (e) { if (alive.current && sequence.current === seq) setError(errorText(e)); }
-            finally { if (alive.current && sequence.current === seq) setReading(false); }
-        }
-        async function save(event) {
-            event.preventDefault();
-            if (!title.trim() || !data || busy || reading) return;
-            setError('');
-            try { await onSave({ title: title.trim(), data }); } catch (e) { if (alive.current) setError(errorText(e)); }
-        }
-        return <Dialog title="Назначить тест" onClose={onClose} busy={busy}>
-            <p>Получатель: {nameOf(user)}. Загрузите JSON с вопросами, вариантами и индексами правильных ответов.</p>
-            <form onSubmit={save}>
-                <input className="adm-hidden" type="file" accept=".json,application/json" ref={fileRef} tabIndex={-1} aria-label="Файл теста" disabled={busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; read(file); }}/>
-                <button className="adm-upload" type="button" disabled={busy || reading} onClick={() => fileRef.current?.click()}><AdminIcon name="cloud" size={23}/>{reading ? 'Проверяем файл…' : fileName || 'Выбрать JSON-файл'}<small>До 350 КБ · до 300 вопросов</small></button>
-                {data && <div className="adm-preview"><AdminIcon name="checkCircle" size={15}/>Проверено вопросов: {data.length}</div>}
-                <label htmlFor="adm-test-title">Название теста</label><input id="adm-test-title" className="adm-input" autoComplete="off" maxLength={100} value={title} onChange={event => setTitle(event.target.value)} placeholder="Например: Excel — базовые формулы" disabled={busy}/>
-                {error && <p className="adm-error" role="alert">{error}</p>}
-                <div className="adm-dialog-actions"><Btn disabled={busy} onClick={onClose}>Отмена</Btn><button type="submit" className="adm-btn primary" disabled={busy || reading || !data || !title.trim()}>{busy ? 'Сохраняем…' : 'Назначить тест'}</button></div>
-            </form>
-        </Dialog>;
-    }
-    function activityTime(value) {
-        if (value == null || value === '') return null;
-        if (typeof value.toMillis === 'function') { const n=value.toMillis(); return Number.isFinite(n) ? n : null; }
-        if (typeof value.seconds === 'number') return value.seconds * 1000;
-        if (value instanceof Date) return Number.isFinite(+value) ? +value : null;
-        if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? value : null;
-        if (typeof value !== 'string') return null;
-        const ru=value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-        if (ru) { const d=new Date(+ru[3],+ru[2]-1,+ru[1],+(ru[4]||0),+(ru[5]||0),+(ru[6]||0)); return d.getFullYear()===+ru[3] && d.getMonth()===+ru[2]-1 && d.getDate()===+ru[1] ? +d : null; }
-        if (!/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(value)) return null;
-        const n=Date.parse(value); return Number.isFinite(n) ? n : null;
-    }
-    function lastActivity(user) {
-        return Math.max(0,...['lastSeenAt','lastActiveAt','lastVisitAt','lastLoginAt'].map(k=>activityTime(user?.[k]) || 0)) || null;
-    }
-    const dateText = value => { const n=activityTime(value); return n == null ? 'Нет данных' : new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'short'}).format(n); };
-    function Seen({user, now}) {
-        const time=lastActivity(user);
-        let label='Активность не записана';
-        if (time) {
-            const minutes=Math.max(0,Math.floor((now-time)/60000));
-            label=minutes<1 ? 'Активность только что' : minutes<60 ? `Активность ${minutes} мин назад` : minutes<1440 ? `Активность ${Math.floor(minutes/60)} ч назад` : `Был(а) ${new Date(time).toLocaleDateString('ru-RU')}`;
-        }
-        return <span className={`adm-seen ${time && now-time<300000 ? 'recent' : ''}`} title={time ? dateText(time) : label}><AdminIcon name="clock" size={11}/>{label}</span>;
-    }
-    // Один живой список всех пользователей. Страницы ниже — только отображение.
-    function useAllUsers(enabled, uid, retry) {
-        const [state,setState]=useState({rows:null,busy:true,error:''});
-        useEffect(()=>{
-            if(!enabled){setState({rows:null,busy:false,error:''});return;}
-            const db=window.db;
-            const cache=directoryCache?.uid===uid && directoryCache.db===db && Date.now()-directoryCache.at<DIRECTORY_CACHE_TTL ? directoryCache.rows : null;
-            let live=true, initialized=false;
-            const profiles=new Map();
-            setState({rows:cache,busy:true,error:''});
-            const stop=db.collection('users').onSnapshot({includeMetadataChanges:true},snapshot=>{
-                if(!live || window.auth?.currentUser?.uid!==uid)return;
-                const fromCache=!!snapshot.metadata?.fromCache;
-                if(!initialized && fromCache && (cache || snapshot.empty))return;
-                let changed=!initialized;
-                if(!initialized){
-                    snapshot.docs.forEach(doc=>profiles.set(doc.id,{...doc.data(),id:doc.id}));
-                    initialized=true;
-                }else snapshot.docChanges().forEach(change=>{
-                    changed=true;
-                    if(change.type==='removed')profiles.delete(change.doc.id);
-                    else profiles.set(change.doc.id,{...change.doc.data(),id:change.doc.id});
-                });
-                if(changed){
-                    const rows=Array.from(profiles.values());
-                    if(!fromCache)directoryCache={uid,db,rows,at:Date.now()};
-                    setState({rows,busy:fromCache,error:''});
-                }else{
-                    if(!fromCache)directoryCache={uid,db,rows:Array.from(profiles.values()),at:Date.now()};
-                    setState(previous=>({...previous,busy:fromCache,error:''}));
-                }
-            },error=>{
-                if(!live)return;
-                directoryCache=null;
-                setState({rows:null,busy:false,error:errorText(error)});
-            });
-            return()=>{live=false;stop();};
-        },[enabled,uid,retry]);
-        return state;
-    }
-    function comparePeriods(history,days,end) {
-        const span=days*86400000, start=end-span, previous=start-span;
-        const bins=[[],[]];let skipped=0;
-        array(history).forEach(row=>{
-            if(!row || typeof row!=='object'){skipped++;return;}
-            const at=activityTime(firstDefined(row,['at','date','createdAt','timestamp']));
-            const raw=row.percent;
-            if(at==null || raw==null || raw==='' || !Number.isFinite(Number(raw)) || Number(raw)<0 || Number(raw)>100){skipped++;return;}
-            if(at>=previous && at<end)bins[at>=start?1:0].push({at,value:Number(raw)});
+  // Keep dialogs mounted until their closing animation finishes.
+  function AdminPresence({
+    show,
+    children,
+    immediate = false
+  }) {
+    const [retained, setRetained] = useState(show);
+    const last = useRef(children);
+    if (show) last.current = children;
+    useEffect(() => {
+      if (show) {
+        setRetained(true);
+        return;
+      }
+      const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
+      const timer = setTimeout(() => setRetained(false), delay);
+      return () => clearTimeout(timer);
+    }, [show]);
+    if (immediate || !show && !retained) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: `adm-presence ${show ? '' : 'leaving'}`,
+      ref: el => {
+        if (el) el.inert = !show;
+      },
+      "aria-hidden": show ? undefined : true
+    }, show ? children : last.current);
+  }
+  function AdminNumber({
+    value
+  }) {
+    const [display, setDisplay] = useState(typeof value === 'number' ? 0 : value);
+    const current = useRef(typeof value === 'number' ? 0 : value);
+    useEffect(() => {
+      if (typeof value !== 'number' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        current.current = value;
+        setDisplay(value);
+        return;
+      }
+      const from = typeof current.current === 'number' ? current.current : 0;
+      if (from === value) {
+        current.current = value;
+        setDisplay(value);
+        return;
+      }
+      let frame, start;
+      const tick = now => {
+        if (start === undefined) start = now;
+        const t = Math.min(1, (now - start) / 550);
+        const next = Math.round(from + (value - from) * (1 - Math.pow(1 - t, 3)));
+        current.current = next;
+        setDisplay(next);
+        if (t < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(frame);
+    }, [value]);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, display), /*#__PURE__*/React.createElement("span", {
+      className: "adm-hidden"
+    }, value));
+  }
+  // The ripple is decorative and never intercepts clicks or writes to Firebase.
+  function useAdminRipples(ref) {
+    useEffect(() => {
+      const root = ref.current;
+      if (!root) return;
+      const nodes = new Set();
+      const handle = event => {
+        if (event.button !== 0 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+        const target = event.target.closest('button');
+        if (!target || target.disabled || !root.contains(target) || target.closest('.leaving')) return;
+        const ripple = document.createElement('i');
+        ripple.className = 'adm-ripple';
+        ripple.setAttribute('aria-hidden', 'true');
+        const size = Math.min(72, Math.max(36, target.offsetHeight));
+        Object.assign(ripple.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${event.clientX - size / 2}px`,
+          top: `${event.clientY - size / 2}px`
         });
-        const metrics=bins.map(rows=>({count:rows.length,average:rows.length?Math.round(rows.reduce((sum,r)=>sum+r.value,0)/rows.length):null,best:rows.length?Math.max(...rows.map(r=>r.value)):null,days:new Set(rows.map(r=>new Date(r.at).toLocaleDateString('en-CA'))).size}));
-        return {metrics,skipped,start,previous,end};
-    }
-    function ProgressComparison({user}) {
-        const [days,setDays]=useState(7);const [end,setEnd]=useState(()=>Date.now());
-        const data=useMemo(()=>comparePeriods(user.testHistory,days,end),[user.testHistory,days,end]);
-        const [before,after]=data.metrics;
-        const value=(n,unit)=>n==null?'—':`${n}${unit}`;
-        const range=(a,b)=>`${new Date(a).toLocaleDateString('ru-RU')} — ${new Date(b-1).toLocaleDateString('ru-RU')}`;
-        return <div className="adm-insight"><div className="adm-section-label"><div><h3>Сравнение прогресса</h3><p>Тестирование · два последовательных периода</p></div><div className="adm-period" role="group" aria-label="Период сравнения">{[7,30].map(n=><button type="button" key={n} className={`adm-chip ${days===n?'active':''}`} aria-pressed={days===n} onClick={()=>{setDays(n);setEnd(Date.now());}}>{n} дней</button>)}</div></div><div className="adm-period-legend"><span>Раньше: {range(data.previous,data.start)}</span><span>Сейчас: {range(data.start,data.end)}</span></div><div className="adm-compare-grid">{[['count','Попытки',''],['average','Средний балл','%'],['best','Лучший результат','%'],['days','Дни с тестами','']].map(([key,label,unit])=>{const delta=before[key]==null || after[key]==null?null:Math.round((after[key]-before[key])*10)/10;return <div className="adm-compare-card" key={key}><span>{label}</span><div><small>{value(before[key],unit)}</small><span aria-hidden="true">→</span><strong>{value(after[key],unit)}</strong></div><p className={delta>0?'up':delta<0?'down':''}>{delta==null?'Недостаточно данных':delta===0?'Без изменений':`${delta>0?'+':''}${delta}${unit?' п. п.':''}`}</p></div>})}</div>{!before.count&&!after.count&&<div className="adm-note">За эти периоды нет результатов с датами. Они появятся после прохождения тестов.</div>}<p className="adm-fineprint">Периоды по {days} суток до момента открытия или переключения. {data.skipped>0?`Записей без корректной даты или оценки: ${data.skipped}. `:''}Для сравнения Excel и печати нужна история результатов по датам; общие рекорды не показывают недельный прогресс.</p></div>;
-    }
-    function UserActivity({user,now}) {
-        const [state,setState]=useState({items:[],loading:true,error:''});const [retry,setRetry]=useState(0);
-        useEffect(()=>{
-            let live=true;setState({items:[],loading:true,error:''});
-            window.db.collection('users').doc(user.id).collection('activity').orderBy('at','desc').limit(20).get().then(snap=>{
-                if(live)setState({items:snap.docs.map(d=>({...d.data(),id:d.id})),loading:false,error:''});
-            }).catch(e=>{if(live)setState({items:[],loading:false,error:errorText(e)});});
-            return()=>{live=false;};
-        },[user.id,retry]);
-        return <><div className="adm-section-label"><div><h3>Последняя активность</h3><p>Данные подключённого трекера платформы</p></div><Btn disabled={state.loading} onClick={()=>setRetry(n=>n+1)}>Обновить</Btn></div><div className="adm-activity-summary"><Seen user={user} now={now}/><strong>{dateText(lastActivity(user))}</strong><span>Последний вход: {dateText(firstDefined(user,['lastLoginAt','lastLogin']))}</span></div>{state.loading?<div className="adm-skeleton" role="status" aria-label="Загрузка активности"/>:state.error?<div className="adm-note" role="alert">{state.error} Метки последнего входа доступны выше.</div>:!state.items.length?<Empty compact title="Событий пока нет">Журнал заполнится, когда трекер начнёт сохранять действия ученика.</Empty>:<div className="adm-timeline">{state.items.map(item=><article key={item.id}><span className="adm-timeline-dot"/><div><strong>{str(item.label)||ACTIVITY_SECTIONS[item.section]||'Действие на платформе'}</strong><p>{ACTIVITY_SECTIONS[item.section]||str(item.section)}{item.action?` · ${str(item.action)}`:''}</p><time>{dateText(item.at)}</time></div></article>)}</div>}<p className="adm-fineprint">Показаны последние 20 событий. Время активности не является подтверждением, что пользователь сейчас онлайн.</p></>;
-    }
-    function AdminAudit({user}) {
-        const entries=array(user.adminAudit).filter(e=>e&&typeof e==='object').slice().reverse();
-        return <><div className="adm-section-label"><div><h3>История действий администратора</h3><p>Изменения этого профиля через обновлённую панель</p></div><span className="adm-badge accent">{entries.length}</span></div>{!entries.length?<Empty compact title="Пока без изменений">После первого сохранения здесь появятся действие, автор и время.</Empty>:<div className="adm-timeline">{entries.map((entry,i)=><article key={entry.id||i}><span className="adm-timeline-dot"/><div><strong>{str(entry.action)||'Профиль изменён'}</strong><p>{str(entry.actorName)||str(entry.actorUid)||'Администратор'}</p><p>{array(entry.changes).map(c=>str(c)).join(' · ')}</p><time>{dateText(entry.at)}</time></div></article>)}</div>}<p className="adm-fineprint">Последние 100 действий на профиль. Старые действия до установки не восстанавливаются. Время — по часам устройства администратора.</p></>;
-    }
-    function auditChanges(current,patch) {
-        const out=[];
-        if('role' in patch)out.push(`Роль: ${patch.role==='admin'?'администратор':'студент'}`);
-        if('isBanned' in patch)out.push(patch.isBanned?'Аккаунт заблокирован':'Блокировка снята');
-        if('allowedModules' in patch){const old=modulesOf(current),next=array(patch.allowedModules);out.push(...AVAILABLE_MODULES.filter(m=>old.includes(m.id)!==next.includes(m.id)).map(m=>`${m.label}: ${next.includes(m.id)?'открыт':'закрыт'}`));}
-        if('excelHintsEnabled' in patch)out.push(`Подсказки Excel: ${patch.excelHintsEnabled?'включены':'выключены'}`);
-        if('assignedTests' in patch){
-            const old=testsOf(current),next=array(patch.assignedTests);
-            out.push(`Назначенных тестов: ${old.length} → ${next.length}`);
-            next.filter(t=>!old.some(o=>o.id===t.id)).forEach(t=>out.push(`Назначен: ${str(t.title).slice(0,100)||'Без названия'}`));
-            old.filter(t=>!next.some(n=>n.id===t.id)).forEach(t=>out.push(`Удалён: ${str(t.title).slice(0,100)||'Без названия'}`));
+        root.appendChild(ripple);
+        nodes.add(ripple);
+        const done = () => {
+          clearTimeout(ripple._admTimer);
+          nodes.delete(ripple);
+          ripple.remove();
+        };
+        ripple.addEventListener('animationend', done, {
+          once: true
+        });
+        ripple.addEventListener('animationcancel', done, {
+          once: true
+        });
+        // Bounded fallback also covers a motion preference change mid-animation.
+        const timer = setTimeout(done, 650);
+        ripple._admTimer = timer;
+      };
+      root.addEventListener('pointerdown', handle);
+      return () => {
+        root.removeEventListener('pointerdown', handle);
+        nodes.forEach(node => {
+          clearTimeout(node._admTimer);
+          node.remove();
+        });
+      };
+    }, [ref]);
+  }
+  const Btn = ({
+    children,
+    variant = '',
+    ...props
+  }) => /*#__PURE__*/React.createElement("button", _extends({
+    type: "button",
+    className: `adm-btn ${variant}`
+  }, props), children);
+  const IconBtn = ({
+    icon = 'x',
+    label,
+    ...props
+  }) => /*#__PURE__*/React.createElement("button", _extends({
+    type: "button",
+    className: "adm-icon-btn",
+    title: label,
+    "aria-label": label
+  }, props), /*#__PURE__*/React.createElement(AdminIcon, {
+    name: icon,
+    size: 15
+  }));
+  const Empty = ({
+    title,
+    children,
+    compact = false
+  }) => /*#__PURE__*/React.createElement("div", {
+    className: `adm-empty ${compact ? 'compact' : ''}`
+  }, /*#__PURE__*/React.createElement(AdminIcon, {
+    name: "inbox",
+    size: 26
+  }), /*#__PURE__*/React.createElement("strong", null, title), children);
+  function Dialog({
+    title,
+    children,
+    onClose,
+    busy
+  }) {
+    const ref = useRef(null);
+    const busyRef = useRef(busy);
+    busyRef.current = busy;
+    const closeRef = useRef(onClose);
+    closeRef.current = onClose;
+    useEffect(() => {
+      const prior = document.activeElement;
+      ref.current?.focus();
+      const handle = event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!busyRef.current) closeRef.current();
         }
-        if('chatContactMode' in patch)out.push(`Контакты: ${{all:'все',teachers:'преподаватели',selected:'выбранные'}[patch.chatContactMode]||'изменены'}`);
-        if('chatAllowedUsers' in patch)out.push(`Выбранных контактов: ${array(patch.chatAllowedUsers).length}`);
-        [['testHistory','Тесты'],['excelProgress','Excel'],['typingProgress','Печать'],['hotkeyProgress','Хоткеи']].forEach(([key,label])=>{if(key in patch)out.push(`${label}: статистика сброшена`)});
-        return out.slice(0,20);
-    }
-
-    function UserDetails({ user, allUsers, now, self, busy, onAction, onModule, onHints, onImport, onRemove, onExport, onChatMode, onChatUser }) {
-        const [tab, setTab] = useState('access');
-        const [picked, setPicked] = useState([]);
-        const [contactSearch, setContactSearch] = useState('');
-        const [exporting, setExporting] = useState(false);
-        const toggle = id => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-        const allPicked = picked.length === SUBJECTS.length;
-        const summaries = { tests: `${array(user.testHistory).length} попыток`, hotkeys: `${number((user.hotkeyProgress || {}).sessionsPlayed)} сессий`, typing: `${number((user.typingProgress || {}).testsCompleted)} тренировок`, excel: `${number((user.excelProgress || {}).level, 1)} уровень · ${number((user.excelProgress || {}).xp)} XP` };
-        const tests = testsOf(user), avg = average(user);
-        const excel = user.excelProgress || {}, typing = user.typingProgress || {}, hotkeys = user.hotkeyProgress || {};
-        const contactMode = chatModeOf(user), allowedContacts = chatAllowedOf(user);
-        const contactCandidates = array(allUsers).filter(item => item.id !== user.id).sort((a, b) => userNameCollator.compare(nameOf(a), nameOf(b)));
-        const contactQuery = contactSearch.trim().toLocaleLowerCase();
-        const filteredContacts = contactCandidates.filter(item => !contactQuery || `${nameOf(item)} ${str(item.email)} ${item.id}`.toLocaleLowerCase().includes(contactQuery));
-        const visibleContactCount = contactMode === 'all' ? contactCandidates.length : contactMode === 'teachers' ? contactCandidates.filter(item => item.role === 'admin').length : allowedContacts.filter(id => contactCandidates.some(item => item.id === id)).length;
-        const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['chat', 'chat', 'Чат'], ['activity', 'activity', 'Активность'], ['audit', 'clock', 'Журнал'], ['account', 'shield', 'Аккаунт']];
-        const download = async parts => { if (exporting) return; setExporting(true); try { await onExport(parts); } finally { setExporting(false); } };
-        return <section className="adm-detail" aria-label={`Пользователь ${nameOf(user)}`} aria-busy={busy}>
-            <div className="adm-profile"><div className="adm-avatar large">{initials(user)}</div><div className="adm-profile-text"><h3>{nameOf(user)}</h3><p>{str(user.email) || 'Email не указан'}</p><div className="adm-badges"><span className={`adm-badge ${user.isBanned ? 'bad' : 'good'}`}>{user.isBanned ? 'Заблокирован' : 'Не заблокирован'}</span><span className="adm-badge">{user.role === 'admin' ? 'Администратор' : 'Студент'}</span>{self && <span className="adm-badge accent">Это вы</span>}</div></div>{busy && <div className="adm-saving" role="status"><i className="adm-spinner"/>Сохранение</div>}</div>
-            <div className="adm-profile-seen"><Seen user={user} now={now}/></div>
-            <div className="adm-tabs" role="tablist" aria-label="Разделы пользователя">{tabs.map(([id, icon, label], index) => <button key={id} type="button" className={`adm-tab ${tab === id ? 'active' : ''}`} role="tab" id={`adm-tab-${id}`} aria-controls={`adm-pane-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)} onKeyDown={event => { const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1; if (next >= 0) { event.preventDefault(); setTab(tabs[next][0]); document.getElementById(`adm-tab-${tabs[next][0]}`)?.focus(); } }}><AdminIcon name={icon} size={14}/>{label}</button>)}</div>
-            <div key={tab} className="adm-pane" role="tabpanel" id={`adm-pane-${tab}`} aria-labelledby={`adm-tab-${tab}`}>
-            {tab === 'access' && <><div className="adm-section-label"><div><h3>Модули платформы</h3><p>Настройте доступ к каждому разделу.</p></div><span className="adm-count">{AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length} / {AVAILABLE_MODULES.length}</span></div><div className="adm-modules">{AVAILABLE_MODULES.map(module => { const on = modulesOf(user).includes(module.id); return <button key={module.id} type="button" role="switch" aria-checked={on} aria-label={`Доступ: ${module.label}`} disabled={busy} className={`adm-module ${on ? 'on' : ''}`} onClick={() => onModule(module.id, !on)}><AdminIcon name={module.icon} size={18}/><span className="adm-module-name">{module.label}<small>{on ? 'Доступ открыт' : 'Доступ закрыт'}</small></span><span className="adm-switch" aria-hidden="true"/></button>; })}</div><div className="adm-setting"><button type="button" role="switch" aria-label="Подсказки Excel" aria-checked={user.excelHintsEnabled !== false} disabled={busy} className={`adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`} onClick={() => onHints(user.excelHintsEnabled === false)}><AdminIcon name="lightbulb" size={19}/><span className="adm-module-name">Подсказки Excel<small>{user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены'}</small></span><span className="adm-switch" aria-hidden="true"/></button></div>{user.isBanned && <div className="adm-note"><AdminIcon name="lock" size={15}/>Аккаунт заблокирован. Настройка модулей не снимает общую блокировку.</div>}</>}
-            {tab === 'tests' && <><div className="adm-section-label"><div><h3>Персональные тесты</h3><p>Задания, назначенные этому пользователю.</p></div><Btn variant="primary" onClick={onImport} disabled={busy}><AdminIcon name="cloud" size={14}/>Назначить</Btn></div>{!tests.length ? <Empty title="Пока нет назначенных тестов">Загрузите файл с вопросами, чтобы добавить первое задание.</Empty> : <div className="adm-test-list">{tests.map((test, index) => <div className="adm-test" key={`${test.id}-${index}`}><AdminIcon name="fileText" size={19}/><div className="adm-test-text"><strong>{str(test.title) || 'Без названия'}</strong><small>{array(test.data).length} вопросов</small></div><IconBtn label={`Удалить тест: ${str(test.title) || 'Без названия'}`} disabled={busy || test.id == null} onClick={() => onRemove(test)}/></div>)}</div>}</>}
-            {tab === 'stats' && <><ProgressComparison user={user}/><div className="adm-section-label"><div><h3>Результаты обучения</h3><p>Показатели из профиля пользователя.</p></div></div><div className="adm-stat-grid"><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="barChart" size={16}/>Excel</div><strong>{number(excel.level, 1)}<small>уровень</small></strong><p>{number(excel.xp)} XP · {Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons)} заданий</p><p>Серия: {number(excel.streak)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="keyboard" size={16}/>Печать</div><strong>{number(typing.maxWpm)}<small>WPM</small></strong><p>Завершено: {number(typing.testsCompleted)}</p><p>Лучшее комбо: {number(typing.maxCombo)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="zap" size={16}/>Горячие клавиши</div><strong>{number(hotkeys.totalScore)}<small>очков</small></strong><p>Сессий: {number(hotkeys.sessionsPlayed)}</p><p>Лучший за подход: {number(hotkeys.maxScore)}</p></div><div className="adm-stat"><div className="adm-stat-title"><AdminIcon name="fileText" size={16}/>Тестирование</div><strong>{avg === null ? '—' : `${avg}%`}</strong><p>{avg === null ? 'Нет корректных оценок' : 'Средний результат'}</p><p>Попыток в истории: {array(user.testHistory).length}</p></div></div><div className="adm-divider"/><div className="adm-report-box"><div className="adm-report-head"><div className="adm-report-icon"><AdminIcon name="download" size={19}/></div><div className="adm-report-copy"><strong>Отчёт ученика в Excel</strong><small>Профиль, доступы, сводная статистика и журнал активности входят автоматически. Ниже можно выбрать подробные разделы.</small></div><Btn variant="primary" disabled={busy || exporting} onClick={() => download(SUBJECTS.map(s => s.id))}>{exporting ? <><i className="adm-spinner"/>Готовим…</> : <><AdminIcon name="download" size={14}/>Полный отчёт</>}</Btn></div><div className="adm-section-label"><div><h3>Подробные разделы</h3><p>Выберите данные для дополнительной детализации.</p></div><span className="adm-count">{picked.length} / {SUBJECTS.length}</span></div><div className="adm-report-meter"><i style={{width: `${picked.length / SUBJECTS.length * 100}%`}}/></div><div className="adm-subjects" role="group" aria-label="Разделы отчёта"><button type="button" role="checkbox" aria-checked={allPicked} disabled={busy || exporting} className={`adm-subject adm-subject-all ${allPicked ? 'on' : ''}`} onClick={() => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))}><AdminIcon name="layers" size={18}/><span className="adm-module-name">Все разделы<small>Тесты, хоткеи, печать и Excel</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>{SUBJECTS.map(s => { const on = picked.includes(s.id); return <button key={s.id} type="button" role="checkbox" aria-checked={on} disabled={busy || exporting} className={`adm-subject ${on ? 'on' : ''}`} onClick={() => toggle(s.id)}><AdminIcon name={s.icon} size={18}/><span className="adm-module-name">{s.label}<small>{summaries[s.id]}</small></span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div><div className="adm-export-actions split"><Btn disabled={busy || exporting || !picked.length} onClick={() => download(picked)}><AdminIcon name="download" size={14}/>{exporting ? 'Готовим файл…' : 'Скачать выбранное'}</Btn><Btn variant="danger" disabled={busy || !picked.length} onClick={() => onAction('reset', picked)}><AdminIcon name="trash" size={14}/>Сбросить выбранное</Btn></div></div></>}
-            {tab === 'chat' && <><div className="adm-section-label"><div><h3>Контакты в чате</h3><p>Определите, кого этот пользователь увидит в списке контактов.</p></div><span className="adm-count">{visibleContactCount} доступно</span></div><div className="adm-contact-modes" role="radiogroup" aria-label="Режим контактов">{[['all','users','Все пользователи','Показывать всех зарегистрированных пользователей.'],['teachers','shield','Только преподаватели','Оставить в контактах только администраторов.'],['selected','checkCircle','Только выбранные','Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => <button key={id} type="button" role="radio" aria-checked={contactMode === id} disabled={busy} className={`adm-contact-mode ${contactMode === id ? 'on' : ''}`} onClick={() => onChatMode(id)}><AdminIcon name={icon} size={18}/><strong>{title}</strong><small>{desc}</small></button>)}</div>{contactMode === 'selected' && <><div className="adm-contact-toolbar"><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={contactSearch} onChange={event => setContactSearch(event.target.value)} placeholder="Найти имя, email или UID" aria-label="Поиск контакта"/>{contactSearch && <IconBtn label="Очистить поиск" onClick={() => setContactSearch('')}/>}</div></div><div className="adm-contact-list">{!filteredContacts.length ? <div className="adm-contact-empty">Подходящих пользователей не найдено.</div> : filteredContacts.map(contact => { const on = allowedContacts.includes(contact.id); return <button type="button" key={contact.id} role="checkbox" aria-checked={on} disabled={busy} className={`adm-contact ${on ? 'on' : ''}`} onClick={() => onChatUser(contact.id, !on)}><span className="adm-avatar">{initials(contact)}</span><span className="adm-contact-copy"><strong>{nameOf(contact)}</strong><small>{str(contact.email) || contact.id}</small></span><span className="adm-contact-role">{contact.role === 'admin' ? 'Преподаватель' : 'Студент'}</span><span className="adm-check"><AdminIcon name="check" size={12} strokeWidth={3}/></span></button>; })}</div></>}<div className="adm-chat-summary"><AdminIcon name="info" size={14}/>{contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'}</div><div className="adm-note"><AdminIcon name="shield" size={15}/>Этот раздел управляет отображением контактов в интерфейсе. Для жёсткого запрета переписки также проверьте Firestore Rules.</div></>}
-            {tab === 'activity' && <UserActivity user={user} now={now}/>}
-            {tab === 'audit' && <AdminAudit user={user}/>}
-            {tab === 'account' && <><div className="adm-section-label"><div><h3>Управление аккаунтом</h3><p>Изменения применяются после подтверждения.</p></div></div><div className="adm-action-row"><div><strong>Права администратора</strong><p>{user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.'}</p></div><Btn disabled={self || busy} onClick={() => onAction('role')}>{user.role === 'admin' ? 'Снять права' : 'Выдать права'}</Btn></div><div className="adm-action-row"><div><strong>{user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'}</strong><p>{user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.'}</p></div><Btn variant={user.isBanned ? '' : 'danger'} disabled={self || busy} onClick={() => onAction('ban')}>{user.isBanned ? 'Разблокировать' : 'Заблокировать'}</Btn></div>{self && <div className="adm-note"><AdminIcon name="info" size={15}/>Собственные права администратора и блокировку здесь изменить нельзя.</div>}</>}
-            </div>
-        </section>;
-    }
-    function AdminPanel({ onKicked }) {
-        const motionRoot = useRef(null);
-        useAdminRipples(motionRoot);
-        const [uid, setUid] = useState(window.auth?.currentUser?.uid || null);
-        const [authReady, setAuthReady] = useState(!!window.auth?.currentUser || typeof window.auth?.onAuthStateChanged !== 'function');
-        const [access, setAccess] = useState({ state: 'checking', uid: null, message: '' });
-        const [retry, setRetry] = useState(0);
-        const [search, setSearch] = useState('');
-        const [filter, setFilter] = useState('all');
-        const [sort, setSort] = useState('name');
-        const [page, setPage] = useState(1);
-        const [selectedId, setSelectedId] = useState(null);
-        const [pending, setPending] = useState(() => new Set());
-        const [confirm, setConfirm] = useState(null);
-        const [dialogError, setDialogError] = useState('');
-        const [importUid, setImportUid] = useState(null);
-        const [toasts, setToasts] = useState([]);
-        const alive = useRef(true), locks = useRef(new Set()), timers = useRef(new Set());
-        const actor = useRef(uid), accessRef = useRef(access), kicked = useRef(null), onKickedRef = useRef(onKicked);
-        actor.current = uid; accessRef.current = access; onKickedRef.current = onKicked;
-        const ready = access.state === 'ready' && access.uid === uid;
-        const directory = useAllUsers(ready, uid, retry);
-        const users = directory.rows, loadError = directory.error;
-        const [now,setNow] = useState(()=>Date.now());
-        useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
-        useEffect(() => {
-            alive.current = true;
-            let style = document.getElementById('ultimate-admin-styles');
-            if (!style) { style = document.createElement('style'); style.id = 'ultimate-admin-styles'; document.head.appendChild(style); }
-            style.textContent = STYLES;
-            return () => { alive.current = false; timers.current.forEach(clearTimeout); timers.current.clear(); };
-        }, []);
-        useEffect(() => {
-            const auth = window.auth;
-            if (!auth) { setAccess({ state: 'error', uid: null, message: 'Авторизация не подключена. Перезагрузите страницу.' }); return; }
-            if (typeof auth.onAuthStateChanged === 'function') return auth.onAuthStateChanged(user => {
-                if (actor.current !== (user?.uid || null)) directoryCache = null;
-                actor.current = user?.uid || null;
-                setAuthReady(true); setUid(user?.uid || null); setConfirm(null); setImportUid(null);
-            }, () => setAccess({ state: 'error', uid: null, message: 'Не удалось проверить авторизацию.' }));
-        }, [retry]);
-        useEffect(() => {
-            let live = true;
-            if (directoryCache && (directoryCache.uid !== uid || directoryCache.db !== window.db)) directoryCache = null;
-            setSelectedId(null);
-            if (!window.auth) { setAccess({ state: 'error', uid, message: 'Авторизация не подключена. Перезагрузите страницу.' }); return; }
-            if (!authReady) { setAccess({ state: 'checking', uid, message: '' }); return; }
-            if (!window.db) { setAccess({ state: 'error', uid, message: 'База данных не подключена. Перезагрузите страницу.' }); return; }
-            if (!uid) { setAccess({ state: 'denied', uid, message: 'Войдите в аккаунт администратора.' }); return; }
-            setAccess({ state: 'checking', uid, message: '' });
-            const unsubscribe = window.db.collection('users').doc(uid).onSnapshot(snapshot => {
-                if (!live) return;
-                const user = snapshot.exists ? snapshot.data() : null;
-                if (!user || user.role !== 'admin' || user.isBanned) {
-                    setAccess({ state: 'denied', uid, message: user?.isBanned ? 'Аккаунт заблокирован.' : 'Для этой панели нужны права администратора.' });
-                    directoryCache = null;
-                    setConfirm(null); setImportUid(null);
-                } else setAccess({ state: 'ready', uid, message: '' });
-            }, error => {
-                if (!live) return;
-                const denied = String(error.code).includes('permission-denied');
-                setAccess({ state: denied ? 'denied' : 'error', uid, message: denied ? 'Нет доступа к профилю администратора.' : 'Не удалось проверить права. Проверьте подключение и повторите.' });
-                directoryCache = null;
-                setConfirm(null); setImportUid(null);
-            });
-            return () => { live = false; unsubscribe(); };
-        }, [uid, retry, authReady]);
-        useEffect(() => {
-            if (access.state !== 'denied') { if (access.state === 'ready') kicked.current = null; return; }
-            const timer = setTimeout(() => {
-                if (kicked.current === access.message) return;
-                kicked.current = access.message; onKickedRef.current?.();
-            }, 1400);
-            return () => clearTimeout(timer);
-        }, [access.state, access.message]);
-        useEffect(() => { setPage(1); setSelectedId(null); }, [search, filter, sort]);
-        const list = useMemo(() => {
-            const q = search.trim().toLocaleLowerCase();
-            return array(users).filter(user => (filter !== 'admins' || user.role === 'admin') && (filter !== 'banned' || user.isBanned) && (filter !== 'students' || user.role !== 'admin') && (filter !== 'inactive' || (lastActivity(user)!=null && now-lastActivity(user)>=7*86400000)) && (!q || `${nameOf(user)} ${str(user.email)} ${user.id}`.toLocaleLowerCase().includes(q))).sort((a, b) => {
-                if (sort === 'activity') { const delta=(lastActivity(b)||0)-(lastActivity(a)||0);if(delta)return delta; }
-                if (sort === 'tests') { const delta = testsOf(b).length - testsOf(a).length; if (delta) return delta; }
-                if (sort === 'role') { const delta = Number(b.role === 'admin') - Number(a.role === 'admin'); if (delta) return delta; }
-                return userNameCollator.compare(nameOf(a), nameOf(b)) || a.id.localeCompare(b.id);
-            });
-        }, [users, search, filter, sort, now]);
-        const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
-        const currentPage = Math.min(page, pageCount);
-        const visible = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-        const selected = list.find(user => user.id === selectedId) || visible[0] || null;
-        const importUser = array(users).find(user => user.id === importUid);
-        const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
-        function dismissToast(id) {
-            if (!alive.current) return;
-            setToasts(previous => previous.map(item => item.id === id ? { ...item, leaving: true } : item));
-            const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 250;
-            const timer = setTimeout(() => { timers.current.delete(timer); if (alive.current) setToasts(previous => previous.filter(item => item.id !== id)); }, delay);
-            timers.current.add(timer);
+        if (event.key !== 'Tab') return;
+        const nodes = Array.from(ref.current?.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]') || []).filter(node => node.getClientRects().length);
+        if (!nodes.length) {
+          event.preventDefault();
+          ref.current?.focus();
+          return;
         }
-        function toast(message, type = 'success') {
-            if (!alive.current) return;
-            const id = `${Date.now()}-${Math.random()}`;
-            setToasts(previous => [...previous.slice(-3), { id, message, type }]);
-            const timer = setTimeout(() => { timers.current.delete(timer); if (alive.current) dismissToast(id); }, 4500);
-            timers.current.add(timer);
+        const first = nodes[0],
+          last = nodes[nodes.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !ref.current?.contains(document.activeElement))) {
+          event.preventDefault();
+          first.focus();
         }
-        // Транзакция читает актуальный профиль и не затирает параллельные изменения.
-        // Реальная авторизация должна оставаться в существующих Firestore Rules.
-        async function mutate(targetUid, transform, message) {
-            const actorUid = actor.current;
-            if (!actorUid || accessRef.current.state !== 'ready' || accessRef.current.uid !== actorUid) throw problem('Права администратора не подтверждены.');
-            if (locks.current.has(targetUid)) throw problem('Для этого пользователя уже выполняется сохранение.');
-            locks.current.add(targetUid); setPending(new Set(locks.current));
-            try {
-                const db = window.db;
-                if (!db?.runTransaction) throw problem('Не удалось подключить транзакции Firebase. Проверьте подключение базы данных.');
-                const auditId=window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-                await db.runTransaction(async transaction => {
-                    if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился. Откройте панель заново.');
-                    const selfRef = db.collection('users').doc(actorUid), targetRef = db.collection('users').doc(targetUid);
-                    const selfSnapshot = await transaction.get(selfRef);
-                    const self = selfSnapshot.exists ? selfSnapshot.data() : null;
-                    if (!self || self.role !== 'admin' || self.isBanned) throw problem('Права администратора отозваны.');
-                    const targetSnapshot = targetUid === actorUid ? selfSnapshot : await transaction.get(targetRef);
-                    if (!targetSnapshot.exists) throw problem('Пользователь уже удалён.');
-                    const current = targetSnapshot.data();
-                    const patch = transform(current, actorUid);
-                    if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился.');
-                    const changes=auditChanges(current,patch);
-                    const adminAudit=[...array(current.adminAudit).filter(e=>e&&typeof e==='object').slice(-99),{
-                        id:auditId, at:new Date().toISOString(), actorUid, actorName:nameOf(self).slice(0,120),
-                        action:message || 'Настройки изменены', changes
-                    }];
-                    const updated={...current,...patch,adminAudit};
-                    if(new TextEncoder().encode(JSON.stringify(updated)).length>850*1024)throw problem('Профиль слишком большой. Уменьшите объём назначенных тестов перед сохранением.');
-                    transaction.update(targetRef, {...patch,adminAudit});
-                });
-                if (alive.current && actor.current === actorUid && message) toast(message);
-            } finally {
-                locks.current.delete(targetUid);
-                if (alive.current) setPending(new Set(locks.current));
+      };
+      document.addEventListener('keydown', handle, true);
+      return () => {
+        document.removeEventListener('keydown', handle, true);
+        if (prior?.isConnected) prior.focus();
+      };
+    }, []);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "adm-overlay",
+      onMouseDown: event => {
+        if (event.target === event.currentTarget && !busy) onClose();
+      }
+    }, /*#__PURE__*/React.createElement("section", {
+      className: "adm-dialog",
+      ref: ref,
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": title,
+      tabIndex: -1
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "shield",
+      size: 24
+    }), /*#__PURE__*/React.createElement("h3", null, title), children));
+  }
+  function ImportDialog({
+    user,
+    onClose,
+    onSave,
+    busy
+  }) {
+    const [title, setTitle] = useState('');
+    const [data, setData] = useState(null);
+    const [fileName, setFileName] = useState('');
+    const [error, setError] = useState('');
+    const [reading, setReading] = useState(false);
+    const fileRef = useRef(null),
+      sequence = useRef(0),
+      alive = useRef(true);
+    useEffect(() => {
+      alive.current = true;
+      return () => {
+        alive.current = false;
+        sequence.current++;
+      };
+    }, []);
+    async function read(file) {
+      if (!file) return;
+      const seq = ++sequence.current;
+      setData(null);
+      setError('');
+      setFileName(file.name);
+      setReading(true);
+      try {
+        if (file.size > MAX_FILE) throw problem('Файл больше 350 КБ. Уменьшите тест или используйте ссылки на изображения.');
+        let parsed;
+        try {
+          parsed = JSON.parse((await file.text()).replace(/^\uFEFF/, ''));
+        } catch {
+          throw problem('Не удалось прочитать JSON. Проверьте формат файла.');
+        }
+        const normalized = normalizeTest(parsed);
+        if (!alive.current || sequence.current !== seq) return;
+        setData(normalized);
+        setTitle(previous => previous || file.name.replace(/\.json$/i, '').slice(0, 100));
+      } catch (e) {
+        if (alive.current && sequence.current === seq) setError(errorText(e));
+      } finally {
+        if (alive.current && sequence.current === seq) setReading(false);
+      }
+    }
+    async function save(event) {
+      event.preventDefault();
+      if (!title.trim() || !data || busy || reading) return;
+      setError('');
+      try {
+        await onSave({
+          title: title.trim(),
+          data
+        });
+      } catch (e) {
+        if (alive.current) setError(errorText(e));
+      }
+    }
+    return /*#__PURE__*/React.createElement(Dialog, {
+      title: "\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C \u0442\u0435\u0441\u0442",
+      onClose: onClose,
+      busy: busy
+    }, /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u044C: ", nameOf(user), ". \u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 JSON \u0441 \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438, \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u0430\u043C\u0438 \u0438 \u0438\u043D\u0434\u0435\u043A\u0441\u0430\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u044B\u0445 \u043E\u0442\u0432\u0435\u0442\u043E\u0432."), /*#__PURE__*/React.createElement("form", {
+      onSubmit: save
+    }, /*#__PURE__*/React.createElement("input", {
+      className: "adm-hidden",
+      type: "file",
+      accept: ".json,application/json",
+      ref: fileRef,
+      tabIndex: -1,
+      "aria-label": "\u0424\u0430\u0439\u043B \u0442\u0435\u0441\u0442\u0430",
+      disabled: busy,
+      onChange: event => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        read(file);
+      }
+    }), /*#__PURE__*/React.createElement("button", {
+      className: "adm-upload",
+      type: "button",
+      disabled: busy || reading,
+      onClick: () => fileRef.current?.click()
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "cloud",
+      size: 23
+    }), reading ? 'Проверяем файл…' : fileName || 'Выбрать JSON-файл', /*#__PURE__*/React.createElement("small", null, "\u0414\u043E 350 \u041A\u0411 \xB7 \u0434\u043E 300 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432")), data && /*#__PURE__*/React.createElement("div", {
+      className: "adm-preview"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "checkCircle",
+      size: 15
+    }), "\u041F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432: ", data.length), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "adm-test-title"
+    }, "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0442\u0435\u0441\u0442\u0430"), /*#__PURE__*/React.createElement("input", {
+      id: "adm-test-title",
+      className: "adm-input",
+      autoComplete: "off",
+      maxLength: 100,
+      value: title,
+      onChange: event => setTitle(event.target.value),
+      placeholder: "\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: Excel \u2014 \u0431\u0430\u0437\u043E\u0432\u044B\u0435 \u0444\u043E\u0440\u043C\u0443\u043B\u044B",
+      disabled: busy
+    }), error && /*#__PURE__*/React.createElement("p", {
+      className: "adm-error",
+      role: "alert"
+    }, error), /*#__PURE__*/React.createElement("div", {
+      className: "adm-dialog-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: onClose
+    }, "\u041E\u0442\u043C\u0435\u043D\u0430"), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      className: "adm-btn primary",
+      disabled: busy || reading || !data || !title.trim()
+    }, busy ? 'Сохраняем…' : 'Назначить тест'))));
+  }
+  function activityTime(value) {
+    if (value == null || value === '') return null;
+    if (typeof value.toMillis === 'function') {
+      const n = value.toMillis();
+      return Number.isFinite(n) ? n : null;
+    }
+    if (typeof value.seconds === 'number') return value.seconds * 1000;
+    if (value instanceof Date) return Number.isFinite(+value) ? +value : null;
+    if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? value : null;
+    if (typeof value !== 'string') return null;
+    const ru = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (ru) {
+      const d = new Date(+ru[3], +ru[2] - 1, +ru[1], +(ru[4] || 0), +(ru[5] || 0), +(ru[6] || 0));
+      return d.getFullYear() === +ru[3] && d.getMonth() === +ru[2] - 1 && d.getDate() === +ru[1] ? +d : null;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(value)) return null;
+    const n = Date.parse(value);
+    return Number.isFinite(n) ? n : null;
+  }
+  function lastActivity(user) {
+    return Math.max(0, ...['lastSeenAt', 'lastActiveAt', 'lastVisitAt', 'lastLoginAt'].map(k => activityTime(user?.[k]) || 0)) || null;
+  }
+  const dateText = value => {
+    const n = activityTime(value);
+    return n == null ? 'Нет данных' : new Intl.DateTimeFormat('ru-RU', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(n);
+  };
+  function Seen({
+    user,
+    now
+  }) {
+    const time = lastActivity(user);
+    let label = 'Активность не записана';
+    if (time) {
+      const minutes = Math.max(0, Math.floor((now - time) / 60000));
+      label = minutes < 1 ? 'Активность только что' : minutes < 60 ? `Активность ${minutes} мин назад` : minutes < 1440 ? `Активность ${Math.floor(minutes / 60)} ч назад` : `Был(а) ${new Date(time).toLocaleDateString('ru-RU')}`;
+    }
+    return /*#__PURE__*/React.createElement("span", {
+      className: `adm-seen ${time && now - time < 300000 ? 'recent' : ''}`,
+      title: time ? dateText(time) : label
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "clock",
+      size: 11
+    }), label);
+  }
+  // Один живой список всех пользователей. Страницы ниже — только отображение.
+  function useAllUsers(enabled, uid, retry) {
+    const [state, setState] = useState({
+      rows: null,
+      busy: true,
+      error: ''
+    });
+    useEffect(() => {
+      if (!enabled) {
+        setState({
+          rows: null,
+          busy: false,
+          error: ''
+        });
+        return;
+      }
+      const db = window.db;
+      const cache = directoryCache?.uid === uid && directoryCache.db === db && Date.now() - directoryCache.at < DIRECTORY_CACHE_TTL ? directoryCache.rows : null;
+      let live = true,
+        initialized = false;
+      const profiles = new Map();
+      setState({
+        rows: cache,
+        busy: true,
+        error: ''
+      });
+      const stop = db.collection('users').onSnapshot({
+        includeMetadataChanges: true
+      }, snapshot => {
+        if (!live || window.auth?.currentUser?.uid !== uid) return;
+        const fromCache = !!snapshot.metadata?.fromCache;
+        if (!initialized && fromCache && (cache || snapshot.empty)) return;
+        let changed = !initialized;
+        if (!initialized) {
+          snapshot.docs.forEach(doc => profiles.set(doc.id, {
+            ...doc.data(),
+            id: doc.id
+          }));
+          initialized = true;
+        } else snapshot.docChanges().forEach(change => {
+          changed = true;
+          if (change.type === 'removed') profiles.delete(change.doc.id);else profiles.set(change.doc.id, {
+            ...change.doc.data(),
+            id: change.doc.id
+          });
+        });
+        if (changed) {
+          const rows = Array.from(profiles.values());
+          if (!fromCache) directoryCache = {
+            uid,
+            db,
+            rows,
+            at: Date.now()
+          };
+          setState({
+            rows,
+            busy: fromCache,
+            error: ''
+          });
+        } else {
+          if (!fromCache) directoryCache = {
+            uid,
+            db,
+            rows: Array.from(profiles.values()),
+            at: Date.now()
+          };
+          setState(previous => ({
+            ...previous,
+            busy: fromCache,
+            error: ''
+          }));
+        }
+      }, error => {
+        if (!live) return;
+        directoryCache = null;
+        setState({
+          rows: null,
+          busy: false,
+          error: errorText(error)
+        });
+      });
+      return () => {
+        live = false;
+        stop();
+      };
+    }, [enabled, uid, retry]);
+    return state;
+  }
+  function comparePeriods(history, days, end) {
+    const span = days * 86400000,
+      start = end - span,
+      previous = start - span;
+    const bins = [[], []];
+    let skipped = 0;
+    array(history).forEach(row => {
+      if (!row || typeof row !== 'object') {
+        skipped++;
+        return;
+      }
+      const at = activityTime(firstDefined(row, ['at', 'date', 'createdAt', 'timestamp']));
+      const raw = row.percent;
+      if (at == null || raw == null || raw === '' || !Number.isFinite(Number(raw)) || Number(raw) < 0 || Number(raw) > 100) {
+        skipped++;
+        return;
+      }
+      if (at >= previous && at < end) bins[at >= start ? 1 : 0].push({
+        at,
+        value: Number(raw)
+      });
+    });
+    const metrics = bins.map(rows => ({
+      count: rows.length,
+      average: rows.length ? Math.round(rows.reduce((sum, r) => sum + r.value, 0) / rows.length) : null,
+      best: rows.length ? Math.max(...rows.map(r => r.value)) : null,
+      days: new Set(rows.map(r => new Date(r.at).toLocaleDateString('en-CA'))).size
+    }));
+    return {
+      metrics,
+      skipped,
+      start,
+      previous,
+      end
+    };
+  }
+  function ProgressComparison({
+    user
+  }) {
+    const [days, setDays] = useState(7);
+    const [end, setEnd] = useState(() => Date.now());
+    const data = useMemo(() => comparePeriods(user.testHistory, days, end), [user.testHistory, days, end]);
+    const [before, after] = data.metrics;
+    const value = (n, unit) => n == null ? '—' : `${n}${unit}`;
+    const range = (a, b) => `${new Date(a).toLocaleDateString('ru-RU')} — ${new Date(b - 1).toLocaleDateString('ru-RU')}`;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "adm-insight"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430"), /*#__PURE__*/React.createElement("p", null, "\u0422\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \xB7 \u0434\u0432\u0430 \u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0445 \u043F\u0435\u0440\u0438\u043E\u0434\u0430")), /*#__PURE__*/React.createElement("div", {
+      className: "adm-period",
+      role: "group",
+      "aria-label": "\u041F\u0435\u0440\u0438\u043E\u0434 \u0441\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u044F"
+    }, [7, 30].map(n => /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: n,
+      className: `adm-chip ${days === n ? 'active' : ''}`,
+      "aria-pressed": days === n,
+      onClick: () => {
+        setDays(n);
+        setEnd(Date.now());
+      }
+    }, n, " \u0434\u043D\u0435\u0439")))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-period-legend"
+    }, /*#__PURE__*/React.createElement("span", null, "\u0420\u0430\u043D\u044C\u0448\u0435: ", range(data.previous, data.start)), /*#__PURE__*/React.createElement("span", null, "\u0421\u0435\u0439\u0447\u0430\u0441: ", range(data.start, data.end))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-compare-grid"
+    }, [['count', 'Попытки', ''], ['average', 'Средний балл', '%'], ['best', 'Лучший результат', '%'], ['days', 'Дни с тестами', '']].map(([key, label, unit]) => {
+      const delta = before[key] == null || after[key] == null ? null : Math.round((after[key] - before[key]) * 10) / 10;
+      return /*#__PURE__*/React.createElement("div", {
+        className: "adm-compare-card",
+        key: key
+      }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, value(before[key], unit)), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true"
+      }, "\u2192"), /*#__PURE__*/React.createElement("strong", null, value(after[key], unit))), /*#__PURE__*/React.createElement("p", {
+        className: delta > 0 ? 'up' : delta < 0 ? 'down' : ''
+      }, delta == null ? 'Недостаточно данных' : delta === 0 ? 'Без изменений' : `${delta > 0 ? '+' : ''}${delta}${unit ? ' п. п.' : ''}`));
+    })), !before.count && !after.count && /*#__PURE__*/React.createElement("div", {
+      className: "adm-note"
+    }, "\u0417\u0430 \u044D\u0442\u0438 \u043F\u0435\u0440\u0438\u043E\u0434\u044B \u043D\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u043E\u0432 \u0441 \u0434\u0430\u0442\u0430\u043C\u0438. \u041E\u043D\u0438 \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0440\u043E\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F \u0442\u0435\u0441\u0442\u043E\u0432."), /*#__PURE__*/React.createElement("p", {
+      className: "adm-fineprint"
+    }, "\u041F\u0435\u0440\u0438\u043E\u0434\u044B \u043F\u043E ", days, " \u0441\u0443\u0442\u043E\u043A \u0434\u043E \u043C\u043E\u043C\u0435\u043D\u0442\u0430 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u044F \u0438\u043B\u0438 \u043F\u0435\u0440\u0435\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F. ", data.skipped > 0 ? `Записей без корректной даты или оценки: ${data.skipped}. ` : '', "\u0414\u043B\u044F \u0441\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u044F Excel \u0438 \u043F\u0435\u0447\u0430\u0442\u0438 \u043D\u0443\u0436\u043D\u0430 \u0438\u0441\u0442\u043E\u0440\u0438\u044F \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u043E\u0432 \u043F\u043E \u0434\u0430\u0442\u0430\u043C; \u043E\u0431\u0449\u0438\u0435 \u0440\u0435\u043A\u043E\u0440\u0434\u044B \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442 \u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0439 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441."));
+  }
+  function UserActivity({
+    user,
+    now
+  }) {
+    const [state, setState] = useState({
+      items: [],
+      loading: true,
+      error: ''
+    });
+    const [retry, setRetry] = useState(0);
+    useEffect(() => {
+      let live = true;
+      setState({
+        items: [],
+        loading: true,
+        error: ''
+      });
+      window.db.collection('users').doc(user.id).collection('activity').orderBy('at', 'desc').limit(20).get().then(snap => {
+        if (live) setState({
+          items: snap.docs.map(d => ({
+            ...d.data(),
+            id: d.id
+          })),
+          loading: false,
+          error: ''
+        });
+      }).catch(e => {
+        if (live) setState({
+          items: [],
+          loading: false,
+          error: errorText(e)
+        });
+      });
+      return () => {
+        live = false;
+      };
+    }, [user.id, retry]);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C"), /*#__PURE__*/React.createElement("p", null, "\u0414\u0430\u043D\u043D\u044B\u0435 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0451\u043D\u043D\u043E\u0433\u043E \u0442\u0440\u0435\u043A\u0435\u0440\u0430 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B")), /*#__PURE__*/React.createElement(Btn, {
+      disabled: state.loading,
+      onClick: () => setRetry(n => n + 1)
+    }, "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C")), /*#__PURE__*/React.createElement("div", {
+      className: "adm-activity-summary"
+    }, /*#__PURE__*/React.createElement(Seen, {
+      user: user,
+      now: now
+    }), /*#__PURE__*/React.createElement("strong", null, dateText(lastActivity(user))), /*#__PURE__*/React.createElement("span", null, "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u0432\u0445\u043E\u0434: ", dateText(firstDefined(user, ['lastLoginAt', 'lastLogin'])))), state.loading ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-skeleton",
+      role: "status",
+      "aria-label": "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u0438"
+    }) : state.error ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-note",
+      role: "alert"
+    }, state.error, " \u041C\u0435\u0442\u043A\u0438 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0433\u043E \u0432\u0445\u043E\u0434\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B \u0432\u044B\u0448\u0435.") : !state.items.length ? /*#__PURE__*/React.createElement(Empty, {
+      compact: true,
+      title: "\u0421\u043E\u0431\u044B\u0442\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"
+    }, "\u0416\u0443\u0440\u043D\u0430\u043B \u0437\u0430\u043F\u043E\u043B\u043D\u0438\u0442\u0441\u044F, \u043A\u043E\u0433\u0434\u0430 \u0442\u0440\u0435\u043A\u0435\u0440 \u043D\u0430\u0447\u043D\u0451\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0442\u044C \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F \u0443\u0447\u0435\u043D\u0438\u043A\u0430.") : /*#__PURE__*/React.createElement("div", {
+      className: "adm-timeline"
+    }, state.items.map(item => /*#__PURE__*/React.createElement("article", {
+      key: item.id
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "adm-timeline-dot"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, str(item.label) || ACTIVITY_SECTIONS[item.section] || 'Действие на платформе'), /*#__PURE__*/React.createElement("p", null, ACTIVITY_SECTIONS[item.section] || str(item.section), item.action ? ` · ${str(item.action)}` : ''), /*#__PURE__*/React.createElement("time", null, dateText(item.at)))))), /*#__PURE__*/React.createElement("p", {
+      className: "adm-fineprint"
+    }, "\u041F\u043E\u043A\u0430\u0437\u0430\u043D\u044B \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 20 \u0441\u043E\u0431\u044B\u0442\u0438\u0439. \u0412\u0440\u0435\u043C\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u0438 \u043D\u0435 \u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0435\u043C, \u0447\u0442\u043E \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u0441\u0435\u0439\u0447\u0430\u0441 \u043E\u043D\u043B\u0430\u0439\u043D."));
+  }
+  function AdminAudit({
+    user
+  }) {
+    const entries = array(user.adminAudit).filter(e => e && typeof e === 'object').slice().reverse();
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u044D\u0442\u043E\u0433\u043E \u043F\u0440\u043E\u0444\u0438\u043B\u044F \u0447\u0435\u0440\u0435\u0437 \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u0443\u044E \u043F\u0430\u043D\u0435\u043B\u044C")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-badge accent"
+    }, entries.length)), !entries.length ? /*#__PURE__*/React.createElement(Empty, {
+      compact: true,
+      title: "\u041F\u043E\u043A\u0430 \u0431\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439"
+    }, "\u041F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435, \u0430\u0432\u0442\u043E\u0440 \u0438 \u0432\u0440\u0435\u043C\u044F.") : /*#__PURE__*/React.createElement("div", {
+      className: "adm-timeline"
+    }, entries.map((entry, i) => /*#__PURE__*/React.createElement("article", {
+      key: entry.id || i
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "adm-timeline-dot"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, str(entry.action) || 'Профиль изменён'), /*#__PURE__*/React.createElement("p", null, str(entry.actorName) || str(entry.actorUid) || 'Администратор'), /*#__PURE__*/React.createElement("p", null, array(entry.changes).map(c => str(c)).join(' · ')), /*#__PURE__*/React.createElement("time", null, dateText(entry.at)))))), /*#__PURE__*/React.createElement("p", {
+      className: "adm-fineprint"
+    }, "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 100 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u043D\u0430 \u043F\u0440\u043E\u0444\u0438\u043B\u044C. \u0421\u0442\u0430\u0440\u044B\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F \u0434\u043E \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0438 \u043D\u0435 \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0442\u0441\u044F. \u0412\u0440\u0435\u043C\u044F \u2014 \u043F\u043E \u0447\u0430\u0441\u0430\u043C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430."));
+  }
+  function auditChanges(current, patch) {
+    const out = [];
+    if ('role' in patch) out.push(`Роль: ${patch.role === 'admin' ? 'администратор' : 'студент'}`);
+    if ('isBanned' in patch) out.push(patch.isBanned ? 'Аккаунт заблокирован' : 'Блокировка снята');
+    if ('allowedModules' in patch) {
+      const old = modulesOf(current),
+        next = array(patch.allowedModules);
+      out.push(...AVAILABLE_MODULES.filter(m => old.includes(m.id) !== next.includes(m.id)).map(m => `${m.label}: ${next.includes(m.id) ? 'открыт' : 'закрыт'}`));
+    }
+    if ('hotkeyHintsEnabled' in patch) out.push(`Подсказки горячих клавиш: ${patch.hotkeyHintsEnabled ? 'включены' : 'выключены'}`);
+    if ('excelHintsEnabled' in patch) out.push(`Подсказки Excel: ${patch.excelHintsEnabled ? 'включены' : 'выключены'}`);
+    if ('assignedTests' in patch) {
+      const old = testsOf(current),
+        next = array(patch.assignedTests);
+      out.push(`Назначенных тестов: ${old.length} → ${next.length}`);
+      next.filter(t => !old.some(o => o.id === t.id)).forEach(t => out.push(`Назначен: ${str(t.title).slice(0, 100) || 'Без названия'}`));
+      old.filter(t => !next.some(n => n.id === t.id)).forEach(t => out.push(`Удалён: ${str(t.title).slice(0, 100) || 'Без названия'}`));
+    }
+    if ('chatContactMode' in patch) out.push(`Контакты: ${{
+      all: 'все',
+      teachers: 'преподаватели',
+      selected: 'выбранные'
+    }[patch.chatContactMode] || 'изменены'}`);
+    if ('chatAllowedUsers' in patch) out.push(`Выбранных контактов: ${array(patch.chatAllowedUsers).length}`);
+    [['testHistory', 'Тесты'], ['excelProgress', 'Excel'], ['typingProgress', 'Печать'], ['hotkeyProgress', 'Хоткеи']].forEach(([key, label]) => {
+      if (key in patch) out.push(`${label}: статистика сброшена`);
+    });
+    return out.slice(0, 20);
+  }
+  function UserDetails({
+    user,
+    allUsers,
+    now,
+    self,
+    busy,
+    onAction,
+    onModule,
+    onHints,
+    onHotkeyHints,
+    onImport,
+    onRemove,
+    onExport,
+    onChatMode,
+    onChatUser
+  }) {
+    const [tab, setTab] = useState('access');
+    const [picked, setPicked] = useState([]);
+    const [contactSearch, setContactSearch] = useState('');
+    const [exporting, setExporting] = useState(false);
+    const toggle = id => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+    const allPicked = picked.length === SUBJECTS.length;
+    const summaries = {
+      tests: `${array(user.testHistory).length} попыток`,
+      hotkeys: `${number((user.hotkeyProgress || {}).sessionsPlayed)} сессий`,
+      typing: `${number((user.typingProgress || {}).testsCompleted)} тренировок`,
+      excel: `${number((user.excelProgress || {}).level, 1)} уровень · ${number((user.excelProgress || {}).xp)} XP`
+    };
+    const tests = testsOf(user),
+      avg = average(user);
+    const excel = user.excelProgress || {},
+      typing = user.typingProgress || {},
+      hotkeys = user.hotkeyProgress || {};
+    const contactMode = chatModeOf(user),
+      allowedContacts = chatAllowedOf(user);
+    const contactCandidates = array(allUsers).filter(item => item.id !== user.id).sort((a, b) => userNameCollator.compare(nameOf(a), nameOf(b)));
+    const contactQuery = contactSearch.trim().toLocaleLowerCase();
+    const filteredContacts = contactCandidates.filter(item => !contactQuery || `${nameOf(item)} ${str(item.email)} ${item.id}`.toLocaleLowerCase().includes(contactQuery));
+    const visibleContactCount = contactMode === 'all' ? contactCandidates.length : contactMode === 'teachers' ? contactCandidates.filter(item => item.role === 'admin').length : allowedContacts.filter(id => contactCandidates.some(item => item.id === id)).length;
+    const tabs = [['access', 'settings', 'Доступы'], ['tests', 'fileText', `Тесты · ${tests.length}`], ['stats', 'barChart', 'Статистика'], ['chat', 'chat', 'Чат'], ['activity', 'activity', 'Активность'], ['audit', 'clock', 'Журнал'], ['account', 'shield', 'Аккаунт']];
+    const download = async parts => {
+      if (exporting) return;
+      setExporting(true);
+      try {
+        await onExport(parts);
+      } finally {
+        setExporting(false);
+      }
+    };
+    return /*#__PURE__*/React.createElement("section", {
+      className: "adm-detail",
+      "aria-label": `Пользователь ${nameOf(user)}`,
+      "aria-busy": busy
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-profile"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-avatar large"
+    }, initials(user)), /*#__PURE__*/React.createElement("div", {
+      className: "adm-profile-text"
+    }, /*#__PURE__*/React.createElement("h3", null, nameOf(user)), /*#__PURE__*/React.createElement("p", null, str(user.email) || 'Email не указан'), /*#__PURE__*/React.createElement("div", {
+      className: "adm-badges"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: `adm-badge ${user.isBanned ? 'bad' : 'good'}`
+    }, user.isBanned ? 'Заблокирован' : 'Не заблокирован'), /*#__PURE__*/React.createElement("span", {
+      className: "adm-badge"
+    }, user.role === 'admin' ? 'Администратор' : 'Студент'), self && /*#__PURE__*/React.createElement("span", {
+      className: "adm-badge accent"
+    }, "\u042D\u0442\u043E \u0432\u044B"))), busy && /*#__PURE__*/React.createElement("div", {
+      className: "adm-saving",
+      role: "status"
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "adm-spinner"
+    }), "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435")), /*#__PURE__*/React.createElement("div", {
+      className: "adm-profile-seen"
+    }, /*#__PURE__*/React.createElement(Seen, {
+      user: user,
+      now: now
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-tabs",
+      role: "tablist",
+      "aria-label": "\u0420\u0430\u0437\u0434\u0435\u043B\u044B \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044F"
+    }, tabs.map(([id, icon, label], index) => /*#__PURE__*/React.createElement("button", {
+      key: id,
+      type: "button",
+      className: `adm-tab ${tab === id ? 'active' : ''}`,
+      role: "tab",
+      id: `adm-tab-${id}`,
+      "aria-controls": `adm-pane-${id}`,
+      "aria-selected": tab === id,
+      tabIndex: tab === id ? 0 : -1,
+      onClick: () => setTab(id),
+      onKeyDown: event => {
+        const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1;
+        if (next >= 0) {
+          event.preventDefault();
+          setTab(tabs[next][0]);
+          document.getElementById(`adm-tab-${tabs[next][0]}`)?.focus();
+        }
+      }
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: icon,
+      size: 14
+    }), label))), /*#__PURE__*/React.createElement("div", {
+      key: tab,
+      className: "adm-pane",
+      role: "tabpanel",
+      id: `adm-pane-${tab}`,
+      "aria-labelledby": `adm-tab-${tab}`
+    }, tab === 'access' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041C\u043E\u0434\u0443\u043B\u0438 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B"), /*#__PURE__*/React.createElement("p", null, "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043A\u0430\u0436\u0434\u043E\u043C\u0443 \u0440\u0430\u0437\u0434\u0435\u043B\u0443.")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-count"
+    }, AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length, " / ", AVAILABLE_MODULES.length)), /*#__PURE__*/React.createElement("div", {
+      className: "adm-modules"
+    }, AVAILABLE_MODULES.map(module => {
+      const on = modulesOf(user).includes(module.id);
+      return /*#__PURE__*/React.createElement("button", {
+        key: module.id,
+        type: "button",
+        role: "switch",
+        "aria-checked": on,
+        "aria-label": `Доступ: ${module.label}`,
+        disabled: busy,
+        className: `adm-module ${on ? 'on' : ''}`,
+        onClick: () => onModule(module.id, !on)
+      }, /*#__PURE__*/React.createElement(AdminIcon, {
+        name: module.icon,
+        size: 18
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "adm-module-name"
+      }, module.label, /*#__PURE__*/React.createElement("small", null, on ? 'Доступ открыт' : 'Доступ закрыт')), /*#__PURE__*/React.createElement("span", {
+        className: "adm-switch",
+        "aria-hidden": "true"
+      }));
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-setting"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      role: "switch",
+      "aria-label": "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 Excel",
+      "aria-checked": user.excelHintsEnabled !== false,
+      disabled: busy,
+      className: `adm-module ${user.excelHintsEnabled !== false ? 'on' : ''}`,
+      onClick: () => onHints(user.excelHintsEnabled === false)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "lightbulb",
+      size: 19
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "adm-module-name"
+    }, "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 Excel", /*#__PURE__*/React.createElement("small", null, user.excelHintsEnabled !== false ? 'Помощь при выполнении заданий включена' : 'Режим экзамена — подсказки отключены')), /*#__PURE__*/React.createElement("span", {
+      className: "adm-switch",
+      "aria-hidden": "true"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-setting"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      role: "switch",
+      "aria-label": "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u0433\u043E\u0440\u044F\u0447\u0438\u0445 \u043A\u043B\u0430\u0432\u0438\u0448",
+      "aria-checked": user.hotkeyHintsEnabled !== false,
+      disabled: busy,
+      className: `adm-module ${user.hotkeyHintsEnabled !== false ? 'on' : ''}`,
+      onClick: () => onHotkeyHints(user.hotkeyHintsEnabled === false)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "keyboard",
+      size: 19
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "adm-module-name"
+    }, "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u0433\u043E\u0440\u044F\u0447\u0438\u0445 \u043A\u043B\u0430\u0432\u0438\u0448", /*#__PURE__*/React.createElement("small", null, user.hotkeyHintsEnabled !== false ? 'Кнопка подсказки доступна ученику' : 'Кнопка скрыта во время тренировки')), /*#__PURE__*/React.createElement("span", {
+      className: "adm-switch",
+      "aria-hidden": "true"
+    }))), user.isBanned && /*#__PURE__*/React.createElement("div", {
+      className: "adm-note"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "lock",
+      size: 15
+    }), "\u0410\u043A\u043A\u0430\u0443\u043D\u0442 \u0437\u0430\u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u0430\u043D. \u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043C\u043E\u0434\u0443\u043B\u0435\u0439 \u043D\u0435 \u0441\u043D\u0438\u043C\u0430\u0435\u0442 \u043E\u0431\u0449\u0443\u044E \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0443.")), tab === 'tests' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0442\u0435\u0441\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u0434\u0430\u043D\u0438\u044F, \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u043D\u044B\u0435 \u044D\u0442\u043E\u043C\u0443 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044E.")), /*#__PURE__*/React.createElement(Btn, {
+      variant: "primary",
+      onClick: onImport,
+      disabled: busy
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "cloud",
+      size: 14
+    }), "\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C")), !tests.length ? /*#__PURE__*/React.createElement(Empty, {
+      title: "\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u043D\u044B\u0445 \u0442\u0435\u0441\u0442\u043E\u0432"
+    }, "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0444\u0430\u0439\u043B \u0441 \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438, \u0447\u0442\u043E\u0431\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043F\u0435\u0440\u0432\u043E\u0435 \u0437\u0430\u0434\u0430\u043D\u0438\u0435.") : /*#__PURE__*/React.createElement("div", {
+      className: "adm-test-list"
+    }, tests.map((test, index) => /*#__PURE__*/React.createElement("div", {
+      className: "adm-test",
+      key: `${test.id}-${index}`
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "fileText",
+      size: 19
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "adm-test-text"
+    }, /*#__PURE__*/React.createElement("strong", null, str(test.title) || 'Без названия'), /*#__PURE__*/React.createElement("small", null, array(test.data).length, " \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432")), /*#__PURE__*/React.createElement(IconBtn, {
+      label: `Удалить тест: ${str(test.title) || 'Без названия'}`,
+      disabled: busy || test.id == null,
+      onClick: () => onRemove(test)
+    }))))), tab === 'stats' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ProgressComparison, {
+      user: user
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u044F"), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u0438 \u0438\u0437 \u043F\u0440\u043E\u0444\u0438\u043B\u044F \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044F."))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat-grid"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat-title"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "barChart",
+      size: 16
+    }), "Excel"), /*#__PURE__*/React.createElement("strong", null, number(excel.level, 1), /*#__PURE__*/React.createElement("small", null, "\u0443\u0440\u043E\u0432\u0435\u043D\u044C")), /*#__PURE__*/React.createElement("p", null, number(excel.xp), " XP \xB7 ", Array.isArray(excel.completedLessons) ? excel.completedLessons.length : number(excel.completedLessons), " \u0437\u0430\u0434\u0430\u043D\u0438\u0439"), /*#__PURE__*/React.createElement("p", null, "\u0421\u0435\u0440\u0438\u044F: ", number(excel.streak))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat-title"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "keyboard",
+      size: 16
+    }), "\u041F\u0435\u0447\u0430\u0442\u044C"), /*#__PURE__*/React.createElement("strong", null, number(typing.maxWpm), /*#__PURE__*/React.createElement("small", null, "WPM")), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E: ", number(typing.testsCompleted)), /*#__PURE__*/React.createElement("p", null, "\u041B\u0443\u0447\u0448\u0435\u0435 \u043A\u043E\u043C\u0431\u043E: ", number(typing.maxCombo))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat-title"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "zap",
+      size: 16
+    }), "\u0413\u043E\u0440\u044F\u0447\u0438\u0435 \u043A\u043B\u0430\u0432\u0438\u0448\u0438"), /*#__PURE__*/React.createElement("strong", null, number(hotkeys.totalScore), /*#__PURE__*/React.createElement("small", null, "\u043E\u0447\u043A\u043E\u0432")), /*#__PURE__*/React.createElement("p", null, "\u0421\u0435\u0441\u0441\u0438\u0439: ", number(hotkeys.sessionsPlayed)), /*#__PURE__*/React.createElement("p", null, "\u041B\u0443\u0447\u0448\u0438\u0439 \u0437\u0430 \u043F\u043E\u0434\u0445\u043E\u0434: ", number(hotkeys.maxScore))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-stat-title"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "fileText",
+      size: 16
+    }), "\u0422\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("strong", null, avg === null ? '—' : `${avg}%`), /*#__PURE__*/React.createElement("p", null, avg === null ? 'Нет корректных оценок' : 'Средний результат'), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u043F\u044B\u0442\u043E\u043A \u0432 \u0438\u0441\u0442\u043E\u0440\u0438\u0438: ", array(user.testHistory).length))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-divider"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "adm-report-box"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-report-head"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-report-icon"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "download",
+      size: 19
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-report-copy"
+    }, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0442\u0447\u0451\u0442 \u0443\u0447\u0435\u043D\u0438\u043A\u0430 \u0432 Excel"), /*#__PURE__*/React.createElement("small", null, "\u041F\u0440\u043E\u0444\u0438\u043B\u044C, \u0434\u043E\u0441\u0442\u0443\u043F\u044B, \u0441\u0432\u043E\u0434\u043D\u0430\u044F \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0438 \u0436\u0443\u0440\u043D\u0430\u043B \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u0438 \u0432\u0445\u043E\u0434\u044F\u0442 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438. \u041D\u0438\u0436\u0435 \u043C\u043E\u0436\u043D\u043E \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0440\u0430\u0437\u0434\u0435\u043B\u044B.")), /*#__PURE__*/React.createElement(Btn, {
+      variant: "primary",
+      disabled: busy || exporting,
+      onClick: () => download(SUBJECTS.map(s => s.id))
+    }, exporting ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("i", {
+      className: "adm-spinner"
+    }), "\u0413\u043E\u0442\u043E\u0432\u0438\u043C\u2026") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "download",
+      size: 14
+    }), "\u041F\u043E\u043B\u043D\u044B\u0439 \u043E\u0442\u0447\u0451\u0442"))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041F\u043E\u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0440\u0430\u0437\u0434\u0435\u043B\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0434\u043B\u044F \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0439 \u0434\u0435\u0442\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438.")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-count"
+    }, picked.length, " / ", SUBJECTS.length)), /*#__PURE__*/React.createElement("div", {
+      className: "adm-report-meter"
+    }, /*#__PURE__*/React.createElement("i", {
+      style: {
+        width: `${picked.length / SUBJECTS.length * 100}%`
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-subjects",
+      role: "group",
+      "aria-label": "\u0420\u0430\u0437\u0434\u0435\u043B\u044B \u043E\u0442\u0447\u0451\u0442\u0430"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      role: "checkbox",
+      "aria-checked": allPicked,
+      disabled: busy || exporting,
+      className: `adm-subject adm-subject-all ${allPicked ? 'on' : ''}`,
+      onClick: () => setPicked(allPicked ? [] : SUBJECTS.map(s => s.id))
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "layers",
+      size: 18
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "adm-module-name"
+    }, "\u0412\u0441\u0435 \u0440\u0430\u0437\u0434\u0435\u043B\u044B", /*#__PURE__*/React.createElement("small", null, "\u0422\u0435\u0441\u0442\u044B, \u0445\u043E\u0442\u043A\u0435\u0438, \u043F\u0435\u0447\u0430\u0442\u044C \u0438 Excel")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-check"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "check",
+      size: 12,
+      strokeWidth: 3
+    }))), SUBJECTS.map(s => {
+      const on = picked.includes(s.id);
+      return /*#__PURE__*/React.createElement("button", {
+        key: s.id,
+        type: "button",
+        role: "checkbox",
+        "aria-checked": on,
+        disabled: busy || exporting,
+        className: `adm-subject ${on ? 'on' : ''}`,
+        onClick: () => toggle(s.id)
+      }, /*#__PURE__*/React.createElement(AdminIcon, {
+        name: s.icon,
+        size: 18
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "adm-module-name"
+      }, s.label, /*#__PURE__*/React.createElement("small", null, summaries[s.id])), /*#__PURE__*/React.createElement("span", {
+        className: "adm-check"
+      }, /*#__PURE__*/React.createElement(AdminIcon, {
+        name: "check",
+        size: 12,
+        strokeWidth: 3
+      })));
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-export-actions split"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy || exporting || !picked.length,
+      onClick: () => download(picked)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "download",
+      size: 14
+    }), exporting ? 'Готовим файл…' : 'Скачать выбранное'), /*#__PURE__*/React.createElement(Btn, {
+      variant: "danger",
+      disabled: busy || !picked.length,
+      onClick: () => onAction('reset', picked)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "trash",
+      size: 14
+    }), "\u0421\u0431\u0440\u043E\u0441\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u043E\u0435")))), tab === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041A\u043E\u043D\u0442\u0430\u043A\u0442\u044B \u0432 \u0447\u0430\u0442\u0435"), /*#__PURE__*/React.createElement("p", null, "\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u0435, \u043A\u043E\u0433\u043E \u044D\u0442\u043E\u0442 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u0443\u0432\u0438\u0434\u0438\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432.")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-count"
+    }, visibleContactCount, " \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E")), /*#__PURE__*/React.createElement("div", {
+      className: "adm-contact-modes",
+      role: "radiogroup",
+      "aria-label": "\u0420\u0435\u0436\u0438\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432"
+    }, [['all', 'users', 'Все пользователи', 'Показывать всех зарегистрированных пользователей.'], ['teachers', 'shield', 'Только преподаватели', 'Оставить в контактах только администраторов.'], ['selected', 'checkCircle', 'Только выбранные', 'Показывать только отмеченные ниже аккаунты.']].map(([id, icon, title, desc]) => /*#__PURE__*/React.createElement("button", {
+      key: id,
+      type: "button",
+      role: "radio",
+      "aria-checked": contactMode === id,
+      disabled: busy,
+      className: `adm-contact-mode ${contactMode === id ? 'on' : ''}`,
+      onClick: () => onChatMode(id)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: icon,
+      size: 18
+    }), /*#__PURE__*/React.createElement("strong", null, title), /*#__PURE__*/React.createElement("small", null, desc)))), contactMode === 'selected' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-contact-toolbar"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-search"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "search",
+      size: 15
+    }), /*#__PURE__*/React.createElement("input", {
+      className: "adm-input",
+      value: contactSearch,
+      onChange: event => setContactSearch(event.target.value),
+      placeholder: "\u041D\u0430\u0439\u0442\u0438 \u0438\u043C\u044F, email \u0438\u043B\u0438 UID",
+      "aria-label": "\u041F\u043E\u0438\u0441\u043A \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u0430"
+    }), contactSearch && /*#__PURE__*/React.createElement(IconBtn, {
+      label: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043F\u043E\u0438\u0441\u043A",
+      onClick: () => setContactSearch('')
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-contact-list"
+    }, !filteredContacts.length ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-contact-empty"
+    }, "\u041F\u043E\u0434\u0445\u043E\u0434\u044F\u0449\u0438\u0445 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E.") : filteredContacts.map(contact => {
+      const on = allowedContacts.includes(contact.id);
+      return /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        key: contact.id,
+        role: "checkbox",
+        "aria-checked": on,
+        disabled: busy,
+        className: `adm-contact ${on ? 'on' : ''}`,
+        onClick: () => onChatUser(contact.id, !on)
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "adm-avatar"
+      }, initials(contact)), /*#__PURE__*/React.createElement("span", {
+        className: "adm-contact-copy"
+      }, /*#__PURE__*/React.createElement("strong", null, nameOf(contact)), /*#__PURE__*/React.createElement("small", null, str(contact.email) || contact.id)), /*#__PURE__*/React.createElement("span", {
+        className: "adm-contact-role"
+      }, contact.role === 'admin' ? 'Преподаватель' : 'Студент'), /*#__PURE__*/React.createElement("span", {
+        className: "adm-check"
+      }, /*#__PURE__*/React.createElement(AdminIcon, {
+        name: "check",
+        size: 12,
+        strokeWidth: 3
+      })));
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-chat-summary"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "info",
+      size: 14
+    }), contactMode === 'all' ? 'Сейчас пользователь видит всех, кроме самого себя.' : contactMode === 'teachers' ? 'Сейчас отображаются только аккаунты преподавателей.' : allowedContacts.length ? `Выбрано контактов: ${allowedContacts.length}.` : 'Контакты не выбраны — список чата будет пустым.'), /*#__PURE__*/React.createElement("div", {
+      className: "adm-note"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "shield",
+      size: 15
+    }), "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0434\u0435\u043B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435. \u0414\u043B\u044F \u0436\u0451\u0441\u0442\u043A\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u0435\u0442\u0430 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u0442\u0430\u043A\u0436\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Firestore Rules.")), tab === 'activity' && /*#__PURE__*/React.createElement(UserActivity, {
+      user: user,
+      now: now
+    }), tab === 'audit' && /*#__PURE__*/React.createElement(AdminAudit, {
+      user: user
+    }), tab === 'account' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-label"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u043E\u043C"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u044E\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F."))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-action-row"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "\u041F\u0440\u0430\u0432\u0430 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430"), /*#__PURE__*/React.createElement("p", null, user.role === 'admin' ? 'Доступ к панели управления выдан.' : 'Пользователь работает с правами студента.')), /*#__PURE__*/React.createElement(Btn, {
+      disabled: self || busy,
+      onClick: () => onAction('role')
+    }, user.role === 'admin' ? 'Снять права' : 'Выдать права')), /*#__PURE__*/React.createElement("div", {
+      className: "adm-action-row"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, user.isBanned ? 'Снять блокировку' : 'Заблокировать аккаунт'), /*#__PURE__*/React.createElement("p", null, user.isBanned ? 'Разрешить пользователю вернуться к обучению.' : 'Ограничить доступ пользователя к платформе.')), /*#__PURE__*/React.createElement(Btn, {
+      variant: user.isBanned ? '' : 'danger',
+      disabled: self || busy,
+      onClick: () => onAction('ban')
+    }, user.isBanned ? 'Разблокировать' : 'Заблокировать')), self && /*#__PURE__*/React.createElement("div", {
+      className: "adm-note"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "info",
+      size: 15
+    }), "\u0421\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0430 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430 \u0438 \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0443 \u0437\u0434\u0435\u0441\u044C \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F."))));
+  }
+  // Explicit paths only. Nothing is deleted before the preview is confirmed.
+  const cleanupPathAllowed = (kind, path) => kind === 'chat' ? /^private_chats\/[^/]+\/messages\/[^/]+$/.test(path) : /^chessRooms\/[^/]+$/.test(path);
+  async function cleanupAdmin(db, uid, guard) {
+    guard();
+    const snap = await db.collection('users').doc(uid).get({
+      source: 'server'
+    });
+    guard();
+    if (!snap.exists || snap.data().role !== 'admin' || snap.data().isBanned) throw Error('Права администратора не подтверждены.');
+  }
+  async function cleanupPreview(db, uid, kind, guard, progress) {
+    await cleanupAdmin(db, uid, guard);
+    const field = window.firebase.firestore.FieldPath.documentId();
+    const base = (kind === 'chat' ? db.collectionGroup('messages') : db.collection('chessRooms')).orderBy(field);
+    const refs = [];
+    let cursor = null,
+      scanned = 0,
+      active = 0;
+    while (true) {
+      guard();
+      const page = await (cursor ? base.startAfter(cursor) : base).limit(200).get({
+        source: 'server'
+      });
+      guard();
+      for (const doc of page.docs) {
+        if (!cleanupPathAllowed(kind, doc.ref.path)) continue;
+        if (kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) continue;
+        refs.push(doc.ref);
+        if (kind === 'rooms' && doc.data().status === 'playing') active++;
+      }
+      scanned += page.size;
+      progress(refs.length);
+      if (page.size < 200) break;
+      if (scanned >= 50000) throw Error('За один просмотр проверяется до 50 000 документов. Для большего архива нужна серверная очистка. Ничего не удалено.');
+      cursor = page.docs[page.docs.length - 1];
+    }
+    return {
+      kind,
+      refs,
+      active,
+      created: Date.now()
+    };
+  }
+  async function cleanupExecute(db, uid, plan, guard, progress, stopped) {
+    let deleted = 0,
+      skipped = 0,
+      processed = 0;
+    try {
+      if (Date.now() - plan.created > 300000) throw Error('Предпросмотр устарел. Проверьте данные заново.');
+      for (let i = 0; i < plan.refs.length; i += 40) {
+        guard();
+        if (stopped()) return {
+          deleted,
+          skipped,
+          processed,
+          stopped: true
+        };
+        const refs = plan.refs.slice(i, i + 40);
+        // Read role and current room state in the SAME transaction as deletion.
+        const result = await db.runTransaction(async tx => {
+          guard();
+          const self = await tx.get(db.collection('users').doc(uid));
+          if (!self.exists || self.data().role !== 'admin' || self.data().isBanned) throw Error('Права администратора отозваны.');
+          const snapshots = [];
+          for (const ref of refs) {
+            if (!cleanupPathAllowed(plan.kind, ref.path)) throw Error('Недопустимый путь очистки.');
+            snapshots.push(await tx.get(ref));
+          }
+          guard();
+          let count = 0,
+            skip = 0;
+          for (const doc of snapshots) {
+            if (!doc.exists) {
+              skip++;
+              continue;
             }
-        }
-        function quick(transform, message = 'Настройки сохранены') {
-            if (!selected) return;
-            mutate(selected.id, transform, message).catch(error => toast(errorText(error), 'error'));
-        }
-        function ask(kind, parts = []) {
-        if (!selected) return;
-        if (kind === 'reset' && !parts.length) return;
-        const user = selected;
-        const names = SUBJECTS.filter(s => parts.includes(s.id)).map(s => s.label).join(', ');
-            if (kind !== 'reset' && user.id === actor.current) { toast('Собственные права и блокировку изменить нельзя.', 'error'); return; }
-            const config = kind === 'role' ? { title: user.role === 'admin' ? 'Снять права администратора?' : 'Выдать права администратора?', message: `${nameOf(user)} ${user.role === 'admin' ? 'потеряет' : 'получит'} доступ к панели управления.`, label: user.role === 'admin' ? 'Снять права' : 'Выдать права', danger: true, value: user.role !== 'admin', expected: user.role } : kind === 'ban' ? { title: user.isBanned ? 'Снять блокировку?' : 'Заблокировать пользователя?', message: `${nameOf(user)} ${user.isBanned ? 'снова получит доступ к платформе.' : 'будет заблокирован на платформе.'}`, label: user.isBanned ? 'Разблокировать' : 'Заблокировать', danger: !user.isBanned, value: !user.isBanned, expected: !!user.isBanned } : { title: 'Сбросить выбранное?', message: `У ${nameOf(user)} будет удалено без возможности восстановления: ${names}. Назначенные тесты останутся.`, label: 'Сбросить', danger: true, parts };
-            setDialogError(''); setConfirm({ ...config, kind, uid: user.id });
-        }
-        async function confirmAction() {
-            if (!confirm || locks.current.has(confirm.uid)) return;
-            const job = confirm; setDialogError('');
-            try {
-                await mutate(job.uid, (current, actorUid) => {
-                    if (job.kind === 'role' || job.kind === 'ban') {
-                        if (job.uid === actorUid) throw problem('Нельзя изменять собственные права или блокировку.');
-                        if (job.kind === 'role') {
-                            if (current.role !== job.expected) throw problem('Роль уже изменена другим администратором. Закройте окно и проверьте профиль.');
-                            return { role: job.value ? 'admin' : 'student' };
-                        }
-                        if (!!current.isBanned !== job.expected) throw problem('Блокировка уже изменена. Закройте окно и проверьте профиль.');
-                        return { isBanned: job.value };
-                    }
-                    if (job.kind === 'remove') {
-                        if (current.assignedTests != null && !Array.isArray(current.assignedTests)) throw problem('Список тестов в профиле имеет неверный формат.');
-                        return { assignedTests: array(current.assignedTests).filter(test => test?.id !== job.testId) };
-                    }
-                    const patch = {};
-                    if (job.parts.includes('tests')) patch.testHistory = [];
-                    if (job.parts.includes('excel')) patch.excelProgress = { level: 1, xp: 0, completedLessons: 0, streak: 0 };
-                    if (job.parts.includes('typing')) patch.typingProgress = { maxWpm: 0, maxCombo: 0, testsCompleted: 0 };
-                    if (job.parts.includes('hotkeys')) patch.hotkeyProgress = { maxScore: 0, totalScore: 0, sessionsPlayed: 0, history: [] };
-                    return patch;
-                }, job.kind === 'remove' ? 'Тест удалён' : job.kind === 'reset' ? 'Статистика сброшена' : 'Изменения сохранены');
-                if (alive.current) setConfirm(null);
-            } catch (error) { if (alive.current) setDialogError(errorText(error)); }
-        }
-        async function saveTest(test) {
-            const targetUid = importUid, actorUid = actor.current;
-            // Числовой id сохранён для совместимости с существующим тестовым модулем.
-            const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
-            await mutate(targetUid, current => {
-                if (current.assignedTests != null && !Array.isArray(current.assignedTests)) throw problem('Список тестов в профиле имеет неверный формат.');
-                if (testsOf(current).some(item => item.id === id)) throw problem('Повторите назначение теста.');
-                const assignedTests = [...array(current.assignedTests), { id, title: test.title, data: test.data }];
-                // Консервативный бюджет: вопросы хранятся в одном документе пользователя.
-                const bytes = new TextEncoder().encode(JSON.stringify({ ...current, assignedTests })).length;
-                if (bytes > 700 * 1024) throw problem('Профиль содержит слишком много данных. Удалите ненужные назначенные тесты или уменьшите изображения.');
-                return { assignedTests };
-            }, 'Тест назначен');
-            if (alive.current && actor.current === actorUid) setImportUid(null);
-        }
-        const changePage = value => { setPage(Math.max(1, Math.min(pageCount, value))); setSelectedId(null); };
-        return <div className="adm-root" ref={motionRoot}>
-            <div className="adm-toasts" aria-live="polite">{toasts.map(item => <div key={item.id} className={`adm-toast ${item.type} ${item.leaving ? 'leaving' : ''}`}><AdminIcon name={item.type === 'error' ? 'alertTriangle' : 'checkCircle'} size={17}/><span>{item.message}</span><IconBtn label="Скрыть уведомление" onClick={() => dismissToast(item.id)}/></div>)}</div>
-            <AdminPresence immediate={!ready} show={!!(ready && confirm)}>{ready && confirm && <Dialog title={confirm.title} busy={pending.has(confirm.uid)} onClose={() => setConfirm(null)}><p>{confirm.message}</p>{dialogError && <p className="adm-error" role="alert">{dialogError}</p>}<div className="adm-dialog-actions"><Btn disabled={pending.has(confirm.uid)} onClick={() => setConfirm(null)}>Отмена</Btn><Btn variant={confirm.danger ? 'danger' : 'primary'} disabled={pending.has(confirm.uid)} onClick={confirmAction}>{pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label}</Btn></div></Dialog>}</AdminPresence>
-            <AdminPresence immediate={!ready} show={!!(ready && importUser)}>{ready && importUser && <ImportDialog key={importUid} user={importUser} busy={pending.has(importUid)} onClose={() => setImportUid(null)} onSave={saveTest}/>}</AdminPresence>
-            <main className="adm-shell" aria-label="Панель администратора">
-                <header className="adm-head"><div className="adm-brand"><AdminIcon name="shield" size={24}/></div><div><div className="adm-eyebrow">ULTIMATE LMS / ADMIN</div><h2>Панель управления</h2><p>Пользователи, доступы и результаты обучения</p></div>{ready && !loadError && users && <div className="adm-live"><span className="adm-dot"/>{directory.busy?'Обновление…':'Автообновление'}</div>}</header>
-                {!ready ? <Empty title={access.state === 'checking' ? 'Проверяем права доступа…' : access.state === 'denied' ? 'Доступ ограничен' : 'Не удалось открыть панель'}><p role="status">{access.message}</p>{access.state === 'error' && <Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn>}</Empty> : <>
-                    <div className="adm-summary">{[['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => <div className="adm-summary-card" key={label}><span>{label}</span><strong><AdminNumber value={users === null ? '—' : stats[index]}/></strong><AdminIcon name={icon} size={21}/></div>)}</div>
-                    {loadError && users === null ? <div className="adm-banner" role="alert"><AdminIcon name="alertTriangle" size={19}/><span>{loadError}</span><Btn onClick={() => setRetry(value => value + 1)}>Повторить</Btn></div> : <div className="adm-workspace">
-                        <aside className="adm-directory" aria-label="Список пользователей"><div className="adm-section-head"><h3>Пользователи</h3><span className="adm-count" aria-live="polite">{users === null ? 'Загрузка…' : `${list.length} найдено`}</span></div><div className="adm-search"><AdminIcon name="search" size={15}/><input className="adm-input" value={search} onChange={event => setSearch(event.target.value)} placeholder="Имя, email или UID" aria-label="Поиск пользователей"/>{search && <IconBtn label="Очистить поиск" onClick={() => setSearch('')}/>}</div>
-                            <div className="adm-filter" aria-label="Фильтр пользователей">{[['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы'],['inactive','Не заходили 7 дней']].map(([id, label]) => <button type="button" key={id} className={`adm-chip ${filter === id ? 'active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div>
-                            <div className="adm-sort"><span>Сортировка</span><select aria-label="Сортировка пользователей" value={sort} onChange={event => setSort(event.target.value)}><option value="name">По имени</option><option value="role">Администраторы выше</option><option value="tests">Больше тестов</option><option value="activity">Последняя активность</option></select></div>
-                            <div className="adm-users">{users === null ? <div role="status" aria-label="Загрузка пользователей">{[0, 1, 2, 3].map(i => <div key={i} className="adm-skeleton"/>)}</div> : !visible.length ? <Empty compact title={users.length ? 'Никого не нашли' : 'Пока нет пользователей'}>{users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.'}</Empty> : visible.map((user, index) => <button style={{'--ad-order': index}} type="button" key={user.id} className={`adm-person ${selected?.id === user.id ? 'selected' : ''}`} aria-pressed={selected?.id === user.id} onClick={() => setSelectedId(user.id)}><span className="adm-avatar">{initials(user)}</span><span className="adm-person-text"><strong>{nameOf(user)}{user.id === uid ? ' · Вы' : ''}</strong><small>{str(user.email) || user.id}</small><Seen user={user} now={now}/></span>{user.role === 'admin' && <AdminIcon name="shield" size={13}/>}<span className={`adm-role-dot ${user.isBanned ? 'banned' : ''}`} title={user.isBanned ? 'Заблокирован' : 'Не заблокирован'}/></button>)}</div>
-                            {list.length > PAGE_SIZE && <nav className="adm-pagination" aria-label="Страницы пользователей"><Btn disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Назад</Btn><span>{currentPage} / {pageCount}</span><Btn disabled={currentPage === pageCount} onClick={()=>changePage(currentPage+1)}>Далее</Btn></nav>}
-                        </aside>
-                        {selected ? <UserDetails key={selected.id} user={selected} allUsers={array(users)} now={now} self={selected.id === uid} busy={pending.has(selected.id)} onAction={ask} onExport={async parts => { try { const exportUid=actor.current; await exportUser(selected, parts, array(users)); if(alive.current && exportUid===actor.current)toast('Отчёт Excel готов'); } catch (error) { toast(errorText(error), 'error'); } }} onModule={(moduleId, enabled) => quick(current => { const modules = modulesOf(current); return { allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId) }; })} onHints={enabled => quick(() => ({ excelHintsEnabled: enabled }))} onChatMode={mode => quick(() => ({ chatContactMode: mode }), 'Настройки чата сохранены')} onChatUser={(contactUid, enabled) => quick(current => { const currentAllowed = chatAllowedOf(current); return { chatContactMode: 'selected', chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid) }; }, 'Контакты чата обновлены')} onImport={() => setImportUid(selected.id)} onRemove={test => { setDialogError(''); setConfirm({ kind: 'remove', uid: selected.id, testId: test.id, title: 'Удалить назначенный тест?', message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`, label: 'Удалить тест', danger: true }); }}/> : <Empty title={users === null ? 'Загружаем профили…' : 'Выберите пользователя'}>Здесь будут доступы, тесты, чат и статистика.</Empty>}
-                    </div>}
-                </>}
-                <footer className="adm-footer"><span>Ultimate LMS</span><span>Изменения сохраняются отдельно для каждого пользователя</span></footer>
-            </main>
-        </div>;
+            if (plan.kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) {
+              skip++;
+              continue;
+            }
+            tx.delete(doc.ref);
+            count++;
+          }
+          return {
+            count,
+            skip
+          };
+        });
+        deleted += result.count;
+        skipped += result.skip;
+        processed += refs.length;
+        progress({
+          deleted,
+          skipped,
+          processed
+        });
+      }
+      return {
+        deleted,
+        skipped,
+        processed,
+        stopped: false
+      };
+    } catch (error) {
+      error.cleanupResult = {
+        deleted,
+        skipped,
+        processed
+      };
+      throw error;
     }
-    Object.assign(window, { AdminPanel });
+  }
+  function DataMaintenance({
+    uid
+  }) {
+    const [open, setOpen] = useState(false),
+      [phase, setPhase] = useState('idle'),
+      [plan, setPlan] = useState(null);
+    const [message, setMessage] = useState(''),
+      [failure, setFailure] = useState(''),
+      [typed, setTyped] = useState('');
+    const [counts, setCounts] = useState({
+      deleted: 0,
+      skipped: 0,
+      processed: 0
+    });
+    const live = useRef(true),
+      lock = useRef(false),
+      cancel = useRef(false);
+    useEffect(() => {
+      live.current = true;
+      return () => {
+        live.current = false;
+        cancel.current = true;
+      };
+    }, []);
+    const guard = () => {
+      if (!live.current || window.auth?.currentUser?.uid !== uid) throw Error('Аккаунт изменился или панель закрыта. Выполнение остановлено.');
+    };
+    const busy = phase === 'scan' || phase === 'delete';
+    const titles = {
+      finished: 'Завершённые партии',
+      rooms: 'Все шахматные комнаты',
+      chat: 'Вся история личных чатов'
+    };
+    async function inspect(kind) {
+      if (lock.current) return;
+      lock.current = true;
+      cancel.current = false;
+      setPlan(null);
+      setTyped('');
+      setFailure('');
+      setMessage('Проверяем данные в Firebase…');
+      setPhase('scan');
+      setCounts({
+        deleted: 0,
+        skipped: 0,
+        processed: 0
+      });
+      try {
+        const result = await cleanupPreview(window.db, uid, kind, () => {
+          guard();
+          if (cancel.current) throw Error('Проверка остановлена. Ничего не удалено.');
+        }, n => {
+          if (live.current) setMessage(`Найдено: ${n}`);
+        });
+        if (live.current) {
+          setPlan(result);
+          setPhase('preview');
+          setMessage(result.refs.length ? 'Проверьте объём перед удалением.' : 'Ничего не найдено — база уже чистая.');
+        }
+      } catch (e) {
+        if (live.current) {
+          setPhase('idle');
+          setFailure(e.message || errorText(e));
+          setMessage('');
+        }
+      } finally {
+        lock.current = false;
+      }
+    }
+    async function execute() {
+      if (lock.current || !plan || typed.trim() !== 'УДАЛИТЬ') return;
+      lock.current = true;
+      cancel.current = false;
+      setPhase('delete');
+      setFailure('');
+      setMessage('Удаляем подтверждённые данные…');
+      try {
+        const r = await cleanupExecute(window.db, uid, plan, guard, c => {
+          if (live.current) setCounts(c);
+        }, () => cancel.current);
+        if (live.current) {
+          setCounts(r);
+          setPhase('done');
+          setMessage(`${r.stopped ? 'Остановлено' : 'Готово'}. Удалено: ${r.deleted}. Пропущено: ${r.skipped}.`);
+          setPlan(null);
+          setTyped('');
+        }
+      } catch (e) {
+        if (live.current) {
+          const r = e.cleanupResult || counts;
+          setCounts(r);
+          setPhase('done');
+          setPlan(null);
+          setFailure(`${e.message || errorText(e)} Подтверждено удалений: ${r.deleted}. При потере связи итог последней порции может быть неизвестен — запустите новую проверку.`);
+          setMessage('');
+        }
+      } finally {
+        lock.current = false;
+      }
+    }
+    return /*#__PURE__*/React.createElement("section", {
+      className: "adm-maint"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "adm-maint-toggle",
+      "aria-expanded": open,
+      onClick: () => setOpen(v => !v)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "adm-maint-symbol"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "settings",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445"), /*#__PURE__*/React.createElement("small", null, "\u041A\u043E\u043C\u043D\u0430\u0442\u044B \u0448\u0430\u0445\u043C\u0430\u0442 \u0438 \u0438\u0441\u0442\u043E\u0440\u0438\u044F \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A")), /*#__PURE__*/React.createElement("span", {
+      className: `adm-maint-chevron ${open ? 'open' : ''}`
+    }, "\u2304")), /*#__PURE__*/React.createElement(AdminPresence, {
+      show: open
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-body"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-grid"
+    }, /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "chess",
+      size: 24
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0428\u0430\u0445\u043C\u0430\u0442\u043D\u044B\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u041E\u0441\u0432\u043E\u0431\u043E\u0434\u0438\u0442\u0435 \u0441\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u0441\u043B\u0435 \u0438\u0433\u0440\u044B. \u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438 \u043C\u043E\u0436\u043D\u043E \u0443\u0434\u0430\u043B\u0438\u0442\u044C, \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435."), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect('finished')
+    }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435"), /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect('rooms')
+    }, "\u0412\u0441\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "chat",
+      size: 24
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u043B\u0438\u0447\u043D\u044B\u0445 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A. \u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438 \u0438 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043E\u0431\u0449\u0435\u043D\u0438\u044E \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect('chat')
+    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0438\u0441\u0442\u043E\u0440\u0438\u044E")))), message && /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-status",
+      role: "status"
+    }, busy && /*#__PURE__*/React.createElement("i", {
+      className: "adm-spinner"
+    }), message), failure && /*#__PURE__*/React.createElement("p", {
+      className: "adm-error",
+      role: "alert"
+    }, failure), plan && phase === 'preview' && plan.refs.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-confirm"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+      className: "adm-eyebrow"
+    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.refs.length), " ", plan.kind === 'chat' ? 'сообщений' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
+      className: "adm-input",
+      value: typed,
+      onChange: e => setTyped(e.target.value),
+      autoComplete: "off",
+      spellCheck: false
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      onClick: () => {
+        setPlan(null);
+        setMessage('');
+        setPhase('idle');
+      }
+    }, "\u041E\u0442\u043C\u0435\u043D\u0430"), /*#__PURE__*/React.createElement(Btn, {
+      variant: "danger",
+      disabled: typed.trim() !== 'УДАЛИТЬ',
+      onClick: execute
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "alertTriangle",
+      size: 16
+    }), "\u0423\u0434\u0430\u043B\u0438\u0442\u044C"))), phase === 'delete' && /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-progress"
+    }, /*#__PURE__*/React.createElement("progress", {
+      value: counts.processed,
+      max: Math.max(1, plan?.refs.length || 1)
+    }), /*#__PURE__*/React.createElement("span", null, "\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E ", counts.processed, " \u0438\u0437 ", plan?.refs.length, " \xB7 \u0443\u0434\u0430\u043B\u0435\u043D\u043E ", counts.deleted)), busy && /*#__PURE__*/React.createElement(Btn, {
+      onClick: () => {
+        cancel.current = true;
+        setMessage('Останавливаем после текущей операции…');
+      }
+    }, "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C"))));
+  }
+  function AdminPanel({
+    onKicked
+  }) {
+    const motionRoot = useRef(null);
+    useAdminRipples(motionRoot);
+    const [uid, setUid] = useState(window.auth?.currentUser?.uid || null);
+    const [authReady, setAuthReady] = useState(!!window.auth?.currentUser || typeof window.auth?.onAuthStateChanged !== 'function');
+    const [access, setAccess] = useState({
+      state: 'checking',
+      uid: null,
+      message: ''
+    });
+    const [retry, setRetry] = useState(0);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState('all');
+    const [sort, setSort] = useState('name');
+    const [page, setPage] = useState(1);
+    const [selectedId, setSelectedId] = useState(null);
+    const [pending, setPending] = useState(() => new Set());
+    const [confirm, setConfirm] = useState(null);
+    const [dialogError, setDialogError] = useState('');
+    const [importUid, setImportUid] = useState(null);
+    const [toasts, setToasts] = useState([]);
+    const alive = useRef(true),
+      locks = useRef(new Set()),
+      timers = useRef(new Set());
+    const actor = useRef(uid),
+      accessRef = useRef(access),
+      kicked = useRef(null),
+      onKickedRef = useRef(onKicked);
+    actor.current = uid;
+    accessRef.current = access;
+    onKickedRef.current = onKicked;
+    const ready = access.state === 'ready' && access.uid === uid;
+    const directory = useAllUsers(ready, uid, retry);
+    const users = directory.rows,
+      loadError = directory.error;
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+      const timer = setInterval(() => setNow(Date.now()), 60000);
+      return () => clearInterval(timer);
+    }, []);
+    useEffect(() => {
+      alive.current = true;
+      let style = document.getElementById('ultimate-admin-styles');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'ultimate-admin-styles';
+        document.head.appendChild(style);
+      }
+      style.textContent = STYLES;
+      return () => {
+        alive.current = false;
+        timers.current.forEach(clearTimeout);
+        timers.current.clear();
+      };
+    }, []);
+    useEffect(() => {
+      const auth = window.auth;
+      if (!auth) {
+        setAccess({
+          state: 'error',
+          uid: null,
+          message: 'Авторизация не подключена. Перезагрузите страницу.'
+        });
+        return;
+      }
+      if (typeof auth.onAuthStateChanged === 'function') return auth.onAuthStateChanged(user => {
+        if (actor.current !== (user?.uid || null)) directoryCache = null;
+        actor.current = user?.uid || null;
+        setAuthReady(true);
+        setUid(user?.uid || null);
+        setConfirm(null);
+        setImportUid(null);
+      }, () => setAccess({
+        state: 'error',
+        uid: null,
+        message: 'Не удалось проверить авторизацию.'
+      }));
+    }, [retry]);
+    useEffect(() => {
+      let live = true;
+      if (directoryCache && (directoryCache.uid !== uid || directoryCache.db !== window.db)) directoryCache = null;
+      setSelectedId(null);
+      if (!window.auth) {
+        setAccess({
+          state: 'error',
+          uid,
+          message: 'Авторизация не подключена. Перезагрузите страницу.'
+        });
+        return;
+      }
+      if (!authReady) {
+        setAccess({
+          state: 'checking',
+          uid,
+          message: ''
+        });
+        return;
+      }
+      if (!window.db) {
+        setAccess({
+          state: 'error',
+          uid,
+          message: 'База данных не подключена. Перезагрузите страницу.'
+        });
+        return;
+      }
+      if (!uid) {
+        setAccess({
+          state: 'denied',
+          uid,
+          message: 'Войдите в аккаунт администратора.'
+        });
+        return;
+      }
+      setAccess({
+        state: 'checking',
+        uid,
+        message: ''
+      });
+      const unsubscribe = window.db.collection('users').doc(uid).onSnapshot(snapshot => {
+        if (!live) return;
+        const user = snapshot.exists ? snapshot.data() : null;
+        if (!user || user.role !== 'admin' || user.isBanned) {
+          setAccess({
+            state: 'denied',
+            uid,
+            message: user?.isBanned ? 'Аккаунт заблокирован.' : 'Для этой панели нужны права администратора.'
+          });
+          directoryCache = null;
+          setConfirm(null);
+          setImportUid(null);
+        } else setAccess({
+          state: 'ready',
+          uid,
+          message: ''
+        });
+      }, error => {
+        if (!live) return;
+        const denied = String(error.code).includes('permission-denied');
+        setAccess({
+          state: denied ? 'denied' : 'error',
+          uid,
+          message: denied ? 'Нет доступа к профилю администратора.' : 'Не удалось проверить права. Проверьте подключение и повторите.'
+        });
+        directoryCache = null;
+        setConfirm(null);
+        setImportUid(null);
+      });
+      return () => {
+        live = false;
+        unsubscribe();
+      };
+    }, [uid, retry, authReady]);
+    useEffect(() => {
+      if (access.state !== 'denied') {
+        if (access.state === 'ready') kicked.current = null;
+        return;
+      }
+      const timer = setTimeout(() => {
+        if (kicked.current === access.message) return;
+        kicked.current = access.message;
+        onKickedRef.current?.();
+      }, 1400);
+      return () => clearTimeout(timer);
+    }, [access.state, access.message]);
+    useEffect(() => {
+      setPage(1);
+      setSelectedId(null);
+    }, [search, filter, sort]);
+    const list = useMemo(() => {
+      const q = search.trim().toLocaleLowerCase();
+      return array(users).filter(user => (filter !== 'admins' || user.role === 'admin') && (filter !== 'banned' || user.isBanned) && (filter !== 'students' || user.role !== 'admin') && (filter !== 'inactive' || lastActivity(user) != null && now - lastActivity(user) >= 7 * 86400000) && (!q || `${nameOf(user)} ${str(user.email)} ${user.id}`.toLocaleLowerCase().includes(q))).sort((a, b) => {
+        if (sort === 'activity') {
+          const delta = (lastActivity(b) || 0) - (lastActivity(a) || 0);
+          if (delta) return delta;
+        }
+        if (sort === 'tests') {
+          const delta = testsOf(b).length - testsOf(a).length;
+          if (delta) return delta;
+        }
+        if (sort === 'role') {
+          const delta = Number(b.role === 'admin') - Number(a.role === 'admin');
+          if (delta) return delta;
+        }
+        return userNameCollator.compare(nameOf(a), nameOf(b)) || a.id.localeCompare(b.id);
+      });
+    }, [users, search, filter, sort, now]);
+    const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    const currentPage = Math.min(page, pageCount);
+    const visible = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const selected = list.find(user => user.id === selectedId) || visible[0] || null;
+    const importUser = array(users).find(user => user.id === importUid);
+    const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
+    function dismissToast(id) {
+      if (!alive.current) return;
+      setToasts(previous => previous.map(item => item.id === id ? {
+        ...item,
+        leaving: true
+      } : item));
+      const delay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 250;
+      const timer = setTimeout(() => {
+        timers.current.delete(timer);
+        if (alive.current) setToasts(previous => previous.filter(item => item.id !== id));
+      }, delay);
+      timers.current.add(timer);
+    }
+    function toast(message, type = 'success') {
+      if (!alive.current) return;
+      const id = `${Date.now()}-${Math.random()}`;
+      setToasts(previous => [...previous.slice(-3), {
+        id,
+        message,
+        type
+      }]);
+      const timer = setTimeout(() => {
+        timers.current.delete(timer);
+        if (alive.current) dismissToast(id);
+      }, 4500);
+      timers.current.add(timer);
+    }
+    // Транзакция читает актуальный профиль и не затирает параллельные изменения.
+    // Реальная авторизация должна оставаться в существующих Firestore Rules.
+    async function mutate(targetUid, transform, message) {
+      const actorUid = actor.current;
+      if (!actorUid || accessRef.current.state !== 'ready' || accessRef.current.uid !== actorUid) throw problem('Права администратора не подтверждены.');
+      if (locks.current.has(targetUid)) throw problem('Для этого пользователя уже выполняется сохранение.');
+      locks.current.add(targetUid);
+      setPending(new Set(locks.current));
+      try {
+        const db = window.db;
+        if (!db?.runTransaction) throw problem('Не удалось подключить транзакции Firebase. Проверьте подключение базы данных.');
+        const auditId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        await db.runTransaction(async transaction => {
+          if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился. Откройте панель заново.');
+          const selfRef = db.collection('users').doc(actorUid),
+            targetRef = db.collection('users').doc(targetUid);
+          const selfSnapshot = await transaction.get(selfRef);
+          const self = selfSnapshot.exists ? selfSnapshot.data() : null;
+          if (!self || self.role !== 'admin' || self.isBanned) throw problem('Права администратора отозваны.');
+          const targetSnapshot = targetUid === actorUid ? selfSnapshot : await transaction.get(targetRef);
+          if (!targetSnapshot.exists) throw problem('Пользователь уже удалён.');
+          const current = targetSnapshot.data();
+          const patch = transform(current, actorUid);
+          if (!alive.current || actor.current !== actorUid) throw problem('Аккаунт изменился.');
+          const changes = auditChanges(current, patch);
+          const adminAudit = [...array(current.adminAudit).filter(e => e && typeof e === 'object').slice(-99), {
+            id: auditId,
+            at: new Date().toISOString(),
+            actorUid,
+            actorName: nameOf(self).slice(0, 120),
+            action: message || 'Настройки изменены',
+            changes
+          }];
+          const updated = {
+            ...current,
+            ...patch,
+            adminAudit
+          };
+          if (new TextEncoder().encode(JSON.stringify(updated)).length > 850 * 1024) throw problem('Профиль слишком большой. Уменьшите объём назначенных тестов перед сохранением.');
+          transaction.update(targetRef, {
+            ...patch,
+            adminAudit
+          });
+        });
+        if (alive.current && actor.current === actorUid && message) toast(message);
+      } finally {
+        locks.current.delete(targetUid);
+        if (alive.current) setPending(new Set(locks.current));
+      }
+    }
+    function quick(transform, message = 'Настройки сохранены') {
+      if (!selected) return;
+      mutate(selected.id, transform, message).catch(error => toast(errorText(error), 'error'));
+    }
+    function ask(kind, parts = []) {
+      if (!selected) return;
+      if (kind === 'reset' && !parts.length) return;
+      const user = selected;
+      const names = SUBJECTS.filter(s => parts.includes(s.id)).map(s => s.label).join(', ');
+      if (kind !== 'reset' && user.id === actor.current) {
+        toast('Собственные права и блокировку изменить нельзя.', 'error');
+        return;
+      }
+      const config = kind === 'role' ? {
+        title: user.role === 'admin' ? 'Снять права администратора?' : 'Выдать права администратора?',
+        message: `${nameOf(user)} ${user.role === 'admin' ? 'потеряет' : 'получит'} доступ к панели управления.`,
+        label: user.role === 'admin' ? 'Снять права' : 'Выдать права',
+        danger: true,
+        value: user.role !== 'admin',
+        expected: user.role
+      } : kind === 'ban' ? {
+        title: user.isBanned ? 'Снять блокировку?' : 'Заблокировать пользователя?',
+        message: `${nameOf(user)} ${user.isBanned ? 'снова получит доступ к платформе.' : 'будет заблокирован на платформе.'}`,
+        label: user.isBanned ? 'Разблокировать' : 'Заблокировать',
+        danger: !user.isBanned,
+        value: !user.isBanned,
+        expected: !!user.isBanned
+      } : {
+        title: 'Сбросить выбранное?',
+        message: `У ${nameOf(user)} будет удалено без возможности восстановления: ${names}. Назначенные тесты останутся.`,
+        label: 'Сбросить',
+        danger: true,
+        parts
+      };
+      setDialogError('');
+      setConfirm({
+        ...config,
+        kind,
+        uid: user.id
+      });
+    }
+    async function confirmAction() {
+      if (!confirm || locks.current.has(confirm.uid)) return;
+      const job = confirm;
+      setDialogError('');
+      try {
+        await mutate(job.uid, (current, actorUid) => {
+          if (job.kind === 'role' || job.kind === 'ban') {
+            if (job.uid === actorUid) throw problem('Нельзя изменять собственные права или блокировку.');
+            if (job.kind === 'role') {
+              if (current.role !== job.expected) throw problem('Роль уже изменена другим администратором. Закройте окно и проверьте профиль.');
+              return {
+                role: job.value ? 'admin' : 'student'
+              };
+            }
+            if (!!current.isBanned !== job.expected) throw problem('Блокировка уже изменена. Закройте окно и проверьте профиль.');
+            return {
+              isBanned: job.value
+            };
+          }
+          if (job.kind === 'remove') {
+            if (current.assignedTests != null && !Array.isArray(current.assignedTests)) throw problem('Список тестов в профиле имеет неверный формат.');
+            return {
+              assignedTests: array(current.assignedTests).filter(test => test?.id !== job.testId)
+            };
+          }
+          const patch = {};
+          if (job.parts.includes('tests')) patch.testHistory = [];
+          if (job.parts.includes('excel')) patch.excelProgress = {
+            level: 1,
+            xp: 0,
+            completedLessons: 0,
+            streak: 0
+          };
+          if (job.parts.includes('typing')) patch.typingProgress = {
+            maxWpm: 0,
+            maxCombo: 0,
+            testsCompleted: 0
+          };
+          if (job.parts.includes('hotkeys')) patch.hotkeyProgress = {
+            maxScore: 0,
+            totalScore: 0,
+            sessionsPlayed: 0,
+            history: []
+          };
+          return patch;
+        }, job.kind === 'remove' ? 'Тест удалён' : job.kind === 'reset' ? 'Статистика сброшена' : 'Изменения сохранены');
+        if (alive.current) setConfirm(null);
+      } catch (error) {
+        if (alive.current) setDialogError(errorText(error));
+      }
+    }
+    async function saveTest(test) {
+      const targetUid = importUid,
+        actorUid = actor.current;
+      // Числовой id сохранён для совместимости с существующим тестовым модулем.
+      const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+      await mutate(targetUid, current => {
+        if (current.assignedTests != null && !Array.isArray(current.assignedTests)) throw problem('Список тестов в профиле имеет неверный формат.');
+        if (testsOf(current).some(item => item.id === id)) throw problem('Повторите назначение теста.');
+        const assignedTests = [...array(current.assignedTests), {
+          id,
+          title: test.title,
+          data: test.data
+        }];
+        // Консервативный бюджет: вопросы хранятся в одном документе пользователя.
+        const bytes = new TextEncoder().encode(JSON.stringify({
+          ...current,
+          assignedTests
+        })).length;
+        if (bytes > 700 * 1024) throw problem('Профиль содержит слишком много данных. Удалите ненужные назначенные тесты или уменьшите изображения.');
+        return {
+          assignedTests
+        };
+      }, 'Тест назначен');
+      if (alive.current && actor.current === actorUid) setImportUid(null);
+    }
+    const changePage = value => {
+      setPage(Math.max(1, Math.min(pageCount, value)));
+      setSelectedId(null);
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      className: "adm-root",
+      ref: motionRoot
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-toasts",
+      "aria-live": "polite"
+    }, toasts.map(item => /*#__PURE__*/React.createElement("div", {
+      key: item.id,
+      className: `adm-toast ${item.type} ${item.leaving ? 'leaving' : ''}`
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: item.type === 'error' ? 'alertTriangle' : 'checkCircle',
+      size: 17
+    }), /*#__PURE__*/React.createElement("span", null, item.message), /*#__PURE__*/React.createElement(IconBtn, {
+      label: "\u0421\u043A\u0440\u044B\u0442\u044C \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435",
+      onClick: () => dismissToast(item.id)
+    })))), /*#__PURE__*/React.createElement(AdminPresence, {
+      immediate: !ready,
+      show: !!(ready && confirm)
+    }, ready && confirm && /*#__PURE__*/React.createElement(Dialog, {
+      title: confirm.title,
+      busy: pending.has(confirm.uid),
+      onClose: () => setConfirm(null)
+    }, /*#__PURE__*/React.createElement("p", null, confirm.message), dialogError && /*#__PURE__*/React.createElement("p", {
+      className: "adm-error",
+      role: "alert"
+    }, dialogError), /*#__PURE__*/React.createElement("div", {
+      className: "adm-dialog-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: pending.has(confirm.uid),
+      onClick: () => setConfirm(null)
+    }, "\u041E\u0442\u043C\u0435\u043D\u0430"), /*#__PURE__*/React.createElement(Btn, {
+      variant: confirm.danger ? 'danger' : 'primary',
+      disabled: pending.has(confirm.uid),
+      onClick: confirmAction
+    }, pending.has(confirm.uid) ? 'Сохраняем…' : confirm.label)))), /*#__PURE__*/React.createElement(AdminPresence, {
+      immediate: !ready,
+      show: !!(ready && importUser)
+    }, ready && importUser && /*#__PURE__*/React.createElement(ImportDialog, {
+      key: importUid,
+      user: importUser,
+      busy: pending.has(importUid),
+      onClose: () => setImportUid(null),
+      onSave: saveTest
+    })), /*#__PURE__*/React.createElement("main", {
+      className: "adm-shell",
+      "aria-label": "\u041F\u0430\u043D\u0435\u043B\u044C \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "adm-head"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-brand"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "shield",
+      size: 24
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-eyebrow"
+    }, "ULTIMATE LMS / ADMIN"), /*#__PURE__*/React.createElement("h2", null, "\u041F\u0430\u043D\u0435\u043B\u044C \u0443\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F"), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438, \u0434\u043E\u0441\u0442\u0443\u043F\u044B \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u044F")), ready && !loadError && users && /*#__PURE__*/React.createElement("div", {
+      className: "adm-live"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "adm-dot"
+    }), directory.busy ? 'Обновление…' : 'Автообновление')), !ready ? /*#__PURE__*/React.createElement(Empty, {
+      title: access.state === 'checking' ? 'Проверяем права доступа…' : access.state === 'denied' ? 'Доступ ограничен' : 'Не удалось открыть панель'
+    }, /*#__PURE__*/React.createElement("p", {
+      role: "status"
+    }, access.message), access.state === 'error' && /*#__PURE__*/React.createElement(Btn, {
+      onClick: () => setRetry(value => value + 1)
+    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
+      key: uid,
+      uid: uid
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "adm-summary"
+    }, [['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => /*#__PURE__*/React.createElement("div", {
+      className: "adm-summary-card",
+      key: label
+    }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement(AdminNumber, {
+      value: users === null ? '—' : stats[index]
+    })), /*#__PURE__*/React.createElement(AdminIcon, {
+      name: icon,
+      size: 21
+    })))), loadError && users === null ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-banner",
+      role: "alert"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "alertTriangle",
+      size: 19
+    }), /*#__PURE__*/React.createElement("span", null, loadError), /*#__PURE__*/React.createElement(Btn, {
+      onClick: () => setRetry(value => value + 1)
+    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement("div", {
+      className: "adm-workspace"
+    }, /*#__PURE__*/React.createElement("aside", {
+      className: "adm-directory",
+      "aria-label": "\u0421\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-section-head"
+    }, /*#__PURE__*/React.createElement("h3", null, "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438"), /*#__PURE__*/React.createElement("span", {
+      className: "adm-count",
+      "aria-live": "polite"
+    }, users === null ? 'Загрузка…' : `${list.length} найдено`)), /*#__PURE__*/React.createElement("div", {
+      className: "adm-search"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "search",
+      size: 15
+    }), /*#__PURE__*/React.createElement("input", {
+      className: "adm-input",
+      value: search,
+      onChange: event => setSearch(event.target.value),
+      placeholder: "\u0418\u043C\u044F, email \u0438\u043B\u0438 UID",
+      "aria-label": "\u041F\u043E\u0438\u0441\u043A \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"
+    }), search && /*#__PURE__*/React.createElement(IconBtn, {
+      label: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043F\u043E\u0438\u0441\u043A",
+      onClick: () => setSearch('')
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "adm-filter",
+      "aria-label": "\u0424\u0438\u043B\u044C\u0442\u0440 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"
+    }, [['all', 'Все'], ['students', 'Студенты'], ['admins', 'Админы'], ['banned', 'Заблокированы'], ['inactive', 'Не заходили 7 дней']].map(([id, label]) => /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: id,
+      className: `adm-chip ${filter === id ? 'active' : ''}`,
+      "aria-pressed": filter === id,
+      onClick: () => setFilter(id)
+    }, label))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-sort"
+    }, /*#__PURE__*/React.createElement("span", null, "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u043A\u0430"), /*#__PURE__*/React.createElement("select", {
+      "aria-label": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u043A\u0430 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439",
+      value: sort,
+      onChange: event => setSort(event.target.value)
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "name"
+    }, "\u041F\u043E \u0438\u043C\u0435\u043D\u0438"), /*#__PURE__*/React.createElement("option", {
+      value: "role"
+    }, "\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u044B \u0432\u044B\u0448\u0435"), /*#__PURE__*/React.createElement("option", {
+      value: "tests"
+    }, "\u0411\u043E\u043B\u044C\u0448\u0435 \u0442\u0435\u0441\u0442\u043E\u0432"), /*#__PURE__*/React.createElement("option", {
+      value: "activity"
+    }, "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C"))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-users"
+    }, users === null ? /*#__PURE__*/React.createElement("div", {
+      role: "status",
+      "aria-label": "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"
+    }, [0, 1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "adm-skeleton"
+    }))) : !visible.length ? /*#__PURE__*/React.createElement(Empty, {
+      compact: true,
+      title: users.length ? 'Никого не нашли' : 'Пока нет пользователей'
+    }, users.length ? 'Измените поиск или фильтр.' : 'Здесь появятся зарегистрированные пользователи.') : visible.map((user, index) => /*#__PURE__*/React.createElement("button", {
+      style: {
+        '--ad-order': index
+      },
+      type: "button",
+      key: user.id,
+      className: `adm-person ${selected?.id === user.id ? 'selected' : ''}`,
+      "aria-pressed": selected?.id === user.id,
+      onClick: () => setSelectedId(user.id)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "adm-avatar"
+    }, initials(user)), /*#__PURE__*/React.createElement("span", {
+      className: "adm-person-text"
+    }, /*#__PURE__*/React.createElement("strong", null, nameOf(user), user.id === uid ? ' · Вы' : ''), /*#__PURE__*/React.createElement("small", null, str(user.email) || user.id), /*#__PURE__*/React.createElement(Seen, {
+      user: user,
+      now: now
+    })), user.role === 'admin' && /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "shield",
+      size: 13
+    }), /*#__PURE__*/React.createElement("span", {
+      className: `adm-role-dot ${user.isBanned ? 'banned' : ''}`,
+      title: user.isBanned ? 'Заблокирован' : 'Не заблокирован'
+    })))), list.length > PAGE_SIZE && /*#__PURE__*/React.createElement("nav", {
+      className: "adm-pagination",
+      "aria-label": "\u0421\u0442\u0440\u0430\u043D\u0438\u0446\u044B \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: currentPage === 1,
+      onClick: () => changePage(currentPage - 1)
+    }, "\u041D\u0430\u0437\u0430\u0434"), /*#__PURE__*/React.createElement("span", null, currentPage, " / ", pageCount), /*#__PURE__*/React.createElement(Btn, {
+      disabled: currentPage === pageCount,
+      onClick: () => changePage(currentPage + 1)
+    }, "\u0414\u0430\u043B\u0435\u0435"))), selected ? /*#__PURE__*/React.createElement(UserDetails, {
+      key: selected.id,
+      user: selected,
+      allUsers: array(users),
+      now: now,
+      self: selected.id === uid,
+      busy: pending.has(selected.id),
+      onAction: ask,
+      onExport: async parts => {
+        try {
+          const exportUid = actor.current;
+          await exportUser(selected, parts, array(users));
+          if (alive.current && exportUid === actor.current) toast('Отчёт Excel готов');
+        } catch (error) {
+          toast(errorText(error), 'error');
+        }
+      },
+      onModule: (moduleId, enabled) => quick(current => {
+        const modules = modulesOf(current);
+        return {
+          allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId)
+        };
+      }),
+      onHints: enabled => quick(() => ({
+        excelHintsEnabled: enabled
+      })),
+      onHotkeyHints: enabled => quick(() => ({
+        hotkeyHintsEnabled: enabled
+      }), 'Настройка подсказок сохранена'),
+      onChatMode: mode => quick(() => ({
+        chatContactMode: mode
+      }), 'Настройки чата сохранены'),
+      onChatUser: (contactUid, enabled) => quick(current => {
+        const currentAllowed = chatAllowedOf(current);
+        return {
+          chatContactMode: 'selected',
+          chatAllowedUsers: enabled ? [...new Set([...currentAllowed, contactUid])] : currentAllowed.filter(id => id !== contactUid)
+        };
+      }, 'Контакты чата обновлены'),
+      onImport: () => setImportUid(selected.id),
+      onRemove: test => {
+        setDialogError('');
+        setConfirm({
+          kind: 'remove',
+          uid: selected.id,
+          testId: test.id,
+          title: 'Удалить назначенный тест?',
+          message: `«${str(test.title) || 'Без названия'}» будет удалён у ${nameOf(selected)}.`,
+          label: 'Удалить тест',
+          danger: true
+        });
+      }
+    }) : /*#__PURE__*/React.createElement(Empty, {
+      title: users === null ? 'Загружаем профили…' : 'Выберите пользователя'
+    }, "\u0417\u0434\u0435\u0441\u044C \u0431\u0443\u0434\u0443\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u044B, \u0442\u0435\u0441\u0442\u044B, \u0447\u0430\u0442 \u0438 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430."))), /*#__PURE__*/React.createElement("footer", {
+      className: "adm-footer"
+    }, /*#__PURE__*/React.createElement("span", null, "Ultimate LMS"), /*#__PURE__*/React.createElement("span", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044F"))));
+  }
+  Object.assign(window, {
+    AdminPanel
+  });
 })();
