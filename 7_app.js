@@ -123,7 +123,9 @@ function loadExcelModule() {
     script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
     document.head.appendChild(script);
-  }).catch(error => { excelModulePromise = null; throw error; });
+  }).catch(error => {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":126,"operation":"promise-catch","handled":true});
+ excelModulePromise = null; throw error; });
   return excelModulePromise;
 }
 function LazyExcelTrainer(props) {
@@ -248,6 +250,8 @@ function App() {
       }
       setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
     } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":250,"operation":"caught","handled":true});
+
       console.error('[Ultimate LMS Local Data]', error);
       setSets([]);
       setHistory([]);
@@ -336,6 +340,8 @@ function App() {
             initialData = await window.ensureLmsUserProfile(currentUser, { signal });
             break;
           } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":338,"operation":"caught","handled":true});
+
             const code = String(error?.code || '').split('/').pop();
             const temporary = ['unavailable', 'deadline-exceeded', 'aborted', 'network-request-failed'].includes(code);
             if (!temporary || attempt === 2 || signal.aborted) throw error;
@@ -380,6 +386,8 @@ function App() {
             try {
               await window.auth.signOut();
             } catch (signOutError) {
+window.reportLmsError?.(signOutError, {"section":"platform","source":"7_app.js","line":382,"operation":"caught","handled":true});
+
               console.error('[Ultimate LMS SignOut]', signOutError);
             }
             alert('Доступ закрыт! Вы были исключены администратором.');
@@ -387,6 +395,8 @@ function App() {
           }
           applyProfile(currentUser, data);
         }, error => {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":389,"operation":"snapshot","handled":true});
+
           console.error('[Ultimate LMS Profile Snapshot]', error);
           if (!active || sequence !== authSequence) return;
           publishReady(null);
@@ -394,6 +404,8 @@ function App() {
           setAuthError('Не удалось обновить профиль (' + (error.code || 'unknown') + '). Нажмите «Повторить».');
         });
       } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":396,"operation":"caught","handled":true});
+
         console.error('[Ultimate LMS Profile Bootstrap]', error);
         if (!active || sequence !== authSequence) return;
         publishReady(null);
@@ -472,6 +484,8 @@ function App() {
           }
         }
       } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":474,"operation":"caught","handled":true});
+
         console.warn('[Ultimate LMS Fingerprint]', error);
       }
     }
@@ -583,6 +597,8 @@ function App() {
         assignedTests: updatedTests
       });
     } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":585,"operation":"caught","handled":true});
+
       console.error('[Ultimate LMS Remove Assigned Test]', error);
       alert('Ошибка при удалении теста');
     }
@@ -596,6 +612,8 @@ function App() {
         nickname: newNick.trim()
       });
     } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":598,"operation":"caught","handled":true});
+
       console.error('[Ultimate LMS Nickname]', error);
       alert('Ошибка при сохранении никнейма!');
     }
@@ -619,6 +637,8 @@ function App() {
       });
       await window.auth.signInWithPopup(provider);
     } catch (error) {
+window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":621,"operation":"caught","handled":true});
+
       console.error('[Ultimate LMS Google Auth]', error);
       const ignoredErrors = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
       if (ignoredErrors.includes(error?.code)) {
@@ -927,4 +947,4 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
   }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(/*#__PURE__*/React.createElement(App, null));
+root.render(React.createElement(window.LmsErrorBoundary || React.Fragment, null, React.createElement(App, null)));
