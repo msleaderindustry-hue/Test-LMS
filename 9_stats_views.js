@@ -533,6 +533,8 @@
           requestAnimationFrame(() => document.getElementById(historyId)?.focus());
         }
       } catch (e) {
+window.reportLmsError?.(e, {"section":"stats","source":"9_stats_views.js","line":535,"operation":"caught","handled":true});
+
         if (alive.current) setError(e.message || 'Не удалось удалить запись. Попробуйте ещё раз.');
       } finally {
         lock.current = false;
@@ -543,7 +545,9 @@
           try {
             downloadHistory(rows);
             setExportError('');
-          } catch {
+          } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"stats","source":"9_stats_views.js","line":546,"operation":"caught","handled":true});
+
             setExportError('Не удалось скачать историю. Попробуй ещё раз.');
           }
         }}><Icon name="download" size={17} />Excel</button></div>{rows.length > 0 && <div className="usp-tools"><label className="usp-search"><Icon name="search" size={16} /><input aria-label="Поиск в истории" placeholder="Найти тему или имя…" value={query} onChange={e => {
@@ -603,6 +607,8 @@
           setStatus('ready');
         }
       }).catch(e => {
+window.reportLmsError?.(e, {"section":"stats","source":"9_stats_views.js","line":605,"operation":"promise-catch","handled":true});
+
         if (!active) return;
         setUsers([]);
         setStatus('error');
