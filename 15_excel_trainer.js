@@ -3360,7 +3360,9 @@ const CALCULABLE_NAMES = new Set(["ABS","ACCRINT","ACOS","ACOSH","ACOT","ACOTH",
         timer=setTimeout(()=>finish(Object.assign(new Error('Calculation timeout'),{code:'LIMIT'})),6500);
         signal?.addEventListener('abort',abort,{once:true});
         worker.postMessage({lesson,meta:FUNCTION_META,type,formula});
-      } catch(error) {finish(Object.assign(error,{code:'ENGINE'}));}
+      } catch(error) {
+window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js","line":3363,"operation":"caught","handled":true});
+finish(Object.assign(error,{code:'ENGINE'}));}
     });
   }
   async function requestLessonJSON(prompt,signal) {
@@ -4584,6 +4586,8 @@ resultValue рассчитан отдельным вычислителем. Не
             setSavePending(false);
           }
         } catch (error) {
+window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js","line":4586,"operation":"caught","handled":true});
+
           if (accountRef.current === uid) {
             setSaveError(true);
             setSavePending(false);
@@ -4642,7 +4646,7 @@ resultValue рассчитан отдельным вычислителем. Не
             progressRef.current = clean;
             setProgress(clean);
           }
-        }, () => setSaveError(true));
+        }, (__lmsSnapshotError) => setSaveError(true));
       };
       connect(window.auth?.currentUser);
       const unsubscribeAuth = window.auth?.onAuthStateChanged?.(user => {
@@ -4801,6 +4805,8 @@ resultValue рассчитан отдельным вычислителем. Не
             acceptedLesson = await auditLesson({...parsedFormula, ...computed}, controller.signal);
             break;
           } catch (validationError) {
+window.reportLmsError?.(validationError, {"section":"excel","source":"15_excel_trainer.js","line":4803,"operation":"caught","handled":true});
+
             if (controller.signal.aborted || ['ENGINE','NETWORK'].includes(validationError.code)) throw validationError;
             validationIssue = String(validationError.message || 'Validation failed').slice(0,600);
             if (attempt === 1) throw Object.assign(new Error(validationIssue), {code:'QUALITY'});
@@ -4810,6 +4816,8 @@ resultValue рассчитан отдельным вычислителем. Не
         setCurrentLesson(acceptedLesson);
         pushToast(t.toastLessonReady);
       } catch (error) {
+window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js","line":4812,"operation":"caught","handled":true});
+
         if (requestId === requestIdRef.current)
           setError(controller.signal.aborted ? 'ABORTED' : error.code || 'NETWORK');
       } finally {
@@ -4859,6 +4867,8 @@ resultValue рассчитан отдельным вычислителем. Не
         const checked = await calculateLesson(currentLesson, {type:'answer', formula:inputValue, signal:requestRef.current?.signal});
         isCorrect = checked.correct;
       } catch (error) {
+window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js","line":4861,"operation":"caught","handled":true});
+
         if (checkedRequestId !== requestIdRef.current) return;
         if (['ENGINE','LIMIT','ABORTED'].includes(error.code)) {
           pushToast(calculationErrorText(error.code, lang));
