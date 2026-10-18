@@ -125,7 +125,9 @@
                     finish(null, value);
                 }, error => finish(error));
                 if (done) stop?.();
-            } catch (error) { finish(error); }
+            } catch (error) {
+window.reportLmsError?.(error, {"section":"auth","source":"3_auth_admin.js","line":128,"operation":"caught","handled":true});
+ finish(error); }
         });
         checkActive();
         const checked = data => {
@@ -192,6 +194,8 @@
                 // onAuthStateChanged в главном App теперь сам
                 // проверит серверный профиль и только после этого откроет LMS.
             } catch (err) {
+window.reportLmsError?.(err, {"section":"auth","source":"3_auth_admin.js","line":194,"operation":"caught","handled":true});
+
                 console.error('[Ultimate LMS Auth]', err);
 
                 if (
