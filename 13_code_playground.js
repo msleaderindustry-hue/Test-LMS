@@ -672,6 +672,8 @@ HTML:\n${current.html}\nCSS:\n${current.css}\nJavaScript:\n${current.js}`;
         if (!answer) throw new Error('Наставник вернул пустой ответ. Попробуй уточнить вопрос.');
         if (mountedRef.current && requestRef.current === controller) setAiResponse(answer);
       } catch (error) {
+window.reportLmsError?.(error, {"section":"code","source":"13_code_playground.js","line":674,"operation":"caught","handled":true});
+
         if (mountedRef.current && requestRef.current === controller) setAiError(controller.signal.aborted ? timedOut ? 'Ответ не успел загрузиться. Попробуй ещё раз.' : 'Запрос отменён.' : error.message || 'Не удалось подключиться.');
       } finally {
         clearTimeout(timeout);
