@@ -130,6 +130,8 @@
                 status: response.status
             };
         } catch (error) {
+window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","line":132,"operation":"caught","handled":true});
+
             if (error?.name === 'AbortError') {
                 console.error(
                     '[Ultimate LMS Discord] Превышено время ожидания ответа Worker.'
@@ -334,6 +336,8 @@
 
             return result;
         } catch (error) {
+window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","line":336,"operation":"caught","handled":true});
+
             console.error(
                 '[Ultimate LMS Visitor Logger]',
                 error
@@ -397,6 +401,8 @@
 
             return await postDiscord(payload);
         } catch (error) {
+window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","line":399,"operation":"caught","handled":true});
+
             console.error(
                 '[Ultimate LMS Security]',
                 error
@@ -599,6 +605,8 @@
                         }
                     );
                 } catch (trackerError) {
+window.reportLmsError?.(trackerError, {"section":"discord","source":"5_discord.js","line":601,"operation":"caught","handled":true});
+
                     console.warn(
                         '[Ultimate LMS Tracker]',
                         trackerError
@@ -608,6 +616,8 @@
 
             return result;
         } catch (error) {
+window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","line":610,"operation":"caught","handled":true});
+
             console.error(
                 '[Ultimate LMS Test Result]',
                 error
