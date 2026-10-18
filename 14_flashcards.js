@@ -255,6 +255,8 @@
         setReady(true);
         setNotice(`Колода готова · ${cards.length} карточек`);
       } catch (e) {
+window.reportLmsError?.(e, {"section":"flashcards","source":"14_flashcards.js","line":257,"operation":"caught","handled":true});
+
         if (mounted.current && id === version.current && (!controller.signal.aborted || timedOut)) setError(timedOut ? 'Генерация заняла слишком много времени. Попробуй ещё раз.' : 'Не удалось создать колоду. Попробуй уточнить тему. Текущие карточки остались на месте.');
       } finally {
         clearTimeout(timer);
