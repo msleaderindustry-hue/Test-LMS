@@ -2055,6 +2055,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
   }
   function DataMaintenance({
     uid,
+    standalone = false,
     users
   }) {
     const [category, setCategory] = useState('activity'),
@@ -2071,7 +2072,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
       setMessage('');
       setPhase('idle');
     }
-    const [open, setOpen] = useState(!!onlyKind),
+    const [open, setOpen] = useState(standalone || !!onlyKind),
       [phase, setPhase] = useState('idle'),
       [plan, setPlan] = useState(null);
     const [message, setMessage] = useState(''),
@@ -2184,11 +2185,11 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
     }
     return /*#__PURE__*/React.createElement("section", {
       className: `adm-maint ${onlyKind ? 'adm-maint-personal' : ''}`
-    }, !onlyKind && /*#__PURE__*/React.createElement("button", {
+    }, !onlyKind && /*#__PURE__*/React.createElement(standalone ? "div" : "button", {
       type: "button",
       className: "adm-maint-toggle",
-      "aria-expanded": open,
-      onClick: () => setOpen(v => !v)
+      "aria-expanded": standalone ? undefined : open,
+      onClick: standalone ? undefined : () => setOpen(v => !v)
     }, /*#__PURE__*/React.createElement("span", {
       className: "adm-maint-symbol"
     }, /*#__PURE__*/React.createElement(AdminIcon, {
@@ -2369,6 +2370,10 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
       message: ''
     });
     const [retry, setRetry] = useState(0);
+    const [screen, setScreen] = useState('overview');
+    const [visited, setVisited] = useState({overview:true});
+    const [mobileProfile, setMobileProfile] = useState(false);
+    const navigate = id => { setScreen(id); setVisited(v => ({...v, [id]:true})); };
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('name');
@@ -2406,7 +2411,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
         style.id = 'ultimate-admin-styles';
         document.head.appendChild(style);
       }
-      style.textContent = STYLES;
+      style.textContent = STYLES + '\n    /* Administration workspace, October 2026 */\n    .adm-redesign .adm-shell{max-width:1240px;border-radius:24px;background:var(--ad-bg)}\n    .adm-redesign .adm-head{padding:28px 30px 24px;background:linear-gradient(120deg,var(--ad-soft),transparent 75%)}\n    .adm-redesign .adm-brand{border-radius:16px;box-shadow:0 6px 20px #8055e51a}\n    .adm-main-nav{display:flex;gap:6px;padding:10px 24px;border-top:1px solid var(--ad-line);border-bottom:1px solid var(--ad-line);background:var(--ad-panel);overflow:auto}\n    .adm-root .adm-main-nav button{display:flex;align-items:center;justify-content:center;gap:9px;flex:1;padding:13px 16px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--ad-muted);font-size:13px;white-space:nowrap;transition:background .2s,color .2s}\n    .adm-root .adm-main-nav button.active{color:var(--ad-accent);background:var(--ad-soft);border-color:var(--ad-line);font-weight:700}\n    .adm-root .adm-main-nav button:hover{background:var(--ad-soft);color:var(--ad-text)}\n    .adm-screen[hidden]{display:none!important}.adm-screen:not([hidden]){animation:adm-screen-in .28s ease both;min-height:360px}\n    .adm-welcome{padding:30px 28px 22px}.adm-welcome h3{font-size:26px;letter-spacing:-.7px;margin:8px 0;color:var(--ad-text)}.adm-welcome p{font-size:13px;color:var(--ad-muted);line-height:1.7}\n    .adm-redesign .adm-summary{padding:0 28px 24px;gap:14px}.adm-redesign .adm-summary-card{border-radius:16px;padding:20px;background:var(--ad-panel)}\n    .adm-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:0 28px 30px}\n    .adm-root .adm-shortcut{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:22px;border:1px solid var(--ad-line);border-radius:18px;background:var(--ad-panel);color:var(--ad-text);transition:transform .2s,border-color .2s,box-shadow .2s;min-width:0}\n    .adm-root .adm-shortcut:hover{transform:translateY(-3px);border-color:var(--ad-accent);box-shadow:0 12px 24px #00000010}.adm-shortcut-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--ad-soft);color:var(--ad-accent);margin-bottom:20px}\n    .adm-shortcut h3{font-size:16px;margin-bottom:9px}.adm-shortcut p{font-size:12px;color:var(--ad-muted);line-height:1.7;margin-bottom:24px}.adm-shortcut-link{font-size:12px;font-weight:650;color:var(--ad-accent);margin-top:auto}\n    .adm-redesign .adm-workspace{border-top:0;grid-template-columns:340px minmax(0,1fr)}.adm-redesign .adm-directory{background:var(--ad-panel);padding:22px 16px}.adm-redesign .adm-person{padding:13px 10px}.adm-redesign .adm-person.selected{box-shadow:inset 3px 0 var(--ad-accent)}\n    .adm-redesign .adm-detail{padding:26px}.adm-redesign .adm-input,.adm-redesign select{min-height:40px;border-radius:10px}.adm-redesign .adm-chip{min-height:32px}.adm-redesign .adm-users{max-height:620px;overflow:auto}\n    .adm-root .adm-back-list{display:none}.adm-redesign .adm-maint{margin:24px;border-radius:18px}.adm-redesign .adm-maint-toggle{cursor:default}.adm-redesign .adm-maint-disclosure{display:none}.adm-redesign .adm-maint-body{padding-top:14px}\n    .adm-redesign :is(button,input,select,summary):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}\n    @keyframes adm-screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}\n    @media(max-width:850px){.adm-shortcuts{gap:10px}.adm-root .adm-shortcut{padding:16px}.adm-redesign .adm-workspace{grid-template-columns:280px minmax(0,1fr)}.adm-main-nav{padding:10px 16px}.adm-root .adm-main-nav button{padding:12px 10px}}\n    @media(max-width:620px){.adm-redesign .adm-head{padding:22px 16px}.adm-main-nav{display:grid;grid-template-columns:1fr 1fr;padding:10px;gap:4px}.adm-root .adm-main-nav button{justify-content:flex-start;font-size:12px}.adm-welcome{padding:22px 16px 18px}.adm-welcome h3{font-size:22px}.adm-redesign .adm-summary{padding:0 16px 18px;gap:10px}.adm-redesign .adm-summary-card{padding:14px}.adm-shortcuts{grid-template-columns:1fr;padding:0 16px 22px}.adm-shortcut-icon{margin-bottom:12px}.adm-shortcut p{margin-bottom:16px}.adm-redesign .adm-workspace{display:block}.adm-redesign .adm-directory{border:0}.adm-redesign .adm-users{max-height:none}.adm-redesign .adm-detail{display:none;padding:18px 16px}.adm-profile-open .adm-directory{display:none}.adm-profile-open .adm-detail{display:block}.adm-root.adm-profile-open .adm-back-list{display:block;margin:16px 16px 0;border:1px solid var(--ad-line);border-radius:10px;padding:10px 14px;background:var(--ad-panel);color:var(--ad-accent);font-size:13px}.adm-redesign .adm-maint{margin:16px}.adm-redesign .adm-overlay{align-items:flex-end;padding:10px}.adm-redesign .adm-dialog{border-radius:22px 22px 12px 12px;width:100%;max-height:85dvh;overflow:auto}}\n    @media(prefers-reduced-motion:reduce){.adm-redesign *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}\n';
       return () => {
         alive.current = false;
         timers.current.forEach(clearTimeout);
@@ -2550,7 +2555,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
     const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
     const currentPage = Math.min(page, pageCount);
     const visible = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-    const selected = list.find(user => user.id === selectedId) || visible[0] || null;
+    const selected = array(users).find(user => user.id === selectedId) || visible[0] || null;
     const importUser = array(users).find(user => user.id === importUid);
     const stats = useMemo(() => [array(users).length, array(users).filter(user => user.role === 'admin').length, array(users).filter(user => user.isBanned).length, array(users).reduce((sum, user) => sum + testsOf(user).length, 0)], [users]);
     function dismissToast(id) {
@@ -2754,7 +2759,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
       setSelectedId(null);
     };
     return /*#__PURE__*/React.createElement("div", {
-      className: "adm-root",
+      className: `adm-root adm-redesign ${mobileProfile ? "adm-profile-open" : ""}`,
       ref: motionRoot
     }, /*#__PURE__*/React.createElement("div", {
       className: "adm-toasts",
@@ -2818,11 +2823,13 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
       role: "status"
     }, access.message), access.state === 'error' && /*#__PURE__*/React.createElement(Btn, {
       onClick: () => setRetry(value => value + 1)
-    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(window.LmsErrorJournal || (() => null), {key: "errors-" + uid}), React.createElement(DataMaintenance, {
-      key: uid,
-      uid: uid,
-      users: users
-    }), /*#__PURE__*/React.createElement("div", {
+    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, React.createElement("nav", {className:"adm-main-nav", "aria-label":"Разделы панели"},
+      [['overview','barChart','Обзор'],['students','users','Ученики'],['diagnostics','activity','Диагностика'],['maintenance','settings','Обслуживание']].map(([id,icon,label]) => React.createElement("button", {key:id,type:"button",className:screen===id?'active':'',"aria-current":screen===id?'page':undefined,onClick:()=>navigate(id)},React.createElement(AdminIcon,{name:icon,size:18}),label))),
+    React.createElement("section",{className:"adm-screen",hidden:screen!=='diagnostics'}, visited.diagnostics && React.createElement(window.LmsErrorJournal || (()=>null),{key:'errors-'+uid,standalone:true,active:screen==='diagnostics'})),
+    React.createElement("section",{className:"adm-screen",hidden:screen!=='maintenance'}, visited.maintenance && React.createElement(DataMaintenance,{key:uid,uid,users,standalone:true})),
+    React.createElement("section",{className:"adm-screen adm-overview",hidden:screen!=='overview'},
+    React.createElement("div",{className:"adm-welcome"},React.createElement("div",{className:"adm-eyebrow"},"ВАША ПЛАТФОРМА"),React.createElement("h3",null,"Всё важное — под рукой"),React.createElement("p",null,"Управляйте обучением, доступами и состоянием платформы из одного места.")),
+    /*#__PURE__*/React.createElement("div", {
       className: "adm-summary"
     }, [['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => /*#__PURE__*/React.createElement("div", {
       className: "adm-summary-card",
@@ -2832,7 +2839,11 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
     })), /*#__PURE__*/React.createElement(AdminIcon, {
       name: icon,
       size: 21
-    })))), loadError && users === null ? /*#__PURE__*/React.createElement("div", {
+    })))), React.createElement("div",{className:"adm-shortcuts"},
+      [['students','users','Ученики и обучение','Профили, доступы, задания и результаты','Открыть учеников'],['diagnostics','activity','Состояние платформы','Ошибки, повторения и подробности событий','Открыть диагностику'],['maintenance','settings','Порядок в данных','Просмотр и очистка накопленных записей','Перейти к обслуживанию']].map(([id,icon,title,description,action])=>React.createElement("button",{type:"button",key:id,className:"adm-shortcut",onClick:()=>navigate(id)},React.createElement("span",{className:"adm-shortcut-icon"},React.createElement(AdminIcon,{name:icon,size:23})),React.createElement("h3",null,title),React.createElement("p",null,description),React.createElement("span",{className:"adm-shortcut-link"},action," →"))))),
+    React.createElement("section",{className:"adm-screen",hidden:screen!=='students'}, visited.students && React.createElement(React.Fragment,null,
+    React.createElement("button",{type:"button",className:"adm-back-list",onClick:()=>setMobileProfile(false)},"← К списку учеников"),
+    loadError && users === null ? /*#__PURE__*/React.createElement("div", {
       className: "adm-banner",
       role: "alert"
     }, /*#__PURE__*/React.createElement(AdminIcon, {
@@ -2906,7 +2917,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
       key: user.id,
       className: `adm-person ${selected?.id === user.id ? 'selected' : ''}`,
       "aria-pressed": selected?.id === user.id,
-      onClick: () => setSelectedId(user.id)
+      onClick: () => { setSelectedId(user.id); setMobileProfile(true); }
     }, /*#__PURE__*/React.createElement("span", {
       className: "adm-avatar"
     }, initials(user)), /*#__PURE__*/React.createElement("span", {
@@ -2985,11 +2996,13 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
       }
     }) : /*#__PURE__*/React.createElement(Empty, {
       title: users === null ? 'Загружаем профили…' : 'Выберите пользователя'
-    }, "\u0417\u0434\u0435\u0441\u044C \u0431\u0443\u0434\u0443\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u044B, \u0442\u0435\u0441\u0442\u044B, \u0447\u0430\u0442 \u0438 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430."))), /*#__PURE__*/React.createElement("footer", {
+    }, "\u0417\u0434\u0435\u0441\u044C \u0431\u0443\u0434\u0443\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u044B, \u0442\u0435\u0441\u0442\u044B, \u0447\u0430\u0442 \u0438 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430."))))), /*#__PURE__*/React.createElement("footer", {
       className: "adm-footer"
     }, /*#__PURE__*/React.createElement("span", null, "Ultimate LMS"), /*#__PURE__*/React.createElement("span", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044F"))));
   }
   Object.assign(window, {
-    AdminPanel
+    AdminPanel,
+    LmsAdminDialog: Dialog,
+    LmsAdminPresence: AdminPresence
   });
 })();
