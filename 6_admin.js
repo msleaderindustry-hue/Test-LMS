@@ -1026,7 +1026,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         let parsed;
         try {
           parsed = JSON.parse((await file.text()).replace(/^\uFEFF/, ''));
-        } catch {
+        } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"admin","source":"6_admin.js","line":1029,"operation":"caught","handled":true});
+
           throw problem('Не удалось прочитать JSON. Проверьте формат файла.');
         }
         const normalized = normalizeTest(parsed);
@@ -1034,6 +1036,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         setData(normalized);
         setTitle(previous => previous || file.name.replace(/\.json$/i, '').slice(0, 100));
       } catch (e) {
+window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":1036,"operation":"caught","handled":true});
+
         if (alive.current && sequence.current === seq) setError(errorText(e));
       } finally {
         if (alive.current && sequence.current === seq) setReading(false);
@@ -1049,6 +1053,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           data
         });
       } catch (e) {
+window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":1051,"operation":"caught","handled":true});
+
         if (alive.current) setError(errorText(e));
       }
     }
@@ -1229,6 +1235,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           }));
         }
       }, error => {
+window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":1231,"operation":"snapshot","handled":true});
+
         if (!live) return;
         directoryCache = null;
         setState({
@@ -1358,6 +1366,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           error: ''
         });
       }).catch(e => {
+window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":1360,"operation":"promise-catch","handled":true});
+
         if (live) setState({
           items: [],
           loading: false,
@@ -2033,6 +2043,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         stopped: false
       };
     } catch (error) {
+window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2035,"operation":"caught","handled":true});
+
       error.cleanupResult = {
         deleted,
         skipped,
@@ -2125,6 +2137,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setMessage(result.refs.length ? 'Проверьте объём перед удалением.' : 'Ничего не найдено — база уже чистая.');
         }
       } catch (e) {
+window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2127,"operation":"caught","handled":true});
+
         if (live.current) {
           setPhase('idle');
           setFailure(cleanupErrorText(e));
@@ -2154,6 +2168,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           window.dispatchEvent(new Event('lms:activity-cleaned'));
         }
       } catch (e) {
+window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,"operation":"caught","handled":true});
+
         if (live.current) {
           const r = e.cleanupResult || counts;
           setCounts(r);
@@ -2479,6 +2495,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           message: ''
         });
       }, error => {
+window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2481,"operation":"snapshot","handled":true});
+
         if (!live) return;
         const denied = String(error.code).includes('permission-denied');
         setAccess({
@@ -2701,6 +2719,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         }, job.kind === 'remove' ? 'Тест удалён' : job.kind === 'reset' ? 'Статистика сброшена' : 'Изменения сохранены');
         if (alive.current) setConfirm(null);
       } catch (error) {
+window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2703,"operation":"caught","handled":true});
+
         if (alive.current) setDialogError(errorText(error));
       }
     }
@@ -2798,7 +2818,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       role: "status"
     }, access.message), access.state === 'error' && /*#__PURE__*/React.createElement(Btn, {
       onClick: () => setRetry(value => value + 1)
-    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
+    }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(window.LmsErrorJournal || (() => null), {key: "errors-" + uid}), React.createElement(DataMaintenance, {
       key: uid,
       uid: uid,
       users: users
@@ -2923,6 +2943,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           await exportUser(selected, parts, array(users));
           if (alive.current && exportUid === actor.current) toast('Отчёт Excel готов');
         } catch (error) {
+window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2925,"operation":"caught","handled":true});
+
           toast(errorText(error), 'error');
         }
       },
