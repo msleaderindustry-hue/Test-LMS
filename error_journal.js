@@ -37,6 +37,7 @@
  @media(max-width:600px){.ej{margin:12px}.ej-body{padding:0 12px 12px}.ej-toolbar{padding:10px}.ej-title strong{font-size:14px}.ej-title small{max-width:210px}.ej-bottom button{flex:1}}
  @media(prefers-reduced-motion:reduce){.ej *{animation:none!important;transition:none!important}}
  `;
+  const extraCss = '\n .adm-root .ej-modal-layer{margin:0!important;border:0!important;background:transparent!important;overflow:visible!important}.ej .adm-dialog label{margin:0}.adm-redesign .ej{margin:24px;background:var(--ad-panel);border-radius:18px}.adm-redesign .ej-toggle{cursor:default}.adm-redesign .ej-body{padding:0 20px 20px}\n .ej-toolbar{align-items:center}.ej-toolbar label:nth-of-type(3){order:-2;flex:1 1 300px}.adm-root .ej .ej-filter-toggle{order:-1}.ej-toolbar label:nth-of-type(1),.ej-toolbar label:nth-of-type(2){display:none}.ej-toolbar.ej-filters-open label{display:grid}\n .ej-toolbar label:nth-of-type(3) input{min-height:44px}.ej-row{padding:16px 14px;transition:background .2s,border-color .2s,box-shadow .2s}.ej-row.ej-selected{background:var(--ad-soft);border-color:var(--ad-accent);box-shadow:inset 3px 0 var(--ad-accent)}.ej-row summary{line-height:1.7}.ej-row details[open] p{animation:ej-enter .2s ease}.ej-row b{float:right;padding:0 7px;background:var(--ad-soft);border-radius:6px;color:var(--ad-accent)}\n .ej-bottom{justify-content:flex-start;align-items:center}.ej-selection{padding:12px;background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:12px}.ej-selected-count{font-size:12px;color:var(--ad-accent);font-weight:700}.ej-selection button:last-child:not(:disabled){color:var(--ad-red);border-color:var(--ad-red)}\n .ej .adm-dialog{max-width:440px;display:grid;gap:16px}.ej .adm-dialog>svg{color:var(--ad-red)}.ej .adm-dialog label{display:grid;gap:8px;font-size:12px;color:var(--ad-muted)}.ej .adm-dialog .ej-bottom{justify-content:flex-end;margin:0}.adm-root .ej .adm-dialog .ej-bottom button:last-child{background:var(--ad-red);color:white;border-color:var(--ad-red)}.ej .adm-dialog .ej-bottom button:disabled{opacity:.45;cursor:not-allowed}.ej .adm-dialog>strong{font-size:15px;line-height:1.5}\n @media(max-width:620px){.adm-redesign .ej{margin:16px}.adm-redesign .ej-body{padding:0 12px 12px}.ej-toolbar label:nth-of-type(3){flex-basis:100%}.ej-toolbar label{min-width:100%;}.ej-selection{gap:8px}.ej-selected-count{width:100%}.ej-bottom button{flex:initial}.ej-meta{line-height:1.6}.ej-row{padding:12px}.ej .adm-dialog{max-width:none}}\n';
   const Icon = ({
     name
   }) => /*#__PURE__*/React.createElement("svg", {
@@ -66,8 +67,13 @@
   }), /*#__PURE__*/React.createElement("path", {
     d: "M12 7v6M12 17h.01"
   })));
-  function Journal() {
-    const [open, setOpen] = useState(false),
+  function ModalLayer({children}) {
+    const host = document.querySelector('.adm-root');
+    return host && window.ReactDOM?.createPortal ? ReactDOM.createPortal(React.createElement('div',{className:'ej ej-modal-layer'},children),host) : children;
+  }
+  function Journal({standalone = false, active = true}) {
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [open, setOpen] = useState(standalone),
       [rows, setRows] = useState([]),
       [busy, setBusy] = useState(false),
       [error, setError] = useState(''),
@@ -91,6 +97,8 @@
         generation.current++;
       };
     }, []);
+    useEffect(() => { if (standalone) void load(); }, []);
+    useEffect(() => { if (!active) { setConfirm(false); setWord(''); } }, [active]);
     const explain = e => String(e?.code || '').includes('permission-denied') ? 'Нет доступа к журналу. Опубликуйте правила из комплекта и укажите UID владельца.' : String(e?.code || '').includes('unavailable') ? 'Нет соединения с Firebase. Повторите позже.' : 'Операция не выполнена (' + String(e?.code || 'unknown') + ').';
     async function load(append = false) {
       if (lock.current) return;
@@ -126,7 +134,7 @@
         if (alive.current) setBusy(false);
       }
     }
-    const filtered = rows.filter(r => (!section || r.section === section) && (!severity || r.severity === severity) && (!search || [r.code, r.source, r.uid, r.operation].join(' ').toLowerCase().includes(search.toLowerCase())));
+    const filtered = rows.filter(r => (!section || r.section === section) && (!severity || r.severity === severity) && (!search || [r.message, LABELS[r.section], r.code, r.source, r.uid, r.operation].join(' ').toLowerCase().includes(search.toLowerCase())));
     const groups = new Map();
     for (const row of filtered) {
       const key = [row.section, row.source, row.line, row.operation, row.code, row.status, row.severity].join('|');
@@ -177,11 +185,11 @@
     }
     return /*#__PURE__*/React.createElement("section", {
       className: "ej"
-    }, /*#__PURE__*/React.createElement("style", null, css), /*#__PURE__*/React.createElement("button", {
-      type: "button",
+    }, /*#__PURE__*/React.createElement("style", null, css + extraCss), /*#__PURE__*/React.createElement(standalone ? "div" : "button", {
+      type: standalone ? undefined : "button",
       className: "ej-toggle",
-      "aria-expanded": open,
-      onClick: () => {
+      "aria-expanded": standalone ? undefined : open,
+      onClick: standalone ? undefined : () => {
         setOpen(!open);
         if (!open && !rows.length) void load();
       }
@@ -190,14 +198,14 @@
     }, /*#__PURE__*/React.createElement("span", {
       className: "ej-mark"
     }, /*#__PURE__*/React.createElement(Icon, null)), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", null, "\u0416\u0443\u0440\u043D\u0430\u043B \u043E\u0448\u0438\u0431\u043E\u043A"), /*#__PURE__*/React.createElement("small", null, "\u0421\u0431\u043E\u0438 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0438 \u043F\u043E\u0432\u0442\u043E\u0440\u044F\u044E\u0449\u0438\u0435\u0441\u044F \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u044B"))), /*#__PURE__*/React.createElement("span", {
-      className: 'ej-chevron ' + (open ? 'open' : '')
+      className: 'ej-chevron ' + (open ? 'open' : ''), hidden:standalone
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "chevron"
     }))), open && /*#__PURE__*/React.createElement("div", {
       className: "ej-body"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "ej-toolbar"
-    }, /*#__PURE__*/React.createElement("label", null, "\u0420\u0430\u0437\u0434\u0435\u043B", /*#__PURE__*/React.createElement("select", {
+      className: `ej-toolbar ${filtersOpen ? "ej-filters-open" : ""}`
+    }, React.createElement("button", {type:"button",className:"ej-filter-toggle","aria-expanded":filtersOpen,onClick:()=>setFiltersOpen(v=>!v)}, "Фильтры", (section || severity) ? " · активны" : ""), /*#__PURE__*/React.createElement("label", null, "\u0420\u0430\u0437\u0434\u0435\u043B", /*#__PURE__*/React.createElement("select", {
       disabled: busy,
       value: section,
       onChange: e => {
@@ -259,8 +267,8 @@
     }, note), /*#__PURE__*/React.createElement("div", {
       className: "ej-list",
       "aria-busy": busy
-    }, [...groups.entries()].map(([key, g]) => /*#__PURE__*/React.createElement("article", {
-      className: "ej-row",
+    }, busy && !rows.length && React.createElement("div", {role:"status","aria-label":"Загрузка журнала"}, [0,1,2].map(i=>React.createElement("div",{key:i,className:"adm-skeleton"}))), [...groups.entries()].map(([key, g]) => /*#__PURE__*/React.createElement("article", {
+      className: `ej-row ${g.ids.every(id => selected.includes(id)) ? "ej-selected" : ""}`,
       key: key
     }, /*#__PURE__*/React.createElement("input", {
       type: "checkbox",
@@ -273,8 +281,8 @@
     }, LABELS[g.section] || g.section), g.message, " ", /*#__PURE__*/React.createElement("b", null, "\xD7", g.total), /*#__PURE__*/React.createElement("small", null, g.at?.toDate?.().toLocaleString('ru-RU') || 'Дата не определена', " \xB7 ", g.source || 'Глобальный обработчик', g.line ? ':' + g.line : '')), /*#__PURE__*/React.createElement("p", null, "\u041A\u043E\u0434: ", g.code, g.status ? ' · HTTP ' + g.status : '', " \xB7 \u0414\u0435\u0439\u0441\u0442\u0432\u0438\u0435: ", g.operation), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439: ", g.users.size, " \xB7 \u0417\u0430\u043F\u0438\u0441\u0435\u0439: ", g.ids.length, " \xB7 ", g.severity === 'warning' ? 'Перехвачено приложением' : 'Ошибка'), /*#__PURE__*/React.createElement("p", null, "UID: ", [...g.users].join(', ')), /*#__PURE__*/React.createElement("p", null, "\u041F\u043E\u0432\u0442\u043E\u0440\u044B \u043E\u0431\u044A\u0435\u0434\u0438\u043D\u0435\u043D\u044B \u0441\u0440\u0435\u0434\u0438 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043D\u044B\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439. \u0422\u0435\u043A\u0441\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430 \u0438 \u043B\u0438\u0447\u043D\u044B\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u043D\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."))))), !groups.size && !busy && !error && /*#__PURE__*/React.createElement("div", {
       className: "ej-empty"
     }, "\u041E\u0448\u0438\u0431\u043E\u043A \u043F\u043E \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u043C \u0443\u0441\u043B\u043E\u0432\u0438\u044F\u043C \u043D\u0435\u0442."), /*#__PURE__*/React.createElement("div", {
-      className: "ej-bottom"
-    }, /*#__PURE__*/React.createElement("button", {
+      className: "ej-bottom ej-selection"
+    }, selected.length > 0 && React.createElement("span", {className:"ej-selected-count",role:"status"}, "Выбрано: ", selected.length), selected.length > 0 && React.createElement("button",{type:"button",disabled:busy,onClick:()=>{setSelected([]);setConfirm(false);}},"Снять выбор"), /*#__PURE__*/React.createElement("button", {
       type: "button",
       disabled: busy || !filtered.length,
       onClick: () => {
@@ -294,12 +302,14 @@
       }
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "trash"
-    }), "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 (", selected.length, ")")), confirm && /*#__PURE__*/React.createElement("div", {
-      className: "ej-confirm"
-    }, /*#__PURE__*/React.createElement("strong", null, "\u0423\u0434\u0430\u043B\u0438\u0442\u044C ", selected.length, " \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0438?"), /*#__PURE__*/React.createElement("small", null, "\u0423\u0434\u0430\u043B\u044F\u044E\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0438\u0441\u0438. \u0410\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u043D\u0435 \u0437\u0430\u0442\u0440\u0430\u0433\u0438\u0432\u0430\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
+    }), "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 (", selected.length, ")")), React.createElement(ModalLayer,null, React.createElement(window.LmsAdminPresence || React.Fragment, window.LmsAdminPresence ? {show:confirm} : null, confirm && /*#__PURE__*/React.createElement(window.LmsAdminDialog || "div", {
+      title: "Удаление записей", busy, onClose:()=>setConfirm(false)
+    }, error && React.createElement("p",{role:"alert",className:"adm-error"},error), /*#__PURE__*/React.createElement("strong", null, "Удалить выбранные записи (", selected.length, ")?"), /*#__PURE__*/React.createElement("small", null, "\u0423\u0434\u0430\u043B\u044F\u044E\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0438\u0441\u0438. \u0410\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u043D\u0435 \u0437\u0430\u0442\u0440\u0430\u0433\u0438\u0432\u0430\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
       type: "text",
       value: word,
       disabled: busy,
+      autoComplete: "off",
+      className: "adm-input",
       onChange: e => setWord(e.target.value)
     })), /*#__PURE__*/React.createElement("div", {
       className: "ej-bottom"
@@ -311,7 +321,7 @@
       type: "button",
       disabled: busy || word !== 'УДАЛИТЬ',
       onClick: remove
-    }, busy ? 'Удаляем…' : 'Подтвердить удаление'))), /*#__PURE__*/React.createElement("small", {
+    }, busy ? 'Удаляем…' : 'Подтвердить удаление'))))), /*#__PURE__*/React.createElement("small", {
       style: {
         marginTop: 14
       }
