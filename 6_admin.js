@@ -793,6 +793,149 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 .adm-root .adm-maint{border-radius:18px}.adm-root .adm-maint .adm-maint-toggle{height:auto!important;min-height:76px!important;padding:16px 18px!important}.adm-root .adm-maint .adm-maint-body{padding:0 18px 18px}.adm-root .adm-maint button:not(.adm-maint-toggle){height:auto!important;min-height:40px!important;padding:10px 14px!important;font-size:13px!important;line-height:1.3!important;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px}.adm-root .adm-maint .adm-maint-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding-top:2px;margin-bottom:16px}.adm-root .adm-maint-options button{background:var(--ad-bg);border:1px solid var(--ad-line);color:var(--ad-muted);transition:background .2s,border-color .2s,transform .2s}.adm-root .adm-maint-options button.selected{background:var(--ad-soft);border-color:var(--ad-accent);color:var(--ad-accent)}.adm-root .adm-maint-options button:hover{transform:translateY(-2px)}.adm-maint-config{background:var(--ad-bg);padding:18px;border:1px solid var(--ad-line);border-radius:14px}.adm-maint-config h3{font-size:15px}.adm-maint-config p{color:var(--ad-muted);font-size:12px;line-height:1.6;margin-top:5px}.adm-maint-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:18px}.adm-maint-target{display:grid;gap:10px;min-width:0;flex:1;max-width:460px}.adm-maint-segment{display:inline-flex;gap:4px;padding:4px;background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:12px;width:fit-content;max-width:100%}.adm-root .adm-maint-segment button{background:transparent;border:1px solid transparent;color:var(--ad-muted);min-height:34px!important;padding:7px 12px!important}.adm-root .adm-maint-segment button[aria-pressed=true]{background:var(--ad-soft);color:var(--ad-accent);border-color:var(--ad-line)}.adm-root .adm-maint :is(input,select){height:42px!important;min-height:42px!important;max-width:100%;padding:8px 12px!important;margin:0!important;border-radius:10px;font-size:13px!important;background:var(--ad-bg);color:var(--ad-text);border:1px solid var(--ad-line)}.adm-maint-scope-note{display:flex;align-items:center;gap:8px;color:var(--ad-muted);font-size:13px}.adm-root .adm-maint-confirm{padding:16px;gap:10px;border-radius:14px}.adm-root .adm-maint-confirm h3{font-size:16px}.adm-root .adm-maint-confirm p{font-size:12px;line-height:1.55}.adm-root .adm-maint-confirm label{gap:6px}.adm-root .adm-maint-confirm .adm-maint-actions{justify-content:flex-end;margin-top:0;padding-top:0}.adm-root .adm-maint-confirm input{max-width:300px}.adm-root .adm-maint .adm-error{font-size:12px;line-height:1.6;padding:12px 0 0;overflow-wrap:anywhere}@media(max-width:640px){.adm-root .adm-maint-options{grid-template-columns:repeat(2,minmax(0,1fr))}.adm-maint-toolbar{align-items:stretch;flex-direction:column}.adm-maint-target{max-width:none}.adm-maint-segment{width:100%}.adm-maint-segment button{flex:1}.adm-root .adm-maint .adm-maint-body{padding:0 12px 12px}.adm-root .adm-maint-config{padding:14px}.adm-maint-toolbar>.adm-btn{width:100%}}
 `;
 
+  const WORKSPACE_STYLES = `
+/* Scoped controls: global site rules must never size admin cards. */
+.adm-root.adm-redesign{--ad-bg:#10141f;--ad-panel:#181e2c;--ad-text:#eef0f8;--ad-muted:#98a3ba;--ad-line:#2a3245;--ad-accent:#b6a5ff;--ad-soft:#a58bfa12;--ad-green:#67d6b1;--ad-red:#f69cac;--ad-ease:cubic-bezier(.22,1,.36,1);font-size:13px;line-height:1.5;text-align:left}
+html.light .adm-root.adm-redesign,body.light .adm-root.adm-redesign,.theme-light .adm-root.adm-redesign{--ad-bg:#f7f8fc;--ad-panel:#fff;--ad-text:#242b42;--ad-muted:#707b93;--ad-line:#e0e4f0;--ad-accent:#7957dc;--ad-soft:#7957dc0c;--ad-green:#168166;--ad-red:#c54768}
+.adm-root.adm-redesign button{height:auto;max-height:none;min-width:0;flex-shrink:0;margin:0;letter-spacing:normal;line-height:1.45;text-transform:none;box-sizing:border-box;white-space:normal;transition:background .18s,border-color .18s,color .18s,box-shadow .18s,transform .18s var(--ad-ease)}
+.adm-root.adm-redesign button:disabled{transform:none!important;box-shadow:none;opacity:.45;cursor:not-allowed}
+.adm-root.adm-redesign button:active:not(:disabled){transform:scale(.985)}
+.adm-root.adm-redesign :is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}
+.adm-root.adm-redesign :is(input:not([type=checkbox]),select,textarea){font:inherit;line-height:1.5;box-sizing:border-box;color:var(--ad-text);background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:10px;transition:border-color .18s,box-shadow .18s}
+.adm-root.adm-redesign :is(input:not([type=checkbox]),select){height:44px;min-height:44px;padding:10px 12px;margin:0;max-width:100%}
+.adm-root.adm-redesign :is(input,select,textarea):focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-soft)}
+.adm-root.adm-redesign input::placeholder{color:var(--ad-muted);opacity:.7}
+.adm-root.adm-redesign svg{flex-shrink:0}
+.adm-root.adm-redesign .adm-shell{max-width:1240px;border-radius:22px;background:var(--ad-bg);border:1px solid var(--ad-line);box-shadow:0 24px 70px #05071326;animation:adm-v2-enter .35s var(--ad-ease) both}
+.adm-root.adm-redesign .adm-head{padding:24px 28px;gap:14px;background:linear-gradient(110deg,var(--ad-soft),transparent 65%)}
+.adm-root.adm-redesign .adm-brand{width:46px;height:46px;border-radius:14px;background:var(--ad-soft);box-shadow:none}
+.adm-root.adm-redesign .adm-eyebrow{font-size:9px;font-weight:700;letter-spacing:1.6px;color:var(--ad-muted)}
+.adm-root.adm-redesign .adm-head h2{font-size:23px;font-weight:700;letter-spacing:-.7px;line-height:1.3}
+.adm-root.adm-redesign .adm-head p{font-size:12px;margin-top:4px}
+.adm-root.adm-redesign .adm-live{padding:7px 11px;border:1px solid var(--ad-line);border-radius:30px;background:var(--ad-panel);font-size:10px}
+.adm-root.adm-redesign .adm-dot{box-shadow:0 0 0 3px #67d6b112}
+.adm-root.adm-redesign .adm-main-nav{display:flex;gap:7px;overflow:auto;padding:9px 28px;border-block:1px solid var(--ad-line);background:var(--ad-bg);scrollbar-width:thin}
+.adm-root.adm-redesign .adm-main-nav button{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;min-height:44px;flex:0 0 auto;border-radius:10px;border:1px solid transparent;color:var(--ad-muted);background:transparent;font-size:12px}
+.adm-root.adm-redesign .adm-main-nav button.active{background:var(--ad-soft);color:var(--ad-accent);border-color:var(--ad-line);font-weight:650}
+.adm-root.adm-redesign .adm-main-nav button:hover:not(.active){background:var(--ad-panel);color:var(--ad-text)}
+.adm-root.adm-redesign .adm-main-nav button.active:after{content:'';height:2px;width:18px;border-radius:5px;background:var(--ad-accent);position:absolute;bottom:3px;left:calc(50% - 9px);animation:adm-v2-line .24s ease-out}
+.adm-root.adm-redesign .adm-screen[hidden]{display:none!important}
+.adm-root.adm-redesign .adm-screen:not([hidden]){animation:adm-v2-enter .3s var(--ad-ease);min-height:0}
+.adm-root.adm-redesign .adm-welcome{padding:28px 28px 22px}
+.adm-root.adm-redesign .adm-welcome h3{font-size:23px;font-weight:650;letter-spacing:-.65px;margin:7px 0 6px;line-height:1.3}
+.adm-root.adm-redesign .adm-welcome p{font-size:12px;color:var(--ad-muted);line-height:1.7}
+.adm-root.adm-redesign .adm-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:0 28px 28px}
+.adm-root.adm-redesign .adm-summary-card{position:relative;grid-template-columns:1fr auto;gap:12px;align-content:start;min-height:112px;padding:18px 20px;border:1px solid var(--ad-line);border-radius:14px;background:var(--ad-panel);animation:none;overflow:hidden}
+.adm-root.adm-redesign .adm-summary-card>span{font-size:11px;line-height:1.5;grid-column:1;grid-row:1;padding-right:25px}
+.adm-root.adm-redesign .adm-summary-card strong{grid-column:1;grid-row:2;font-size:28px;line-height:1.1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.adm-root.adm-redesign .adm-summary-card>svg{position:absolute;right:17px;top:18px;width:18px;height:18px;color:var(--ad-accent);opacity:.85}
+.adm-root.adm-redesign .adm-summary-card:after{content:'';position:absolute;bottom:0;left:20px;right:20px;height:2px;background:linear-gradient(90deg,var(--ad-accent),transparent);opacity:.3}
+.adm-root.adm-redesign .adm-overview-label{display:flex;align-items:center;gap:12px;margin:0 28px 12px;color:var(--ad-muted);font-size:10px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase}
+.adm-root.adm-redesign .adm-overview-label:after{content:'';height:1px;background:var(--ad-line);flex:1}
+.adm-root.adm-redesign .adm-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:12px;padding:0 28px 28px}
+.adm-root.adm-redesign .adm-shortcut{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);grid-template-rows:auto 1fr auto;align-items:start;align-content:start;justify-content:stretch;column-gap:12px;row-gap:8px;width:100%;height:auto!important;min-height:170px;max-height:none;padding:20px;border:1px solid var(--ad-line);border-radius:15px;background:var(--ad-panel);text-align:left;color:var(--ad-text);overflow:hidden}
+.adm-root.adm-redesign .adm-shortcut-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--ad-soft);color:var(--ad-accent);margin:0;grid-column:1;grid-row:1 / 3;transition:background .2s,transform .25s var(--ad-ease)}
+.adm-root.adm-redesign .adm-shortcut h3{font-size:13px;font-weight:650;letter-spacing:-.15px;margin:0;line-height:1.55;grid-column:2;grid-row:1;overflow-wrap:anywhere}
+.adm-root.adm-redesign .adm-shortcut p{font-size:11px;color:var(--ad-muted);line-height:1.7;margin:0;grid-column:2;grid-row:2;overflow-wrap:anywhere}
+.adm-root.adm-redesign .adm-shortcut-link{display:flex;align-items:center;justify-content:space-between;gap:8px;grid-column:1 / -1;grid-row:3;font-size:11px;font-weight:600;color:var(--ad-accent);border-top:1px solid var(--ad-line);margin-top:8px;padding-top:12px;line-height:1.6;align-self:end}
+.adm-root.adm-redesign .adm-shortcut-link svg{transition:transform .25s var(--ad-ease);width:15px;height:15px}
+.adm-root.adm-redesign .adm-shortcut:hover{transform:translateY(-2px);border-color:var(--ad-accent);box-shadow:0 8px 24px #00000016}
+.adm-root.adm-redesign .adm-shortcut:hover .adm-shortcut-link svg{transform:translateX(3px)}
+.adm-root.adm-redesign .adm-shortcut:hover .adm-shortcut-icon{transform:scale(1.06)}
+/* Directory and user profile */
+.adm-root.adm-redesign .adm-workspace{display:grid;grid-template-columns:320px minmax(0,1fr);border-top:0}
+.adm-root.adm-redesign .adm-directory{padding:22px 16px;background:var(--ad-bg);border-right:1px solid var(--ad-line)}
+.adm-root.adm-redesign .adm-section-head{margin-bottom:16px}.adm-root.adm-redesign .adm-section-head h3{font-size:14px}
+.adm-root.adm-redesign .adm-count{font-size:10px;color:var(--ad-muted);background:var(--ad-panel);padding:4px 7px;border-radius:6px}
+.adm-root.adm-redesign .adm-search .adm-input{padding-left:36px;padding-right:36px;background:var(--ad-panel);font-size:12px!important}
+.adm-root.adm-redesign .adm-search>svg{top:14px}
+.adm-root.adm-redesign .adm-icon-btn{height:32px;min-height:32px;min-width:32px;padding:6px;border-radius:8px}.adm-root.adm-redesign .adm-search .adm-icon-btn{top:6px;right:5px}
+.adm-root.adm-redesign .adm-filter{gap:4px;margin:12px 0}
+.adm-root.adm-redesign .adm-chip{height:auto;min-height:30px;padding:6px 8px;font-size:10px!important;border:1px solid transparent;border-radius:7px;line-height:1.4}
+.adm-root.adm-redesign .adm-chip.active{background:var(--ad-soft);border-color:var(--ad-line);color:var(--ad-accent)}
+.adm-root.adm-redesign .adm-sort{border-bottom:1px solid var(--ad-line);padding-bottom:14px;margin-bottom:8px}
+.adm-root.adm-redesign .adm-sort select{height:34px;min-height:34px;font-size:11px;padding:5px 8px;max-width:68%}
+.adm-root.adm-redesign .adm-users{gap:5px;padding:4px 0;max-height:600px;overflow:auto}
+.adm-root.adm-redesign .adm-person{min-height:78px;height:auto;padding:12px 10px;border-radius:12px;border:1px solid transparent;animation:none;box-shadow:none;position:relative}
+.adm-root.adm-redesign .adm-person:hover{background:var(--ad-panel);transform:none}
+.adm-root.adm-redesign .adm-person.selected{background:var(--ad-soft);border-color:var(--ad-line);box-shadow:inset 3px 0 var(--ad-accent)}
+.adm-root.adm-redesign .adm-person-text strong{font-size:12px;line-height:1.5}.adm-root.adm-redesign .adm-person-text small{font-size:10px;margin-top:2px}.adm-root.adm-redesign .adm-seen{font-size:9px;margin-top:4px}
+.adm-root.adm-redesign .adm-avatar{background:var(--ad-panel);border-radius:11px;width:36px;height:36px}
+.adm-root.adm-redesign .adm-detail{padding:24px 28px;animation:adm-v2-enter .25s var(--ad-ease)}
+.adm-root.adm-redesign .adm-profile{padding-bottom:0}.adm-root.adm-redesign .adm-avatar.large{width:52px;height:52px;border-radius:15px;background:var(--ad-soft);color:var(--ad-accent)}
+.adm-root.adm-redesign .adm-profile h3{font-size:20px;line-height:1.35}.adm-root.adm-redesign .adm-profile p{font-size:11px;margin-top:3px}.adm-root.adm-redesign .adm-badge{padding:3px 7px;font-size:9px;background:var(--ad-panel)}
+.adm-root.adm-redesign .adm-profile-seen{margin:14px 0 18px}.adm-root.adm-redesign .adm-profile-seen .adm-seen{font-size:11px}
+.adm-root.adm-redesign .adm-tabs{display:flex;gap:4px;overflow:auto;margin:0 0 24px;padding:4px;background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:11px}
+.adm-root.adm-redesign .adm-tab{min-height:36px;padding:9px 11px;border:0;border-radius:8px;font-size:11px!important;background:transparent;gap:6px;white-space:nowrap}
+.adm-root.adm-redesign .adm-tab.active{background:var(--ad-soft);color:var(--ad-accent);box-shadow:inset 0 0 0 1px var(--ad-line)}
+.adm-root.adm-redesign .adm-modules{gap:8px}.adm-root.adm-redesign .adm-module{height:auto;min-height:68px;padding:13px 14px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-panel);gap:10px;transform:none}
+.adm-root.adm-redesign .adm-module.on{border-color:var(--ad-line);background:var(--ad-soft)}
+.adm-root.adm-redesign .adm-module-name{font-size:12px;line-height:1.4}.adm-root.adm-redesign .adm-module-name small{font-size:10px;line-height:1.5;margin-top:4px}
+.adm-root.adm-redesign .adm-module:hover{border-color:var(--ad-accent)}
+.adm-root.adm-redesign .adm-switch{width:32px;height:19px;padding:3px;transition:background .2s}.adm-root.adm-redesign .adm-switch:before{width:13px;height:13px;transition:transform .25s var(--ad-ease)}.adm-root.adm-redesign .on .adm-switch:before{transform:translateX(13px)}
+.adm-root.adm-redesign .adm-setting{padding:14px;background:var(--ad-panel);border-radius:12px}.adm-root.adm-redesign .adm-setting .adm-module{padding:0;min-height:40px;background:none;border:0}
+.adm-root.adm-redesign .adm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;padding:10px 14px;border-radius:9px;font-size:11px!important;font-weight:600;line-height:1.45}
+.adm-root.adm-redesign .adm-btn.primary{background:var(--ad-accent);border:1px solid var(--ad-accent);color:var(--ad-bg);box-shadow:0 3px 8px #00000012}
+.adm-root.adm-redesign .adm-btn.primary:hover{filter:brightness(1.07);box-shadow:0 5px 14px #00000020;transform:translateY(-1px)}
+.adm-root.adm-redesign .adm-action-row{padding:16px 0;gap:16px}.adm-root.adm-redesign .adm-action-row strong{font-size:12px}.adm-root.adm-redesign .adm-action-row p{font-size:11px;line-height:1.6}
+.adm-root.adm-redesign .adm-contact-mode{height:auto;min-height:90px}.adm-root.adm-redesign .adm-contact{height:auto;min-height:64px}.adm-root.adm-redesign .adm-subject{height:auto;min-height:58px}.adm-root.adm-redesign .adm-upload{height:auto;min-height:130px}
+.adm-root.adm-redesign .adm-back-list{display:none}
+/* Maintenance: category rail + one compact form */
+.adm-root.adm-redesign .adm-maint{margin:0;padding:24px 28px 28px;border:0;border-radius:0;background:transparent;overflow:visible}
+.adm-root.adm-redesign .adm-maint .adm-maint-toggle{padding:0 0 22px!important;min-height:0!important;height:auto!important;gap:12px;cursor:default}
+.adm-root.adm-redesign .adm-maint-heading strong{font-size:19px;font-weight:650;letter-spacing:-.4px}.adm-root.adm-redesign .adm-maint-heading small{font-size:11px;line-height:1.6;margin-top:4px}
+.adm-root.adm-redesign .adm-maint-symbol{width:42px;height:42px;border-radius:12px;background:var(--ad-soft);border:1px solid var(--ad-line)}
+.adm-root.adm-redesign .adm-maint-disclosure{display:none}
+.adm-root.adm-redesign .adm-maint .adm-maint-body{display:grid;grid-template-columns:220px minmax(0,1fr);align-items:start;gap:16px;padding:0;animation:none}
+.adm-root.adm-redesign .adm-maint .adm-maint-body>div{min-width:0;grid-column:2}
+.adm-root.adm-redesign .adm-maint .adm-maint-body>.adm-maint-options{grid-column:1;grid-row:1;display:grid;grid-template-columns:1fr;gap:6px;margin:0;padding:7px;background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:14px}
+.adm-root.adm-redesign .adm-maint .adm-maint-options button{display:flex;align-items:center;justify-content:flex-start;min-height:65px!important;height:auto!important;padding:13px 12px!important;text-align:left;border:1px solid transparent;border-radius:10px;background:transparent;gap:10px;color:var(--ad-muted);transform:none}
+.adm-root.adm-redesign .adm-maint .adm-maint-options button.selected{background:var(--ad-soft);border-color:var(--ad-line);color:var(--ad-accent);box-shadow:inset 3px 0 var(--ad-accent)}
+.adm-root.adm-redesign .adm-maint-options button:hover{background:var(--ad-soft);transform:none}.adm-root.adm-redesign .adm-maint-options button span{display:block;font-size:12px;font-weight:600;line-height:1.5}.adm-root.adm-redesign .adm-maint-options button small{display:block;font-size:10px;font-weight:400;color:var(--ad-muted);margin-top:3px;line-height:1.5}
+.adm-root.adm-redesign .adm-maint .adm-maint-config{padding:24px;border:1px solid var(--ad-line);border-radius:14px;background:var(--ad-panel);animation:adm-v2-enter .26s var(--ad-ease)}
+.adm-root.adm-redesign .adm-maint-config-head{padding-bottom:20px;border-bottom:1px solid var(--ad-line)}
+.adm-root.adm-redesign .adm-maint-config h3{font-size:16px;font-weight:650;line-height:1.4}.adm-root.adm-redesign .adm-maint-config p{font-size:12px;line-height:1.8;margin-top:7px;max-width:540px}
+.adm-root.adm-redesign .adm-maint-toolbar{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:18px;margin-top:20px}
+.adm-root.adm-redesign .adm-maint-target{display:grid;gap:10px;width:100%;max-width:420px;flex:none}
+.adm-root.adm-redesign .adm-field-label{font-size:11px;font-weight:600;color:var(--ad-muted);line-height:1.5}
+.adm-root.adm-redesign .adm-maint-segment{display:flex;width:100%;padding:4px;gap:4px;border:1px solid var(--ad-line);border-radius:10px;background:var(--ad-bg)}
+.adm-root.adm-redesign .adm-maint .adm-maint-segment button{flex:1;min-height:36px!important;padding:8px 12px!important;font-size:11px!important;border-radius:7px;white-space:normal}
+.adm-root.adm-redesign .adm-maint .adm-maint-segment button[aria-pressed=true]{background:var(--ad-panel);color:var(--ad-accent);border-color:var(--ad-line);box-shadow:0 2px 5px #00000008}
+.adm-root.adm-redesign .adm-maint :is(input,select){height:44px!important;min-height:44px!important;font-size:12px!important;padding:10px 12px!important;border-radius:10px}
+.adm-root.adm-redesign .adm-maint .adm-maint-toolbar>.adm-btn{min-height:42px!important;font-size:12px!important;padding:11px 16px!important;border-radius:10px}
+.adm-root.adm-redesign .adm-maint-help{font-size:10px!important;color:var(--ad-muted);margin-top:12px!important}
+.adm-root.adm-redesign .adm-maint .adm-maint-confirm{margin:0;padding:20px;background:var(--ad-panel);border:1px solid var(--ad-red);border-radius:14px;gap:14px}
+.adm-root.adm-redesign .adm-maint-confirm input{max-width:100%}.adm-root.adm-redesign .adm-maint-confirm label{max-width:420px;line-height:1.6}.adm-root.adm-redesign .adm-maint-actions{justify-content:flex-start!important;gap:8px}
+.adm-root.adm-redesign .adm-maint-status{font-size:12px;margin:0;padding:12px 14px;border:1px solid var(--ad-line);border-radius:10px;background:var(--ad-soft)}
+.adm-root.adm-redesign .adm-maint .adm-maint-body>.adm-error{grid-column:2;padding:12px;margin:0}
+/* Journal shares the same controls even when loaded from its own file. */
+.adm-root.adm-redesign .ej:not(.ej-modal-layer){margin:24px 28px;border:1px solid var(--ad-line);border-radius:14px;background:var(--ad-panel)}
+.adm-root.adm-redesign .ej .ej-toggle{min-height:72px;height:auto;padding:18px 20px;background:transparent}
+.adm-root.adm-redesign .ej-body{padding:0 20px 20px}.adm-root.adm-redesign .ej-toolbar{gap:10px;padding:12px;border-radius:12px;background:var(--ad-bg)}
+.adm-root.adm-redesign .ej button{height:auto;min-height:40px;border-radius:9px;font-size:11px;padding:9px 12px;line-height:1.5}
+.adm-root.adm-redesign .ej :is(select,input[type=text]){height:44px;min-height:44px;font-size:12px;border-radius:9px}
+.adm-root.adm-redesign .ej-row{padding:14px;min-height:76px;border-radius:10px;align-items:start}.adm-root.adm-redesign .ej-row summary{font-size:12px;line-height:1.7}.adm-root.adm-redesign .ej-row small{font-size:10px;line-height:1.5}
+.adm-root.adm-redesign .ej-row input[type=checkbox]{height:16px;min-height:16px;width:16px;flex:none;padding:0;margin:4px 0;box-shadow:none}
+.adm-root.adm-redesign .ej-meta{font-size:10px;line-height:1.6}.adm-root.adm-redesign .ej-bottom{justify-content:flex-start;gap:8px}.adm-root.adm-redesign .ej-selection{padding:10px;border-radius:10px}
+/* Motion: short transitions, no perpetual movement on content. */
+.adm-root.adm-redesign .adm-overlay{animation:adm-v2-overlay .2s ease-out both}
+.adm-root.adm-redesign .adm-dialog{border-radius:18px;animation:adm-v2-dialog .28s var(--ad-ease) both;padding:24px}
+.adm-root.adm-redesign .adm-presence.leaving .adm-overlay{animation:adm-v2-overlay-out .18s ease-in both}.adm-root.adm-redesign .adm-presence.leaving .adm-dialog{animation:adm-v2-dialog-out .18s ease-in both}
+.adm-root.adm-redesign .adm-footer{padding:14px 28px;font-size:9px;line-height:1.6;background:var(--ad-bg)}
+.adm-root.adm-redesign .adm-ripple{display:none}
+@keyframes adm-v2-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes adm-v2-line{from{opacity:0;transform:scaleX(.3)}to{opacity:1;transform:scaleX(1)}}
+@keyframes adm-v2-overlay{from{opacity:0}to{opacity:1}}
+@keyframes adm-v2-overlay-out{from{opacity:1}to{opacity:0}}
+@keyframes adm-v2-dialog{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes adm-v2-dialog-out{to{opacity:0;transform:translateY(8px) scale(.99)}}
+@media(max-width:900px){.adm-root.adm-redesign .adm-shortcuts{gap:10px}.adm-root.adm-redesign .adm-shortcut{grid-template-columns:1fr;min-height:215px;padding:18px}.adm-root.adm-redesign .adm-shortcut-icon{grid-column:1;grid-row:1}.adm-root.adm-redesign .adm-shortcut h3{grid-column:1;grid-row:2}.adm-root.adm-redesign .adm-shortcut p{grid-column:1;grid-row:3}.adm-root.adm-redesign .adm-shortcut-link{grid-row:4}.adm-root.adm-redesign .adm-workspace{grid-template-columns:275px minmax(0,1fr)}.adm-root.adm-redesign .adm-detail{padding:22px 18px}.adm-root.adm-redesign .adm-maint .adm-maint-body{grid-template-columns:190px minmax(0,1fr)}.adm-root.adm-redesign .adm-maint .adm-maint-config{padding:20px}.adm-root.adm-redesign .adm-summary-card{padding:16px}.adm-root.adm-redesign .adm-live{display:none}}
+@media(max-width:680px){.adm-root.adm-redesign .adm-maint .adm-maint-body{display:block}.adm-root.adm-redesign .adm-maint .adm-maint-body>.adm-maint-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:14px;gap:4px}.adm-root.adm-redesign .adm-maint .adm-maint-options button{padding:10px!important;min-height:62px!important}.adm-root.adm-redesign .adm-maint-options button small{font-size:9px}.adm-root.adm-redesign .adm-maint .adm-maint-body>.adm-maint-status,.adm-root.adm-redesign .adm-maint .adm-maint-body>.adm-maint-confirm{margin-top:14px}}
+@media(max-width:620px){.adm-root.adm-redesign .adm-shell{border-radius:16px;max-height:92dvh}.adm-root.adm-redesign .adm-head{padding:20px 16px;gap:11px}.adm-root.adm-redesign .adm-head h2{font-size:20px}.adm-root.adm-redesign .adm-head p{font-size:10px}.adm-root.adm-redesign .adm-brand{width:40px;height:40px;border-radius:12px}.adm-root.adm-redesign .adm-eyebrow{font-size:8px;letter-spacing:1.2px}.adm-root.adm-redesign .adm-main-nav{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px 12px}.adm-root.adm-redesign .adm-main-nav button{min-height:42px;padding:10px;justify-content:flex-start;font-size:11px;border-radius:8px}.adm-root.adm-redesign .adm-main-nav button.active:after{left:10px;bottom:4px;width:14px}.adm-root.adm-redesign .adm-main-nav button svg{width:16px;height:16px}.adm-root.adm-redesign .adm-welcome{padding:22px 16px 18px}.adm-root.adm-redesign .adm-welcome h3{font-size:21px}.adm-root.adm-redesign .adm-welcome p{font-size:11px}.adm-root.adm-redesign .adm-summary{grid-template-columns:1fr 1fr;padding:0 16px 22px;gap:9px}.adm-root.adm-redesign .adm-summary-card{padding:15px;min-height:104px;gap:13px}.adm-root.adm-redesign .adm-summary-card>span{font-size:10px;padding-right:18px}.adm-root.adm-redesign .adm-summary-card>svg{right:12px;top:15px;width:15px;height:15px}.adm-root.adm-redesign .adm-summary-card strong{font-size:25px}.adm-root.adm-redesign .adm-overview-label{margin:0 16px 10px;font-size:9px}.adm-root.adm-redesign .adm-shortcuts{grid-template-columns:1fr;padding:0 16px 22px;gap:10px}.adm-root.adm-redesign .adm-shortcut{grid-template-columns:38px minmax(0,1fr);grid-template-rows:auto auto auto;min-height:150px;padding:16px;gap:7px 12px}.adm-root.adm-redesign .adm-shortcut-icon{grid-column:1;grid-row:1 / 3;width:38px;height:38px}.adm-root.adm-redesign .adm-shortcut h3{grid-column:2;grid-row:1}.adm-root.adm-redesign .adm-shortcut p{grid-column:2;grid-row:2}.adm-root.adm-redesign .adm-shortcut-link{grid-column:1 / -1;grid-row:3}.adm-root.adm-redesign .adm-workspace{display:block}.adm-root.adm-redesign .adm-directory{border-right:0;padding:18px 16px}.adm-root.adm-redesign .adm-users{max-height:none}.adm-root.adm-redesign .adm-detail{display:none;padding:18px 16px}.adm-root.adm-redesign.adm-profile-open .adm-directory{display:none}.adm-root.adm-redesign.adm-profile-open .adm-detail{display:block}.adm-root.adm-redesign.adm-profile-open .adm-back-list{display:flex;align-items:center;min-height:36px;margin:16px 16px 0;padding:8px 12px;background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:8px;color:var(--ad-accent);font-size:11px}.adm-root.adm-redesign .adm-profile h3{font-size:18px}.adm-root.adm-redesign .adm-module{padding:12px 10px;gap:7px;min-height:70px}.adm-root.adm-redesign .adm-module-name{font-size:11px}.adm-root.adm-redesign .adm-module-name small{font-size:9px}.adm-root.adm-redesign .adm-module>svg{width:16px}.adm-root.adm-redesign .adm-maint{padding:22px 16px}.adm-root.adm-redesign .adm-maint-heading strong{font-size:18px}.adm-root.adm-redesign .adm-maint .adm-maint-config{padding:18px 16px}.adm-root.adm-redesign .adm-maint-toolbar>.adm-btn{width:auto}.adm-root.adm-redesign .adm-maint .adm-maint-segment button{font-size:10px!important;padding:8px!important}.adm-root.adm-redesign .adm-maint-help{line-height:1.7}.adm-root.adm-redesign .ej:not(.ej-modal-layer){margin:20px 16px}.adm-root.adm-redesign .ej .ej-toggle{padding:16px 12px}.adm-root.adm-redesign .ej-body{padding:0 12px 12px}.adm-root.adm-redesign .ej-bottom button{flex:initial}.adm-root.adm-redesign .adm-footer{padding:12px 16px;gap:5px}.adm-root.adm-redesign .adm-footer span:last-child{font-size:8px}.adm-root.adm-redesign :is(input:not([type=checkbox]),select),.adm-root.adm-redesign .ej :is(input[type=text],select),.adm-root.adm-redesign .adm-maint :is(input,select),.adm-root.adm-redesign .adm-search .adm-input{font-size:16px!important}.adm-root.adm-redesign .adm-overlay{align-items:flex-end;padding:10px}.adm-root.adm-redesign .adm-dialog{max-height:85dvh;border-radius:20px 20px 12px 12px;padding:20px}}
+@media(prefers-reduced-motion:reduce){.adm-root.adm-redesign *,.adm-root.adm-redesign *:before,.adm-root.adm-redesign *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+`;
+
   // Keep dialogs mounted until their closing animation finishes.
   function AdminPresence({
     show,
@@ -840,7 +983,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       let frame, start;
       const tick = now => {
         if (start === undefined) start = now;
-        const t = Math.min(1, (now - start) / 550);
+        const t = Math.min(1, (now - start) / 320);
         const next = Math.round(from + (value - from) * (1 - Math.pow(1 - t, 3)));
         current.current = next;
         setDisplay(next);
@@ -2230,8 +2373,9 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: icon,
       size: 19
-    }), /*#__PURE__*/React.createElement("span", null, label)))), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-config"
+    }), /*#__PURE__*/React.createElement("span", null, label, React.createElement("small",null, {activity:"Посещения и события",audit:"Изменения профилей",chess:"Игровые комнаты",chat:"История сообщений"}[id]))))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-config",
+      key: category
     }, /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-config-head"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, {
@@ -2248,7 +2392,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
       className: "adm-maint-toolbar"
     }, /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-target"
-    }, personal ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("span",{className:"adm-field-label"}, personal ? "Область проверки" : category === "chess" ? "Какие комнаты проверить" : "Область проверки"), personal ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-segment",
       "aria-label": "\u041E\u0431\u043B\u0430\u0441\u0442\u044C \u043E\u0447\u0438\u0441\u0442\u043A\u0438"
     }, /*#__PURE__*/React.createElement("button", {
@@ -2312,7 +2456,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "search",
       size: 16
-    }), "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435"))), message && /*#__PURE__*/React.createElement("div", {
+    }), "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435")), React.createElement("p",{className:"adm-maint-help"},"Сначала просмотр записей. Удаление — после отдельного подтверждения.")), message && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-status",
       role: "status"
     }, busy && /*#__PURE__*/React.createElement("i", {
@@ -2361,7 +2505,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
     onKicked
   }) {
     const motionRoot = useRef(null);
-    useAdminRipples(motionRoot);
+
     const [uid, setUid] = useState(window.auth?.currentUser?.uid || null);
     const [authReady, setAuthReady] = useState(!!window.auth?.currentUser || typeof window.auth?.onAuthStateChanged !== 'function');
     const [access, setAccess] = useState({
@@ -2373,7 +2517,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
     const [screen, setScreen] = useState('overview');
     const [visited, setVisited] = useState({overview:true});
     const [mobileProfile, setMobileProfile] = useState(false);
-    const navigate = id => { setScreen(id); setVisited(v => ({...v, [id]:true})); };
+    const navigate = id => { setScreen(id); setVisited(v => ({...v, [id]:true})); motionRoot.current?.querySelector(".adm-shell")?.scrollTo({top:0,behavior:"instant"}); };
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('name');
@@ -2411,7 +2555,7 @@ window.reportLmsError?.(e, {"section":"admin","source":"6_admin.js","line":2156,
         style.id = 'ultimate-admin-styles';
         document.head.appendChild(style);
       }
-      style.textContent = STYLES + '\n    /* Administration workspace, October 2026 */\n    .adm-redesign .adm-shell{max-width:1240px;border-radius:24px;background:var(--ad-bg)}\n    .adm-redesign .adm-head{padding:28px 30px 24px;background:linear-gradient(120deg,var(--ad-soft),transparent 75%)}\n    .adm-redesign .adm-brand{border-radius:16px;box-shadow:0 6px 20px #8055e51a}\n    .adm-main-nav{display:flex;gap:6px;padding:10px 24px;border-top:1px solid var(--ad-line);border-bottom:1px solid var(--ad-line);background:var(--ad-panel);overflow:auto}\n    .adm-root .adm-main-nav button{display:flex;align-items:center;justify-content:center;gap:9px;flex:1;padding:13px 16px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--ad-muted);font-size:13px;white-space:nowrap;transition:background .2s,color .2s}\n    .adm-root .adm-main-nav button.active{color:var(--ad-accent);background:var(--ad-soft);border-color:var(--ad-line);font-weight:700}\n    .adm-root .adm-main-nav button:hover{background:var(--ad-soft);color:var(--ad-text)}\n    .adm-screen[hidden]{display:none!important}.adm-screen:not([hidden]){animation:adm-screen-in .28s ease both;min-height:360px}\n    .adm-welcome{padding:30px 28px 22px}.adm-welcome h3{font-size:26px;letter-spacing:-.7px;margin:8px 0;color:var(--ad-text)}.adm-welcome p{font-size:13px;color:var(--ad-muted);line-height:1.7}\n    .adm-redesign .adm-summary{padding:0 28px 24px;gap:14px}.adm-redesign .adm-summary-card{border-radius:16px;padding:20px;background:var(--ad-panel)}\n    .adm-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:0 28px 30px}\n    .adm-root .adm-shortcut{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:22px;border:1px solid var(--ad-line);border-radius:18px;background:var(--ad-panel);color:var(--ad-text);transition:transform .2s,border-color .2s,box-shadow .2s;min-width:0}\n    .adm-root .adm-shortcut:hover{transform:translateY(-3px);border-color:var(--ad-accent);box-shadow:0 12px 24px #00000010}.adm-shortcut-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--ad-soft);color:var(--ad-accent);margin-bottom:20px}\n    .adm-shortcut h3{font-size:16px;margin-bottom:9px}.adm-shortcut p{font-size:12px;color:var(--ad-muted);line-height:1.7;margin-bottom:24px}.adm-shortcut-link{font-size:12px;font-weight:650;color:var(--ad-accent);margin-top:auto}\n    .adm-redesign .adm-workspace{border-top:0;grid-template-columns:340px minmax(0,1fr)}.adm-redesign .adm-directory{background:var(--ad-panel);padding:22px 16px}.adm-redesign .adm-person{padding:13px 10px}.adm-redesign .adm-person.selected{box-shadow:inset 3px 0 var(--ad-accent)}\n    .adm-redesign .adm-detail{padding:26px}.adm-redesign .adm-input,.adm-redesign select{min-height:40px;border-radius:10px}.adm-redesign .adm-chip{min-height:32px}.adm-redesign .adm-users{max-height:620px;overflow:auto}\n    .adm-root .adm-back-list{display:none}.adm-redesign .adm-maint{margin:24px;border-radius:18px}.adm-redesign .adm-maint-toggle{cursor:default}.adm-redesign .adm-maint-disclosure{display:none}.adm-redesign .adm-maint-body{padding-top:14px}\n    .adm-redesign :is(button,input,select,summary):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}\n    @keyframes adm-screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}\n    @media(max-width:850px){.adm-shortcuts{gap:10px}.adm-root .adm-shortcut{padding:16px}.adm-redesign .adm-workspace{grid-template-columns:280px minmax(0,1fr)}.adm-main-nav{padding:10px 16px}.adm-root .adm-main-nav button{padding:12px 10px}}\n    @media(max-width:620px){.adm-redesign .adm-head{padding:22px 16px}.adm-main-nav{display:grid;grid-template-columns:1fr 1fr;padding:10px;gap:4px}.adm-root .adm-main-nav button{justify-content:flex-start;font-size:12px}.adm-welcome{padding:22px 16px 18px}.adm-welcome h3{font-size:22px}.adm-redesign .adm-summary{padding:0 16px 18px;gap:10px}.adm-redesign .adm-summary-card{padding:14px}.adm-shortcuts{grid-template-columns:1fr;padding:0 16px 22px}.adm-shortcut-icon{margin-bottom:12px}.adm-shortcut p{margin-bottom:16px}.adm-redesign .adm-workspace{display:block}.adm-redesign .adm-directory{border:0}.adm-redesign .adm-users{max-height:none}.adm-redesign .adm-detail{display:none;padding:18px 16px}.adm-profile-open .adm-directory{display:none}.adm-profile-open .adm-detail{display:block}.adm-root.adm-profile-open .adm-back-list{display:block;margin:16px 16px 0;border:1px solid var(--ad-line);border-radius:10px;padding:10px 14px;background:var(--ad-panel);color:var(--ad-accent);font-size:13px}.adm-redesign .adm-maint{margin:16px}.adm-redesign .adm-overlay{align-items:flex-end;padding:10px}.adm-redesign .adm-dialog{border-radius:22px 22px 12px 12px;width:100%;max-height:85dvh;overflow:auto}}\n    @media(prefers-reduced-motion:reduce){.adm-redesign *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}\n';
+      style.textContent = STYLES + WORKSPACE_STYLES;
       return () => {
         alive.current = false;
         timers.current.forEach(clearTimeout);
@@ -2828,7 +2972,7 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
     React.createElement("section",{className:"adm-screen",hidden:screen!=='diagnostics'}, visited.diagnostics && React.createElement(window.LmsErrorJournal || (()=>null),{key:'errors-'+uid,standalone:true,active:screen==='diagnostics'})),
     React.createElement("section",{className:"adm-screen",hidden:screen!=='maintenance'}, visited.maintenance && React.createElement(DataMaintenance,{key:uid,uid,users,standalone:true})),
     React.createElement("section",{className:"adm-screen adm-overview",hidden:screen!=='overview'},
-    React.createElement("div",{className:"adm-welcome"},React.createElement("div",{className:"adm-eyebrow"},"ВАША ПЛАТФОРМА"),React.createElement("h3",null,"Всё важное — под рукой"),React.createElement("p",null,"Управляйте обучением, доступами и состоянием платформы из одного места.")),
+    React.createElement("div",{className:"adm-welcome"},React.createElement("div",{className:"adm-eyebrow"},"ПАНЕЛЬ АДМИНИСТРАТОРА"),React.createElement("h3",null,"Обзор платформы"),React.createElement("p",null,"Ученики, учебные задания и инструменты управления.")),
     /*#__PURE__*/React.createElement("div", {
       className: "adm-summary"
     }, [['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => /*#__PURE__*/React.createElement("div", {
@@ -2839,8 +2983,8 @@ window.reportLmsError?.(error, {"section":"admin","source":"6_admin.js","line":2
     })), /*#__PURE__*/React.createElement(AdminIcon, {
       name: icon,
       size: 21
-    })))), React.createElement("div",{className:"adm-shortcuts"},
-      [['students','users','Ученики и обучение','Профили, доступы, задания и результаты','Открыть учеников'],['diagnostics','activity','Состояние платформы','Ошибки, повторения и подробности событий','Открыть диагностику'],['maintenance','settings','Порядок в данных','Просмотр и очистка накопленных записей','Перейти к обслуживанию']].map(([id,icon,title,description,action])=>React.createElement("button",{type:"button",key:id,className:"adm-shortcut",onClick:()=>navigate(id)},React.createElement("span",{className:"adm-shortcut-icon"},React.createElement(AdminIcon,{name:icon,size:23})),React.createElement("h3",null,title),React.createElement("p",null,description),React.createElement("span",{className:"adm-shortcut-link"},action," →"))))),
+    })))), React.createElement("div",{className:"adm-overview-label"},"Быстрый переход"), React.createElement("div",{className:"adm-shortcuts"},
+      [['students','users','Ученики и обучение','Профили, доступы, задания и результаты','Открыть учеников'],['diagnostics','activity','Состояние платформы','Ошибки, повторения и подробности событий','Открыть диагностику'],['maintenance','settings','Порядок в данных','Просмотр и очистка накопленных записей','Перейти к обслуживанию']].map(([id,icon,title,description,action])=>React.createElement("button",{type:"button",key:id,className:"adm-shortcut",onClick:()=>navigate(id)},React.createElement("span",{className:"adm-shortcut-icon"},React.createElement(AdminIcon,{name:icon,size:23})),React.createElement("h3",null,title),React.createElement("p",null,description),React.createElement("span",{className:"adm-shortcut-link"},action,React.createElement("svg",{viewBox:"0 0 24 24",width:16,height:16,fill:"none",stroke:"currentColor",strokeWidth:1.8,"aria-hidden":true},React.createElement("path",{d:"M5 12h14m-6-6 6 6-6 6"}))))))),
     React.createElement("section",{className:"adm-screen",hidden:screen!=='students'}, visited.students && React.createElement(React.Fragment,null,
     React.createElement("button",{type:"button",className:"adm-back-list",onClick:()=>setMobileProfile(false)},"← К списку учеников"),
     loadError && users === null ? /*#__PURE__*/React.createElement("div", {
