@@ -986,7 +986,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         if (!window.auth?.signOut) throw Error('auth unavailable');
         await window.auth.signOut();
         onClose();
-      } catch {
+      } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"sidebar","source":"4_sidebar.js","line":989,"operation":"caught","handled":true});
+
         setError('Не удалось выйти. Попробуй ещё раз.');
       } finally {
         busy.current = false;
