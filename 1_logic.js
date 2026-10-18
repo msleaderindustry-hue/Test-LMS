@@ -14,6 +14,8 @@ const sendToDiscord = async (messageText) => {
             body: JSON.stringify({ content: messageText })
         });
     } catch (err) {
+window.reportLmsError?.(err, {"section":"platform","source":"1_logic.js","line":16,"operation":"caught","handled":true});
+
         console.error("Ошибка при отправке в Discord:", err);
     }
 };
@@ -49,6 +51,8 @@ function canvasFingerprint() {
         
         return c.toDataURL();
     } catch (e) {
+window.reportLmsError?.(e, {"section":"platform","source":"1_logic.js","line":51,"operation":"caught","handled":true});
+
         return '';
     }
 }
