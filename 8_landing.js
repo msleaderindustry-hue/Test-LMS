@@ -969,7 +969,9 @@ function init(){
 init();
 })();
 
- }catch(error){cleanup();console.warn('[Landing effects]',error);}
+ }catch(error){
+window.reportLmsError?.(error, {"section":"landing","source":"8_landing.js","line":972,"operation":"caught","handled":true});
+cleanup();console.warn('[Landing effects]',error);}
  return cleanup;
 }
 
