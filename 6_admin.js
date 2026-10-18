@@ -789,7 +789,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     .adm-root .adm-activity-summary{display:grid;gap:8px;padding:16px;background:var(--ad-soft);border:1px solid var(--ad-line);border-radius:13px;margin-bottom:20px}.adm-root .adm-activity-summary>span{font-size:12px;color:var(--ad-muted)}
     .adm-root .adm-timeline article{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--ad-line);animation:adm-rise .3s var(--ad-ease) both}.adm-root .adm-timeline article>div{min-width:0;overflow-wrap:anywhere}.adm-root .adm-timeline strong{font-size:13px}.adm-root .adm-timeline p,.adm-root .adm-timeline time{display:block;font-size:11px;color:var(--ad-muted);margin-top:5px}.adm-root .adm-timeline-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--ad-accent);box-shadow:0 0 0 4px var(--ad-soft)}
     @media(max-width:620px){.adm-root .adm-insight{padding:14px}.adm-root .adm-insight .adm-section-label{flex-wrap:wrap;gap:10px}.adm-root .adm-compare-card{padding:12px}.adm-root .adm-compare-card strong{font-size:22px}.adm-root .adm-person{min-height:88px}.adm-root .adm-count{font-size:10px;text-align:right}.adm-root .adm-pagination{flex-wrap:wrap;gap:8px}}
-    `;
+    
+.adm-root .adm-maint{border-radius:18px}.adm-root .adm-maint .adm-maint-toggle{height:auto!important;min-height:76px!important;padding:16px 18px!important}.adm-root .adm-maint .adm-maint-body{padding:0 18px 18px}.adm-root .adm-maint button:not(.adm-maint-toggle){height:auto!important;min-height:40px!important;padding:10px 14px!important;font-size:13px!important;line-height:1.3!important;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px}.adm-root .adm-maint .adm-maint-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding-top:2px;margin-bottom:16px}.adm-root .adm-maint-options button{background:var(--ad-bg);border:1px solid var(--ad-line);color:var(--ad-muted);transition:background .2s,border-color .2s,transform .2s}.adm-root .adm-maint-options button.selected{background:var(--ad-soft);border-color:var(--ad-accent);color:var(--ad-accent)}.adm-root .adm-maint-options button:hover{transform:translateY(-2px)}.adm-maint-config{background:var(--ad-bg);padding:18px;border:1px solid var(--ad-line);border-radius:14px}.adm-maint-config h3{font-size:15px}.adm-maint-config p{color:var(--ad-muted);font-size:12px;line-height:1.6;margin-top:5px}.adm-maint-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:18px}.adm-maint-target{display:grid;gap:10px;min-width:0;flex:1;max-width:460px}.adm-maint-segment{display:inline-flex;gap:4px;padding:4px;background:var(--ad-panel);border:1px solid var(--ad-line);border-radius:12px;width:fit-content;max-width:100%}.adm-root .adm-maint-segment button{background:transparent;border:1px solid transparent;color:var(--ad-muted);min-height:34px!important;padding:7px 12px!important}.adm-root .adm-maint-segment button[aria-pressed=true]{background:var(--ad-soft);color:var(--ad-accent);border-color:var(--ad-line)}.adm-root .adm-maint :is(input,select){height:42px!important;min-height:42px!important;max-width:100%;padding:8px 12px!important;margin:0!important;border-radius:10px;font-size:13px!important;background:var(--ad-bg);color:var(--ad-text);border:1px solid var(--ad-line)}.adm-maint-scope-note{display:flex;align-items:center;gap:8px;color:var(--ad-muted);font-size:13px}.adm-root .adm-maint-confirm{padding:16px;gap:10px;border-radius:14px}.adm-root .adm-maint-confirm h3{font-size:16px}.adm-root .adm-maint-confirm p{font-size:12px;line-height:1.55}.adm-root .adm-maint-confirm label{gap:6px}.adm-root .adm-maint-confirm .adm-maint-actions{justify-content:flex-end;margin-top:0;padding-top:0}.adm-root .adm-maint-confirm input{max-width:300px}.adm-root .adm-maint .adm-error{font-size:12px;line-height:1.6;padding:12px 0 0;overflow-wrap:anywhere}@media(max-width:640px){.adm-root .adm-maint-options{grid-template-columns:repeat(2,minmax(0,1fr))}.adm-maint-toolbar{align-items:stretch;flex-direction:column}.adm-maint-target{max-width:none}.adm-maint-segment{width:100%}.adm-maint-segment button{flex:1}.adm-root .adm-maint .adm-maint-body{padding:0 12px 12px}.adm-root .adm-maint-config{padding:14px}.adm-maint-toolbar>.adm-btn{width:100%}}
+`;
 
   // Keep dialogs mounted until their closing animation finishes.
   function AdminPresence({
@@ -1462,7 +1464,6 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     onChatMode,
     onChatUser
   }) {
-    const [cleanupRevision, setCleanupRevision] = useState(0);
     const [tab, setTab] = useState('access');
     const [picked, setPicked] = useState([]);
     const [contactSearch, setContactSearch] = useState('');
@@ -1844,22 +1845,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "shield",
       size: 15
-    }), "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0434\u0435\u043B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435. \u0414\u043B\u044F \u0436\u0451\u0441\u0442\u043A\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u0435\u0442\u0430 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u0442\u0430\u043A\u0436\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Firestore Rules.")), tab === 'activity' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
-      uid: window.auth?.currentUser?.uid,
-      targetUser: user,
-      onlyKind: "activity",
-      onDone: () => setCleanupRevision(v => v + 1)
-    }), /*#__PURE__*/React.createElement(UserActivity, {
-      key: cleanupRevision,
+    }), "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0434\u0435\u043B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435. \u0414\u043B\u044F \u0436\u0451\u0441\u0442\u043A\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u0435\u0442\u0430 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u0442\u0430\u043A\u0436\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Firestore Rules.")), tab === 'activity' && /*#__PURE__*/React.createElement(UserActivity, {
       user: user,
       now: now
-    })), tab === 'audit' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
-      uid: window.auth?.currentUser?.uid,
-      targetUser: user,
-      onlyKind: "audit"
-    }), /*#__PURE__*/React.createElement(AdminAudit, {
+    }), tab === 'audit' && /*#__PURE__*/React.createElement(AdminAudit, {
       user: user
-    })), tab === 'account' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }), tab === 'account' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "adm-section-label"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u043E\u043C"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u044E\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F."))), /*#__PURE__*/React.createElement("div", {
       className: "adm-action-row"
@@ -1892,39 +1883,56 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   async function cleanupPreview(db, uid, kind, guard, progress, targetUid = null) {
     await cleanupAdmin(db, uid, guard);
     const field = window.firebase.firestore.FieldPath.documentId();
-    const source = kind === 'activity' ? targetUid ? db.collection('users').doc(targetUid).collection('activity') : db.collectionGroup('activity') : kind === 'audit' ? db.collection('users') : kind === 'chat' ? db.collectionGroup('messages') : db.collection('chessRooms');
-    const base = source.orderBy(field);
-    const auditEntries = {};
-    let total = 0;
-    const refs = [];
-    let cursor = null,
-      scanned = 0,
-      active = 0;
-    while (true) {
-      guard();
-      const page = await (cursor ? base.startAfter(cursor) : base).limit(200).get({
-        source: 'server'
-      });
-      guard();
-      for (const doc of page.docs) {
-        if (!cleanupPathAllowed(kind, doc.ref.path)) continue;
-        if (targetUid && ['activity', 'audit'].includes(kind) && doc.ref.path.split('/')[1] !== targetUid) continue;
-        if (kind === 'audit') {
-          const entries = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
-          if (!entries.length) continue;
-          auditEntries[doc.ref.path] = entries.map(e => JSON.stringify(e));
-          total += entries.length;
-        } else total++;
-        if (kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) continue;
-        refs.push(doc.ref);
-        if (kind === 'rooms' && doc.data().status === 'playing') active++;
+    const refs = [],
+      auditEntries = {};
+    let total = 0,
+      active = 0,
+      scanned = 0;
+    async function pages(source, visit) {
+      let cursor = null;
+      const base = source.orderBy(field);
+      while (true) {
+        guard();
+        const page = await (cursor ? base.startAfter(cursor) : base).limit(200).get({
+          source: 'server'
+        });
+        guard();
+        scanned += page.size;
+        if (scanned > 50000) throw Error('Слишком большой архив для одной проверки. Выберите отдельного пользователя. Ничего не удалено.');
+        for (const doc of page.docs) {
+          guard();
+          await visit(doc);
+        }
+        progress(total);
+        if (page.size < 200) break;
+        cursor = page.docs[page.docs.length - 1];
       }
-      scanned += page.size;
-      progress(total);
-      if (page.size < 200) break;
-      if (scanned >= 50000) throw Error('За один просмотр проверяется до 50 000 документов. Для большего архива нужна серверная очистка. Ничего не удалено.');
-      cursor = page.docs[page.docs.length - 1];
     }
+    function collect(doc) {
+      if (!doc.exists || !cleanupPathAllowed(kind, doc.ref.path)) return;
+      if (targetUid && ['activity', 'audit'].includes(kind) && doc.ref.path.split('/')[1] !== targetUid) return;
+      if (kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) return;
+      if (kind === 'audit') {
+        const entries = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
+        if (!entries.length) return;
+        auditEntries[doc.ref.path] = entries.map(e => JSON.stringify(e));
+        total += entries.length;
+      } else total++;
+      refs.push(doc.ref);
+      if (kind === 'rooms' && doc.data().status === 'playing') active++;
+    }
+    if (kind === 'activity') {
+      if (targetUid) await pages(db.collection('users').doc(targetUid).collection('activity'), collect);else await pages(db.collection('users'), async user => {
+        await pages(db.collection('users').doc(user.ref.path.split('/')[1]).collection('activity'), collect);
+      });
+    } else if (kind === 'audit' && targetUid) {
+      guard();
+      collect(await db.collection('users').doc(targetUid).get({
+        source: 'server'
+      }));
+      guard();
+      progress(total);
+    } else await pages(kind === 'audit' ? db.collection('users') : kind === 'chat' ? db.collectionGroup('messages') : db.collection('chessRooms'), collect);
     return {
       kind,
       refs,
@@ -1934,6 +1942,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       auditEntries,
       created: Date.now()
     };
+  }
+  function cleanupErrorText(error) {
+    if (String(error?.code || '').includes('permission-denied')) return 'Firebase запретил операцию. Проверьте права администратора и правила чтения/удаления для выбранных данных. Правила Firestore автоматически не изменяются.';
+    return error?.message || errorText(error);
   }
   async function cleanupExecute(db, uid, plan, guard, progress, stopped) {
     let deleted = 0,
@@ -2026,10 +2038,22 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   }
   function DataMaintenance({
     uid,
-    targetUser = null,
-    onlyKind = null,
-    onDone
+    users
   }) {
+    const [category, setCategory] = useState('activity'),
+      [scope, setScope] = useState('all'),
+      [targetId, setTargetId] = useState(''),
+      [roomMode, setRoomMode] = useState('finished');
+    const personal = ['activity', 'audit'].includes(category);
+    const targetUser = personal && scope === 'one' ? array(users).find(u => u.id === targetId) : null;
+    const onlyKind = null;
+    function resetPreview() {
+      setPlan(null);
+      setTyped('');
+      setFailure('');
+      setMessage('');
+      setPhase('idle');
+    }
     const [open, setOpen] = useState(!!onlyKind),
       [phase, setPhase] = useState('idle'),
       [plan, setPlan] = useState(null);
@@ -2064,6 +2088,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     };
     async function inspect(kind) {
       if (lock.current) return;
+      if (personal && scope === 'one' && !targetUser) {
+        setFailure('Выберите пользователя из списка.');
+        return;
+      }
       lock.current = true;
       cancel.current = false;
       setPlan(null);
@@ -2084,14 +2112,17 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           if (live.current) setMessage(`Найдено: ${n}`);
         }, targetUser?.id || null);
         if (live.current) {
-          setPlan(result);
+          setPlan({
+            ...result,
+            targetLabel: targetUser ? nameOf(targetUser) : 'Все пользователи'
+          });
           setPhase('preview');
           setMessage(result.refs.length ? 'Проверьте объём перед удалением.' : 'Ничего не найдено — база уже чистая.');
         }
       } catch (e) {
         if (live.current) {
           setPhase('idle');
-          setFailure(e.message || errorText(e));
+          setFailure(cleanupErrorText(e));
           setMessage('');
         }
       } finally {
@@ -2115,7 +2146,6 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setMessage(`${r.stopped ? 'Остановлено' : 'Готово'}. Удалено: ${r.deleted}. Пропущено: ${r.skipped}.`);
           setPlan(null);
           setTyped('');
-          onDone?.();
           window.dispatchEvent(new Event('lms:activity-cleaned'));
         }
       } catch (e) {
@@ -2124,9 +2154,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setCounts(r);
           setPhase('done');
           setPlan(null);
-          setFailure(`${e.message || errorText(e)} Подтверждено удалений: ${r.deleted}. При потере связи итог последней порции может быть неизвестен — запустите новую проверку.`);
+          setFailure(`${cleanupErrorText(e)} Подтверждено удалений: ${r.deleted}. При потере связи итог последней порции может быть неизвестен — запустите новую проверку.`);
           setMessage('');
-          onDone?.();
         }
       } finally {
         lock.current = false;
@@ -2163,52 +2192,105 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       show: open
     }, /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-body"
-    }, onlyKind ? /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-personal-row"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0447\u0438\u0441\u0442\u043A\u0430 \u0434\u043B\u044F ", nameOf(targetUser)), /*#__PURE__*/React.createElement("p", null, onlyKind === 'activity' ? 'Удаляется история посещений и событий этого ученика.' : 'Удаляются записи об изменениях профиля этого ученика.')), /*#__PURE__*/React.createElement(Btn, {
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-options",
+      "aria-label": "\u0422\u0438\u043F \u0434\u0430\u043D\u043D\u044B\u0445"
+    }, [['activity', 'activity', 'Активность'], ['audit', 'clock', 'Журнал'], ['chess', 'chess', 'Шахматы'], ['chat', 'chat', 'Переписки']].map(([id, icon, label]) => /*#__PURE__*/React.createElement("button", {
+      key: id,
+      type: "button",
       disabled: busy,
-      onClick: () => inspect(onlyKind)
+      className: category === id ? 'selected' : '',
+      "aria-pressed": category === id,
+      onClick: () => {
+        resetPreview();
+        setCategory(id);
+      }
     }, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "alertTriangle",
-      size: 15
-    }), "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-grid"
-    }, /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "chess",
-      size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0428\u0430\u0445\u043C\u0430\u0442\u043D\u044B\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438 \u043C\u043E\u0436\u043D\u043E \u0443\u0434\u0430\u043B\u0438\u0442\u044C, \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435."), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-actions"
-    }, /*#__PURE__*/React.createElement(Btn, {
+      name: icon,
+      size: 19
+    }), /*#__PURE__*/React.createElement("span", null, label)))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-config"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-config-head"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, {
+      activity: 'История активности',
+      audit: 'Журнал администратора',
+      chess: 'Шахматные комнаты',
+      chat: 'История переписок'
+    }[category]), /*#__PURE__*/React.createElement("p", null, {
+      activity: 'События и посещения разделов. Результаты обучения и последний вход сохраняются.',
+      audit: 'Записи об изменениях профилей. Настройки и права пользователей сохраняются.',
+      chess: 'Освободите список комнат после игры.',
+      chat: 'Удаление сообщений всех личных переписок. Доступ к общению сохраняется.'
+    }[category]))), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-toolbar"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-target"
+    }, personal ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-segment",
+      "aria-label": "\u041E\u0431\u043B\u0430\u0441\u0442\u044C \u043E\u0447\u0438\u0441\u0442\u043A\u0438"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
       disabled: busy,
-      onClick: () => inspect('finished')
-    }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435"), /*#__PURE__*/React.createElement(Btn, {
+      "aria-pressed": scope === 'all',
+      onClick: () => {
+        resetPreview();
+        setScope('all');
+      }
+    }, "\u0412\u0441\u0435 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
       disabled: busy,
-      onClick: () => inspect('rooms')
-    }, "\u0412\u0441\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "chat",
-      size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u043B\u0438\u0447\u043D\u044B\u0445 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A. \u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438 \u0438 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043E\u0431\u0449\u0435\u043D\u0438\u044E \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-actions"
-    }, /*#__PURE__*/React.createElement(Btn, {
+      "aria-pressed": scope === 'one',
+      onClick: () => {
+        resetPreview();
+        setScope('one');
+      }
+    }, "\u041E\u0434\u0438\u043D \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C")), scope === 'one' && /*#__PURE__*/React.createElement("select", {
+      className: "adm-input",
+      "aria-label": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u0434\u043B\u044F \u043E\u0447\u0438\u0441\u0442\u043A\u0438",
+      disabled: busy || !users,
+      value: targetId,
+      onChange: e => {
+        resetPreview();
+        setTargetId(e.target.value);
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, users ? 'Выберите пользователя…' : 'Загрузка пользователей…'), array(users).map(u => /*#__PURE__*/React.createElement("option", {
+      key: u.id,
+      value: u.id
+    }, nameOf(u), " \xB7 ", u.email || u.id)))) : category === 'chess' ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-segment",
+      "aria-label": "\u041A\u043E\u043C\u043D\u0430\u0442\u044B \u0434\u043B\u044F \u043E\u0447\u0438\u0441\u0442\u043A\u0438"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
       disabled: busy,
-      onClick: () => inspect('chat')
-    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0438\u0441\u0442\u043E\u0440\u0438\u044E"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "activity",
-      size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0410\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0432\u0441\u0435\u0445 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u043F\u043E\u0441\u0435\u0449\u0435\u043D\u0438\u0439 \u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u044F \u0438 \u043C\u0435\u0442\u043A\u0438 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0433\u043E \u0432\u0445\u043E\u0434\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-actions"
-    }, /*#__PURE__*/React.createElement(Btn, {
+      "aria-pressed": roomMode === 'finished',
+      onClick: () => {
+        resetPreview();
+        setRoomMode('finished');
+      }
+    }, "\u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
       disabled: busy,
-      onClick: () => inspect('activity')
-    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "clock",
-      size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0416\u0443\u0440\u043D\u0430\u043B \u0432\u0441\u0435\u0445 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u043F\u0438\u0441\u0438 \u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F\u0445 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430. \u041F\u0440\u0430\u0432\u0430, \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0438 \u043F\u0440\u043E\u0444\u0438\u043B\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-actions"
-    }, /*#__PURE__*/React.createElement(Btn, {
-      disabled: busy,
-      onClick: () => inspect('audit')
-    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0436\u0443\u0440\u043D\u0430\u043B")))), message && /*#__PURE__*/React.createElement("div", {
+      "aria-pressed": roomMode === 'rooms',
+      onClick: () => {
+        resetPreview();
+        setRoomMode('rooms');
+      }
+    }, "\u0412\u0441\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B")) : /*#__PURE__*/React.createElement("span", {
+      className: "adm-maint-scope-note"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "users",
+      size: 16
+    }), "\u0412\u0441\u0435 \u043B\u0438\u0447\u043D\u044B\u0435 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438")), /*#__PURE__*/React.createElement(Btn, {
+      variant: "primary",
+      disabled: busy || personal && scope === 'one' && !targetUser,
+      onClick: () => inspect(category === 'chess' ? roomMode : category)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "search",
+      size: 16
+    }), "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435"))), message && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-status",
       role: "status"
     }, busy && /*#__PURE__*/React.createElement("i", {
@@ -2220,7 +2302,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "adm-maint-confirm"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       className: "adm-eyebrow"
-    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, targetUser ? `Только: ${nameOf(targetUser)}` : 'Область: все пользователи платформы')), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.total), " ", plan.kind === 'chat' ? 'сообщений' : ['activity', 'audit'].includes(plan.kind) ? 'записей' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, ['activity', 'audit'].includes(plan.kind) ? 'Новые записи после проверки сохраняются. Профили и результаты обучения не удаляются.' : plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
+    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, `Область: ${plan.targetLabel}`)), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.total), " ", plan.kind === 'chat' ? 'сообщений' : ['activity', 'audit'].includes(plan.kind) ? 'записей' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, ['activity', 'audit'].includes(plan.kind) ? 'Новые записи после проверки сохраняются. Профили и результаты обучения не удаляются.' : plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
       className: "adm-input",
       value: typed,
       onChange: e => setTyped(e.target.value),
@@ -2713,7 +2795,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       onClick: () => setRetry(value => value + 1)
     }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
       key: uid,
-      uid: uid
+      uid: uid,
+      users: users
     }), /*#__PURE__*/React.createElement("div", {
       className: "adm-summary"
     }, [['Пользователей', 'users'], ['Администраторов', 'shield'], ['Заблокировано', 'ban'], ['Назначенных тестов', 'fileText']].map(([label, icon], index) => /*#__PURE__*/React.createElement("div", {
