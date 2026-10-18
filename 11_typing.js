@@ -358,6 +358,8 @@ function TypingTest({ onBack }) {
             });
             saved.current.add(session.id); status('success', 'Результат сохранён в профиле.');
         } catch (error) {
+window.reportLmsError?.(error, {"section":"typing","source":"11_typing.js","line":360,"operation":"caught","handled":true});
+
             status('error', error.message === 'account-changed' ? 'Аккаунт изменился. Результат не сохранён в новый профиль.' : String(error.code).includes('permission-denied') || error.message === 'access-denied' ? 'Нет разрешения на сохранение результата.' : 'Не удалось подтвердить сохранение. Проверьте интернет и повторите.');
         } finally { saveJobs.current.delete(session.id); }
     }
@@ -375,7 +377,9 @@ function TypingTest({ onBack }) {
             const response = await fetch(AI_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: job.controller.signal, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
             if (!response.ok) throw new Error(response.status === 429 ? 'Слишком много запросов. Подождите немного и повторите.' : 'Сервис генерации временно недоступен.');
             let data;
-            try { data = await response.json(); } catch { throw new Error('Сервис вернул некорректный ответ. Попробуйте ещё раз.'); }
+            try { data = await response.json(); } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"typing","source":"11_typing.js","line":378,"operation":"caught","handled":true});
+ throw new Error('Сервис вернул некорректный ответ. Попробуйте ещё раз.'); }
             if (data.error) throw new Error('Сервис не смог создать текст. Попробуйте позже.');
             const parts = data.candidates?.[0]?.content?.parts;
             const raw = Array.isArray(parts) ? parts.filter(part => !part.thought && typeof part.text === 'string').map(part => part.text).join(' ') : '';
@@ -383,6 +387,8 @@ function TypingTest({ onBack }) {
             if (!alive.current || request.current !== job || job.controller.signal.aborted || current.current.lang !== lang) return;
             request.current = null; clearTimeout(job.timer); setGenerating(false); setShowAI(false); install(text, lang, 'ai');
         } catch (error) {
+window.reportLmsError?.(error, {"section":"typing","source":"11_typing.js","line":385,"operation":"caught","handled":true});
+
             if (!alive.current || request.current !== job) return;
             setNotice({ type: 'error', text: (job.timedOut ? 'Сервис не ответил за 45 секунд.' : error instanceof TypeError ? 'Не удалось подключиться к сервису.' : error.message) + ' Предыдущий текст сохранён.' });
         } finally {
