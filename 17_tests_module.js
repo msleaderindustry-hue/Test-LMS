@@ -993,6 +993,8 @@
           text: `Импортировано вопросов: ${normalized.length}`
         });
       } catch (err) {
+window.reportLmsError?.(err, {"section":"tests","source":"17_tests_module.js","line":995,"operation":"caught","handled":true});
+
         if (alive.current) setNotice({
           error: true,
           text: err instanceof SyntaxError ? 'Не удалось прочитать JSON. Проверь формат файла.' : err.message
@@ -1048,6 +1050,8 @@
         const qs = shuffled(valid).slice(0, count).map(shuffledQuestion);
         beginSession(qs, mins);
       } catch (e) {
+window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","line":1050,"operation":"caught","handled":true});
+
         setNotice({
           error: true,
           text: e.message
@@ -1231,6 +1235,8 @@
             }
             job.cloud = true;
           } catch (e) {
+window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","line":1233,"operation":"caught","handled":true});
+
             issues.push('Не удалось синхронизировать статистику с аккаунтом.');
           }
         } else if (owner?.uid && !ref) issues.push('Подключение к статистике аккаунта недоступно.');
@@ -1246,6 +1252,8 @@
           localStorage.setItem('test_history_v1', JSON.stringify([...merged.values()]));
           job.local = true;
         } catch (e) {
+window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","line":1248,"operation":"caught","handled":true});
+
           if (!job.cloud) issues.push('Браузер не разрешил сохранить историю.');
         }
         setHistory?.(prev => [...(Array.isArray(prev) ? prev : []).filter(r => r.id !== record.id), record]);
@@ -1263,6 +1271,8 @@
               if (response === false || response?.ok === false) throw Error('Discord');
               job.discord = true;
             } catch (e) {
+window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","line":1265,"operation":"caught","handled":true});
+
               issues.push('Не удалось отправить результат в Discord.');
             }
           } else issues.push('Функция отправки в Discord не подключена.');
