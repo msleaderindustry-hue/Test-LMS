@@ -3572,6 +3572,8 @@
           if (!live || version !== generation) return;
           setAllowed(snapshot.exists && snapshot.data().hotkeyHintsEnabled !== false);
         }, error => {
+window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","line":3574,"operation":"snapshot","handled":true});
+
           if (live && version === generation) setAllowed(false);
           console.warn('[hotkeys] hint settings:', error.code || error.message);
         });
@@ -3975,6 +3977,8 @@
         setUseCustom(true);
         if (known) setBank(known);
       } catch (e) {
+window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":3977,"operation":"caught","handled":true});
+
         if (alive.current && version === requestVersion.current && (!controller.signal.aborted || timedOut)) setError(timedOut ? u.timedOut : t.errorFailed);
       } finally {
         clearTimeout(timeout);
