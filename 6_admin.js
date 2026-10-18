@@ -683,6 +683,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }
   }
   const STYLES = `
+.adm-root .adm-maint-toggle{min-height:82px;align-items:center;padding:18px 20px;line-height:1.4}.adm-maint-heading{flex:1;min-width:0}.adm-maint-disclosure{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;align-self:center;padding:9px 12px;border:1px solid var(--ad-line);border-radius:11px;background:var(--ad-bg);color:var(--ad-accent);font-size:12px;font-weight:600;transition:background .2s,transform .2s}.adm-maint-disclosure svg{display:block;flex-shrink:0;transition:transform .28s ease}.adm-maint-disclosure svg.open{transform:rotate(180deg)}.adm-maint-toggle:hover .adm-maint-disclosure{background:var(--ad-soft)}.adm-maint-toggle:active .adm-maint-disclosure{transform:scale(.96)}.adm-maint-personal{margin:0 0 20px}.adm-maint-personal .adm-maint-body{padding:16px}.adm-maint-personal-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.adm-maint-personal-row p{font-size:12px;color:var(--ad-muted);margin-top:5px}.adm-maint-personal-row button{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0}@media(max-width:500px){.adm-root .adm-maint-toggle{padding:14px 12px;gap:9px}.adm-maint-disclosure{padding:9px}.adm-maint-disclosure>span{display:none}.adm-maint-personal-row{align-items:flex-start;flex-direction:column}.adm-maint-personal-row button{width:100%}}
+
 .adm-maint{margin:0 30px 24px;border:1px solid var(--ad-line);border-radius:20px;background:var(--ad-panel);overflow:hidden}.adm-maint-toggle{display:flex;align-items:center;gap:13px;width:100%;padding:18px 20px;border:0;background:transparent;color:var(--ad-text);text-align:left}.adm-maint-toggle strong{display:block;font-size:15px}.adm-maint-toggle small{display:block;color:var(--ad-muted);font-size:12px;margin-top:3px}.adm-maint-symbol{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--ad-soft);color:var(--ad-accent);flex-shrink:0}.adm-maint-chevron{margin-left:auto;transition:transform .25s;font-size:21px}.adm-maint-chevron.open{transform:rotate(180deg)}.adm-maint-body{padding:0 20px 20px;animation:admMaintIn .28s ease both}.adm-maint-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.adm-maint-grid article{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.adm-maint-grid article>svg{color:var(--ad-accent)}.adm-maint-grid h3,.adm-maint-confirm h3{font-size:16px}.adm-maint-grid p,.adm-maint-confirm p{color:var(--ad-muted);font-size:13px;line-height:1.6}.adm-maint-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}.adm-maint-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}.adm-maint-confirm{margin-top:16px;padding:20px;border-radius:15px;border:1px solid var(--ad-line);background:var(--ad-bg);display:grid;gap:12px;animation:admMaintIn .25s ease}.adm-maint-confirm label{display:grid;gap:7px;color:var(--ad-muted);font-size:12px}.adm-maint-confirm input{max-width:300px}.adm-maint-status{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--ad-accent);font-size:13px}.adm-maint-progress{display:grid;gap:6px;margin:12px 0;color:var(--ad-muted);font-size:12px}.adm-maint-progress progress{width:100%;height:8px;accent-color:var(--ad-accent)}@keyframes admMaintIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}@media(max-width:640px){.adm-maint{margin:0 14px 18px}.adm-maint-grid{grid-template-columns:1fr}.adm-maint-body{padding:0 12px 14px}.adm-maint-toggle{padding:15px 12px}.adm-maint-actions{width:100%}.adm-maint-actions button{flex:1}}@media(prefers-reduced-motion:reduce){.adm-maint *{animation:none!important;transition:none!important}}
 
     .adm-root{--ad-bg:var(--bg-body,#111620);--ad-panel:var(--bg-panel,#191f2d);--ad-text:var(--text-main,#edf1fa);--ad-muted:var(--text-sec,#a1abc0);--ad-line:var(--glass-border,#2d3546);--ad-accent:#a89aff;--ad-soft:rgba(154,132,255,.12);--ad-green:#55cfa3;--ad-red:#f2929e;--ad-shadow:0 22px 65px #0003;color:var(--ad-text);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:left;color-scheme:dark;width:100%;min-width:0}
@@ -1326,6 +1328,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     user,
     now
   }) {
+    useEffect(() => {
+      const refresh = () => setRetry(v => v + 1);
+      window.addEventListener('lms:activity-cleaned', refresh);
+      return () => window.removeEventListener('lms:activity-cleaned', refresh);
+    }, []);
     const [state, setState] = useState({
       items: [],
       loading: true,
@@ -1455,6 +1462,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     onChatMode,
     onChatUser
   }) {
+    const [cleanupRevision, setCleanupRevision] = useState(0);
     const [tab, setTab] = useState('access');
     const [picked, setPicked] = useState([]);
     const [contactSearch, setContactSearch] = useState('');
@@ -1836,12 +1844,22 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "shield",
       size: 15
-    }), "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0434\u0435\u043B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435. \u0414\u043B\u044F \u0436\u0451\u0441\u0442\u043A\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u0435\u0442\u0430 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u0442\u0430\u043A\u0436\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Firestore Rules.")), tab === 'activity' && /*#__PURE__*/React.createElement(UserActivity, {
+    }), "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0434\u0435\u043B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\u043C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u0432 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435. \u0414\u043B\u044F \u0436\u0451\u0441\u0442\u043A\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u0435\u0442\u0430 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438 \u0442\u0430\u043A\u0436\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Firestore Rules.")), tab === 'activity' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
+      uid: window.auth?.currentUser?.uid,
+      targetUser: user,
+      onlyKind: "activity",
+      onDone: () => setCleanupRevision(v => v + 1)
+    }), /*#__PURE__*/React.createElement(UserActivity, {
+      key: cleanupRevision,
       user: user,
       now: now
-    }), tab === 'audit' && /*#__PURE__*/React.createElement(AdminAudit, {
+    })), tab === 'audit' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DataMaintenance, {
+      uid: window.auth?.currentUser?.uid,
+      targetUser: user,
+      onlyKind: "audit"
+    }), /*#__PURE__*/React.createElement(AdminAudit, {
       user: user
-    }), tab === 'account' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    })), tab === 'account' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "adm-section-label"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u043E\u043C"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u044E\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F."))), /*#__PURE__*/React.createElement("div", {
       className: "adm-action-row"
@@ -1862,7 +1880,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }), "\u0421\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0430 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430 \u0438 \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0443 \u0437\u0434\u0435\u0441\u044C \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F."))));
   }
   // Explicit paths only. Nothing is deleted before the preview is confirmed.
-  const cleanupPathAllowed = (kind, path) => kind === 'chat' ? /^private_chats\/[^/]+\/messages\/[^/]+$/.test(path) : /^chessRooms\/[^/]+$/.test(path);
+  const cleanupPathAllowed = (kind, path) => kind === 'activity' ? /^users\/[^/]+\/activity\/[^/]+$/.test(path) : kind === 'audit' ? /^users\/[^/]+$/.test(path) : kind === 'chat' ? /^private_chats\/[^/]+\/messages\/[^/]+$/.test(path) : /^chessRooms\/[^/]+$/.test(path);
   async function cleanupAdmin(db, uid, guard) {
     guard();
     const snap = await db.collection('users').doc(uid).get({
@@ -1871,10 +1889,13 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     guard();
     if (!snap.exists || snap.data().role !== 'admin' || snap.data().isBanned) throw Error('Права администратора не подтверждены.');
   }
-  async function cleanupPreview(db, uid, kind, guard, progress) {
+  async function cleanupPreview(db, uid, kind, guard, progress, targetUid = null) {
     await cleanupAdmin(db, uid, guard);
     const field = window.firebase.firestore.FieldPath.documentId();
-    const base = (kind === 'chat' ? db.collectionGroup('messages') : db.collection('chessRooms')).orderBy(field);
+    const source = kind === 'activity' ? targetUid ? db.collection('users').doc(targetUid).collection('activity') : db.collectionGroup('activity') : kind === 'audit' ? db.collection('users') : kind === 'chat' ? db.collectionGroup('messages') : db.collection('chessRooms');
+    const base = source.orderBy(field);
+    const auditEntries = {};
+    let total = 0;
     const refs = [];
     let cursor = null,
       scanned = 0,
@@ -1887,12 +1908,19 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       guard();
       for (const doc of page.docs) {
         if (!cleanupPathAllowed(kind, doc.ref.path)) continue;
+        if (targetUid && ['activity', 'audit'].includes(kind) && doc.ref.path.split('/')[1] !== targetUid) continue;
+        if (kind === 'audit') {
+          const entries = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
+          if (!entries.length) continue;
+          auditEntries[doc.ref.path] = entries.map(e => JSON.stringify(e));
+          total += entries.length;
+        } else total++;
         if (kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) continue;
         refs.push(doc.ref);
         if (kind === 'rooms' && doc.data().status === 'playing') active++;
       }
       scanned += page.size;
-      progress(refs.length);
+      progress(total);
       if (page.size < 200) break;
       if (scanned >= 50000) throw Error('За один просмотр проверяется до 50 000 документов. Для большего архива нужна серверная очистка. Ничего не удалено.');
       cursor = page.docs[page.docs.length - 1];
@@ -1901,6 +1929,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       kind,
       refs,
       active,
+      total,
+      targetUid,
+      auditEntries,
       created: Date.now()
     };
   }
@@ -1941,8 +1972,28 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
               skip++;
               continue;
             }
-            tx.delete(doc.ref);
-            count++;
+            if (plan.kind === 'audit') {
+              // Remove only entries shown in the preview, preserving later changes.
+              const pending = new Map();
+              for (const key of plan.auditEntries[doc.ref.path] || []) pending.set(key, (pending.get(key) || 0) + 1);
+              const current = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
+              let removed = 0;
+              const retained = current.filter(entry => {
+                const key = JSON.stringify(entry),
+                  n = pending.get(key) || 0;
+                if (!n) return true;
+                pending.set(key, n - 1);
+                removed++;
+                return false;
+              });
+              if (removed) tx.update(doc.ref, {
+                adminAudit: retained
+              });
+              count += removed;
+            } else {
+              tx.delete(doc.ref);
+              count++;
+            }
           }
           return {
             count,
@@ -1974,9 +2025,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }
   }
   function DataMaintenance({
-    uid
+    uid,
+    targetUser = null,
+    onlyKind = null,
+    onDone
   }) {
-    const [open, setOpen] = useState(false),
+    const [open, setOpen] = useState(!!onlyKind),
       [phase, setPhase] = useState('idle'),
       [plan, setPlan] = useState(null);
     const [message, setMessage] = useState(''),
@@ -2004,7 +2058,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const titles = {
       finished: 'Завершённые партии',
       rooms: 'Все шахматные комнаты',
-      chat: 'Вся история личных чатов'
+      chat: 'Вся история личных чатов',
+      activity: 'История активности',
+      audit: 'Журнал администратора'
     };
     async function inspect(kind) {
       if (lock.current) return;
@@ -2026,7 +2082,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           if (cancel.current) throw Error('Проверка остановлена. Ничего не удалено.');
         }, n => {
           if (live.current) setMessage(`Найдено: ${n}`);
-        });
+        }, targetUser?.id || null);
         if (live.current) {
           setPlan(result);
           setPhase('preview');
@@ -2059,6 +2115,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setMessage(`${r.stopped ? 'Остановлено' : 'Готово'}. Удалено: ${r.deleted}. Пропущено: ${r.skipped}.`);
           setPlan(null);
           setTyped('');
+          onDone?.();
+          window.dispatchEvent(new Event('lms:activity-cleaned'));
         }
       } catch (e) {
         if (live.current) {
@@ -2068,14 +2126,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setPlan(null);
           setFailure(`${e.message || errorText(e)} Подтверждено удалений: ${r.deleted}. При потере связи итог последней порции может быть неизвестен — запустите новую проверку.`);
           setMessage('');
+          onDone?.();
         }
       } finally {
         lock.current = false;
       }
     }
     return /*#__PURE__*/React.createElement("section", {
-      className: "adm-maint"
-    }, /*#__PURE__*/React.createElement("button", {
+      className: `adm-maint ${onlyKind ? 'adm-maint-personal' : ''}`
+    }, !onlyKind && /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "adm-maint-toggle",
       "aria-expanded": open,
@@ -2085,18 +2144,39 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "settings",
       size: 20
-    })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445"), /*#__PURE__*/React.createElement("small", null, "\u041A\u043E\u043C\u043D\u0430\u0442\u044B \u0448\u0430\u0445\u043C\u0430\u0442 \u0438 \u0438\u0441\u0442\u043E\u0440\u0438\u044F \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A")), /*#__PURE__*/React.createElement("span", {
-      className: `adm-maint-chevron ${open ? 'open' : ''}`
-    }, "\u2304")), /*#__PURE__*/React.createElement(AdminPresence, {
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "adm-maint-heading"
+    }, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445"), /*#__PURE__*/React.createElement("small", null, "\u041A\u043E\u043C\u043D\u0430\u0442\u044B, \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0438, \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0438 \u0436\u0443\u0440\u043D\u0430\u043B")), /*#__PURE__*/React.createElement("span", {
+      className: "adm-maint-disclosure"
+    }, /*#__PURE__*/React.createElement("span", null, open ? 'Свернуть' : 'Открыть'), /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24",
+      width: "18",
+      height: "18",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      className: open ? 'open' : '',
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "m6 9 6 6 6-6"
+    })))), /*#__PURE__*/React.createElement(AdminPresence, {
       show: open
     }, /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-body"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, onlyKind ? /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-personal-row"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "\u041E\u0447\u0438\u0441\u0442\u043A\u0430 \u0434\u043B\u044F ", nameOf(targetUser)), /*#__PURE__*/React.createElement("p", null, onlyKind === 'activity' ? 'Удаляется история посещений и событий этого ученика.' : 'Удаляются записи об изменениях профиля этого ученика.')), /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect(onlyKind)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "alertTriangle",
+      size: 15
+    }), "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C")) : /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-grid"
     }, /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "chess",
       size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0428\u0430\u0445\u043C\u0430\u0442\u043D\u044B\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u041E\u0441\u0432\u043E\u0431\u043E\u0434\u0438\u0442\u0435 \u0441\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u0441\u043B\u0435 \u0438\u0433\u0440\u044B. \u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438 \u043C\u043E\u0436\u043D\u043E \u0443\u0434\u0430\u043B\u0438\u0442\u044C, \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435."), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0428\u0430\u0445\u043C\u0430\u0442\u043D\u044B\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438 \u043C\u043E\u0436\u043D\u043E \u0443\u0434\u0430\u043B\u0438\u0442\u044C, \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435."), /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-actions"
     }, /*#__PURE__*/React.createElement(Btn, {
       disabled: busy,
@@ -2107,12 +2187,28 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, "\u0412\u0441\u0435 \u043A\u043E\u043C\u043D\u0430\u0442\u044B"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "chat",
       size: 24
-    }), /*#__PURE__*/React.createElement("h3", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u043B\u0438\u0447\u043D\u044B\u0445 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A. \u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438 \u0438 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043E\u0431\u0449\u0435\u043D\u0438\u044E \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432"), /*#__PURE__*/React.createElement("p", null, "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u043B\u0438\u0447\u043D\u044B\u0445 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043E\u043A. \u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438 \u0438 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043E\u0431\u0449\u0435\u043D\u0438\u044E \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-actions"
     }, /*#__PURE__*/React.createElement(Btn, {
       disabled: busy,
       onClick: () => inspect('chat')
-    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0438\u0441\u0442\u043E\u0440\u0438\u044E")))), message && /*#__PURE__*/React.createElement("div", {
+    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0438\u0441\u0442\u043E\u0440\u0438\u044E"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "activity",
+      size: 24
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0410\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0432\u0441\u0435\u0445 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"), /*#__PURE__*/React.createElement("p", null, "\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u043F\u043E\u0441\u0435\u0449\u0435\u043D\u0438\u0439 \u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u044F \u0438 \u043C\u0435\u0442\u043A\u0438 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0433\u043E \u0432\u0445\u043E\u0434\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect('activity')
+    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C"))), /*#__PURE__*/React.createElement("article", null, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "clock",
+      size: 24
+    }), /*#__PURE__*/React.createElement("h3", null, "\u0416\u0443\u0440\u043D\u0430\u043B \u0432\u0441\u0435\u0445 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439"), /*#__PURE__*/React.createElement("p", null, "\u0417\u0430\u043F\u0438\u0441\u0438 \u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F\u0445 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430. \u041F\u0440\u0430\u0432\u0430, \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0438 \u043F\u0440\u043E\u0444\u0438\u043B\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F."), /*#__PURE__*/React.createElement("div", {
+      className: "adm-maint-actions"
+    }, /*#__PURE__*/React.createElement(Btn, {
+      disabled: busy,
+      onClick: () => inspect('audit')
+    }, "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0436\u0443\u0440\u043D\u0430\u043B")))), message && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-status",
       role: "status"
     }, busy && /*#__PURE__*/React.createElement("i", {
@@ -2124,7 +2220,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "adm-maint-confirm"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       className: "adm-eyebrow"
-    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.refs.length), " ", plan.kind === 'chat' ? 'сообщений' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
+    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, targetUser ? `Только: ${nameOf(targetUser)}` : 'Область: все пользователи платформы')), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.total), " ", plan.kind === 'chat' ? 'сообщений' : ['activity', 'audit'].includes(plan.kind) ? 'записей' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, ['activity', 'audit'].includes(plan.kind) ? 'Новые записи после проверки сохраняются. Профили и результаты обучения не удаляются.' : plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
       className: "adm-input",
       value: typed,
       onChange: e => setTyped(e.target.value),
