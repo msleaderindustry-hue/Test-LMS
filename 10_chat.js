@@ -222,7 +222,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           mode: ['all', 'teachers', 'selected'].includes(d.chatContactMode) ? d.chatContactMode : 'all',
           allowed: Array.isArray(d.chatAllowedUsers) ? d.chatAllowedUsers.map(String) : []
         });
-      }, () => {
+      }, (__lmsSnapshotError) => {
+window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.js","line":225,"operation":"snapshot","handled":true});
+
         if (!dead) {
           setPolicy(null);
           setContactError('Не удалось получить настройки доступа к контактам.');
@@ -235,7 +237,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           uid: d.id
         })));
         setLoaded(true);
-      }, () => {
+      }, (__lmsSnapshotError) => {
+window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.js","line":238,"operation":"snapshot","handled":true});
+
         if (!dead) {
           setContactError('Не удалось загрузить контакты. Проверь подключение и доступ.');
           setLoaded(true);
@@ -264,7 +268,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
             ...p,
             [u.uid]: s.docs.filter(d => visible(d.data(), uid)).length
           }));
-        }, () => {});
+        }, (__lmsSnapshotError) => {});
       });
       return () => {
         dead = true;
@@ -296,7 +300,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         setMessages(rows);
         setLoading(false);
         setError('');
-      }, () => {
+      }, (__lmsSnapshotError) => {
+window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.js","line":299,"operation":"snapshot","handled":true});
+
         if (!dead) {
           setLoading(false);
           setError('Сообщения не загрузились. Проверь подключение и разрешения.');
@@ -380,7 +386,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           deletedForEveryone: false,
           read: false
         });
-      } catch {
+      } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"chat","source":"10_chat.js","line":383,"operation":"caught","handled":true});
+
         drafts.current[target] = drafts.current[target] ? drafts.current[target] + '\n' + text : text;
         if (alive.current) {
           if (activeRef.current === target) setDraft(current => current ? current + '\n' + text : text);
@@ -408,7 +416,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
           setMenu(null);
           notify(all ? 'Сообщение удалено у всех' : 'Сообщение удалено у тебя');
         }
-      } catch {
+      } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"chat","source":"10_chat.js","line":411,"operation":"caught","handled":true});
+
         notify('Не удалось удалить сообщение. Попробуй ещё раз.', true);
       } finally {
         if (alive.current) setDeleting(false);
@@ -419,7 +429,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         await navigator.clipboard.writeText(menu.text);
         setMenu(null);
         notify('Текст скопирован');
-      } catch {
+      } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"chat","source":"10_chat.js","line":422,"operation":"caught","handled":true});
+
         notify('Браузер не разрешил копирование.', true);
       }
     };
