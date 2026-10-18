@@ -26,7 +26,9 @@
       duration:details.duration != null && Number.isFinite(Number(details.duration)) ? Number(details.duration) : null,
       device:short(navigator.userAgent || '')};
     try {await window.db.collection('users').doc(targetUid).collection('activity').add(payload);return {ok:true};}
-    catch(e){console.warn('[activity] event:',e);return {ok:false};}
+    catch(e){
+window.reportLmsError?.(e, {"section":"activity","source":"activity_tracker.js","line":29,"operation":"caught","handled":true});
+console.warn('[activity] event:',e);return {ok:false};}
   }
   async function seen(targetUid=uid,visit=false) {
     if(!targetUid || targetUid!==uid || !window.db || presencePending.has(targetUid))return;
@@ -39,7 +41,9 @@
       });
       // update не создаст случайно неполный профиль, если его удалили.
       await window.db.collection('users').doc(targetUid).update(patch);
-    } catch(e){console.warn('[activity] presence:',e);}
+    } catch(e){
+window.reportLmsError?.(e, {"section":"activity","source":"activity_tracker.js","line":42,"operation":"caught","handled":true});
+console.warn('[activity] presence:',e);}
     finally {presencePending.delete(targetUid);}
   }
   function recordScreen(reason='open') {
