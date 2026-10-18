@@ -104,7 +104,9 @@
             };
             tryLoad(0);
         });
-        mathLoader = mathLoader.catch(error => { mathLoader = null; throw error; });
+        mathLoader = mathLoader.catch(error => {
+window.reportLmsError?.(error, {"section":"ai_chat","source":"16_ai_chat.js","line":107,"operation":"promise-catch","handled":true});
+ mathLoader = null; throw error; });
         return mathLoader;
     }
     const MATH_CACHE = new Map();
@@ -155,6 +157,8 @@
             renderMath(tex, display).then(html => {
                 if (alive) setResult({ key, html, error: false });
             }).catch(error => {
+window.reportLmsError?.(error, {"section":"ai_chat","source":"16_ai_chat.js","line":157,"operation":"promise-catch","handled":true});
+
                 console.warn('[AI chat] MathJax:', error.message);
                 if (alive) setResult({ key, html: '', error: true });
             });
@@ -725,7 +729,9 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
                 });
                 if (!response.ok) throw new Error(response.status === 429 ? 'Слишком много запросов. Подожди немного и повтори.' : 'Сервис временно недоступен. Попробуй ещё раз.');
                 let data;
-                try { data = await response.json(); } catch { throw new Error('Сервис вернул некорректный ответ. Попробуй ещё раз.'); }
+                try { data = await response.json(); } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"ai_chat","source":"16_ai_chat.js","line":728,"operation":"caught","handled":true});
+ throw new Error('Сервис вернул некорректный ответ. Попробуй ещё раз.'); }
                 if (data.error) throw new Error('Не удалось получить ответ от сервиса. Повтори запрос позже.');
                 const parts = data.candidates?.[0]?.content?.parts;
                 const answer = Array.isArray(parts) ? parts.filter(part => !part.thought && typeof part.text === 'string').map(part => part.text).join('\n').trim() : '';
@@ -733,6 +739,8 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
                 if (!mounted.current || active.current !== job || job.controller.signal.aborted) return;
                 setMessages(previous => [...previous, { id: uid(), role: 'ai', text: answer, at: Date.now() }]);
             } catch (error) {
+window.reportLmsError?.(error, {"section":"ai_chat","source":"16_ai_chat.js","line":735,"operation":"caught","handled":true});
+
                 if (!mounted.current || active.current !== job) return;
                 const message = job.stopped ? 'Ответ остановлен.' : job.timedOut ? 'Сервис не ответил за 45 секунд. Попробуй ещё раз.' : error instanceof TypeError ? 'Не удалось подключиться. Проверь интернет и повтори.' : error.message || 'Не удалось получить ответ.';
                 setFailure({ text: message, prompt: clean });
@@ -756,7 +764,9 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
                 const body = await response.text();
                 if (body.trim().startsWith('{')) {
                     let result;
-                    try { result = JSON.parse(body); } catch { throw new Error('delivery'); }
+                    try { result = JSON.parse(body); } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"ai_chat","source":"16_ai_chat.js","line":759,"operation":"caught","handled":true});
+ throw new Error('delivery'); }
                     if (result.ok === false || result.success === false || result.error) throw new Error('delivery');
                 }
                 teacherUntil.current = Date.now() + CONFIG.teacherCooldown;
@@ -771,7 +781,9 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
                 if (!mounted.current) return;
                 setCopied(message.id); setCopyError(false); clearTimeout(copyTimer.current);
                 copyTimer.current = setTimeout(() => { if (mounted.current) setCopied(null); }, 2000);
-            } catch { if (mounted.current) setCopyError(true); }
+            } catch (__lmsCaughtError)  {
+window.reportLmsError?.(__lmsCaughtError, {"section":"ai_chat","source":"16_ai_chat.js","line":774,"operation":"caught","handled":true});
+ if (mounted.current) setCopyError(true); }
         }
         const iconButton = (name, label, onClick, extra = {}) => h('button', { type: 'button', className: 'ula-icon', title: label, 'aria-label': label, onClick, ...extra }, h(Icon, { name }));
         const messageNodes = [];
