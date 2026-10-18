@@ -3559,9 +3559,36 @@
       className: "hx-picker-empty"
     }, tr(lang, 'Можно указать свою программу', 'You can enter another program', 'Бошқа дастурни киритиш мумкин'))));
   }
+  function useHotkeyHintsPermission() {
+    const [allowed, setAllowed] = useState(false);
+    useEffect(() => {
+      let live = true, generation = 0, stopProfile = null;
+      function bind(user) {
+        const version = ++generation;
+        if (stopProfile) { stopProfile(); stopProfile = null; }
+        setAllowed(!user);
+        if (!user || !window.db) return;
+        stopProfile = window.db.collection('users').doc(user.uid).onSnapshot(snapshot => {
+          if (!live || version !== generation) return;
+          setAllowed(snapshot.exists && snapshot.data().hotkeyHintsEnabled !== false);
+        }, error => {
+          if (live && version === generation) setAllowed(false);
+          console.warn('[hotkeys] hint settings:', error.code || error.message);
+        });
+      }
+      const stopAuth = window.auth?.onAuthStateChanged
+        ? window.auth.onAuthStateChanged(bind, () => { generation++; stopProfile?.(); if(live)setAllowed(false); }) : null;
+      if (!stopAuth) bind(window.auth?.currentUser || null);
+      return () => { live = false; generation++; stopProfile?.(); stopAuth?.(); };
+    }, []);
+    return allowed;
+  }
   function HotkeyTrainer({
     theme
   } = {}) {
+    const hintsAllowed = useHotkeyHintsPermission();
+    const hintsAllowedRef = useRef(hintsAllowed);
+    hintsAllowedRef.current = hintsAllowed;
     const [settingsOpen, setSettingsOpen] = useState(false),
       [lang, setLang] = useState('ru'),
       [phase, setPhase] = useState('setup'),
@@ -3798,6 +3825,7 @@
       });
     }
     function hint() {
+      if (!hintsAllowedRef.current) return;
       const s = sref.current;
       if (!s || s.records[s.index]?.status !== 'pending') return;
       commit({
@@ -4361,7 +4389,7 @@
       className: "hx-context"
     }, current.notes[lang]), /*#__PURE__*/React.createElement(Combo, {
       hk: current,
-      hidden: !record.hint && record.status === 'pending',
+      hidden: (!hintsAllowed || !record.hint) && record.status === 'pending',
       pressed: record.status === 'pending' ? pressedKeys : null
     })), /*#__PURE__*/React.createElement("div", {
       className: `hx-feedback ${session.feedback}`,
@@ -4399,7 +4427,7 @@
       className: "hx-practice-actions"
     }, /*#__PURE__*/React.createElement("div", {
       className: "hx-assist-actions"
-    }, /*#__PURE__*/React.createElement("button", {
+    }, hintsAllowed && /*#__PURE__*/React.createElement("button", {
       className: "hx-button",
       type: "button",
       disabled: record.status !== 'pending' || record.hint,
