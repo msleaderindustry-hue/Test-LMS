@@ -1870,6 +1870,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       size: 15
     }), "\u0421\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0430 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430 \u0438 \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0443 \u0437\u0434\u0435\u0441\u044C \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F."))));
   }
+  function cleanupAuditKey(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return '[' + value.map(cleanupAuditKey).join(',') + ']';
+    return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + cleanupAuditKey(value[key])).join(',') + '}';
+  }
   // Explicit paths only. Nothing is deleted before the preview is confirmed.
   const cleanupPathAllowed = (kind, path) => kind === 'activity' ? /^users\/[^/]+\/activity\/[^/]+$/.test(path) : kind === 'audit' ? /^users\/[^/]+$/.test(path) : kind === 'chat' ? /^private_chats\/[^/]+\/messages\/[^/]+$/.test(path) : /^chessRooms\/[^/]+$/.test(path);
   async function cleanupAdmin(db, uid, guard) {
@@ -1915,7 +1920,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       if (kind === 'audit') {
         const entries = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
         if (!entries.length) return;
-        auditEntries[doc.ref.path] = entries.map(e => JSON.stringify(e));
+        auditEntries[doc.ref.path] = entries.map(cleanupAuditKey);
         total += entries.length;
       } else total++;
       refs.push(doc.ref);
@@ -1991,7 +1996,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
               const current = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
               let removed = 0;
               const retained = current.filter(entry => {
-                const key = JSON.stringify(entry),
+                const key = cleanupAuditKey(entry),
                   n = pending.get(key) || 0;
                 if (!n) return true;
                 pending.set(key, n - 1);
@@ -2143,7 +2148,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         if (live.current) {
           setCounts(r);
           setPhase('done');
-          setMessage(`${r.stopped ? 'Остановлено' : 'Готово'}. Удалено: ${r.deleted}. Пропущено: ${r.skipped}.`);
+          setMessage(`${r.stopped ? 'Остановлено' : r.deleted ? 'Очистка выполнена' : 'Изменений нет'}. Удалено: ${r.deleted}. Пропущено документов: ${r.skipped}.${!r.deleted ? ' Обновите проверку: подтверждённые записи могли измениться или быть удалены ранее.' : ''}`);
           setPlan(null);
           setTyped('');
           window.dispatchEvent(new Event('lms:activity-cleaned'));
