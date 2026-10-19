@@ -1,0 +1,12 @@
+Stockfish.js 19.0.0 — unmodified engines from npm stockfish@19.0.0.
+Copyright Stockfish contributors, Nathan Rugg, Chess.com.
+License: GPL-3.0 (see LICENSE.txt).
+Corresponding upstream source and build instructions:
+https://github.com/nmrugg/stockfish.js/tree/v19.0.0
+Source archive:
+https://github.com/nmrugg/stockfish.js/archive/refs/tags/v19.0.0.tar.gz
+Releases:
+https://github.com/nmrugg/stockfish.js/releases/tag/v19.0.0
+The split-loader source is stockfish-19-single.js (GPL-3.0-or-later).
+Concatenate stockfish-19-single.part-0.bin through part-5.bin in numeric order
+to reconstruct the original stockfish-19-single.wasm, if needed.
