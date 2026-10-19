@@ -945,7 +945,9 @@ function _extends() {
     title,
     children,
     onClose,
-    busy
+    busy,
+    icon = "shield",
+    className = ""
   }) {
     const ref = useRef(null);
     const busyRef = useRef(busy);
@@ -954,7 +956,7 @@ function _extends() {
     closeRef.current = onClose;
     useEffect(() => {
       const prior = document.activeElement;
-      ref.current?.focus();
+      ref.current?.focus({preventScroll: true});
       const handle = event => {
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -965,7 +967,7 @@ function _extends() {
         const nodes = Array.from(ref.current?.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]') || []).filter(node => node.getClientRects().length);
         if (!nodes.length) {
           event.preventDefault();
-          ref.current?.focus();
+          ref.current?.focus({preventScroll: true});
           return;
         }
         const first = nodes[0],
@@ -981,7 +983,7 @@ function _extends() {
       document.addEventListener('keydown', handle, true);
       return () => {
         document.removeEventListener('keydown', handle, true);
-        if (prior?.isConnected) prior.focus();
+        if (prior?.isConnected) prior.focus({preventScroll: true});
       };
     }, []);
     return /*#__PURE__*/React.createElement("div", {
@@ -990,14 +992,14 @@ function _extends() {
         if (event.target === event.currentTarget && !busy) onClose();
       }
     }, /*#__PURE__*/React.createElement("section", {
-      className: "adm-dialog",
+      className: `adm-dialog ${className}`,
       ref: ref,
       role: "dialog",
       "aria-modal": "true",
       "aria-label": title,
       tabIndex: -1
     }, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "shield",
+      name: icon,
       size: 24
     }), /*#__PURE__*/React.createElement("h3", null, title), children));
   }
@@ -2091,6 +2093,28 @@ function _extends() {
       throw error;
     }
   }
+  function CleanupConfirmation({plan, titles, typed, setTyped, onClose, onConfirm}) {
+    const h = React.createElement;
+    const unit = plan.kind === 'chat' ? 'сообщений' : ['activity', 'audit'].includes(plan.kind) ? 'записей' : 'комнат';
+    const dialog = h(Dialog, {title: 'Подтвердить очистку', icon: 'trash', className: 'adm-cleanup-dialog', onClose, busy: false},
+      h('p', {className: 'adm-cleanup-intro'}, 'Проверьте выбранные данные перед удалением.'),
+      h('div', {className: 'adm-cleanup-summary'},
+        h('span', null, titles[plan.kind]),
+        h('strong', null, plan.total.toLocaleString('ru-RU'), h('small', null, unit)),
+        h('p', null, ['activity', 'audit'].includes(plan.kind) ? plan.targetLabel : plan.kind === 'chat' ? 'Все личные переписки' : plan.kind === 'finished' ? 'Только завершённые партии' : 'Все шахматные комнаты')),
+      h('div', {className: 'adm-cleanup-warning'}, h(AdminIcon, {name: 'alertTriangle', size: 18}),
+        h('p', null, 'Восстановить удалённые данные через платформу нельзя.',
+          plan.kind === 'rooms' && h('span', null, ` Активных партий: ${plan.active}. Участники удалённых комнат потеряют подключение.`))),
+      h('p', {className: 'adm-cleanup-note'}, ['activity', 'audit'].includes(plan.kind) ? 'Новые записи, профили и результаты обучения сохранятся.' : plan.kind === 'chat' ? 'Сообщения после проверки сохранятся.' : 'Комнаты, созданные после проверки, сохранятся.'),
+      h('label', {className: 'adm-cleanup-label'}, h('span', null, 'Введите ', h('b', null, 'УДАЛИТЬ'), ' для подтверждения'),
+        h('input', {className: 'adm-input', value: typed, onChange: e => setTyped(e.target.value), autoComplete: 'off', spellCheck: false, placeholder: 'УДАЛИТЬ'})),
+      h('div', {className: 'adm-dialog-actions'},
+        h(Btn, {onClick: onClose}, 'Отмена'),
+        h(Btn, {variant: 'danger', disabled: typed.trim() !== 'УДАЛИТЬ', onClick: onConfirm}, h(AdminIcon, {name: 'trash', size: 16}), 'Удалить данные')));
+    // Place the overlay outside the scrolling, animated shell.
+    const host = document.querySelector('.adm-root.adm-new');
+    return host && window.ReactDOM?.createPortal ? window.ReactDOM.createPortal(dialog, host) : dialog;
+  }
   function DataMaintenance({
     uid,
     users,
@@ -2368,32 +2392,9 @@ function _extends() {
     }), message), failure && /*#__PURE__*/React.createElement("p", {
       className: "adm-error",
       role: "alert"
-    }, failure), plan && phase === 'preview' && plan.refs.length > 0 && /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-confirm"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-      className: "adm-eyebrow"
-    }, "\u041F\u041E\u0414\u0422\u0412\u0415\u0420\u0416\u0414\u0415\u041D\u0418\u0415 \u041E\u0427\u0418\u0421\u0422\u041A\u0418"), /*#__PURE__*/React.createElement("h3", null, titles[plan.kind]), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, `Область: ${plan.targetLabel}`)), /*#__PURE__*/React.createElement("p", null, "\u041A \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044E: ", /*#__PURE__*/React.createElement("b", null, plan.total), " ", plan.kind === 'chat' ? 'сообщений' : ['activity', 'audit'].includes(plan.kind) ? 'записей' : 'комнат', ". \u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438\u0445 \u0447\u0435\u0440\u0435\u0437 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F."), plan.kind === 'rooms' && /*#__PURE__*/React.createElement("p", null, "\u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043F\u0430\u0440\u0442\u0438\u0438: ", /*#__PURE__*/React.createElement("b", null, plan.active), ". \u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0438 \u0443\u0434\u0430\u043B\u0451\u043D\u043D\u044B\u0445 \u043A\u043E\u043C\u043D\u0430\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u044E\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u043A \u043D\u0438\u043C."), /*#__PURE__*/React.createElement("p", null, ['activity', 'audit'].includes(plan.kind) ? 'Новые записи после проверки сохраняются. Профили и результаты обучения не удаляются.' : plan.kind === 'chat' ? 'Сообщения, появившиеся после проверки, останутся.' : 'Комнаты, созданные после проверки, останутся.')), /*#__PURE__*/React.createElement("label", null, "\u0414\u043B\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u0423\u0414\u0410\u041B\u0418\u0422\u042C", /*#__PURE__*/React.createElement("input", {
-      className: "adm-input",
-      value: typed,
-      onChange: e => setTyped(e.target.value),
-      autoComplete: "off",
-      spellCheck: false
-    })), /*#__PURE__*/React.createElement("div", {
-      className: "adm-maint-actions"
-    }, /*#__PURE__*/React.createElement(Btn, {
-      onClick: () => {
-        setPlan(null);
-        setMessage('');
-        setPhase('idle');
-      }
-    }, "\u041E\u0442\u043C\u0435\u043D\u0430"), /*#__PURE__*/React.createElement(Btn, {
-      variant: "danger",
-      disabled: typed.trim() !== 'УДАЛИТЬ',
-      onClick: execute
-    }, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "alertTriangle",
-      size: 16
-    }), "\u0423\u0434\u0430\u043B\u0438\u0442\u044C"))), phase === 'delete' && /*#__PURE__*/React.createElement("div", {
+    }, failure), plan && phase === 'preview' && plan.refs.length > 0 && React.createElement(CleanupConfirmation, {
+      plan, titles, typed, setTyped, onClose: resetPreview, onConfirm: execute
+    }), phase === 'delete' && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-progress"
     }, /*#__PURE__*/React.createElement("progress", {
       value: counts.processed,
@@ -2405,6 +2406,7 @@ function _extends() {
       }
     }, "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C"))));
   }
+  const ADMIN_POLISH_CSS = "\n/* Consistent setting rows and viewport-level cleanup confirmation. */\n.adm-new .av-recent,.adm-new .av-shortcut{border:1px solid var(--ad-line);border-radius:14px;padding:13px 14px;margin-top:9px;gap:12px;transition:background .2s,border-color .2s}\n.adm-new .av-recent:hover,.adm-new .av-shortcut:hover{padding:13px 14px;background:var(--ad-soft);border-color:var(--ad-accent)}\n.adm-new .adm-setting{padding:0;border:0;background:transparent;margin-top:12px}\n.adm-new .adm-setting .adm-module{width:100%;min-height:76px;padding:15px 16px;border:1px solid var(--ad-line);border-radius:14px;background:var(--ad-bg);gap:12px}\n.adm-new .adm-setting .adm-module.on{background:var(--ad-soft);border-color:var(--ad-line)}\n.adm-new .adm-setting .adm-module:hover{border-color:var(--ad-accent)}\n.adm-new .adm-module-name{line-height:1.5;overflow-wrap:anywhere}\n.adm-new .adm-module-name small{line-height:1.6;margin-top:4px}\n.adm-new .adm-switch{width:34px;height:20px;padding:3px;box-sizing:border-box}\n.adm-new .adm-switch:before{width:14px;height:14px}\n.adm-new .on .adm-switch:before{transform:translateX(14px)}\n.adm-new .adm-module.on .adm-switch{box-shadow:none}\n.adm-new .adm-maint-options button:hover{transform:none}\n.adm-new .adm-maint-target,.adm-new .adm-maint-segment{min-width:0}\n.adm-new .adm-maint-segment button{white-space:normal;min-width:0}\n.adm-new .adm-cleanup-dialog{max-width:460px;padding:26px;border-radius:24px;background:var(--ad-panel);box-sizing:border-box;overscroll-behavior:contain}\n.adm-new .adm-cleanup-dialog>svg{box-sizing:content-box;padding:13px;border-radius:16px;background:color-mix(in srgb,var(--ad-red) 12%,transparent);color:var(--ad-red);margin-bottom:5px}\n.adm-new .adm-cleanup-dialog h3{font-size:22px;margin:8px 0}\n.adm-cleanup-summary{margin:20px 0 14px;padding:18px;border:1px solid var(--ad-line);border-radius:16px;background:var(--ad-bg)}\n.adm-cleanup-summary>span{color:var(--ad-muted);font-size:12px}\n.adm-cleanup-summary>strong{display:flex;align-items:baseline;gap:9px;margin:5px 0;font-size:32px;line-height:1.3}\n.adm-cleanup-summary strong small{font-size:12px;font-weight:500;color:var(--ad-muted)}\n.adm-cleanup-summary p{overflow-wrap:anywhere}\n.adm-cleanup-warning{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--ad-red) 9%,transparent);color:var(--ad-red)}\n.adm-cleanup-warning>svg{flex-shrink:0;margin-top:2px}\n.adm-new .adm-cleanup-warning p{color:var(--ad-red);font-size:12px}\n.adm-new .adm-cleanup-note{font-size:11px;margin-top:12px}\n.adm-new .adm-cleanup-label{display:grid;gap:9px;margin:20px 0 0}\n.adm-new .adm-cleanup-label input{width:100%;max-width:none;min-width:0;box-sizing:border-box;padding:12px 14px}\n.adm-new .adm-cleanup-dialog .adm-dialog-actions{margin-top:20px;display:flex;gap:10px}\n.adm-new .adm-cleanup-dialog .adm-dialog-actions button{flex:1;max-width:none}\n@media(max-width:480px){.adm-new .adm-cleanup-dialog{padding:20px;border-radius:20px}.adm-new .adm-setting .adm-module{padding:13px;gap:10px}.adm-new .adm-cleanup-dialog .adm-dialog-actions{flex-wrap:wrap}.adm-new .adm-cleanup-dialog .adm-dialog-actions button{min-width:120px}}\n";
   const ADMIN_NEW_CSS = ".adm-root.adm-new{--ad-bg:#101521;--ad-panel:#191e2d;--ad-text:#edf0fa;--ad-muted:#a3aec5;--ad-line:rgba(160,175,205,.18);--ad-accent:#b5a0ff;--ad-soft:rgba(160,130,250,.11);font-family:Montserrat,system-ui,sans-serif}\nhtml.light .adm-root.adm-new,body.light .adm-root.adm-new,.theme-light .adm-root.adm-new,[data-theme=light] .adm-root.adm-new{--ad-bg:#f4f5fa;--ad-panel:#fff;--ad-text:#252c40;--ad-muted:#64718a;--ad-line:#dfe3ee;--ad-accent:#7151c7;--ad-soft:#eee9fa}\n.adm-new .adm-shell{max-width:1280px;border-radius:25px;background:var(--ad-bg);max-height:92dvh;box-shadow:0 30px 100px #0003}.adm-new .adm-head{padding:25px 28px;background:var(--ad-panel);border-bottom:1px solid var(--ad-line);gap:15px}.adm-new .adm-head h2{font-size:clamp(21px,2.3vw,28px);letter-spacing:-.8px}.adm-new .adm-head p{font-size:12px;margin-top:5px}.adm-new .adm-eyebrow{font-size:9px;letter-spacing:2px;color:var(--ad-accent)}.adm-new .adm-brand{width:48px;height:48px;border-radius:15px;background:var(--ad-soft);color:var(--ad-accent)}\n.av-nav{display:flex;gap:6px;padding:13px 24px;background:var(--ad-panel);border-bottom:1px solid var(--ad-line)}.adm-new .av-nav button{display:flex;align-items:center;justify-content:center;gap:9px;flex:1;height:auto;min-height:44px;padding:11px 15px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--ad-muted);font:600 13px/1.4 Montserrat,system-ui,sans-serif;transition:background .22s,color .22s,transform .22s}.adm-new .av-nav button.active{background:var(--ad-soft);color:var(--ad-accent);border-color:var(--ad-line)}.adm-new .av-nav button:hover{background:var(--ad-soft)}.adm-new .av-nav button:active{transform:scale(.97)}.av-stage{padding:24px;min-height:420px}.av-scene[hidden]{display:none!important}.av-scene:not([hidden]){animation:av-enter .32s ease}\n.av-welcome{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:28px 30px;border:1px solid var(--ad-line);border-radius:22px;margin-bottom:20px;background:radial-gradient(ellipse at 95% 50%,var(--ad-soft),transparent 65%),var(--ad-panel);overflow:hidden}.av-kicker{color:var(--ad-accent);font-size:10px;letter-spacing:1.8px;font-weight:700}.av-welcome h3{font-size:clamp(24px,3vw,32px);letter-spacing:-1px;margin:10px 0}.av-welcome p{font-size:13px;color:var(--ad-muted);line-height:1.8;max-width:450px}.av-welcome .adm-btn{margin-top:20px}.av-orbit{width:170px;height:150px;position:relative;display:grid;place-items:center;flex-shrink:0;color:var(--ad-accent)}.av-orbit i{position:absolute;width:140px;height:140px;border:1px dashed var(--ad-accent);border-radius:35px;opacity:.25;animation:av-orbit 30s linear infinite}.av-orbit i:nth-child(2){width:110px;height:110px;animation-direction:reverse;border-style:solid}.av-orbit span{display:grid;place-items:center;width:78px;height:78px;border-radius:23px;background:var(--ad-soft);box-shadow:0 0 50px var(--ad-soft);animation:av-float 5s ease-in-out infinite}\n.adm-new .adm-summary{padding:0;margin:0 0 22px;gap:12px}.adm-new .adm-summary-card{padding:19px;border:1px solid var(--ad-line);border-radius:16px;background:var(--ad-panel);box-shadow:none}.adm-new .adm-summary-card strong{font-size:29px}.adm-new .adm-summary-card>span{font-size:11px}.av-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}.av-card{min-width:0;border:1px solid var(--ad-line);border-radius:18px;background:var(--ad-panel);padding:20px}.av-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.av-card-head h3{font-size:14px}.av-card-head small,.av-muted{font-size:11px;color:var(--ad-muted)}\n.adm-new .av-recent,.adm-new .av-shortcut{display:flex;align-items:center;gap:12px;min-height:72px;height:auto;width:100%;border:0;border-bottom:1px solid var(--ad-line);border-radius:0;padding:12px 0;background:transparent;color:var(--ad-text);text-align:left;transition:background .2s,padding .2s}.av-recent>span:nth-child(2),.av-shortcut>span:nth-child(2){flex:1;min-width:0}.av-recent strong,.av-shortcut strong{display:block;font-size:12px;overflow-wrap:anywhere}.av-shortcut small{display:block;font-size:11px;line-height:1.7;color:var(--ad-muted);margin-top:5px}.av-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;color:var(--ad-accent);background:var(--ad-soft);flex-shrink:0}.adm-new .av-recent:hover,.adm-new .av-shortcut:hover{padding-left:8px;padding-right:8px;background:var(--ad-soft)}.av-heading{margin:0 0 18px}.av-heading h3{font-size:21px}.av-heading p{font-size:12px;color:var(--ad-muted);margin-top:5px}\n.adm-new .adm-workspace{grid-template-columns:minmax(250px,310px) minmax(0,1fr);border:1px solid var(--ad-line);border-radius:20px;overflow:hidden;background:var(--ad-panel)}.adm-new .adm-directory{padding:20px 16px;background:var(--ad-bg)}.adm-new .adm-person{border:1px solid transparent;border-radius:12px;min-height:82px;padding:13px 11px}.adm-new .adm-person.selected{background:var(--ad-soft);border-color:var(--ad-line);box-shadow:inset 3px 0 var(--ad-accent)}.adm-new .adm-avatar{background:var(--ad-soft);color:var(--ad-accent);border-radius:12px}.adm-new .adm-detail{padding:24px}.adm-new .adm-tabs{gap:5px;padding:5px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);margin:22px 0}.adm-new .adm-tab{border:0;border-radius:8px;padding:10px 12px;min-height:40px;font-weight:600}.adm-new .adm-tab.active{background:var(--ad-soft);color:var(--ad-accent)}\n.adm-new .adm-input,.adm-new select{min-height:42px;border:1px solid var(--ad-line);border-radius:11px;background:var(--ad-bg);color:var(--ad-text);box-shadow:none}.adm-new .adm-input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-soft)}.adm-new .adm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:auto;min-height:42px;padding:10px 15px;border-radius:11px;font-size:12px;font-weight:600;line-height:1.4}.adm-new .adm-btn.primary{background:linear-gradient(135deg,#8e6ad9,#6d55be);color:#fff;border-color:transparent}.adm-new .adm-action-row{border:1px solid var(--ad-line);background:var(--ad-bg);border-radius:13px;padding:15px;margin:10px 0;gap:16px}.adm-new .adm-action-row>.adm-btn{flex-shrink:0}.adm-new .adm-module{min-height:70px;border-radius:13px}.adm-new .adm-module.on{border-color:var(--ad-accent);background:var(--ad-soft)}\n.adm-new .adm-maint{margin:0;background:var(--ad-panel);border-radius:20px}.adm-new .adm-maint.embedded .adm-maint-disclosure{display:none}.adm-new .adm-maint .adm-maint-body{padding:0 22px 22px}.adm-new .adm-maint-config{padding:22px}.adm-new .adm-maint-confirm{max-width:640px;margin:20px auto 0}.adm-new .adm-maint-actions,.adm-new .adm-dialog-actions{justify-content:flex-end;gap:9px}.adm-new .adm-footer{border-top:1px solid var(--ad-line);background:var(--ad-panel);font-size:10px}.adm-new .av-back{display:none}.av-skeleton{height:180px;border-radius:12px;background:linear-gradient(100deg,var(--ad-bg),var(--ad-soft),var(--ad-bg));background-size:220% 100%;animation:av-shimmer 1.6s linear infinite}\n@keyframes av-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes av-orbit{to{transform:rotate(360deg)}}@keyframes av-float{50%{transform:translateY(-6px)}}@keyframes av-shimmer{to{background-position:-220% 0}}\n@media(max-width:760px){.av-stage{padding:14px}.adm-new .adm-head{padding:20px 16px}.av-nav{padding:10px 12px;gap:4px}.adm-new .av-nav button{font-size:11px;padding:10px 8px;gap:6px;min-width:0}.av-grid{grid-template-columns:1fr}.av-welcome{padding:22px}.av-orbit{width:105px;transform:scale(.75);margin-right:-15px}.adm-new .adm-workspace{grid-template-columns:1fr}.adm-new .av-students:not(.profile-open) .adm-detail{display:none}.adm-new .av-students.profile-open .adm-directory{display:none}.adm-new .av-students.profile-open .av-back{display:inline-flex;margin-bottom:12px}.adm-new .adm-detail{padding:18px 14px}.adm-new .adm-users{max-height:58dvh}.adm-new .adm-action-row{flex-wrap:wrap}.adm-new .adm-action-row>.adm-btn{margin-left:auto}}\n@media(max-width:440px){.adm-new .av-nav button{flex-direction:column;font-size:10px;gap:5px}.av-orbit{display:none}.av-welcome h3{font-size:25px}.adm-new .adm-summary{grid-template-columns:1fr 1fr;gap:9px}.adm-new .adm-summary-card{padding:14px}.av-card{padding:16px}.av-card-head{flex-direction:column;align-items:flex-start;gap:4px}.adm-new .adm-live{display:none}}\n@media(prefers-reduced-motion:reduce){.adm-new *,.adm-new *:before{animation:none!important;transition:none!important}}\n";
   function AdminSections({
     children,
@@ -2512,7 +2514,7 @@ function _extends() {
     }, parts[3]));
     return h('div', {
       className: 'av'
-    }, h('style', null, ADMIN_NEW_CSS), h('nav', {
+    }, h('style', null, ADMIN_NEW_CSS + ADMIN_POLISH_CSS), h('nav', {
       className: 'av-nav',
       'aria-label': 'Разделы админки'
     }, names.map(([id, label, icon]) => h('button', {
