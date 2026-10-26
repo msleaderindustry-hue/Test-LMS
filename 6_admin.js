@@ -2563,6 +2563,13 @@ function _extends() {
   function AssignmentDesk({
     users
   }) {
+    const [creating, setCreating] = useState(false);
+    const formDialog = useRef(null);
+    useEffect(() => {
+      const d = formDialog.current;
+      if (creating && !d.open) d.showModal();
+      if (!creating && d.open) d.close();
+    }, [creating]);
     const [title, setTitle] = useState(''),
       [text, setText] = useState(''),
       [lang, setLang] = useState('ru'),
@@ -2657,6 +2664,7 @@ function _extends() {
         setText('');
         setChosen(new Set());
         draftId.current = null;
+        setCreating(false);
       } catch (e) {
         setError(errorText(e));
       } finally {
@@ -2680,11 +2688,37 @@ function _extends() {
       className: "adm-error",
       role: "alert"
     }, error), /*#__PURE__*/React.createElement("div", {
+      className: "ad-task-toolbar"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Задания и результаты"), /*#__PURE__*/React.createElement("small", null, rows.length, " заданий · обновление в реальном времени")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "adm-btn primary",
+      onClick: () => setCreating(true)
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "plus",
+      size: 16
+    }), "Создать задание")), /*#__PURE__*/React.createElement("div", {
       className: "ad-task-grid"
-    }, /*#__PURE__*/React.createElement("form", {
-      className: "av-card",
+    }, ReactDOM.createPortal(/*#__PURE__*/React.createElement("dialog", {
+      ref: formDialog,
+      className: "ad-task-dialog adm-root",
+      onCancel: e => {
+        e.preventDefault();
+        if (!busy) setCreating(false);
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ad-task-dialog-head"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "НОВОЕ ЗАДАНИЕ"), /*#__PURE__*/React.createElement("h3", null, "Настрой учебную цель")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      disabled: busy,
+      "aria-label": "Закрыть форму",
+      onClick: () => setCreating(false)
+    }, "×")), error && /*#__PURE__*/React.createElement("p", {
+      className: "adm-error",
+      role: "alert"
+    }, error), /*#__PURE__*/React.createElement("form", {
+      className: "av-card ad-task",
       onSubmit: save
-    }, /*#__PURE__*/React.createElement("h3", null, "Новое задание"), /*#__PURE__*/React.createElement("fieldset", {
+    }, /*#__PURE__*/React.createElement("fieldset", {
       disabled: busy
     }, /*#__PURE__*/React.createElement("label", null, "Название", /*#__PURE__*/React.createElement("input", {
       className: "adm-input",
@@ -2764,11 +2798,18 @@ function _extends() {
     }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, nameOf(u)), /*#__PURE__*/React.createElement("small", null, u.email || u.id))))), /*#__PURE__*/React.createElement("button", {
       type: "submit",
       className: "adm-btn primary"
-    }, busy ? 'Сохраняем…' : 'Сохранить задание'))), /*#__PURE__*/React.createElement("div", {
+    }, busy ? 'Сохраняем…' : 'Сохранить задание')))), document.body), /*#__PURE__*/React.createElement("div", {
       className: "av-card"
-    }, /*#__PURE__*/React.createElement("h3", null, "Назначенные задания"), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем…") : !rows.length ? /*#__PURE__*/React.createElement("p", {
-      className: "av-muted"
-    }, "Создайте первое задание. Оно появится здесь.") : /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h3", null, "Назначенные задания"), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем…") : !rows.length ? /*#__PURE__*/React.createElement("div", {
+      className: "ad-task-empty"
+    }, /*#__PURE__*/React.createElement(AdminIcon, {
+      name: "fileText",
+      size: 32
+    }), /*#__PURE__*/React.createElement("h3", null, "Начните с одного задания"), /*#__PURE__*/React.createElement("p", null, "Выберите учеников, задайте текст и срок.", /*#__PURE__*/React.createElement("br", null), "Здесь появятся их результаты и запросы помощи."), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "adm-btn primary",
+      onClick: () => setCreating(true)
+    }, "Создать первое задание")) : /*#__PURE__*/React.createElement("div", {
       className: "ad-task-list"
     }, rows.map(r => /*#__PURE__*/React.createElement("button", {
       type: "button",
@@ -2785,7 +2826,11 @@ function _extends() {
       }, /*#__PURE__*/React.createElement("span", null, selected.studentNames?.[id] || id, /*#__PURE__*/React.createElement("small", null, p?.result ? `Точность: ${p.result.accuracy ?? '—'}% · Скорость: ${p.result.wpm ?? '—'} WPM` : '')), /*#__PURE__*/React.createElement("b", null, state(p)));
     })))));
   }
-  const ASSIGNMENT_CSS = `.ad-task{min-width:0}.ad-task-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}.ad-task .av-card{min-width:0;padding:22px}.ad-task fieldset{border:0;padding:0;margin:16px 0 0;min-width:0}.ad-task label{display:grid;gap:7px;font-size:12px;margin-bottom:14px}.ad-task .adm-input{width:100%;min-width:0;box-sizing:border-box;margin:0}.ad-task textarea{resize:vertical;line-height:1.6}.ad-task-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ad-task-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}.ad-task-people{max-height:245px;overflow:auto;scrollbar-width:thin;margin:12px 0 18px}.ad-task-people label{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #9988bb22;margin:0}.ad-task-people input{width:16px;height:16px;flex-shrink:0;accent-color:#9876e5}.ad-task small{display:block;opacity:.65;font-size:11px;margin-top:5px;overflow-wrap:anywhere}.ad-task-notice{border:1px solid #aa88ee44;background:#aa88ee0c;padding:13px 16px;border-radius:14px;font-size:12px;line-height:1.6;margin-bottom:18px}.ad-task-list{display:grid;gap:9px;margin-top:16px;max-height:440px;overflow:auto;scrollbar-width:thin}.ad-task-list button{display:block;text-align:left;padding:15px;border:1px solid #9988bb33;border-radius:13px;background:transparent;color:inherit;width:100%;cursor:pointer;transition:background .2s,border-color .2s}.ad-task-list button:hover,.ad-task-list button.selected{background:#aa88ee14;border-color:#aa88ee88}.ad-task-detail{margin-top:20px;padding-top:18px;border-top:1px solid #9988bb33}.ad-task-detail p{font-size:12px;opacity:.7}.ad-task-status{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #9988bb22;font-size:12px;overflow-wrap:anywhere}.ad-task-status>b{color:#9876e5;flex-shrink:0}.ad-task .adm-btn{min-height:40px;justify-content:center}.ad-task fieldset>.primary{width:100%}@media(max-width:900px){.ad-task-grid{grid-template-columns:1fr}}@media(max-width:480px){.ad-task-pair{grid-template-columns:1fr;gap:0}.ad-task .av-card{padding:16px}.ad-task-status{flex-wrap:wrap}}`;
+  const ASSIGNMENT_CSS = `.ad-task{min-width:0}.ad-task-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}.ad-task .av-card{min-width:0;padding:22px}.ad-task fieldset{border:0;padding:0;margin:16px 0 0;min-width:0}.ad-task label{display:grid;gap:7px;font-size:12px;margin-bottom:14px}.ad-task .adm-input{width:100%;min-width:0;box-sizing:border-box;margin:0}.ad-task textarea{resize:vertical;line-height:1.6}.ad-task-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ad-task-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}.ad-task-people{max-height:245px;overflow:auto;scrollbar-width:thin;margin:12px 0 18px}.ad-task-people label{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #9988bb22;margin:0}.ad-task-people input{width:16px;height:16px;flex-shrink:0;accent-color:#9876e5}.ad-task small{display:block;opacity:.65;font-size:11px;margin-top:5px;overflow-wrap:anywhere}.ad-task-notice{border:1px solid #aa88ee44;background:#aa88ee0c;padding:13px 16px;border-radius:14px;font-size:12px;line-height:1.6;margin-bottom:18px}.ad-task-list{display:grid;gap:9px;margin-top:16px;max-height:440px;overflow:auto;scrollbar-width:thin}.ad-task-list button{display:block;text-align:left;padding:15px;border:1px solid #9988bb33;border-radius:13px;background:transparent;color:inherit;width:100%;cursor:pointer;transition:background .2s,border-color .2s}.ad-task-list button:hover,.ad-task-list button.selected{background:#aa88ee14;border-color:#aa88ee88}.ad-task-detail{margin-top:20px;padding-top:18px;border-top:1px solid #9988bb33}.ad-task-detail p{font-size:12px;opacity:.7}.ad-task-status{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #9988bb22;font-size:12px;overflow-wrap:anywhere}.ad-task-status>b{color:#9876e5;flex-shrink:0}.ad-task .adm-btn{min-height:40px;justify-content:center}.ad-task fieldset>.primary{width:100%}@media(max-width:900px){.ad-task-grid{grid-template-columns:1fr}}@media(max-width:480px){.ad-task-pair{grid-template-columns:1fr;gap:0}.ad-task .av-card{padding:16px}.ad-task-status{flex-wrap:wrap}}
+.ad-task-grid{grid-template-columns:1fr;align-items:start}.ad-task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px;padding:17px 20px;border:1px solid #a68bd633;border-radius:16px;background:linear-gradient(110deg,#a68bd611,transparent)}.ad-task-toolbar small{margin-top:5px}.ad-task-notice{display:none}.ad-task-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));max-height:none}.ad-task-empty{display:grid;justify-items:center;gap:12px;padding:40px 18px;text-align:center}.ad-task-empty>svg{color:#a78ade;padding:15px;box-sizing:content-box;border-radius:20px;background:#a78ade14}.ad-task-empty h3{margin:6px 0 0}.ad-task-empty p{line-height:1.8;font-size:12px;opacity:.65;margin:0 0 8px}
+.ad-task-dialog{width:min(720px,calc(100vw - 28px));max-width:none;max-height:90dvh;padding:0;border:1px solid #a68bd644;border-radius:22px;background:#191e2e;color:#edf0fa;overflow:auto;scrollbar-width:thin;box-shadow:0 30px 100px #0005;overscroll-behavior:contain}.ad-task-dialog::backdrop{background:#080d1a88;backdrop-filter:blur(6px)}.ad-task-dialog[open]{animation:ad-task-in .25s ease-out}.ad-task-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:22px 24px;border-bottom:1px solid #a68bd633;background:linear-gradient(120deg,#a68bd614,transparent)}.ad-task-dialog-head small{font-size:9px;letter-spacing:1.5px;color:#a78ade}.ad-task-dialog-head h3{font-size:21px;margin:6px 0 0}.ad-task-dialog-head button{display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #a68bd633;border-radius:10px;background:#a68bd611;color:inherit;font-size:22px;cursor:pointer}.ad-task-dialog .av-card{padding:22px 24px;border:0;background:none}.ad-task-dialog fieldset{margin:0}.ad-task-dialog .adm-input{background:#a68bd608;color:inherit;border:1px solid #a68bd633;border-radius:11px;min-height:42px;padding:11px 13px;font:13px/1.5 inherit}.ad-task-dialog .adm-input:focus{outline:2px solid #a68bd688;outline-offset:1px}.ad-task-dialog label{color:inherit}.ad-task-dialog .adm-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #a68bd644;border-radius:10px;background:#a68bd60c;color:inherit;font-family:inherit;cursor:pointer}.ad-task-dialog .adm-btn.primary{background:linear-gradient(120deg,#9a75de,#7455bf);color:white;border:0}.ad-task-dialog .ad-task-people{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:210px}.ad-task-dialog .ad-task-people label{border:1px solid #a68bd622;border-radius:10px;background:#a68bd606;min-width:0}.ad-task-people label:has(input:checked){background:#a68bd61a;border-color:#a68bd688}.ad-task-dialog .ad-task-people span{min-width:0}.ad-task-dialog .ad-task-people small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ad-task-dialog .adm-error{margin:15px 24px}
+:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-task-dialog{background:#faf9ff;color:#293047}@keyframes ad-task-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@media(max-width:600px){.ad-task-toolbar{align-items:stretch;flex-direction:column}.ad-task-dialog .ad-task-people{grid-template-columns:1fr}.ad-task-dialog .av-card{padding:18px}.ad-task-dialog-head{padding:18px}.ad-task-dialog-head h3{font-size:18px}}@media(prefers-reduced-motion:reduce){.ad-task-dialog[open]{animation:none}}
+`;
   function AdminSections({
     children,
     users,
