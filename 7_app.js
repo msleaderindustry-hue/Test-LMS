@@ -256,7 +256,10 @@ function LmsMyAssignments({
 }) {
   const [items, setItems] = React.useState([]),
     [error, setError] = React.useState(''),
-    [loading, setLoading] = React.useState(true);
+    [loading, setLoading] = React.useState(true),
+    [open, setOpen] = React.useState(false);
+  const dialog = React.useRef(null),
+    trigger = React.useRef(null);
   React.useEffect(() => {
     setItems([]);
     setLoading(true);
@@ -271,20 +274,92 @@ function LmsMyAssignments({
       setLoading(false);
     });
   }, [uid]);
-  return /*#__PURE__*/React.createElement("section", {
+  React.useEffect(() => {
+    const d = dialog.current;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
+  function close() {
+    setOpen(false);
+    trigger.current?.focus({
+      preventScroll: true
+    });
+  }
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS + LMS_ASSIGN_DRAWER_CSS), /*#__PURE__*/React.createElement("button", {
+    ref: trigger,
+    className: "la-launcher",
+    "aria-label": "Открыть мои задания",
+    "aria-expanded": open,
+    onClick: () => setOpen(true)
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "20",
+    height: "20",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.7",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("rect", {
+    x: "5",
+    y: "4",
+    width: "14",
+    height: "17",
+    rx: "3"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M9 4V2h6v2M9 10h6M9 14h6M9 18h3"
+  })), /*#__PURE__*/React.createElement("span", null, "Задания"), items.length > 0 && /*#__PURE__*/React.createElement("b", null, items.length)), /*#__PURE__*/React.createElement("dialog", {
+    ref: dialog,
+    className: "la-drawer",
+    onCancel: e => {
+      e.preventDefault();
+      close();
+    },
+    onClick: e => {
+      if (e.target === e.currentTarget) {
+        const r = e.currentTarget.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
+      }
+    }
+  }, /*#__PURE__*/React.createElement("section", {
     className: "la-box"
-  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), /*#__PURE__*/React.createElement("h3", null, "Мои задания")), /*#__PURE__*/React.createElement("span", null, items.length)), error && /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "ТВОЙ УЧЕБНЫЙ ПЛАН"), /*#__PURE__*/React.createElement("h3", null, "Мои задания")), /*#__PURE__*/React.createElement("button", {
+    className: "la-close",
+    "aria-label": "Закрыть задания",
+    onClick: close
+  }, "×")), /*#__PURE__*/React.createElement("div", {
+    className: "la-drawer-intro"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "la-orbit",
+    "aria-hidden": "true"
+  }, "✦"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Шаг за шагом к результату"), /*#__PURE__*/React.createElement("p", null, "Здесь задания преподавателя, сроки и твои результаты."))), /*#__PURE__*/React.createElement("div", {
+    className: "la-drawer-scroll"
+  }, error && /*#__PURE__*/React.createElement("p", {
     role: "alert"
-  }, error), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем задания…") : !items.length ? /*#__PURE__*/React.createElement("p", null, "Здесь появятся задания преподавателя.") : /*#__PURE__*/React.createElement("div", {
+  }, error), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем задания…") : !items.length ? /*#__PURE__*/React.createElement("div", {
+    className: "la-empty"
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "✓"), /*#__PURE__*/React.createElement("h4", null, "Пока заданий нет"), /*#__PURE__*/React.createElement("p", null, "Когда преподаватель назначит задание, оно появится здесь."), /*#__PURE__*/React.createElement("button", {
+    onClick: close
+  }, "Продолжить обучение")) : /*#__PURE__*/React.createElement("div", {
     className: "la-cards"
   }, items.map(task => /*#__PURE__*/React.createElement(LmsAssignmentCard, {
     key: task.id,
     task: task,
     uid: uid,
-    onOpen: onOpen,
+    onOpen: t => {
+      setOpen(false);
+      onOpen(t);
+    },
     canType: canType
-  }))));
+  }))))))), document.body);
 }
+const LMS_ASSIGN_DRAWER_CSS = `
+.la-launcher{position:fixed;right:0;top:42%;z-index:1100;display:flex;align-items:center;gap:9px;padding:13px 15px;border:1px solid #a58ade55;border-right:0;border-radius:16px 0 0 16px;background:#1b2033;color:#c4afff;font-family:inherit;font-size:12px;font-weight:650;box-shadow:0 6px 30px #15102622;cursor:pointer;transition:padding .22s,background .22s;min-height:48px}.la-launcher:hover{padding-right:23px;background:#29233e}.la-launcher b{display:grid;place-items:center;min-width:20px;height:20px;border-radius:7px;background:#a689e629;font-size:10px}
+.la-drawer{padding:0;border:1px solid #a58ade33;border-radius:24px 0 0 24px;width:min(440px,calc(100vw - 14px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:#191e2e;color:#eff0fa;box-shadow:-20px 0 80px #0003}.la-drawer::backdrop{background:#090b1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .28s cubic-bezier(.2,.8,.2,1)}.la-drawer .la-box{display:flex;flex-direction:column;height:100%;margin:0;border:0;border-radius:0;padding:24px;background:inherit;color:inherit}.la-drawer header{flex-shrink:0;margin:0 0 18px}.la-drawer .la-close{width:36px;min-height:36px;height:36px;padding:0;font:24px/1 inherit;display:grid;place-items:center;border-radius:11px}.la-drawer-intro{display:flex;align-items:center;gap:14px;padding:17px;border:1px solid #a58ade33;border-radius:16px;background:linear-gradient(130deg,#a58ade18,transparent);margin-bottom:16px;flex-shrink:0}.la-drawer-intro b{font-size:13px}.la-drawer-intro p{font-size:11px;margin:5px 0 0}.la-orbit{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#a58ade20;color:#b79aea;flex-shrink:0;animation:la-glow 4s ease-in-out infinite}.la-drawer-scroll{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;flex:1}.la-drawer .la-cards{grid-template-columns:1fr}.la-empty{text-align:center;padding:42px 14px}.la-empty>span{display:grid;place-items:center;margin:0 auto 18px;border:1px solid #a58ade44;border-radius:20px;width:64px;height:64px;color:#a58ade;font-size:25px;background:#a58ade0c}.la-empty p{max-width:260px;margin:12px auto 20px}.la-drawer button:focus-visible,.la-launcher:focus-visible{outline:2px solid #a58ade;outline-offset:3px}
+:is(html.light,body.light,.theme-light,[data-theme=light]) .la-drawer{background:#faf9ff;color:#293047}:is(html.light,body.light,.theme-light,[data-theme=light]) .la-launcher{background:#faf9ff;color:#7752b6}
+@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-glow{50%{box-shadow:0 0 20px #a58ade22;transform:translateY(-2px)}}@media(max-width:600px){.la-launcher{padding:12px 10px}.la-launcher>span{display:none}.la-drawer .la-box{padding:20px 16px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-orbit{animation:none}.la-launcher{transition:none}}
+`;
 function LmsAssignmentCard({
   task,
   uid,
