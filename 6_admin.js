@@ -1603,10 +1603,10 @@ function _extends() {
       className: "adm-section-label"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "\u041C\u043E\u0434\u0443\u043B\u0438 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B"), /*#__PURE__*/React.createElement("p", null, "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u043A\u0430\u0436\u0434\u043E\u043C\u0443 \u0440\u0430\u0437\u0434\u0435\u043B\u0443.")), /*#__PURE__*/React.createElement("span", {
       className: "adm-count"
-    }, AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length + (user.assignmentsEnabled !== false ? 1 : 0), " / ", AVAILABLE_MODULES.length + 1)), /*#__PURE__*/React.createElement("div", {
+    }, AVAILABLE_MODULES.filter(module => modulesOf(user).includes(module.id)).length, " / ", AVAILABLE_MODULES.length)), /*#__PURE__*/React.createElement("div", {
       className: "adm-modules"
-    }, [...AVAILABLE_MODULES, {id:"assignments", label:"Задания", icon:"fileText"}].map(module => {
-      const on = module.id === "assignments" ? user.assignmentsEnabled !== false : modulesOf(user).includes(module.id);
+    }, AVAILABLE_MODULES.map(module => {
+      const on = modulesOf(user).includes(module.id);
       return /*#__PURE__*/React.createElement("button", {
         key: module.id,
         type: "button",
@@ -1920,19 +1920,15 @@ function _extends() {
   }
   // Explicit paths only. Nothing is deleted before the preview is confirmed.
   const cleanupPathAllowed = (kind, path) => {
-    const rules = {
-      activity: /^users\/[^/]+\/activity\/[^/]+$/,
-      audit: /^users\/[^/]+$/,
-      chat: /^private_chats\/[^/]+\/messages\/[^/]+$/,
-      finished: /^chessRooms\/[^/]+$/,
-      rooms: /^chessRooms\/[^/]+$/,
-      driveFinished: /^typeDriveRooms\/[^/]+$/,
+    const rules = { activity: /^users\/[^/]+\/activity\/[^/]+$/, audit: /^users\/[^/]+$/,
+      chat: /^private_chats\/[^/]+\/messages\/[^/]+$/, finished: /^chessRooms\/[^/]+$/,
+      rooms: /^chessRooms\/[^/]+$/, driveFinished: /^typeDriveRooms\/[^/]+$/,
       drivePresence: /^typeDrivePresence\/[^/]+$/,
-      driveAll: /^(typeDriveRooms|typeDrivePresence)\/[^/]+$/
-    };
+      driveAll: /^(typeDriveRooms|typeDrivePresence)\/[^/]+$/ };
     return !!rules[kind]?.test(path);
   };
   const driveInactive = d => !d.online || Date.now() - (d.lastSeen?.toMillis?.() || 0) > 90000;
+
   async function cleanupAdmin(db, uid, guard) {
     guard();
     const snap = await db.collection('users').doc(uid).get({
@@ -1945,8 +1941,7 @@ function _extends() {
     await cleanupAdmin(db, uid, guard);
     const field = window.firebase.firestore.FieldPath.documentId();
     const refs = [],
-      auditEntries = {},
-      driveVersions = {};
+      auditEntries = {}, driveVersions = {};
     let total = 0,
       active = 0,
       scanned = 0;
@@ -1974,11 +1969,11 @@ function _extends() {
       if (!doc.exists || !cleanupPathAllowed(kind, doc.ref.path)) return;
       if (targetUid && ['activity', 'audit'].includes(kind) && doc.ref.path.split('/')[1] !== targetUid) return;
       if (kind === 'finished' && !['finished', 'cancelled'].includes(doc.data().status)) return;
-      if (kind === 'driveFinished' && !['finished', 'cancelled'].includes(doc.data().stage)) return;
+      if (kind === 'driveFinished' && !['finished','cancelled'].includes(doc.data().stage)) return;
       if (kind === 'drivePresence' && !driveInactive(doc.data())) return;
       if (kind.startsWith('drive')) {
         driveVersions[doc.ref.path] = cleanupAuditKey(doc.data());
-        if (doc.ref.path.startsWith('typeDriveRooms/') && !['finished', 'cancelled'].includes(doc.data().stage)) active++;
+        if (doc.ref.path.startsWith('typeDriveRooms/') && !['finished','cancelled'].includes(doc.data().stage)) active++;
       }
       if (kind === 'audit') {
         const entries = Array.isArray(doc.data().adminAudit) ? doc.data().adminAudit : [];
@@ -2058,10 +2053,10 @@ function _extends() {
             }
             if (plan.kind.startsWith('drive')) {
               const data = doc.data();
-              if (plan.kind === 'driveFinished' && !['finished', 'cancelled'].includes(data.stage) || plan.kind === 'drivePresence' && !driveInactive(data) || doc.ref.path.startsWith('typeDrivePresence/') && cleanupAuditKey(data) !== plan.driveVersions[doc.ref.path]) {
-                skip++;
-                continue;
-              }
+              if ((plan.kind === 'driveFinished' && !['finished','cancelled'].includes(data.stage)) ||
+                  (plan.kind === 'drivePresence' && !driveInactive(data)) ||
+                  (doc.ref.path.startsWith('typeDrivePresence/') &&
+                    cleanupAuditKey(data) !== plan.driveVersions[doc.ref.path])) { skip++; continue; }
             }
             if (plan.kind === 'audit') {
               // Remove only entries shown in the preview, preserving later changes.
@@ -2123,30 +2118,16 @@ function _extends() {
     }
   }
   function cleanupUnit(count, kind) {
-    const forms = kind === 'chat' ? ['сообщение', 'сообщения', 'сообщений'] : ['activity', 'audit'].includes(kind) || kind.startsWith('drive') ? ['запись', 'записи', 'записей'] : ['комната', 'комнаты', 'комнат'];
-    const n = Math.abs(count),
-      ten = n % 10,
-      hundred = n % 100;
+    const forms = kind === 'chat' ? ['сообщение','сообщения','сообщений'] :
+      (['activity','audit'].includes(kind) || kind.startsWith('drive')) ? ['запись','записи','записей'] : ['комната','комнаты','комнат'];
+    const n = Math.abs(count), ten = n % 10, hundred = n % 100;
     return forms[hundred >= 11 && hundred <= 14 ? 2 : ten === 1 ? 0 : ten >= 2 && ten <= 4 ? 1 : 2];
   }
   // Native top-layer dialog: background is inert; no manual body scroll locks.
-  function CleanupModal({
-    show,
-    busy,
-    onClose,
-    children
-  }) {
+  function CleanupModal({ show, busy, onClose, children }) {
     const h = React.createElement;
-    const ref = useRef(null),
-      last = useRef(null),
-      latest = useRef({
-        busy,
-        onClose
-      });
-    latest.current = {
-      busy,
-      onClose
-    };
+    const ref = useRef(null), last = useRef(null), latest = useRef({ busy, onClose });
+    latest.current = { busy, onClose };
     if (show) last.current = children;
     useEffect(() => {
       const dialog = ref.current;
@@ -2156,49 +2137,34 @@ function _extends() {
         const syncTheme = () => {
           if (!source) return;
           const style = getComputedStyle(source);
-          ['bg', 'panel', 'text', 'muted', 'line', 'accent', 'soft'].forEach(key => dialog.style.setProperty('--ad-' + key, style.getPropertyValue('--ad-' + key)));
+          ['bg','panel','text','muted','line','accent','soft'].forEach(key =>
+            dialog.style.setProperty('--ad-' + key, style.getPropertyValue('--ad-' + key)));
         };
         syncTheme();
         const observer = new MutationObserver(syncTheme);
-        for (let el = source; el; el = el.parentElement) observer.observe(el, {
-          attributes: true,
-          attributeFilter: ['class', 'data-theme']
-        });
+        for (let el = source; el; el = el.parentElement)
+          observer.observe(el, { attributes: true, attributeFilter: ['class','data-theme'] });
         if (!dialog.open) dialog.showModal();
         frame = requestAnimationFrame(() => dialog.classList.add('entered'));
-        return () => {
-          cancelAnimationFrame(frame);
-          observer.disconnect();
-        };
+        return () => { cancelAnimationFrame(frame); observer.disconnect(); };
       }
       dialog.classList.remove('entered');
-      timer = setTimeout(() => {
-        if (dialog.open) dialog.close();
-      }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220);
+      timer = setTimeout(() => { if (dialog.open) dialog.close(); },
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220);
       return () => clearTimeout(timer);
     }, [show]);
     return ReactDOM.createPortal(h('dialog', {
-      ref,
-      className: 'adm-clean-modal',
-      'aria-label': 'Подтверждение очистки',
+      ref, className: 'adm-clean-modal', 'aria-label': 'Подтверждение очистки',
       'aria-busy': busy,
-      onCancel: e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!latest.current.busy) latest.current.onClose();
-      },
+      onCancel: e => { e.preventDefault(); e.stopPropagation(); if (!latest.current.busy) latest.current.onClose(); },
       onClick: e => {
         if (e.target !== e.currentTarget || latest.current.busy) return;
         const r = e.currentTarget.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) latest.current.onClose();
       }
-    }, h('div', {
-      className: 'adm-clean-content',
-      ref: el => {
-        if (el) el.inert = !show;
-      }
-    }, show ? children : last.current)), document.body);
+    }, h('div', { className: 'adm-clean-content', ref: el => { if (el) el.inert = !show; } }, show ? children : last.current)), document.body);
   }
+
   function DataMaintenance({
     uid,
     users,
@@ -2443,22 +2409,11 @@ function _extends() {
     }, users ? 'Выберите пользователя…' : 'Загрузка пользователей…'), array(users).map(u => /*#__PURE__*/React.createElement("option", {
       key: u.id,
       value: u.id
-    }, nameOf(u), " \xB7 ", u.email || u.id)))) : category === 'drive' ? React.createElement('div', {
-      className: 'adm-maint-segment',
-      style: {
-        flexWrap: 'wrap'
-      },
-      'aria-label': 'Данные TypeDrive'
-    }, [['driveFinished', 'Завершённые заезды'], ['drivePresence', 'Неактивные участники'], ['driveAll', 'Все данные']].map(([id, label]) => React.createElement('button', {
-      key: id,
-      type: 'button',
-      disabled: busy,
-      'aria-pressed': driveMode === id,
-      onClick: () => {
-        resetPreview();
-        setDriveMode(id);
-      }
-    }, label))) : category === 'chess' ? /*#__PURE__*/React.createElement("div", {
+    }, nameOf(u), " \xB7 ", u.email || u.id)))) : category === 'drive' ? React.createElement('div', {className:'adm-maint-segment', style:{flexWrap:'wrap'}, 'aria-label':'Данные TypeDrive'},
+      [['driveFinished','Завершённые заезды'],['drivePresence','Неактивные участники'],['driveAll','Все данные']].map(([id,label]) => React.createElement('button', {
+        key:id,type:'button',disabled:busy,'aria-pressed':driveMode===id,
+        onClick:()=>{resetPreview();setDriveMode(id);}
+      },label))) : category === 'chess' ? /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-segment",
       "aria-label": "\u041A\u043E\u043C\u043D\u0430\u0442\u044B \u0434\u043B\u044F \u043E\u0447\u0438\u0441\u0442\u043A\u0438"
     }, /*#__PURE__*/React.createElement("button", {
@@ -2499,54 +2454,33 @@ function _extends() {
       role: "alert"
     }, failure), React.createElement(CleanupModal, {
       show: !!(plan && plan.refs.length > 0 && (phase === 'preview' || phase === 'delete')),
-      busy: phase === 'delete',
-      onClose: resetPreview
-    }, plan && React.createElement(React.Fragment, null, React.createElement('div', {
-      className: 'adm-clean-top'
-    }, React.createElement('span', {
-      className: 'adm-clean-mark'
-    }, React.createElement(AdminIcon, {
-      name: 'alertTriangle',
-      size: 24
-    })), React.createElement('span', {
-      className: 'adm-clean-kicker'
-    }, 'ПОДТВЕРЖДЕНИЕ ОЧИСТКИ')), React.createElement('h3', null, titles[plan.kind]), React.createElement('p', null, 'Проверьте выбранные данные. Восстановить их через платформу нельзя.'), React.createElement('div', {
-      className: 'adm-clean-summary'
-    }, React.createElement('div', null, React.createElement('small', null, 'Область очистки'), React.createElement('strong', null, plan.kind === 'chat' ? 'Все личные переписки' : ['rooms', 'finished', 'driveFinished', 'drivePresence', 'driveAll'].includes(plan.kind) ? titles[plan.kind] : plan.targetLabel)), React.createElement('div', {
-      className: 'adm-clean-count'
-    }, React.createElement('b', null, plan.total), React.createElement('small', null, cleanupUnit(plan.total, plan.kind)))), plan.kind === 'driveAll' && React.createElement('p', null, 'Незавершённых заездов: ', plan.active, '. Они будут прерваны. Обновлённые после проверки записи присутствия будут пропущены; открытый онлайн-режим создаёт их заново.'), plan.kind === 'rooms' && React.createElement('p', null, 'Активных партий: ', React.createElement('b', null, plan.active), '. Игроки потеряют подключение к удалённым комнатам.'), React.createElement('p', null, ['activity', 'audit'].includes(plan.kind) ? 'Профили и результаты обучения сохранятся. Новые записи после проверки останутся.' : plan.kind === 'chat' ? 'Новые сообщения после проверки останутся.' : 'Комнаты, созданные после проверки, останутся.'), phase === 'delete' ? React.createElement('div', {
-      className: 'adm-clean-progress',
-      role: 'status'
-    }, React.createElement('progress', {
-      value: counts.processed,
-      max: Math.max(1, plan.refs.length)
-    }), React.createElement('p', null, `Обработано ${counts.processed} из ${plan.refs.length}. Удалено: ${counts.deleted}.`), React.createElement('p', null, message), React.createElement('button', {
-      type: 'button',
-      onClick: () => {
-        cancel.current = true;
-        setMessage('Останавливаем после текущей операции…');
-      }
-    }, 'Остановить очистку')) : React.createElement(React.Fragment, null, React.createElement('label', null, 'Для подтверждения введите УДАЛИТЬ', React.createElement('input', {
-      value: typed,
-      onChange: e => setTyped(e.target.value),
-      autoComplete: 'off',
-      spellCheck: false,
-      placeholder: 'УДАЛИТЬ'
-    })), React.createElement('div', {
-      className: 'adm-clean-actions'
-    }, React.createElement('button', {
-      type: 'button',
-      onClick: resetPreview,
-      autoFocus: true
-    }, 'Отмена'), React.createElement('button', {
-      type: 'button',
-      className: 'danger',
-      disabled: typed.trim() !== 'УДАЛИТЬ',
-      onClick: execute
-    }, React.createElement(AdminIcon, {
-      name: 'trash',
-      size: 16
-    }), 'Удалить'))))), phase === 'delete' && /*#__PURE__*/React.createElement("div", {
+      busy: phase === 'delete', onClose: resetPreview
+    }, plan && React.createElement(React.Fragment, null,
+      React.createElement('div', {className:'adm-clean-top'},
+        React.createElement('span', {className:'adm-clean-mark'}, React.createElement(AdminIcon, {name:'alertTriangle',size:24})),
+        React.createElement('span', {className:'adm-clean-kicker'}, 'ПОДТВЕРЖДЕНИЕ ОЧИСТКИ')),
+      React.createElement('h3', null, titles[plan.kind]),
+      React.createElement('p', null, 'Проверьте выбранные данные. Восстановить их через платформу нельзя.'),
+      React.createElement('div', {className:'adm-clean-summary'},
+        React.createElement('div', null, React.createElement('small', null, 'Область очистки'),
+          React.createElement('strong', null, plan.kind === 'chat' ? 'Все личные переписки' : ['rooms','finished','driveFinished','drivePresence','driveAll'].includes(plan.kind) ? titles[plan.kind] : plan.targetLabel)),
+        React.createElement('div', {className:'adm-clean-count'}, React.createElement('b', null, plan.total),
+          React.createElement('small', null, cleanupUnit(plan.total, plan.kind)))),
+      plan.kind === 'driveAll' && React.createElement('p', null, 'Незавершённых заездов: ', plan.active, '. Они будут прерваны. Обновлённые после проверки записи присутствия будут пропущены; открытый онлайн-режим создаёт их заново.'),
+      plan.kind === 'rooms' && React.createElement('p', null, 'Активных партий: ', React.createElement('b',null,plan.active), '. Игроки потеряют подключение к удалённым комнатам.'),
+      React.createElement('p', null, ['activity','audit'].includes(plan.kind) ? 'Профили и результаты обучения сохранятся. Новые записи после проверки останутся.' : plan.kind === 'chat' ? 'Новые сообщения после проверки останутся.' : 'Комнаты, созданные после проверки, останутся.'),
+      phase === 'delete' ? React.createElement('div', {className:'adm-clean-progress',role:'status'},
+        React.createElement('progress',{value:counts.processed,max:Math.max(1,plan.refs.length)}),
+        React.createElement('p',null,`Обработано ${counts.processed} из ${plan.refs.length}. Удалено: ${counts.deleted}.`),
+        React.createElement('p',null,message),
+        React.createElement('button',{type:'button',onClick:()=>{cancel.current=true;setMessage('Останавливаем после текущей операции…');}},'Остановить очистку')) :
+      React.createElement(React.Fragment,null,
+        React.createElement('label',null,'Для подтверждения введите УДАЛИТЬ',
+          React.createElement('input',{value:typed,onChange:e=>setTyped(e.target.value),autoComplete:'off',spellCheck:false,placeholder:'УДАЛИТЬ'})),
+        React.createElement('div',{className:'adm-clean-actions'},
+          React.createElement('button',{type:'button',onClick:resetPreview,autoFocus:true},'Отмена'),
+          React.createElement('button',{type:'button',className:'danger',disabled:typed.trim()!=='УДАЛИТЬ',onClick:execute},
+            React.createElement(AdminIcon,{name:'trash',size:16}),'Удалить'))))), phase === 'delete' && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-progress"
     }, /*#__PURE__*/React.createElement("progress", {
       value: counts.processed,
@@ -2560,205 +2494,6 @@ function _extends() {
   }
   const ADMIN_POLISH_CSS = ".adm-root.adm-new .adm-maint .adm-maint-options{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}\n/* Shared surface rhythm, stable hover geometry, restrained motion. */\n.adm-new .av-recent,.adm-new .av-shortcut{border:1px solid var(--ad-line);border-radius:15px;padding:14px;gap:12px;margin-top:9px;background:var(--ad-bg);min-height:76px;transition:background .2s,border-color .2s,box-shadow .2s}\n.adm-new .av-recent:hover,.adm-new .av-shortcut:hover{padding:14px;background:var(--ad-soft);border-color:var(--ad-accent);box-shadow:0 5px 16px #00000008}\n.adm-new :is(.av-recent,.av-shortcut)>span:last-child{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:9px;color:var(--ad-accent);transition:transform .2s}\n.adm-new :is(.av-recent,.av-shortcut):hover>span:last-child{transform:translateX(3px)}\n.adm-new :is(.av-recent,.av-shortcut) strong{font-size:13px;line-height:1.55}\n.adm-new .av-recent .adm-seen{margin-top:5px}\n.adm-new .adm-setting{padding:0;border:0;background:transparent;margin-top:12px}\n.adm-new .adm-setting .adm-module{width:100%;min-height:86px;padding:16px;border:1px solid var(--ad-line);border-radius:15px;background:var(--ad-bg);gap:14px;transition:background .22s,border-color .22s}\n.adm-new .adm-setting .adm-module.on{background:var(--ad-soft);border-color:var(--ad-line)}\n.adm-new .adm-setting .adm-module:hover{border-color:var(--ad-accent)}\n.adm-new .adm-setting .adm-module>svg{width:22px;height:22px;flex-shrink:0}\n.adm-new .adm-setting .adm-module-name{font-size:13px;line-height:1.5}\n.adm-new .adm-setting .adm-module-name small{font-size:11px;line-height:1.65;margin-top:4px}\n.adm-new .adm-setting .adm-switch{width:40px;height:24px;padding:3px;box-sizing:border-box}\n.adm-new .adm-setting .adm-switch:before{width:18px;height:18px;background:#fff;transition:transform .25s cubic-bezier(.2,.8,.2,1)}\n.adm-new .adm-setting .on .adm-switch:before{transform:translateX(16px)}\n.adm-new :is(.av-recent,.av-shortcut,.adm-module):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}\n.adm-clean-modal{--ad-bg:#101521;--ad-panel:#191e2d;--ad-text:#edf0fa;--ad-muted:#a3aec5;--ad-line:#ffffff25;--ad-accent:#b5a0ff;--ad-soft:#a082fa1c;box-sizing:border-box;width:min(500px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 32px);padding:0;margin:auto;border:1px solid var(--ad-line);border-radius:24px;background:var(--ad-panel);color:var(--ad-text);box-shadow:0 32px 100px #0005;overflow:auto;overscroll-behavior:contain;font:400 13px/1.65 Montserrat,system-ui,sans-serif;opacity:0;transform:translateY(18px) scale(.97);transition:opacity .22s,transform .28s cubic-bezier(.2,.8,.2,1)}\n.adm-clean-modal.entered{opacity:1;transform:none}.adm-clean-modal::backdrop{background:#080c1a99;backdrop-filter:blur(7px)}\n.adm-clean-modal *{box-sizing:border-box}.adm-clean-content{padding:26px}.adm-clean-modal h3{font:700 22px/1.3 Montserrat,system-ui,sans-serif;margin:13px 0 8px;letter-spacing:-.5px}.adm-clean-modal p{margin:10px 0;color:var(--ad-muted);overflow-wrap:anywhere}\n.adm-clean-top{display:flex;align-items:center;justify-content:space-between;gap:16px}.adm-clean-mark{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;color:#e47791;background:#e4779118;border:1px solid #e4779130}.adm-clean-kicker{font-size:10px;font-weight:700;letter-spacing:1.3px;color:var(--ad-muted)}\n.adm-clean-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding:16px;margin:20px 0;border:1px solid var(--ad-line);border-radius:15px;background:var(--ad-bg)}.adm-clean-summary small{display:block;color:var(--ad-muted);font-size:11px}.adm-clean-summary strong{display:block;font-size:13px;overflow-wrap:anywhere}.adm-clean-count{text-align:right}.adm-clean-count b{font-size:28px;line-height:1.2;color:var(--ad-text);font-variant-numeric:tabular-nums}\n.adm-clean-modal label{display:grid;gap:8px;margin-top:18px;color:var(--ad-text);font-size:12px}.adm-clean-modal input{display:block;width:100%;height:48px;padding:12px 14px;margin:0;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);color:var(--ad-text);font:500 16px/1.4 Montserrat,system-ui,sans-serif;transition:border-color .2s,box-shadow .2s}.adm-clean-modal input:focus{outline:0;border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-soft)}\n.adm-clean-actions{display:flex;gap:10px;margin-top:22px}.adm-clean-modal button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:0;min-height:46px;height:auto;padding:11px 14px;margin:0;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);color:var(--ad-text);font:600 12px/1.5 Montserrat,system-ui,sans-serif;cursor:pointer;transition:transform .18s,background .18s,opacity .18s}.adm-clean-modal button.danger{background:#b83e60;color:white;border-color:transparent}.adm-clean-modal button:hover:not(:disabled){filter:brightness(1.1)}.adm-clean-modal button:active:not(:disabled){transform:scale(.97)}.adm-clean-modal button:disabled{opacity:.4;cursor:not-allowed}.adm-clean-modal button:focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}.adm-clean-modal progress{width:100%;height:8px;accent-color:var(--ad-accent)}.adm-clean-progress{padding:16px;background:var(--ad-bg);border-radius:14px;margin-top:18px}\n@media(max-width:480px){.adm-clean-content{padding:21px}.adm-clean-modal h3{font-size:20px}.adm-new .adm-setting .adm-module{padding:14px;gap:10px}.adm-new .adm-setting .adm-module-name{font-size:12px}.adm-new :is(.av-recent,.av-shortcut){padding:12px;gap:10px}.adm-new :is(.av-recent,.av-shortcut):hover{padding:12px}.adm-new :is(.av-recent,.av-shortcut) strong{font-size:12px}}\n@media(prefers-reduced-motion:reduce){.adm-clean-modal,.adm-clean-modal *,.adm-new .adm-setting *{transition:none!important;animation:none!important}}\n.adm-root.adm-new{box-sizing:border-box}\n/* Mobile maintenance: override the original, more specific four-column rule. */\n.adm-root.adm-new .adm-maint .adm-maint-body,\n.adm-root.adm-new .adm-maint .adm-maint-config,\n.adm-root.adm-new .adm-maint .adm-maint-target{min-width:0;max-width:100%;box-sizing:border-box}\n.adm-root.adm-new .adm-maint .adm-maint-options>button{min-width:0;white-space:normal;overflow-wrap:anywhere}\n.adm-root.adm-new .adm-maint .adm-maint-options>button svg{flex-shrink:0}\n.adm-root.adm-new .adm-maint .adm-maint-segment{min-width:0;max-width:100%;box-sizing:border-box}\n.adm-root.adm-new .adm-maint .adm-maint-segment>button{min-width:0;white-space:normal;overflow-wrap:anywhere}\n@media(max-width:640px){\n.adm-root.adm-new .adm-maint .adm-maint-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}\n.adm-root.adm-new .adm-maint .adm-maint-options>button{width:100%;min-height:46px!important;padding:10px!important;justify-content:flex-start;font-size:12px!important;gap:8px}\n.adm-root.adm-new .adm-maint .adm-maint-options>button svg{width:17px;height:17px}\n.adm-root.adm-new .adm-maint .adm-maint-config{padding:14px}\n.adm-root.adm-new .adm-maint .adm-maint-segment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:4px}\n.adm-root.adm-new .adm-maint .adm-maint-segment>button{width:100%;max-width:100%;padding:9px 5px!important;font-size:11px!important;line-height:1.5!important}\n.adm-root.adm-new .adm-maint .adm-maint-toolbar{width:100%;min-width:0;align-items:stretch}\n.adm-root.adm-new .adm-maint .adm-maint-toolbar>.adm-btn{width:100%;max-width:100%;font-size:12px!important;padding:12px 8px!important}\n}\n@media(max-width:440px){\n.adm-root.adm-new .av-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:10px 12px}\n.adm-root.adm-new .av-nav>button{flex-direction:row;justify-content:flex-start;gap:8px;min-width:0;padding:10px;font-size:11px;min-height:44px}\n.adm-root.adm-new .av-nav>button svg{flex-shrink:0;width:18px;height:18px}\n}\n";
   const ADMIN_NEW_CSS = ".adm-root.adm-new{--ad-bg:#101521;--ad-panel:#191e2d;--ad-text:#edf0fa;--ad-muted:#a3aec5;--ad-line:rgba(160,175,205,.18);--ad-accent:#b5a0ff;--ad-soft:rgba(160,130,250,.11);font-family:Montserrat,system-ui,sans-serif}\nhtml.light .adm-root.adm-new,body.light .adm-root.adm-new,.theme-light .adm-root.adm-new,[data-theme=light] .adm-root.adm-new{--ad-bg:#f4f5fa;--ad-panel:#fff;--ad-text:#252c40;--ad-muted:#64718a;--ad-line:#dfe3ee;--ad-accent:#7151c7;--ad-soft:#eee9fa}\n.adm-new .adm-shell{max-width:1280px;border-radius:25px;background:var(--ad-bg);max-height:92dvh;box-shadow:0 30px 100px #0003}.adm-new .adm-head{padding:25px 28px;background:var(--ad-panel);border-bottom:1px solid var(--ad-line);gap:15px}.adm-new .adm-head h2{font-size:clamp(21px,2.3vw,28px);letter-spacing:-.8px}.adm-new .adm-head p{font-size:12px;margin-top:5px}.adm-new .adm-eyebrow{font-size:9px;letter-spacing:2px;color:var(--ad-accent)}.adm-new .adm-brand{width:48px;height:48px;border-radius:15px;background:var(--ad-soft);color:var(--ad-accent)}\n.av-nav{display:flex;gap:6px;padding:13px 24px;background:var(--ad-panel);border-bottom:1px solid var(--ad-line)}.adm-new .av-nav button{display:flex;align-items:center;justify-content:center;gap:9px;flex:1;height:auto;min-height:44px;padding:11px 15px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--ad-muted);font:600 13px/1.4 Montserrat,system-ui,sans-serif;transition:background .22s,color .22s,transform .22s}.adm-new .av-nav button.active{background:var(--ad-soft);color:var(--ad-accent);border-color:var(--ad-line)}.adm-new .av-nav button:hover{background:var(--ad-soft)}.adm-new .av-nav button:active{transform:scale(.97)}.av-stage{padding:24px;min-height:420px}.av-scene[hidden]{display:none!important}.av-scene:not([hidden]){animation:av-enter .32s ease}\n.av-welcome{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:28px 30px;border:1px solid var(--ad-line);border-radius:22px;margin-bottom:20px;background:radial-gradient(ellipse at 95% 50%,var(--ad-soft),transparent 65%),var(--ad-panel);overflow:hidden}.av-kicker{color:var(--ad-accent);font-size:10px;letter-spacing:1.8px;font-weight:700}.av-welcome h3{font-size:clamp(24px,3vw,32px);letter-spacing:-1px;margin:10px 0}.av-welcome p{font-size:13px;color:var(--ad-muted);line-height:1.8;max-width:450px}.av-welcome .adm-btn{margin-top:20px}.av-orbit{width:170px;height:150px;position:relative;display:grid;place-items:center;flex-shrink:0;color:var(--ad-accent)}.av-orbit i{position:absolute;width:140px;height:140px;border:1px dashed var(--ad-accent);border-radius:35px;opacity:.25;animation:av-orbit 30s linear infinite}.av-orbit i:nth-child(2){width:110px;height:110px;animation-direction:reverse;border-style:solid}.av-orbit span{display:grid;place-items:center;width:78px;height:78px;border-radius:23px;background:var(--ad-soft);box-shadow:0 0 50px var(--ad-soft);animation:av-float 5s ease-in-out infinite}\n.adm-new .adm-summary{padding:0;margin:0 0 22px;gap:12px}.adm-new .adm-summary-card{padding:19px;border:1px solid var(--ad-line);border-radius:16px;background:var(--ad-panel);box-shadow:none}.adm-new .adm-summary-card strong{font-size:29px}.adm-new .adm-summary-card>span{font-size:11px}.av-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}.av-card{min-width:0;border:1px solid var(--ad-line);border-radius:18px;background:var(--ad-panel);padding:20px}.av-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.av-card-head h3{font-size:14px}.av-card-head small,.av-muted{font-size:11px;color:var(--ad-muted)}\n.adm-new .av-recent,.adm-new .av-shortcut{display:flex;align-items:center;gap:12px;min-height:72px;height:auto;width:100%;border:0;border-bottom:1px solid var(--ad-line);border-radius:0;padding:12px 0;background:transparent;color:var(--ad-text);text-align:left;transition:background .2s,padding .2s}.av-recent>span:nth-child(2),.av-shortcut>span:nth-child(2){flex:1;min-width:0}.av-recent strong,.av-shortcut strong{display:block;font-size:12px;overflow-wrap:anywhere}.av-shortcut small{display:block;font-size:11px;line-height:1.7;color:var(--ad-muted);margin-top:5px}.av-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;color:var(--ad-accent);background:var(--ad-soft);flex-shrink:0}.adm-new .av-recent:hover,.adm-new .av-shortcut:hover{padding-left:8px;padding-right:8px;background:var(--ad-soft)}.av-heading{margin:0 0 18px}.av-heading h3{font-size:21px}.av-heading p{font-size:12px;color:var(--ad-muted);margin-top:5px}\n.adm-new .adm-workspace{grid-template-columns:minmax(250px,310px) minmax(0,1fr);border:1px solid var(--ad-line);border-radius:20px;overflow:hidden;background:var(--ad-panel)}.adm-new .adm-directory{padding:20px 16px;background:var(--ad-bg)}.adm-new .adm-person{border:1px solid transparent;border-radius:12px;min-height:82px;padding:13px 11px}.adm-new .adm-person.selected{background:var(--ad-soft);border-color:var(--ad-line);box-shadow:inset 3px 0 var(--ad-accent)}.adm-new .adm-avatar{background:var(--ad-soft);color:var(--ad-accent);border-radius:12px}.adm-new .adm-detail{padding:24px}.adm-new .adm-tabs{gap:5px;padding:5px;border:1px solid var(--ad-line);border-radius:12px;background:var(--ad-bg);margin:22px 0}.adm-new .adm-tab{border:0;border-radius:8px;padding:10px 12px;min-height:40px;font-weight:600}.adm-new .adm-tab.active{background:var(--ad-soft);color:var(--ad-accent)}\n.adm-new .adm-input,.adm-new select{min-height:42px;border:1px solid var(--ad-line);border-radius:11px;background:var(--ad-bg);color:var(--ad-text);box-shadow:none}.adm-new .adm-input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-soft)}.adm-new .adm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:auto;min-height:42px;padding:10px 15px;border-radius:11px;font-size:12px;font-weight:600;line-height:1.4}.adm-new .adm-btn.primary{background:linear-gradient(135deg,#8e6ad9,#6d55be);color:#fff;border-color:transparent}.adm-new .adm-action-row{border:1px solid var(--ad-line);background:var(--ad-bg);border-radius:13px;padding:15px;margin:10px 0;gap:16px}.adm-new .adm-action-row>.adm-btn{flex-shrink:0}.adm-new .adm-module{min-height:70px;border-radius:13px}.adm-new .adm-module.on{border-color:var(--ad-accent);background:var(--ad-soft)}\n.adm-new .adm-maint{margin:0;background:var(--ad-panel);border-radius:20px}.adm-new .adm-maint.embedded .adm-maint-disclosure{display:none}.adm-new .adm-maint .adm-maint-body{padding:0 22px 22px}.adm-new .adm-maint-config{padding:22px}.adm-new .adm-maint-confirm{max-width:640px;margin:20px auto 0}.adm-new .adm-maint-actions,.adm-new .adm-dialog-actions{justify-content:flex-end;gap:9px}.adm-new .adm-footer{border-top:1px solid var(--ad-line);background:var(--ad-panel);font-size:10px}.adm-new .av-back{display:none}.av-skeleton{height:180px;border-radius:12px;background:linear-gradient(100deg,var(--ad-bg),var(--ad-soft),var(--ad-bg));background-size:220% 100%;animation:av-shimmer 1.6s linear infinite}\n@keyframes av-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes av-orbit{to{transform:rotate(360deg)}}@keyframes av-float{50%{transform:translateY(-6px)}}@keyframes av-shimmer{to{background-position:-220% 0}}\n@media(max-width:760px){.av-stage{padding:14px}.adm-new .adm-head{padding:20px 16px}.av-nav{padding:10px 12px;gap:4px}.adm-new .av-nav button{font-size:11px;padding:10px 8px;gap:6px;min-width:0}.av-grid{grid-template-columns:1fr}.av-welcome{padding:22px}.av-orbit{width:105px;transform:scale(.75);margin-right:-15px}.adm-new .adm-workspace{grid-template-columns:1fr}.adm-new .av-students:not(.profile-open) .adm-detail{display:none}.adm-new .av-students.profile-open .adm-directory{display:none}.adm-new .av-students.profile-open .av-back{display:inline-flex;margin-bottom:12px}.adm-new .adm-detail{padding:18px 14px}.adm-new .adm-users{max-height:58dvh}.adm-new .adm-action-row{flex-wrap:wrap}.adm-new .adm-action-row>.adm-btn{margin-left:auto}}\n@media(max-width:440px){.adm-new .av-nav button{flex-direction:column;font-size:10px;gap:5px}.av-orbit{display:none}.av-welcome h3{font-size:25px}.adm-new .adm-summary{grid-template-columns:1fr 1fr;gap:9px}.adm-new .adm-summary-card{padding:14px}.av-card{padding:16px}.av-card-head{flex-direction:column;align-items:flex-start;gap:4px}.adm-new .adm-live{display:none}}\n@media(prefers-reduced-motion:reduce){.adm-new *,.adm-new *:before{animation:none!important;transition:none!important}}\n";
-  function AssignmentDesk({
-    users
-  }) {
-    const [creating, setCreating] = useState(false);
-    const formDialog = useRef(null);
-    useEffect(() => {
-      const d = formDialog.current;
-      if (creating && !d.open) d.showModal();
-      if (!creating && d.open) d.close();
-    }, [creating]);
-    const [title, setTitle] = useState(''),
-      [text, setText] = useState(''),
-      [lang, setLang] = useState('ru'),
-      [accuracy, setAccuracy] = useState(95),
-      [due, setDue] = useState(''),
-      [query, setQuery] = useState(''),
-      [chosen, setChosen] = useState(new Set()),
-      [rows, setRows] = useState([]),
-      [selected, setSelected] = useState(null),
-      [progress, setProgress] = useState([]),
-      [busy, setBusy] = useState(false),
-      [error, setError] = useState(''),
-      [loading, setLoading] = useState(true);
-    const lock = useRef(false),
-      draftId = useRef(null);
-    const uid = window.auth?.currentUser?.uid;
-    const students = (users || []).filter(u => u.role !== 'admin' && !u.isBanned);
-    const visible = students.filter(u => (nameOf(u) + ' ' + (u.email || '')).toLowerCase().includes(query.toLowerCase()));
-    useEffect(() => {
-      if (!uid) return;
-      return window.db.collection('lmsAssignments').where('createdBy', '==', uid).onSnapshot(s => {
-        setRows(s.docs.map(d => ({
-          id: d.id,
-          ...d.data()
-        })).sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)));
-        setLoading(false);
-      }, e => {
-        setError(errorText(e));
-        setLoading(false);
-      });
-    }, [uid]);
-    useEffect(() => {
-      setProgress([]);
-      if (!selected) return;
-      return window.db.collection('lmsAssignments').doc(selected.id).collection('progress').onSnapshot(s => setProgress(s.docs.map(d => ({
-        id: d.id,
-        ...d.data()
-      }))), e => setError(errorText(e)));
-    }, [selected?.id]);
-    const time = useState(Date.now())[0];
-    const [clock, setClock] = useState(time);
-    useEffect(() => {
-      const t = setInterval(() => setClock(Date.now()), 30000);
-      return () => clearInterval(t);
-    }, []);
-    async function save(e) {
-      e.preventDefault();
-      if (lock.current) return;
-      setError('');
-      const ids = [...chosen];
-      const deadline = new Date(due).getTime();
-      if (!title.trim() || text.trim().length < 20 || text.trim().length > 1800 || !ids.length || ids.length > 100 || !Number.isFinite(deadline) || deadline <= Date.now() || accuracy < 50 || accuracy > 100) {
-        setError('Укажите название, текст 20–1800 символов, 1–100 учеников, точность 50–100% и будущий срок.');
-        return;
-      }
-      lock.current = true;
-      setBusy(true);
-      const db = window.db,
-        actor = uid;
-      const ref = draftId.current ? db.collection('lmsAssignments').doc(draftId.current) : db.collection('lmsAssignments').doc();
-      draftId.current = ref.id;
-      try {
-        await db.runTransaction(async tx => {
-          const admin = await tx.get(db.collection('users').doc(actor));
-          const existing = await tx.get(ref);
-          const profiles = await Promise.all(ids.map(id => tx.get(db.collection('users').doc(id))));
-          if (window.auth?.currentUser?.uid !== actor || admin.data()?.role !== 'admin' || admin.data()?.isBanned) throw Error('Права администратора не подтверждены.');
-          if (existing.exists) {
-            if (existing.data().createdBy !== actor) throw Error('Конфликт задания.');
-            return;
-          }
-          if (profiles.some(p => !p.exists || p.data().isBanned || p.data().role === 'admin' || Array.isArray(p.data().allowedModules) && !p.data().allowedModules.includes('typing'))) throw Error('У части выбранных учеников нет доступа к печати. Обновите выбор.');
-          const payload = {
-            version: 1,
-            title: title.trim(),
-            module: 'typing',
-            text: text.trim().normalize('NFC'),
-            lang,
-            minAccuracy: Number(accuracy),
-            dueAt: window.firebase.firestore.Timestamp.fromMillis(deadline),
-            studentIds: ids,
-            studentNames: Object.fromEntries(ids.map(id => [id, nameOf(students.find(u => u.id === id) || {
-              id
-            })])),
-            createdBy: actor,
-            createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'assigned'
-          };
-          tx.set(ref, payload);
-        });
-        setTitle('');
-        setText('');
-        setChosen(new Set());
-        draftId.current = null;
-        setCreating(false);
-      } catch (e) {
-        setError(errorText(e));
-      } finally {
-        lock.current = false;
-        setBusy(false);
-      }
-    }
-    function state(p) {
-      if (p?.status === 'completed') return 'Выполнено';
-      if (p?.needsHelp) return 'Нужна помощь';
-      if ((selected?.dueAt?.toMillis?.() || Infinity) < clock) return 'Просрочено';
-      return p?.status === 'started' ? 'В процессе' : 'Не начато';
-    }
-    return /*#__PURE__*/React.createElement("section", {
-      className: "ad-task"
-    }, /*#__PURE__*/React.createElement("style", null, ASSIGNMENT_CSS), /*#__PURE__*/React.createElement("div", {
-      className: "av-heading"
-    }, /*#__PURE__*/React.createElement("h3", null, "Назначение заданий"), /*#__PURE__*/React.createElement("p", null, "Один текст, понятная цель и общий срок.")), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-notice"
-    }, "Ученики увидят задания на главной странице. Результаты обновляются после завершения назначенного текста."), error && /*#__PURE__*/React.createElement("p", {
-      className: "adm-error",
-      role: "alert"
-    }, error), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-toolbar"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Задания и результаты"), /*#__PURE__*/React.createElement("small", null, rows.length, " заданий · обновление в реальном времени")), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "adm-btn primary ad-create",
-      onClick: () => setCreating(true)
-    }, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "plus",
-      size: 16
-    }), "Создать задание")), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-grid"
-    }, ReactDOM.createPortal(React.createElement("dialog", {
-      ref: formDialog, className: "ad-task-dialog adm-root", "aria-labelledby":"assignment-title",
-      onCancel: e => { e.preventDefault(); if (!busy) setCreating(false); }
-    }, React.createElement("header", {className:"ad-task-dialog-head"},
-      React.createElement("div", null, React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), React.createElement("h3", {id:"assignment-title"}, "Новое задание")),
-      React.createElement("button", {type:"button",disabled:busy,"aria-label":"Закрыть",onClick:()=>setCreating(false)}, "×")),
-      React.createElement("form", {className:"ad-compose",onSubmit:save},
-        React.createElement("fieldset", {disabled:busy,className:"ad-compose-scroll"},
-          error && React.createElement("p", {className:"adm-error",role:"alert"},error),
-          React.createElement("div", {className:"ad-compose-heading"}, React.createElement(AdminIcon,{name:"keyboard",size:20}), React.createElement("div",null,React.createElement("b",null,"Тренажёр печати"),React.createElement("small",null,"Назначьте текст и цель по точности"))),
-          React.createElement("label",null,"Название задания",React.createElement("input",{value:title,onChange:e=>setTitle(e.target.value),maxLength:120,required:true,placeholder:"Например: точная печать — урок 1"})),
-          React.createElement("div",{className:"ad-language-row"},React.createElement("span",null,"Язык текста"),React.createElement("div",{className:"ad-language",role:"group","aria-label":"Язык текста"},[['ru','RU · Русский'],['en','EN · English']].map(([v,label])=>React.createElement("button",{key:v,type:"button","aria-pressed":lang===v,onClick:()=>setLang(v)},label)))),
-          React.createElement("label",null,React.createElement("span",{className:"ad-label-row"},"Текст для печати",React.createElement("small",null,text.length," / 1800")),React.createElement("textarea",{value:text,onChange:e=>setText(e.target.value),minLength:20,maxLength:1800,required:true,rows:4,placeholder:"Введите текст от 20 до 1800 символов"})),
-          React.createElement("div",{className:"ad-task-pair"},
-            React.createElement("label",null,"Цель по точности, %",React.createElement("input",{type:"number",min:50,max:100,required:true,value:accuracy,onChange:e=>setAccuracy(Number(e.target.value))})),
-            React.createElement("label",null,"Срок выполнения",React.createElement("input",{type:"datetime-local",required:true,value:due,onChange:e=>setDue(e.target.value)}),React.createElement("small",null,"Ваше местное время"))),
-          React.createElement("div",{className:"ad-recipients-head"},React.createElement("h4",null,"Ученики",React.createElement("span",null,chosen.size)),React.createElement("button",{type:"button",disabled:!chosen.size,onClick:()=>setChosen(new Set())},"Снять выбор")),
-          React.createElement("div",{className:"ad-search-row"},React.createElement("input",{"aria-label":"Поиск ученика",placeholder:"Поиск по имени или почте",value:query,onChange:e=>setQuery(e.target.value)}),React.createElement("button",{type:"button",onClick:()=>setChosen(v=>new Set([...v,...visible.map(u=>u.id)].slice(0,100)))},"Выбрать всех")),
-          React.createElement("div",{className:"ad-task-people"},users===null?'Загрузка…':!visible.length?'Ученики не найдены':visible.map(u=>React.createElement("label",{key:u.id},React.createElement("input",{type:"checkbox",checked:chosen.has(u.id),onChange:()=>setChosen(v=>{const n=new Set(v);n.has(u.id)?n.delete(u.id):n.size<100&&n.add(u.id);return n;})}),React.createElement("span",null,React.createElement("b",null,nameOf(u)),React.createElement("small",null,u.email||u.id)))))
-        ),
-        React.createElement("footer",{className:"ad-compose-footer"},React.createElement("span",null,"Выбрано учеников: ",React.createElement("b",null,chosen.size)),React.createElement("div",null,React.createElement("button",{type:"button",disabled:busy,onClick:()=>setCreating(false)},"Отмена"),React.createElement("button",{type:"submit",className:"ad-create",disabled:busy||!chosen.size},busy?'Сохранение…':'Назначить задание')))
-      )
-    ),document.body), /*#__PURE__*/React.createElement("div", {
-      className: "av-card"
-    }, /*#__PURE__*/React.createElement("h3", null, "Назначенные задания"), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем…") : !rows.length ? /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-empty"
-    }, /*#__PURE__*/React.createElement(AdminIcon, {
-      name: "fileText",
-      size: 32
-    }), /*#__PURE__*/React.createElement("h3", null, "Начните с одного задания"), /*#__PURE__*/React.createElement("p", null, "Выберите учеников, задайте текст и срок.", /*#__PURE__*/React.createElement("br", null), "Здесь появятся их результаты и запросы помощи.")) : /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-list"
-    }, rows.map(r => /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      key: r.id,
-      className: selected?.id === r.id ? 'selected' : '',
-      onClick: () => setSelected(r)
-    }, /*#__PURE__*/React.createElement("b", null, r.title), /*#__PURE__*/React.createElement("small", null, r.studentIds?.length || 0, " учеников · ", r.lang?.toUpperCase(), " · ", r.minAccuracy, "%"), /*#__PURE__*/React.createElement("small", null, "До ", r.dueAt?.toDate?.().toLocaleString('ru-RU') || '—')))), selected && /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-detail"
-    }, /*#__PURE__*/React.createElement("h3", null, selected.title), /*#__PURE__*/React.createElement("p", null, "Статусы и результаты обновляются автоматически."), (selected.studentIds || []).map(id => {
-      const p = progress.find(x => x.id === id);
-      return /*#__PURE__*/React.createElement("div", {
-        className: "ad-task-status",
-        key: id
-      }, /*#__PURE__*/React.createElement("span", null, selected.studentNames?.[id] || id, /*#__PURE__*/React.createElement("small", null, p?.result ? `Точность: ${p.result.accuracy ?? '—'}% · Скорость: ${p.result.wpm ?? '—'} WPM` : '')), /*#__PURE__*/React.createElement("b", null, state(p)));
-    })))));
-  }
-  const ASSIGNMENT_CSS = `.ad-task{min-width:0}.ad-task-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}.ad-task .av-card{min-width:0;padding:22px}.ad-task fieldset{border:0;padding:0;margin:16px 0 0;min-width:0}.ad-task label{display:grid;gap:7px;font-size:12px;margin-bottom:14px}.ad-task .adm-input{width:100%;min-width:0;box-sizing:border-box;margin:0}.ad-task textarea{resize:vertical;line-height:1.6}.ad-task-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ad-task-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}.ad-task-people{max-height:245px;overflow:auto;scrollbar-width:thin;margin:12px 0 18px}.ad-task-people label{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #9988bb22;margin:0}.ad-task-people input{width:16px;height:16px;flex-shrink:0;accent-color:#9876e5}.ad-task small{display:block;opacity:.65;font-size:11px;margin-top:5px;overflow-wrap:anywhere}.ad-task-notice{border:1px solid #aa88ee44;background:#aa88ee0c;padding:13px 16px;border-radius:14px;font-size:12px;line-height:1.6;margin-bottom:18px}.ad-task-list{display:grid;gap:9px;margin-top:16px;max-height:440px;overflow:auto;scrollbar-width:thin}.ad-task-list button{display:block;text-align:left;padding:15px;border:1px solid #9988bb33;border-radius:13px;background:transparent;color:inherit;width:100%;cursor:pointer;transition:background .2s,border-color .2s}.ad-task-list button:hover,.ad-task-list button.selected{background:#aa88ee14;border-color:#aa88ee88}.ad-task-detail{margin-top:20px;padding-top:18px;border-top:1px solid #9988bb33}.ad-task-detail p{font-size:12px;opacity:.7}.ad-task-status{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #9988bb22;font-size:12px;overflow-wrap:anywhere}.ad-task-status>b{color:#9876e5;flex-shrink:0}.ad-task .adm-btn{min-height:40px;justify-content:center}.ad-task fieldset>.primary{width:100%}@media(max-width:900px){.ad-task-grid{grid-template-columns:1fr}}@media(max-width:480px){.ad-task-pair{grid-template-columns:1fr;gap:0}.ad-task .av-card{padding:16px}.ad-task-status{flex-wrap:wrap}}
-.ad-task-grid{grid-template-columns:1fr;align-items:start}.ad-task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px;padding:17px 20px;border:1px solid #a68bd633;border-radius:16px;background:linear-gradient(110deg,#a68bd611,transparent)}.ad-task-toolbar small{margin-top:5px}.ad-task-notice{display:none}.ad-task-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));max-height:none}.ad-task-empty{display:grid;justify-items:center;gap:12px;padding:40px 18px;text-align:center}.ad-task-empty>svg{color:#a78ade;padding:15px;box-sizing:content-box;border-radius:20px;background:#a78ade14}.ad-task-empty h3{margin:6px 0 0}.ad-task-empty p{line-height:1.8;font-size:12px;opacity:.65;margin:0 0 8px}
-.ad-task-dialog{width:min(720px,calc(100vw - 28px));max-width:none;max-height:90dvh;padding:0;border:1px solid #a68bd644;border-radius:22px;background:#191e2e;color:#edf0fa;overflow:auto;scrollbar-width:thin;box-shadow:0 30px 100px #0005;overscroll-behavior:contain}.ad-task-dialog::backdrop{background:#080d1a88;backdrop-filter:blur(6px)}.ad-task-dialog[open]{animation:ad-task-in .25s ease-out}.ad-task-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:22px 24px;border-bottom:1px solid #a68bd633;background:linear-gradient(120deg,#a68bd614,transparent)}.ad-task-dialog-head small{font-size:9px;letter-spacing:1.5px;color:#a78ade}.ad-task-dialog-head h3{font-size:21px;margin:6px 0 0}.ad-task-dialog-head button{display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #a68bd633;border-radius:10px;background:#a68bd611;color:inherit;font-size:22px;cursor:pointer}.ad-task-dialog .av-card{padding:22px 24px;border:0;background:none}.ad-task-dialog fieldset{margin:0}.ad-task-dialog .adm-input{background:#a68bd608;color:inherit;border:1px solid #a68bd633;border-radius:11px;min-height:42px;padding:11px 13px;font:13px/1.5 inherit}.ad-task-dialog .adm-input:focus{outline:2px solid #a68bd688;outline-offset:1px}.ad-task-dialog label{color:inherit}.ad-task-dialog .adm-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #a68bd644;border-radius:10px;background:#a68bd60c;color:inherit;font-family:inherit;cursor:pointer}.ad-task-dialog .adm-btn.primary{background:linear-gradient(120deg,#9a75de,#7455bf);color:white;border:0}.ad-task-dialog .ad-task-people{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:210px}.ad-task-dialog .ad-task-people label{border:1px solid #a68bd622;border-radius:10px;background:#a68bd606;min-width:0}.ad-task-people label:has(input:checked){background:#a68bd61a;border-color:#a68bd688}.ad-task-dialog .ad-task-people span{min-width:0}.ad-task-dialog .ad-task-people small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ad-task-dialog .adm-error{margin:15px 24px}
-:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-task-dialog{background:#faf9ff;color:#293047}@keyframes ad-task-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@media(max-width:600px){.ad-task-toolbar{align-items:stretch;flex-direction:column}.ad-task-dialog .ad-task-people{grid-template-columns:1fr}.ad-task-dialog .av-card{padding:18px}.ad-task-dialog-head{padding:18px}.ad-task-dialog-head h3{font-size:18px}}@media(prefers-reduced-motion:reduce){.ad-task-dialog[open]{animation:none}}
-
-.ad-task>.av-heading{display:none}.ad-task-toolbar{border:0;background:none;padding:0 0 20px;margin:0;align-items:center}.ad-task-toolbar b{font-size:22px;letter-spacing:-.5px}.ad-task-grid>.av-card>h3{display:none}.ad-task-grid>.av-card{padding:22px;border-radius:20px}.ad-task-empty{padding:32px 16px;gap:10px}.ad-task-toolbar .adm-btn{flex-shrink:0}.ad-task-dialog{width:min(780px,calc(100vw - 32px));margin:auto;font:14px/1.5 Montserrat,system-ui,sans-serif}.ad-task-dialog-head{position:sticky;top:0;z-index:3;background:var(--ad-panel,#191e2e);padding:22px 28px}.ad-task-dialog .av-card{padding:24px 28px 0}.ad-form-section{font-size:11px;letter-spacing:1px;font-weight:700;color:#a78ade;margin-bottom:20px}.ad-task-dialog label{font-size:12px;font-weight:600;gap:9px;margin-bottom:18px}.ad-task-dialog .adm-input{font-family:inherit;font-size:14px;line-height:1.5;min-height:46px;padding:12px 14px}.ad-task-dialog textarea.adm-input{min-height:130px}.ad-task-dialog .ad-task-pair{gap:18px}.ad-task-dialog .ad-task-line{border-top:1px solid #a68bd633;padding-top:22px;margin-top:6px}.ad-task-dialog fieldset>input{margin-bottom:10px}.ad-task-dialog fieldset>.adm-btn:not(.primary){min-height:36px;padding:7px 12px;font-size:11px}.ad-task-dialog .ad-task-people{gap:8px;margin:14px 0 20px;max-height:220px}.ad-task-dialog .ad-task-people label{margin:0;padding:12px;min-height:62px;transition:background .2s,border-color .2s}.ad-task-dialog fieldset>.primary{position:sticky;bottom:0;z-index:2;min-height:48px;margin:0 0 18px;box-shadow:0 0 0 12px var(--ad-panel,#191e2e);font-weight:700}.ad-task-dialog button{transition:background .2s,transform .2s,box-shadow .2s}.ad-task-dialog button:active{transform:scale(.98)}.ad-task-status{align-items:center}.ad-task-status>span{min-width:0}.ad-task-status>b{white-space:normal;text-align:right;max-width:45%}
-@media(max-width:600px){.ad-task-toolbar{flex-direction:row;gap:12px}.ad-task-toolbar b{font-size:18px}.ad-task-toolbar .adm-btn{font-size:11px;padding:10px}.ad-task-dialog .av-card{padding:18px 18px 0}.ad-task-dialog-head{padding:18px}.ad-task-dialog .adm-input{font-size:16px}.ad-task-dialog .ad-task-pair{gap:0}.ad-task-grid>.av-card{padding:16px}}
-
-/* Assignment composer: fixed header/footer and one scrollable body. */
-.ad-task-dialog{--ac-bg:#191d2c;--ac-field:#222638;--ac-line:#383d54;--ac-text:#eef0fa;--ac-muted:#a5abc1;--ac-accent:#b49ae9;width:min(700px,calc(100vw - 32px));height:min(820px,calc(100dvh - 40px));max-height:calc(100dvh - 40px);padding:0;margin:auto;overflow:hidden;color:var(--ac-text);background:var(--ac-bg);border:1px solid var(--ac-line);border-radius:24px;font:14px/1.5 Montserrat,system-ui,sans-serif}
-.ad-task-dialog[open]{display:flex;flex-direction:column}.ad-task-dialog *{box-sizing:border-box}.ad-task-dialog .ad-task-dialog-head{position:static;flex:none;padding:24px 28px;background:var(--ac-bg);border-bottom:1px solid var(--ac-line)}.ad-task-dialog-head h3{font-size:24px;margin-top:6px}.ad-task-dialog .ad-compose{display:flex;flex-direction:column;flex:1;min-height:0;margin:0;padding:0}.ad-task-dialog .ad-compose-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:24px 28px;border:0;margin:0;display:block}.ad-compose-heading{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding:14px 16px;border-radius:14px;background:#a58ade12;color:var(--ac-accent)}.ad-compose-heading small{display:block;color:var(--ac-muted);font-size:11px;margin-top:3px}.ad-task-dialog .ad-compose label{display:grid;gap:8px;margin:0 0 18px;font-size:12px;font-weight:600}.ad-task-dialog .ad-compose :is(input:not([type=checkbox]),textarea){display:block;width:100%;min-width:0;max-width:100%;height:46px;padding:12px 14px;border:1px solid var(--ac-line);border-radius:12px;background:var(--ac-field);color:var(--ac-text);font:400 14px/1.5 Montserrat,system-ui,sans-serif;transition:border-color .2s,box-shadow .2s;color-scheme:dark}.ad-task-dialog .ad-compose textarea{height:120px;min-height:100px;resize:vertical}.ad-compose input::placeholder,.ad-compose textarea::placeholder{color:var(--ac-muted);opacity:.8}.ad-compose :is(input,textarea):focus{outline:0;border-color:var(--ac-accent);box-shadow:0 0 0 3px #a58ade20}.ad-task-dialog .ad-compose button{height:42px;min-height:42px;padding:10px 16px;border:1px solid var(--ac-line);border-radius:11px;background:var(--ac-field);color:var(--ac-text);font:600 12px/1.4 Montserrat,system-ui,sans-serif;cursor:pointer;white-space:nowrap;transition:background .18s,transform .18s,border-color .18s}.ad-compose button:hover:not(:disabled){border-color:var(--ac-accent);background:#a58ade22}.ad-compose button:active:not(:disabled){transform:scale(.97)}.ad-language-row,.ad-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ad-language-row{margin:0 0 18px;font-size:12px;font-weight:600}.ad-language{display:flex;gap:4px;padding:4px;background:var(--ac-field);border:1px solid var(--ac-line);border-radius:13px}.ad-task-dialog .ad-language button{height:34px;min-height:34px;border:0;background:transparent;padding:7px 12px}.ad-task-dialog .ad-language button[aria-pressed=true]{color:#fff;background:#7857be;box-shadow:0 3px 10px #0002}.ad-compose small{font-size:11px;font-weight:400;color:var(--ac-muted)}.ad-compose .ad-task-pair{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:16px}.ad-recipients-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--ac-line);padding-top:20px;margin:0 0 12px}.ad-recipients-head h4{margin:0;font-size:15px;display:flex;align-items:center;gap:10px}.ad-recipients-head h4 span{font-size:12px;padding:3px 8px;border-radius:8px;background:#a58ade20;color:var(--ac-accent)}.ad-task-dialog .ad-recipients-head button{border:0;background:transparent;color:var(--ac-muted);min-height:32px;height:32px;padding:4px}.ad-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.ad-task-dialog .ad-task-people{max-height:none;overflow:visible;margin:14px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}.ad-task-dialog .ad-task-people label{display:flex;gap:10px;align-items:center;margin:0;min-height:64px;padding:12px;border:1px solid var(--ac-line);border-radius:12px;background:var(--ac-field);cursor:pointer}.ad-task-dialog .ad-task-people label:has(:checked){border-color:#a58ade;background:#a58ade18}.ad-task-people input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:#9876db}.ad-task-people span{min-width:0}.ad-task-people b{display:block;overflow-wrap:anywhere;font-size:12px}.ad-task-people small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.ad-compose-footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 28px;border-top:1px solid var(--ac-line);background:var(--ac-bg)}.ad-compose-footer>span{font-size:11px;color:var(--ac-muted)}.ad-compose-footer>div{display:flex;gap:8px}.ad-task-dialog .ad-create,.adm-root.adm-new .ad-task-toolbar .ad-create{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;height:auto;padding:12px 20px;border:1px solid #b498ed44;border-radius:13px;background:linear-gradient(120deg,#9371d6,#7252b9);color:#fff;font-size:13px;font-weight:700;box-shadow:0 5px 16px #7655ba20}.adm-root.adm-new .ad-task-toolbar .ad-create:hover{filter:brightness(1.08);box-shadow:0 7px 22px #7655ba35}.ad-task-toolbar .ad-create svg{display:block;width:18px;height:18px;flex-shrink:0}.ad-task-toolbar{padding:6px 0 22px;gap:20px}.ad-compose button:disabled{opacity:.45;cursor:not-allowed}
-:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-task-dialog{--ac-bg:#fff;--ac-field:#f5f4fa;--ac-line:#dedce9;--ac-text:#262438;--ac-muted:#68657c;--ac-accent:#7652b9}:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-compose input{color-scheme:light!important}
-@media(max-width:560px){.ad-task-dialog{width:calc(100vw - 20px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border-radius:19px}.ad-task-dialog .ad-task-dialog-head{padding:18px 20px}.ad-task-dialog-head h3{font-size:21px}.ad-task-dialog .ad-compose-scroll{padding:20px}.ad-task-dialog .ad-compose :is(input:not([type=checkbox]),textarea){font-size:16px}.ad-compose .ad-task-pair{grid-template-columns:1fr;gap:0}.ad-task-dialog .ad-task-people{grid-template-columns:1fr}.ad-language-row{align-items:flex-start;flex-direction:column;gap:8px}.ad-language{width:100%}.ad-language button{flex:1}.ad-compose-footer{padding:14px 20px;flex-wrap:wrap;gap:8px}.ad-compose-footer>span{width:100%}.ad-compose-footer>div{width:100%}.ad-compose-footer .ad-create{flex:1}.ad-search-row{gap:8px}.ad-task-dialog .ad-search-row button{padding:8px 10px;font-size:11px}.ad-task-toolbar{align-items:flex-start;flex-direction:column}.adm-root.adm-new .ad-task-toolbar .ad-create{width:100%}}
-@media(prefers-reduced-motion:reduce){.ad-task-dialog *{animation:none!important;transition:none!important}}
-`;
   function AdminSections({
     children,
     users,
@@ -2780,7 +2515,7 @@ function _extends() {
       setProfile(false);
     };
     const parts = React.Children.toArray(children);
-    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['assignments', 'Задания', 'fileText'], ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
+    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
     const recent = array(users).filter(u => lastActivity(u)).sort((a, b) => lastActivity(b) - lastActivity(a)).slice(0, 5);
     const recentRows = recent.map(u => h('button', {
       type: 'button',
@@ -2879,9 +2614,7 @@ function _extends() {
       size: 18
     }), h('span', null, label)))), h('div', {
       className: 'av-stage'
-    }, overview, students, screen === 'assignments' && h(AssignmentDesk, {
-      users
-    }), visited.has('diagnostics') && h('section', {
+    }, overview, students, visited.has('diagnostics') && h('section', {
       className: 'av-scene',
       hidden: screen !== 'diagnostics'
     }, React.cloneElement(parts[0], {
@@ -3508,7 +3241,6 @@ function _extends() {
         }
       },
       onModule: (moduleId, enabled) => quick(current => {
-        if (moduleId === "assignments") return {assignmentsEnabled: enabled};
         const modules = modulesOf(current);
         return {
           allowedModules: enabled ? [...new Set([...modules, moduleId])] : modules.filter(id => id !== moduleId)
