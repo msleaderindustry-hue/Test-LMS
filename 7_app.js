@@ -114,8 +114,10 @@ function loadExcelModule() {
       settled = true;
       clearTimeout(timer);
       script.onload = script.onerror = null;
-      if (error) { script.remove(); reject(error); }
-      else resolve(window.ExcelTrainerLMS);
+      if (error) {
+        script.remove();
+        reject(error);
+      } else resolve(window.ExcelTrainerLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
     script.src = new URL('15_excel_trainer.js?v=selected-181', document.baseURI).href;
@@ -124,8 +126,16 @@ function loadExcelModule() {
     script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
     document.head.appendChild(script);
   }).catch(error => {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":126,"operation":"promise-catch","handled":true});
- excelModulePromise = null; throw error; });
+    window.reportLmsError?.(error, {
+      "section": "platform",
+      "source": "7_app.js",
+      "line": 126,
+      "operation": "promise-catch",
+      "handled": true
+    });
+    excelModulePromise = null;
+    throw error;
+  });
   return excelModulePromise;
 }
 function LazyExcelTrainer(props) {
@@ -135,12 +145,17 @@ function LazyExcelTrainer(props) {
   React.useEffect(() => {
     let active = true;
     setError('');
-    loadExcelModule().then(value => { if (active) setComponent(() => value); }, reason => { if (active) setError(reason.message); });
-    return () => { active = false; };
+    loadExcelModule().then(value => {
+      if (active) setComponent(() => value);
+    }, reason => {
+      if (active) setError(reason.message);
+    });
+    return () => {
+      active = false;
+    };
   }, [attempt]);
   if (Component) return React.createElement(Component, props);
-  return React.createElement(React.Fragment, null,
-    React.createElement('style', null, `
+  return React.createElement(React.Fragment, null, React.createElement('style', null, `
 .lms-excel-loading{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;width:100%!important;max-width:520px!important;min-width:0!important;margin:24px auto!important;padding:40px 28px!important;border:1px solid #a78bfa38!important;border-radius:26px!important;background:linear-gradient(145deg,#211934,#151322)!important;color:#f4efff!important;text-align:center!important;box-shadow:0 18px 55px #09061730;animation:lms-excel-enter .35s ease-out both}
 .lms-excel-loading *{box-sizing:border-box}
 .lms-excel-loading .lel-icon{position:relative;display:grid;place-items:center;width:74px;height:74px;margin:0 0 24px;border-radius:23px;background:#a78bfa12;color:#c4b5fd}
@@ -174,19 +189,45 @@ function LazyExcelTrainer(props) {
 @keyframes lms-excel-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.lms-excel-loading{margin:16px auto!important;padding:32px 20px!important;border-radius:22px!important}.lms-excel-loading h2{font-size:20px!important}}
 @media(prefers-reduced-motion:reduce){.lms-excel-loading,.lms-excel-loading .lel-icon:before,.lms-excel-loading .lel-track span{animation:none!important}.lms-excel-loading .lel-actions button{transition:none!important}}
-`),
-    React.createElement('section', {className:'lms-excel-loading theme-'+(props.theme === 'dark' ? 'dark' : 'light')+(error?' is-error':''),'aria-busy':!error},
-      React.createElement('div', {className:'lel-icon','aria-hidden':true},
-        React.createElement('svg', {viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round'},
-          React.createElement('rect',{x:3,y:3,width:18,height:18,rx:4}),
-          React.createElement('path',{d:'M3 9h18M3 15h18M9 3v18M15 9v12'}))),
-      React.createElement('div',{className:'lel-label'},'EXCEL • ПРАКТИКА'),
-      React.createElement('h2',null,error?'Не удалось загрузить':'Открываем Excel'),
-      React.createElement('p',{className:'lel-copy',role:error?'alert':'status'},error || 'Подготавливаем тренажёр. Скоро можно будет приступить к практике.'),
-      !error && React.createElement('div',{className:'lel-track','aria-hidden':true},React.createElement('span')),
-      React.createElement('div',{className:'lel-actions'},
-        error && React.createElement('button',{type:'button',className:'lel-retry',onClick:()=>setAttempt(value=>value+1)},'Повторить'),
-        React.createElement('button',{type:'button',onClick:props.onBack},'Вернуться в меню'))));
+`), React.createElement('section', {
+    className: 'lms-excel-loading theme-' + (props.theme === 'dark' ? 'dark' : 'light') + (error ? ' is-error' : ''),
+    'aria-busy': !error
+  }, React.createElement('div', {
+    className: 'lel-icon',
+    'aria-hidden': true
+  }, React.createElement('svg', {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round'
+  }, React.createElement('rect', {
+    x: 3,
+    y: 3,
+    width: 18,
+    height: 18,
+    rx: 4
+  }), React.createElement('path', {
+    d: 'M3 9h18M3 15h18M9 3v18M15 9v12'
+  }))), React.createElement('div', {
+    className: 'lel-label'
+  }, 'EXCEL • ПРАКТИКА'), React.createElement('h2', null, error ? 'Не удалось загрузить' : 'Открываем Excel'), React.createElement('p', {
+    className: 'lel-copy',
+    role: error ? 'alert' : 'status'
+  }, error || 'Подготавливаем тренажёр. Скоро можно будет приступить к практике.'), !error && React.createElement('div', {
+    className: 'lel-track',
+    'aria-hidden': true
+  }, React.createElement('span')), React.createElement('div', {
+    className: 'lel-actions'
+  }, error && React.createElement('button', {
+    type: 'button',
+    className: 'lel-retry',
+    onClick: () => setAttempt(value => value + 1)
+  }, 'Повторить'), React.createElement('button', {
+    type: 'button',
+    onClick: props.onBack
+  }, 'Вернуться в меню'))));
 }
 
 // Keep the floating assistant out of the page layout and wait for its mount styles.
@@ -197,16 +238,486 @@ function AppAssistantHost() {
     return () => cancelAnimationFrame(frame);
   }, []);
   return ReactDOM.createPortal(React.createElement('div', {
-    style: {display:'contents',visibility:visible?'visible':'hidden'},
-    className:'lms-assistant-host'
+    style: {
+      display: 'contents',
+      visibility: visible ? 'visible' : 'hidden'
+    },
+    className: 'lms-assistant-host'
   }, React.createElement('style', null, `
 .lms-assistant-host .ula-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
 `), React.createElement(window.AIChatWidget)), document.body);
 }
 
 // --- APP ---
+const LMS_TASK_MODULES = {
+  typing: 'Печать',
+  hotkeys: 'Горячие клавиши',
+  excel: 'Excel'
+};
+function lmsTaskMetric(profile, module) {
+  if (module === 'hotkeys') return {
+    count: Math.max(0, Math.floor(Number(profile?.hotkeyProgress?.sessionsPlayed) || 0))
+  };
+  const lessons = profile?.excelProgress?.completedLessons;
+  return Array.isArray(lessons) ? {
+    count: lessons.length,
+    ids: lessons.map(String)
+  } : {
+    count: Math.max(0, Math.floor(Number(lessons) || 0))
+  };
+}
+function LmsMyAssignments({
+  uid,
+  onOpen,
+  modules,
+  profile
+}) {
+  const [items, setItems] = React.useState([]),
+    [error, setError] = React.useState(''),
+    [loading, setLoading] = React.useState(true),
+    [open, setOpen] = React.useState(false),
+    [closing, setClosing] = React.useState(false),
+    [filter, setFilter] = React.useState('all');
+  const dialog = React.useRef(null),
+    trigger = React.useRef(null),
+    timer = React.useRef(null);
+  React.useEffect(() => {
+    setItems([]);
+    setLoading(true);
+    return window.db.collection('lmsAssignments').where('studentIds', 'array-contains', uid).onSnapshot(s => {
+      setItems(s.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      })).sort((a, b) => (a.dueAt?.toMillis?.() || Infinity) - (b.dueAt?.toMillis?.() || Infinity)));
+      setLoading(false);
+      setError('');
+    }, e => {
+      setError(e.message);
+      setLoading(false);
+    });
+  }, [uid]);
+  React.useEffect(() => {
+    const d = dialog.current;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+  function close() {
+    setClosing(true);
+    timer.current = setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      trigger.current?.focus({
+        preventScroll: true
+      });
+    }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 190);
+  }
+  const list = filter === 'all' ? items : items.filter(t => t.module === filter);
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS + LMS_ASSIGN_DRAWER_CSS), /*#__PURE__*/React.createElement("button", {
+    ref: trigger,
+    className: "la-launcher",
+    title: "Мои задания",
+    "aria-label": "Открыть мои задания",
+    "aria-expanded": open,
+    onClick: () => {
+      clearTimeout(timer.current);
+      setClosing(false);
+      setOpen(true);
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "21",
+    height: "21",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.7",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("rect", {
+    x: "5",
+    y: "4",
+    width: "14",
+    height: "17",
+    rx: "3"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M9 4V2h6v2M9 10h6M9 14h6M9 18h3"
+  }))), /*#__PURE__*/React.createElement("dialog", {
+    ref: dialog,
+    className: 'la-drawer' + (closing ? ' la-closing' : ''),
+    "aria-labelledby": "la-drawer-title",
+    onCancel: e => {
+      e.preventDefault();
+      close();
+    },
+    onClick: e => {
+      if (e.target === e.currentTarget) {
+        const r = e.currentTarget.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
+      }
+    }
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "la-box"
+  }, /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("span", {
+    className: "la-header-icon",
+    "aria-hidden": "true"
+  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), /*#__PURE__*/React.createElement("h3", {
+    id: "la-drawer-title"
+  }, "Мои задания")), /*#__PURE__*/React.createElement("button", {
+    className: "la-close",
+    "aria-label": "Закрыть задания",
+    onClick: close
+  }, "×")), items.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "la-drawer-toolbar"
+  }, /*#__PURE__*/React.createElement("span", null, items.length, " заданий"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "la-sr"
+  }, "Раздел"), /*#__PURE__*/React.createElement("select", {
+    value: filter,
+    onChange: e => setFilter(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "all"
+  }, "Все разделы"), Object.entries(LMS_TASK_MODULES).map(([id, name]) => /*#__PURE__*/React.createElement("option", {
+    key: id,
+    value: id
+  }, name))))), /*#__PURE__*/React.createElement("div", {
+    className: "la-drawer-scroll"
+  }, error && /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    className: "la-error"
+  }, error), loading ? /*#__PURE__*/React.createElement("p", {
+    role: "status"
+  }, "Загружаем задания…") : /*#__PURE__*/React.createElement(React.Fragment, null, !list.length && /*#__PURE__*/React.createElement("div", {
+    className: "la-empty"
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", null, items.length ? 'В этом разделе пусто' : 'Пока заданий нет'), /*#__PURE__*/React.createElement("p", null, items.length ? 'Выберите другой раздел в фильтре.' : 'Новые задания преподавателя появятся здесь.'))), /*#__PURE__*/React.createElement("div", {
+    className: "la-cards"
+  }, items.map(task => /*#__PURE__*/React.createElement("div", {
+    key: task.id,
+    hidden: filter !== 'all' && task.module !== filter
+  }, /*#__PURE__*/React.createElement(LmsAssignmentCard, {
+    task: task,
+    uid: uid,
+    profile: profile,
+    modules: modules,
+    onOpen: t => {
+      setOpen(false);
+      onOpen(t);
+    }
+  })))))), /*#__PURE__*/React.createElement("footer", {
+    className: "la-drawer-footer"
+  }, "Результаты сохраняются после завершения упражнения.")))), document.body);
+}
+function LmsAssignmentCard({
+  task,
+  uid,
+  onOpen,
+  modules,
+  profile
+}) {
+  const [p, setP] = React.useState(null),
+    [error, setError] = React.useState(''),
+    [busy, setBusy] = React.useState(false),
+    [now, setNow] = React.useState(Date.now());
+  const lock = React.useRef(false),
+    alive = React.useRef(true);
+  React.useEffect(() => {
+    alive.current = true;
+    return () => alive.current = false;
+  }, []);
+  React.useEffect(() => window.db.collection('lmsAssignments').doc(task.id).collection('progress').doc(uid).onSnapshot(s => setP(s.data() || {}), e => setError(e.message)), [uid, task.id]);
+  React.useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const metric = JSON.stringify(lmsTaskMetric(profile, task.module));
+  React.useEffect(() => {
+    if (task.module === 'typing' || p?.status !== 'started' || !modules.includes(task.module)) return;
+    let active = true;
+    lmsAssignmentWrite(task.id, uid, 'sync').catch(e => {
+      if (active) setError(e.message);
+    });
+    return () => active = false;
+  }, [metric, p?.status, task.id, uid, modules.join(',')]);
+  async function act(help) {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const live = await lmsAssignmentWrite(task.id, uid, help ? 'help' : 'start');
+      if (!help && alive.current) onOpen(live);
+    } catch (e) {
+      if (alive.current) setError(e.message);
+    } finally {
+      lock.current = false;
+      if (alive.current) setBusy(false);
+    }
+  }
+  const done = p?.status === 'completed',
+    late = task.dueAt?.toMillis?.() < now,
+    canOpen = modules.includes(task.module) && !!LMS_TASK_MODULES[task.module];
+  return /*#__PURE__*/React.createElement("article", {
+    className: done ? 'la-card-done' : ''
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "la-card-top"
+  }, /*#__PURE__*/React.createElement("span", null, LMS_TASK_MODULES[task.module] || 'Раздел'), /*#__PURE__*/React.createElement("b", {
+    className: 'la-state ' + (done ? 'done' : p?.needsHelp ? 'help' : late ? 'late' : '')
+  }, done ? 'Выполнено' : p?.needsHelp ? 'Нужна помощь' : late ? 'Просрочено' : p?.status === 'started' ? 'В процессе' : 'Новое')), /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `${task.lang?.toUpperCase()} · точность от ${task.minAccuracy}%` : task.module === 'excel' ? `Пройти новых уроков: ${task.target || 1}` : `Завершить тренировок: ${task.target || 1}`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
+    className: "la-instruction"
+  }, task.text), /*#__PURE__*/React.createElement("small", null, "До ", task.dueAt?.toDate?.().toLocaleString('ru-RU') || '—'), p?.result && /*#__PURE__*/React.createElement("div", {
+    className: "la-card-result"
+  }, task.module === 'typing' ? `${p.result.accuracy}% точности · ${p.result.wpm} WPM` : `Выполнено: ${p.result.count || 0} / ${task.target || 1}`), /*#__PURE__*/React.createElement("div", {
+    className: "la-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "la-primary",
+    disabled: busy || !canOpen || !p || done,
+    onClick: () => act(false)
+  }, busy ? 'Подождите…' : done ? 'Готово' : p?.status === 'started' ? 'Продолжить' : 'Начать', /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, done ? '✓' : '→')), !done && /*#__PURE__*/React.createElement("button", {
+    disabled: busy || !canOpen || !p || p.needsHelp,
+    onClick: () => act(true)
+  }, p?.needsHelp ? 'Помощь запрошена' : 'Нужна помощь')), !canOpen && /*#__PURE__*/React.createElement("small", null, "Доступ к этому разделу отключён преподавателем."), error && /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    className: "la-error"
+  }, error));
+}
+async function lmsAssignmentWrite(id, uid, action, result) {
+  const db = window.db,
+    ref = db.collection('lmsAssignments').doc(id),
+    pr = ref.collection('progress').doc(uid);
+  return db.runTransaction(async tx => {
+    const [a, p, u] = await Promise.all([tx.get(ref), tx.get(pr), tx.get(db.collection('users').doc(uid))]);
+    const task = a.data(),
+      old = p.data() || {},
+      profile = u.data();
+    const allowed = id => profile?.allowedModules == null || Array.isArray(profile.allowedModules) && profile.allowedModules.includes(id);
+    if (window.auth?.currentUser?.uid !== uid || !a.exists || !task.studentIds?.includes(uid) || !profile || profile.isBanned || !allowed('assignments') || !allowed(task.module)) throw Error('Нет доступа к этому заданию.');
+    if (!LMS_TASK_MODULES[task.module] || task.status !== 'assigned') throw Error('Задание недоступно.');
+    const ts = window.firebase.firestore.FieldValue.serverTimestamp;
+    const next = {
+      ...old,
+      updatedAt: ts()
+    };
+    if (action === 'start') {
+      if (old.status === 'completed') throw Error('Задание уже выполнено.');
+      next.status = 'started';
+      next.startedAt = old.startedAt || ts();
+      if (task.module !== 'typing' && !old.baseline) next.baseline = lmsTaskMetric(profile, task.module);
+    }
+    if (action === 'help') {
+      if (old.status === 'completed') return {
+        ...task,
+        id
+      };
+      next.needsHelp = true;
+      next.status = old.status || 'not_started';
+    }
+    if (action === 'sync') {
+      if (task.module === 'typing' || old.status !== 'started' || !old.baseline) return {
+        ...task,
+        id
+      };
+      const current = lmsTaskMetric(profile, task.module),
+        baseline = old.baseline;
+      const count = Math.max(0, current.ids && baseline.ids ? new Set(current.ids.filter(v => !baseline.ids.includes(v))).size : current.count - baseline.count);
+      const done = count >= Number(task.target || 1);
+      if (old.result?.count === count && !done) return {
+        ...task,
+        id
+      };
+      next.result = {
+        count
+      };
+      if (done) {
+        next.status = 'completed';
+        next.completedAt = ts();
+        next.needsHelp = false;
+      }
+    }
+    if (action === 'finish') {
+      if (task.module !== 'typing' || !result || result.text !== task.text || result.lang !== task.lang || result.characters !== task.text.length) throw Error('Задание изменилось. Откройте его заново.');
+      if (old.status === 'completed' || old.lastAttemptId === result.attemptId) return {
+        ...task,
+        id
+      };
+      const errors = Number(result.errors),
+        ms = Number(result.ms);
+      if (!Number.isInteger(errors) || errors < 0 || !Number.isFinite(ms) || ms < 1000) throw Error('Некорректный результат.');
+      const accuracy = Math.round(result.characters / (result.characters + errors) * 100),
+        wpm = Math.round(result.characters / 5 / (ms / 60000));
+      next.result = {
+        accuracy,
+        wpm,
+        errors,
+        ms
+      };
+      next.lastAttemptId = result.attemptId;
+      next.attempts = (old.attempts || 0) + 1;
+      next.status = accuracy >= task.minAccuracy ? 'completed' : 'started';
+      if (next.status === 'completed') {
+        next.completedAt = ts();
+        next.needsHelp = false;
+      }
+    }
+    tx.set(pr, next);
+    return {
+      ...task,
+      id
+    };
+  });
+}
+function LmsAssignedTyping({
+  task,
+  uid,
+  onClose
+}) {
+  const [index, setIndex] = React.useState(0),
+    [errors, setErrors] = React.useState(0),
+    [wrong, setWrong] = React.useState(false),
+    [status, setStatus] = React.useState(''),
+    [busy, setBusy] = React.useState(false),
+    [finished, setFinished] = React.useState(false),
+    [passed, setPassed] = React.useState(false);
+  const capture = React.useRef(null),
+    container = React.useRef(null),
+    data = React.useRef({
+      index: 0,
+      errors: 0,
+      start: 0,
+      final: null
+    }),
+    lock = React.useRef(false),
+    composing = React.useRef(false);
+  React.useEffect(() => {
+    const c = container.current,
+      x = c?.querySelector('.current');
+    if (c && x) {
+      const a = c.getBoundingClientRect(),
+        b = x.getBoundingClientRect();
+      if (b.bottom > a.bottom) c.scrollTop += b.bottom - a.bottom + 20;
+    }
+  }, [index]);
+  function accept(value) {
+    if (data.current.final || busy || window.auth?.currentUser?.uid !== uid) return;
+    const d = data.current;
+    if (!d.start) d.start = performance.now();
+    for (const c of value.normalize('NFC')) {
+      if (c !== task.text[d.index]) {
+        d.errors++;
+        setWrong(true);
+        break;
+      }
+      d.index++;
+      setWrong(false);
+      if (d.index === task.text.length) {
+        d.final = {
+          text: task.text,
+          lang: task.lang,
+          characters: d.index,
+          errors: d.errors,
+          ms: Math.max(1000, performance.now() - d.start),
+          attemptId: window.crypto?.randomUUID?.() || String(Date.now()) + Math.random()
+        };
+        setFinished(true);
+        void save();
+        break;
+      }
+    }
+    setIndex(d.index);
+    setErrors(d.errors);
+  }
+  async function save() {
+    if (lock.current || !data.current.final) return;
+    lock.current = true;
+    setBusy(true);
+    setStatus('Сохраняем результат…');
+    try {
+      const live = await lmsAssignmentWrite(task.id, uid, 'finish', data.current.final);
+      const ok = Math.round(data.current.index / (data.current.index + data.current.errors) * 100) >= live.minAccuracy;
+      setPassed(ok);
+      setStatus(ok ? 'Задание выполнено. Преподаватель увидит результат.' : 'Результат сохранён. Нужно повысить точность — попробуй ещё раз.');
+    } catch (e) {
+      setStatus('Не удалось сохранить: ' + e.message);
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+  function restart() {
+    data.current = {
+      index: 0,
+      errors: 0,
+      start: 0,
+      final: null
+    };
+    setIndex(0);
+    setErrors(0);
+    setFinished(false);
+    setWrong(false);
+    setStatus('');
+    setPassed(false);
+    capture.current?.focus({
+      preventScroll: true
+    });
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    className: "la-box"
+  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "ЗАДАНИЕ ПРЕПОДАВАТЕЛЯ"), /*#__PURE__*/React.createElement("h3", null, task.title)), /*#__PURE__*/React.createElement("button", {
+    disabled: busy,
+    onClick: onClose
+  }, "К заданиям")), /*#__PURE__*/React.createElement("div", {
+    className: "la-metrics"
+  }, /*#__PURE__*/React.createElement("span", null, "Цель: ", task.minAccuracy, "%"), /*#__PURE__*/React.createElement("span", null, "Точность: ", index + errors ? Math.round(index / (index + errors) * 100) : 100, "%"), /*#__PURE__*/React.createElement("span", null, "Ошибки: ", errors), /*#__PURE__*/React.createElement("span", null, index, " / ", task.text.length)), /*#__PURE__*/React.createElement("div", {
+    className: "la-text",
+    ref: container,
+    onClick: () => capture.current?.focus({
+      preventScroll: true
+    })
+  }, task.text.split('').map((c, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: i < index ? 'done' : i === index ? wrong ? 'current wrong' : 'current' : ''
+  }, c))), !finished && /*#__PURE__*/React.createElement("label", null, "Нажми здесь и печатай", /*#__PURE__*/React.createElement("input", {
+    ref: capture,
+    className: "la-input",
+    autoComplete: "off",
+    autoCorrect: "off",
+    autoCapitalize: "off",
+    spellCheck: false,
+    "aria-label": "Ввод назначенного текста",
+    onPaste: e => e.preventDefault(),
+    onDrop: e => e.preventDefault(),
+    onCompositionStart: () => composing.current = true,
+    onCompositionEnd: e => {
+      composing.current = false;
+      accept(e.currentTarget.value);
+      e.currentTarget.value = '';
+    },
+    onChange: e => {
+      if (composing.current || e.nativeEvent.isComposing) return;
+      const t = e.nativeEvent.inputType;
+      if (!['insertFromPaste', 'insertFromDrop', 'insertReplacementText'].includes(t)) accept(e.target.value);
+      e.target.value = '';
+    }
+  })), /*#__PURE__*/React.createElement("p", null, "Ошибка не пропускает букву. Результат сохраняется после полного текста."), /*#__PURE__*/React.createElement("p", {
+    role: "status"
+  }, status), finished && /*#__PURE__*/React.createElement("div", {
+    className: "la-actions"
+  }, status.startsWith('Не удалось') && /*#__PURE__*/React.createElement("button", {
+    disabled: busy,
+    onClick: save
+  }, "Повторить сохранение"), !passed && /*#__PURE__*/React.createElement("button", {
+    disabled: busy,
+    onClick: restart
+  }, "Повторить текст")));
+}
+const LMS_ASSIGN_CSS = '.la-box,.la-drawer,.la-launcher{--la-bg:#171d2d;--la-paper:#20273a;--la-line:#a994d62c;--la-text:#edf0fa;--la-muted:#a3acc3;--la-accent:#b49aea;--la-ink:#20162f;font-family:inherit;color-scheme:dark}.la-box{background:var(--la-bg);color:var(--la-text);border:1px solid var(--la-line);border-radius:20px;padding:23px;margin:0 0 20px;min-width:0}.la-box *{box-sizing:border-box}.la-box h3,.la-box h4,.la-box p{margin:0}.la-box header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.la-box header>div{flex:1;min-width:0}.la-box h3{font-size:22px;margin-top:4px}.la-box h4{font-size:15px;overflow-wrap:anywhere;line-height:1.5}.la-box p{font-size:12px;line-height:1.7;color:var(--la-muted);margin:9px 0}.la-box small{font-size:10px;color:var(--la-muted);line-height:1.6}.la-box button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;margin:0;padding:10px 13px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text);font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;cursor:pointer;box-shadow:none;text-transform:none;transition:background .18s,transform .18s}.la-box button:hover:not(:disabled){border-color:var(--la-accent)}.la-box button:active:not(:disabled){transform:scale(.97)}.la-box button:disabled{opacity:.45;cursor:default}.la-box .la-primary{background:var(--la-accent);color:var(--la-ink);border-color:transparent}.la-box :focus-visible,.la-launcher:focus-visible{outline:2px solid var(--la-accent);outline-offset:3px}.la-cards{display:grid;grid-template-columns:1fr;gap:12px}.la-cards article{background:var(--la-paper);border:1px solid var(--la-line);border-radius:15px;padding:17px;animation:la-card-in .2s ease-out}.la-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:10px;color:var(--la-muted)}.la-state{padding:4px 7px;background:#a68bd614;color:var(--la-accent);border-radius:7px;font-size:9px;white-space:nowrap}.la-state.done{color:#55b699;background:#55b69915}.la-state.help,.la-state.late{color:#e4aa73;background:#e4aa7312}.la-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.la-actions button{flex:1}.la-instruction{border-left:2px solid var(--la-line);padding-left:10px;white-space:pre-wrap;overflow-wrap:anywhere}.la-card-result{font-size:11px;color:var(--la-accent);padding-top:10px;margin-top:10px;border-top:1px solid var(--la-line)}.la-error{color:#e889a2!important;font-size:11px!important;overflow-wrap:anywhere}.la-metrics{display:flex;gap:12px;flex-wrap:wrap;padding:13px;background:var(--la-paper);border-radius:12px;font-size:12px}.la-text{max-height:250px;overflow:auto;font:23px/1.8 ui-monospace,monospace;margin:18px 0;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin}.la-text .done{color:var(--la-accent)}.la-text .current{background:var(--la-accent);color:var(--la-ink);border-radius:3px}.la-text .wrong{background:#ee9bb5}.la-input{display:block;width:100%;border:1px solid var(--la-line);background:var(--la-paper);color:inherit;font-family:inherit;font-size:16px;padding:13px;border-radius:11px;margin-top:8px}.la-box label{font-size:12px}\n.la-launcher{position:fixed!important;right:0!important;left:auto!important;top:42%;z-index:1100;display:grid;place-items:center;width:44px;height:50px;min-height:50px;margin:0!important;padding:0;border:1px solid var(--la-line);border-right:0;border-radius:15px 0 0 15px!important;background:var(--la-bg);color:var(--la-accent);cursor:pointer;box-shadow:-4px 5px 20px #0001;transition:width .2s,background .2s;transform:none}.la-launcher:hover{width:50px;background:var(--la-paper)}.la-launcher:active{width:46px}.la-launcher svg{display:block;flex-shrink:0}\n.la-drawer{padding:0;border:1px solid var(--la-line);border-right:0;border-radius:22px 0 0 22px;width:min(430px,calc(100vw - 12px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:var(--la-bg);color:var(--la-text);box-shadow:-20px 0 70px #0003}.la-drawer::backdrop{background:#080c1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .26s cubic-bezier(.2,.8,.2,1)}.la-drawer.la-closing{animation:la-slide-out .19s ease-in forwards}.la-drawer .la-box{height:100%;display:flex;flex-direction:column;border:0;border-radius:0;margin:0;padding:0;background:var(--la-bg)}.la-drawer header{margin:0;padding:24px 21px 20px;border-bottom:1px solid var(--la-line);flex-shrink:0}.la-drawer header small{font-size:9px;letter-spacing:1.2px}.la-header-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:var(--la-accent);background:#a68bd614;font-size:19px}.la-drawer .la-close{display:grid;place-items:center;width:33px;height:33px;min-height:33px;padding:0;font-size:22px;border-radius:10px;flex-shrink:0}.la-drawer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 21px;flex-shrink:0;font-size:11px;color:var(--la-muted)}.la-drawer-toolbar select{font-family:inherit;font-size:11px;border:1px solid var(--la-line);border-radius:9px;background:var(--la-paper);color:var(--la-text);padding:8px;max-width:180px}.la-drawer-toolbar option{background:var(--la-bg);color:var(--la-text)}.la-drawer-scroll{overflow:auto;min-height:0;flex:1;padding:18px 21px;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent;overscroll-behavior:contain}.la-drawer-footer{padding:14px 21px;border-top:1px solid var(--la-line);color:var(--la-muted);font-size:10px;line-height:1.6;flex-shrink:0}.la-empty{display:flex;align-items:center;gap:14px;padding:20px 15px;border:1px dashed var(--la-line);border-radius:14px}.la-empty>span{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:#a68bd610;color:var(--la-accent)}.la-empty h4{font-size:13px}.la-empty p{font-size:11px;margin:5px 0 0}.la-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) :is(.la-box,.la-drawer,.la-launcher){--la-bg:#faf9ff;--la-paper:#f0ecf7;--la-line:#7054932c;--la-text:#293047;--la-muted:#6b7288;--la-accent:#7954c0;--la-ink:#fff;color-scheme:light}@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-slide-out{to{opacity:0;transform:translateX(30px)}}@keyframes la-card-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:520px){.la-box{padding:17px}.la-box h3{font-size:19px}.la-text{font-size:20px}.la-drawer header{padding:20px 16px 17px}.la-drawer-scroll{padding:16px}.la-drawer-toolbar{padding:14px 16px}.la-drawer-footer{padding:13px 16px}.la-launcher{width:39px;height:46px;min-height:46px}.la-cards article{padding:15px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-drawer.la-closing,.la-cards article{animation:none}.la-launcher,.la-box button{transition:none}}\n';
+const LMS_ASSIGN_DRAWER_CSS = "";
 function App() {
-  const DEFAULT_MODULES = ['chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'chess', 'stats'];
+  const [assignedTask, setAssignedTask] = useState(null);
+  useEffect(() => {
+    setAssignedTask(null);
+  }, [window.auth?.currentUser?.uid]);
+  const DEFAULT_MODULES = ['assignments', 'chat', 'ai_chat', 'typing', 'hotkeys', 'code', 'flashcards', 'excel', 'chess', 'stats'];
   const [view, setView] = useState('loading');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [sets, setSets] = useState([]);
@@ -250,8 +761,13 @@ function App() {
       }
       setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
     } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":250,"operation":"caught","handled":true});
-
+      window.reportLmsError?.(error, {
+        "section": "platform",
+        "source": "7_app.js",
+        "line": 250,
+        "operation": "caught",
+        "handled": true
+      });
       console.error('[Ultimate LMS Local Data]', error);
       setSets([]);
       setHistory([]);
@@ -294,7 +810,9 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
     let controller = null;
     const publishReady = value => {
       window.__lmsProfileReady = value;
-      window.dispatchEvent(new CustomEvent('lms:profile-ready', { detail: value }));
+      window.dispatchEvent(new CustomEvent('lms:profile-ready', {
+        detail: value
+      }));
     };
     const clearProfileListener = () => {
       if (typeof profileUnsubscribe === 'function') {
@@ -322,7 +840,6 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
       setAuthError('');
       setIsAuthLoading(true);
       resetProfile();
-
       if (!currentUser) {
         if (!active || sequence !== authSequence) return;
         setView('menu');
@@ -337,18 +854,31 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
         let initialData;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            initialData = await window.ensureLmsUserProfile(currentUser, { signal });
+            initialData = await window.ensureLmsUserProfile(currentUser, {
+              signal
+            });
             break;
           } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":338,"operation":"caught","handled":true});
-
+            window.reportLmsError?.(error, {
+              "section": "platform",
+              "source": "7_app.js",
+              "line": 338,
+              "operation": "caught",
+              "handled": true
+            });
             const code = String(error?.code || '').split('/').pop();
             const temporary = ['unavailable', 'deadline-exceeded', 'aborted', 'network-request-failed'].includes(code);
             if (!temporary || attempt === 2 || signal.aborted) throw error;
             await new Promise(resolve => {
-              const finish = () => { clearTimeout(timer); signal.removeEventListener('abort', finish); resolve(); };
+              const finish = () => {
+                clearTimeout(timer);
+                signal.removeEventListener('abort', finish);
+                resolve();
+              };
               const timer = setTimeout(finish, 700 * (attempt + 1));
-              signal.addEventListener('abort', finish, { once: true });
+              signal.addEventListener('abort', finish, {
+                once: true
+              });
               if (signal.aborted) finish();
             });
             if (signal.aborted) throw error;
@@ -360,12 +890,12 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
           error.code = 'lms/account-banned';
           throw error;
         }
-
         applyProfile(currentUser, initialData);
         setView('menu');
         setIsAuthLoading(false);
-        publishReady({ uid: currentUser.uid });
-
+        publishReady({
+          uid: currentUser.uid
+        });
         profileUnsubscribe = profileRef.onSnapshot({
           includeMetadataChanges: true
         }, async snapshot => {
@@ -386,8 +916,13 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
             try {
               await window.auth.signOut();
             } catch (signOutError) {
-window.reportLmsError?.(signOutError, {"section":"platform","source":"7_app.js","line":382,"operation":"caught","handled":true});
-
+              window.reportLmsError?.(signOutError, {
+                "section": "platform",
+                "source": "7_app.js",
+                "line": 382,
+                "operation": "caught",
+                "handled": true
+              });
               console.error('[Ultimate LMS SignOut]', signOutError);
             }
             alert('Доступ закрыт! Вы были исключены администратором.');
@@ -395,8 +930,13 @@ window.reportLmsError?.(signOutError, {"section":"platform","source":"7_app.js",
           }
           applyProfile(currentUser, data);
         }, error => {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":389,"operation":"snapshot","handled":true});
-
+          window.reportLmsError?.(error, {
+            "section": "platform",
+            "source": "7_app.js",
+            "line": 389,
+            "operation": "snapshot",
+            "handled": true
+          });
           console.error('[Ultimate LMS Profile Snapshot]', error);
           if (!active || sequence !== authSequence) return;
           publishReady(null);
@@ -404,8 +944,13 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
           setAuthError('Не удалось обновить профиль (' + (error.code || 'unknown') + '). Нажмите «Повторить».');
         });
       } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":396,"operation":"caught","handled":true});
-
+        window.reportLmsError?.(error, {
+          "section": "platform",
+          "source": "7_app.js",
+          "line": 396,
+          "operation": "caught",
+          "handled": true
+        });
         console.error('[Ultimate LMS Profile Bootstrap]', error);
         if (!active || sequence !== authSequence) return;
         publishReady(null);
@@ -441,6 +986,9 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
 
   useEffect(() => {
     if (!appReady) return;
+    if (!allowedModules.includes('assignments') && assignedTask) {
+      setAssignedTask(null);
+    }
     const viewModule = {
       stats: 'stats',
       typing: 'typing',
@@ -484,8 +1032,13 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
           }
         }
       } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":474,"operation":"caught","handled":true});
-
+        window.reportLmsError?.(error, {
+          "section": "platform",
+          "source": "7_app.js",
+          "line": 474,
+          "operation": "caught",
+          "handled": true
+        });
         console.warn('[Ultimate LMS Fingerprint]', error);
       }
     }
@@ -495,7 +1048,6 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
       document.onkeydown = null;
     };
   }, []);
-
   useEffect(() => {
     if (isAuthLoading) return;
     if (typeof logVisitor === 'function') {
@@ -504,7 +1056,6 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
       });
     }
   }, [isAuthLoading, user?.uid]);
-
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem('theme', theme);
@@ -539,7 +1090,7 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
       admin: 'admin'
     };
     const detail = {
-      section: isChatOpen ? 'chat' : (sections[view] || view || 'platform'),
+      section: isChatOpen ? 'chat' : sections[view] || view || 'platform',
       view: isChatOpen ? 'chat' : view
     };
     // Сохраняем текущий экран даже если трекер подключится чуть позже.
@@ -547,7 +1098,9 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
     if (typeof window.trackLmsSection === 'function') {
       window.trackLmsSection(detail.section, detail);
     } else {
-      window.dispatchEvent(new CustomEvent('lms:section', { detail }));
+      window.dispatchEvent(new CustomEvent('lms:section', {
+        detail
+      }));
     }
   }, [view, isChatOpen, user?.uid]);
 
@@ -564,7 +1117,6 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
       setView('chess');
     }
   }, [appReady, allowedModules]);
-
   const addSet = name => {
     if (!name) return;
     if (sets.includes(name)) return alert('Уже есть!');
@@ -597,8 +1149,13 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
         assignedTests: updatedTests
       });
     } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":585,"operation":"caught","handled":true});
-
+      window.reportLmsError?.(error, {
+        "section": "platform",
+        "source": "7_app.js",
+        "line": 585,
+        "operation": "caught",
+        "handled": true
+      });
       console.error('[Ultimate LMS Remove Assigned Test]', error);
       alert('Ошибка при удалении теста');
     }
@@ -612,8 +1169,13 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
         nickname: newNick.trim()
       });
     } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":598,"operation":"caught","handled":true});
-
+      window.reportLmsError?.(error, {
+        "section": "platform",
+        "source": "7_app.js",
+        "line": 598,
+        "operation": "caught",
+        "handled": true
+      });
       console.error('[Ultimate LMS Nickname]', error);
       alert('Ошибка при сохранении никнейма!');
     }
@@ -630,15 +1192,19 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
         await window.lmsGoogleSignIn();
         return;
       }
-
       const provider = new window.firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: 'select_account'
       });
       await window.auth.signInWithPopup(provider);
     } catch (error) {
-window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":621,"operation":"caught","handled":true});
-
+      window.reportLmsError?.(error, {
+        "section": "platform",
+        "source": "7_app.js",
+        "line": 621,
+        "operation": "caught",
+        "handled": true
+      });
       console.error('[Ultimate LMS Google Auth]', error);
       const ignoredErrors = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
       if (ignoredErrors.includes(error?.code)) {
@@ -660,7 +1226,7 @@ window.reportLmsError?.(error, {"section":"platform","source":"7_app.js","line":
   // UI
   // -----------------------------------------------------------------------
 
-return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
     className: "lms-menu-page-launcher",
     style: {
       position: "absolute",
@@ -820,7 +1386,11 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       lineHeight: 1.6
     }
   }, authError), /*#__PURE__*/React.createElement(Button, {
-    onClick: () => { setAuthError(''); setIsAuthLoading(true); setProfileRetry(value => value + 1); },
+    onClick: () => {
+      setAuthError('');
+      setIsAuthLoading(true);
+      setProfileRetry(value => value + 1);
+    },
     style: {
       minHeight: 48
     }
@@ -838,7 +1408,18 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
     }
   }, /*#__PURE__*/React.createElement(LandingView, {
     onLogin: handleDirectLogin
-  })), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, {key:"admin-view"}), appReady && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && /*#__PURE__*/React.createElement(TestsLMS, {
+  })), appReady && allowedModules.includes('assignments') && React.createElement(LmsMyAssignments, {
+    key: user.uid,
+    uid: user.uid,
+    modules: allowedModules,
+    profile: userData,
+    onOpen: task => {
+      setAssignedTask(task.module === 'typing' ? task : null);
+      setView(task.module);
+    }
+  }), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, {
+    key: "admin-view"
+  }), appReady && ['menu', 'set_menu', 'timer_setup', 'test', 'result', 'review'].includes(view) && /*#__PURE__*/React.createElement(TestsLMS, {
     key: "tests-view",
     view: view,
     setView: setView,
@@ -876,7 +1457,15 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
       width: '100%',
       maxWidth: '1100px'
     }
-  }, /*#__PURE__*/React.createElement(TypingTest, null)), appReady && view === 'hotkeys' && allowedModules.includes('hotkeys') && /*#__PURE__*/React.createElement(motion.div, {
+  }, /*#__PURE__*/assignedTask && allowedModules.includes('assignments') ? React.createElement(LmsAssignedTyping, {
+    key: user.uid + assignedTask.id,
+    task: assignedTask,
+    uid: user.uid,
+    onClose: () => {
+      setAssignedTask(null);
+      setView('menu');
+    }
+  }) : React.createElement(TypingTest, null)), appReady && view === 'hotkeys' && allowedModules.includes('hotkeys') && /*#__PURE__*/React.createElement(motion.div, {
     key: "hotkey_trainer",
     initial: {
       opacity: 0
@@ -924,9 +1513,31 @@ return /*#__PURE__*/React.createElement(React.Fragment, null, showLauncher && Re
   }, /*#__PURE__*/React.createElement(FlashcardsLMS, {
     onBack: () => setView('menu')
   })), appReady && view === 'chess' && allowedModules.includes('chess') && React.createElement(motion.div, {
-    key: 'chess_view',initial:{opacity:0,y:12},animate:{opacity:1,y:0},exit:{opacity:0},transition:{duration:.25},
-    style:{width:'100%',maxWidth:'1600px'}
-  }, React.createElement(ChessLMS,{theme,user,userNickname,onThemeChange:setTheme})), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
+    key: 'chess_view',
+    initial: {
+      opacity: 0,
+      y: 12
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    exit: {
+      opacity: 0
+    },
+    transition: {
+      duration: .25
+    },
+    style: {
+      width: '100%',
+      maxWidth: '1600px'
+    }
+  }, React.createElement(ChessLMS, {
+    theme,
+    user,
+    userNickname,
+    onThemeChange: setTheme
+  })), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
     key: "excel_view",
     initial: {
       opacity: 0
