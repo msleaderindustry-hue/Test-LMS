@@ -2691,114 +2691,36 @@ function _extends() {
       className: "ad-task-toolbar"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Задания и результаты"), /*#__PURE__*/React.createElement("small", null, rows.length, " заданий · обновление в реальном времени")), /*#__PURE__*/React.createElement("button", {
       type: "button",
-      className: "adm-btn primary",
+      className: "adm-btn primary ad-create",
       onClick: () => setCreating(true)
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "plus",
       size: 16
     }), "Создать задание")), /*#__PURE__*/React.createElement("div", {
       className: "ad-task-grid"
-    }, ReactDOM.createPortal(/*#__PURE__*/React.createElement("dialog", {
-      ref: formDialog,
-      className: "ad-task-dialog adm-root",
-      onCancel: e => {
-        e.preventDefault();
-        if (!busy) setCreating(false);
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-dialog-head"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "НОВОЕ ЗАДАНИЕ"), /*#__PURE__*/React.createElement("h3", null, "Создать задание")), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      disabled: busy,
-      "aria-label": "Закрыть форму",
-      onClick: () => setCreating(false)
-    }, "×")), error && /*#__PURE__*/React.createElement("p", {
-      className: "adm-error",
-      role: "alert"
-    }, error), /*#__PURE__*/React.createElement("form", {
-      className: "av-card ad-task",
-      onSubmit: save
-    }, /*#__PURE__*/React.createElement("fieldset", {
-      disabled: busy
-    }, React.createElement("div", {className:"ad-form-section"}, "01 / Задание"), /*#__PURE__*/React.createElement("label", null, "Название", /*#__PURE__*/React.createElement("input", {
-      className: "adm-input",
-      value: title,
-      maxLength: 120,
-      required: true,
-      onChange: e => setTitle(e.target.value),
-      placeholder: "Например: точная печать — урок 1"
-    })), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-pair"
-    }, /*#__PURE__*/React.createElement("label", null, "Раздел", /*#__PURE__*/React.createElement("select", {
-      className: "adm-input",
-      value: "typing",
-      readOnly: true
-    }, /*#__PURE__*/React.createElement("option", {
-      value: "typing"
-    }, "Тренажёр печати"))), /*#__PURE__*/React.createElement("label", null, "Язык", /*#__PURE__*/React.createElement("select", {
-      className: "adm-input",
-      value: lang,
-      onChange: e => setLang(e.target.value)
-    }, /*#__PURE__*/React.createElement("option", {
-      value: "ru"
-    }, "Русский"), /*#__PURE__*/React.createElement("option", {
-      value: "en"
-    }, "English")))), /*#__PURE__*/React.createElement("label", null, "Текст задания", /*#__PURE__*/React.createElement("textarea", {
-      className: "adm-input",
-      value: text,
-      onChange: e => setText(e.target.value),
-      minLength: 20,
-      maxLength: 1800,
-      required: true,
-      rows: 5,
-      placeholder: "Текст, который должны набрать ученики"
-    })), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-pair"
-    }, /*#__PURE__*/React.createElement("label", null, "Точность, не ниже %", /*#__PURE__*/React.createElement("input", {
-      className: "adm-input",
-      type: "number",
-      min: "50",
-      max: "100",
-      value: accuracy,
-      onChange: e => setAccuracy(Number(e.target.value))
-    })), /*#__PURE__*/React.createElement("label", null, "Срок — ваше местное время", /*#__PURE__*/React.createElement("input", {
-      className: "adm-input",
-      type: "datetime-local",
-      required: true,
-      value: due,
-      onChange: e => setDue(e.target.value)
-    }))), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-line"
-    }, /*#__PURE__*/React.createElement("b", null, "02 / Ученики · ", chosen.size), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "adm-btn",
-      onClick: () => setChosen(new Set())
-    }, "Снять выбор")), /*#__PURE__*/React.createElement("input", {
-      className: "adm-input",
-      "aria-label": "Поиск ученика",
-      placeholder: "Найти ученика",
-      value: query,
-      onChange: e => setQuery(e.target.value)
-    }), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "adm-btn",
-      onClick: () => setChosen(v => new Set([...v, ...visible.map(u => u.id)].slice(0, 100)))
-    }, "Выбрать найденных (до 100)"), /*#__PURE__*/React.createElement("div", {
-      className: "ad-task-people"
-    }, users === null ? 'Загружаем учеников…' : !visible.length ? 'Ученики не найдены' : visible.map(u => /*#__PURE__*/React.createElement("label", {
-      key: u.id
-    }, /*#__PURE__*/React.createElement("input", {
-      type: "checkbox",
-      checked: chosen.has(u.id),
-      onChange: () => setChosen(v => {
-        const n = new Set(v);
-        n.has(u.id) ? n.delete(u.id) : n.size < 100 && n.add(u.id);
-        return n;
-      })
-    }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, nameOf(u)), /*#__PURE__*/React.createElement("small", null, u.email || u.id))))), /*#__PURE__*/React.createElement("button", {
-      type: "submit",
-      className: "adm-btn primary"
-    }, busy ? 'Сохраняем…' : 'Сохранить задание')))), document.body), /*#__PURE__*/React.createElement("div", {
+    }, ReactDOM.createPortal(React.createElement("dialog", {
+      ref: formDialog, className: "ad-task-dialog adm-root", "aria-labelledby":"assignment-title",
+      onCancel: e => { e.preventDefault(); if (!busy) setCreating(false); }
+    }, React.createElement("header", {className:"ad-task-dialog-head"},
+      React.createElement("div", null, React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), React.createElement("h3", {id:"assignment-title"}, "Новое задание")),
+      React.createElement("button", {type:"button",disabled:busy,"aria-label":"Закрыть",onClick:()=>setCreating(false)}, "×")),
+      React.createElement("form", {className:"ad-compose",onSubmit:save},
+        React.createElement("fieldset", {disabled:busy,className:"ad-compose-scroll"},
+          error && React.createElement("p", {className:"adm-error",role:"alert"},error),
+          React.createElement("div", {className:"ad-compose-heading"}, React.createElement(AdminIcon,{name:"keyboard",size:20}), React.createElement("div",null,React.createElement("b",null,"Тренажёр печати"),React.createElement("small",null,"Назначьте текст и цель по точности"))),
+          React.createElement("label",null,"Название задания",React.createElement("input",{value:title,onChange:e=>setTitle(e.target.value),maxLength:120,required:true,placeholder:"Например: точная печать — урок 1"})),
+          React.createElement("div",{className:"ad-language-row"},React.createElement("span",null,"Язык текста"),React.createElement("div",{className:"ad-language",role:"group","aria-label":"Язык текста"},[['ru','RU · Русский'],['en','EN · English']].map(([v,label])=>React.createElement("button",{key:v,type:"button","aria-pressed":lang===v,onClick:()=>setLang(v)},label)))),
+          React.createElement("label",null,React.createElement("span",{className:"ad-label-row"},"Текст для печати",React.createElement("small",null,text.length," / 1800")),React.createElement("textarea",{value:text,onChange:e=>setText(e.target.value),minLength:20,maxLength:1800,required:true,rows:4,placeholder:"Введите текст от 20 до 1800 символов"})),
+          React.createElement("div",{className:"ad-task-pair"},
+            React.createElement("label",null,"Цель по точности, %",React.createElement("input",{type:"number",min:50,max:100,required:true,value:accuracy,onChange:e=>setAccuracy(Number(e.target.value))})),
+            React.createElement("label",null,"Срок выполнения",React.createElement("input",{type:"datetime-local",required:true,value:due,onChange:e=>setDue(e.target.value)}),React.createElement("small",null,"Ваше местное время"))),
+          React.createElement("div",{className:"ad-recipients-head"},React.createElement("h4",null,"Ученики",React.createElement("span",null,chosen.size)),React.createElement("button",{type:"button",disabled:!chosen.size,onClick:()=>setChosen(new Set())},"Снять выбор")),
+          React.createElement("div",{className:"ad-search-row"},React.createElement("input",{"aria-label":"Поиск ученика",placeholder:"Поиск по имени или почте",value:query,onChange:e=>setQuery(e.target.value)}),React.createElement("button",{type:"button",onClick:()=>setChosen(v=>new Set([...v,...visible.map(u=>u.id)].slice(0,100)))},"Выбрать всех")),
+          React.createElement("div",{className:"ad-task-people"},users===null?'Загрузка…':!visible.length?'Ученики не найдены':visible.map(u=>React.createElement("label",{key:u.id},React.createElement("input",{type:"checkbox",checked:chosen.has(u.id),onChange:()=>setChosen(v=>{const n=new Set(v);n.has(u.id)?n.delete(u.id):n.size<100&&n.add(u.id);return n;})}),React.createElement("span",null,React.createElement("b",null,nameOf(u)),React.createElement("small",null,u.email||u.id)))))
+        ),
+        React.createElement("footer",{className:"ad-compose-footer"},React.createElement("span",null,"Выбрано учеников: ",React.createElement("b",null,chosen.size)),React.createElement("div",null,React.createElement("button",{type:"button",disabled:busy,onClick:()=>setCreating(false)},"Отмена"),React.createElement("button",{type:"submit",className:"ad-create",disabled:busy||!chosen.size},busy?'Сохранение…':'Назначить задание')))
+      )
+    ),document.body), /*#__PURE__*/React.createElement("div", {
       className: "av-card"
     }, /*#__PURE__*/React.createElement("h3", null, "Назначенные задания"), loading ? /*#__PURE__*/React.createElement("p", null, "Загружаем…") : !rows.length ? /*#__PURE__*/React.createElement("div", {
       className: "ad-task-empty"
@@ -2829,6 +2751,13 @@ function _extends() {
 
 .ad-task>.av-heading{display:none}.ad-task-toolbar{border:0;background:none;padding:0 0 20px;margin:0;align-items:center}.ad-task-toolbar b{font-size:22px;letter-spacing:-.5px}.ad-task-grid>.av-card>h3{display:none}.ad-task-grid>.av-card{padding:22px;border-radius:20px}.ad-task-empty{padding:32px 16px;gap:10px}.ad-task-toolbar .adm-btn{flex-shrink:0}.ad-task-dialog{width:min(780px,calc(100vw - 32px));margin:auto;font:14px/1.5 Montserrat,system-ui,sans-serif}.ad-task-dialog-head{position:sticky;top:0;z-index:3;background:var(--ad-panel,#191e2e);padding:22px 28px}.ad-task-dialog .av-card{padding:24px 28px 0}.ad-form-section{font-size:11px;letter-spacing:1px;font-weight:700;color:#a78ade;margin-bottom:20px}.ad-task-dialog label{font-size:12px;font-weight:600;gap:9px;margin-bottom:18px}.ad-task-dialog .adm-input{font-family:inherit;font-size:14px;line-height:1.5;min-height:46px;padding:12px 14px}.ad-task-dialog textarea.adm-input{min-height:130px}.ad-task-dialog .ad-task-pair{gap:18px}.ad-task-dialog .ad-task-line{border-top:1px solid #a68bd633;padding-top:22px;margin-top:6px}.ad-task-dialog fieldset>input{margin-bottom:10px}.ad-task-dialog fieldset>.adm-btn:not(.primary){min-height:36px;padding:7px 12px;font-size:11px}.ad-task-dialog .ad-task-people{gap:8px;margin:14px 0 20px;max-height:220px}.ad-task-dialog .ad-task-people label{margin:0;padding:12px;min-height:62px;transition:background .2s,border-color .2s}.ad-task-dialog fieldset>.primary{position:sticky;bottom:0;z-index:2;min-height:48px;margin:0 0 18px;box-shadow:0 0 0 12px var(--ad-panel,#191e2e);font-weight:700}.ad-task-dialog button{transition:background .2s,transform .2s,box-shadow .2s}.ad-task-dialog button:active{transform:scale(.98)}.ad-task-status{align-items:center}.ad-task-status>span{min-width:0}.ad-task-status>b{white-space:normal;text-align:right;max-width:45%}
 @media(max-width:600px){.ad-task-toolbar{flex-direction:row;gap:12px}.ad-task-toolbar b{font-size:18px}.ad-task-toolbar .adm-btn{font-size:11px;padding:10px}.ad-task-dialog .av-card{padding:18px 18px 0}.ad-task-dialog-head{padding:18px}.ad-task-dialog .adm-input{font-size:16px}.ad-task-dialog .ad-task-pair{gap:0}.ad-task-grid>.av-card{padding:16px}}
+
+/* Assignment composer: fixed header/footer and one scrollable body. */
+.ad-task-dialog{--ac-bg:#191d2c;--ac-field:#222638;--ac-line:#383d54;--ac-text:#eef0fa;--ac-muted:#a5abc1;--ac-accent:#b49ae9;width:min(700px,calc(100vw - 32px));height:min(820px,calc(100dvh - 40px));max-height:calc(100dvh - 40px);padding:0;margin:auto;overflow:hidden;color:var(--ac-text);background:var(--ac-bg);border:1px solid var(--ac-line);border-radius:24px;font:14px/1.5 Montserrat,system-ui,sans-serif}
+.ad-task-dialog[open]{display:flex;flex-direction:column}.ad-task-dialog *{box-sizing:border-box}.ad-task-dialog .ad-task-dialog-head{position:static;flex:none;padding:24px 28px;background:var(--ac-bg);border-bottom:1px solid var(--ac-line)}.ad-task-dialog-head h3{font-size:24px;margin-top:6px}.ad-task-dialog .ad-compose{display:flex;flex-direction:column;flex:1;min-height:0;margin:0;padding:0}.ad-task-dialog .ad-compose-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:24px 28px;border:0;margin:0;display:block}.ad-compose-heading{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding:14px 16px;border-radius:14px;background:#a58ade12;color:var(--ac-accent)}.ad-compose-heading small{display:block;color:var(--ac-muted);font-size:11px;margin-top:3px}.ad-task-dialog .ad-compose label{display:grid;gap:8px;margin:0 0 18px;font-size:12px;font-weight:600}.ad-task-dialog .ad-compose :is(input:not([type=checkbox]),textarea){display:block;width:100%;min-width:0;max-width:100%;height:46px;padding:12px 14px;border:1px solid var(--ac-line);border-radius:12px;background:var(--ac-field);color:var(--ac-text);font:400 14px/1.5 Montserrat,system-ui,sans-serif;transition:border-color .2s,box-shadow .2s;color-scheme:dark}.ad-task-dialog .ad-compose textarea{height:120px;min-height:100px;resize:vertical}.ad-compose input::placeholder,.ad-compose textarea::placeholder{color:var(--ac-muted);opacity:.8}.ad-compose :is(input,textarea):focus{outline:0;border-color:var(--ac-accent);box-shadow:0 0 0 3px #a58ade20}.ad-task-dialog .ad-compose button{height:42px;min-height:42px;padding:10px 16px;border:1px solid var(--ac-line);border-radius:11px;background:var(--ac-field);color:var(--ac-text);font:600 12px/1.4 Montserrat,system-ui,sans-serif;cursor:pointer;white-space:nowrap;transition:background .18s,transform .18s,border-color .18s}.ad-compose button:hover:not(:disabled){border-color:var(--ac-accent);background:#a58ade22}.ad-compose button:active:not(:disabled){transform:scale(.97)}.ad-language-row,.ad-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ad-language-row{margin:0 0 18px;font-size:12px;font-weight:600}.ad-language{display:flex;gap:4px;padding:4px;background:var(--ac-field);border:1px solid var(--ac-line);border-radius:13px}.ad-task-dialog .ad-language button{height:34px;min-height:34px;border:0;background:transparent;padding:7px 12px}.ad-task-dialog .ad-language button[aria-pressed=true]{color:#fff;background:#7857be;box-shadow:0 3px 10px #0002}.ad-compose small{font-size:11px;font-weight:400;color:var(--ac-muted)}.ad-compose .ad-task-pair{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:16px}.ad-recipients-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--ac-line);padding-top:20px;margin:0 0 12px}.ad-recipients-head h4{margin:0;font-size:15px;display:flex;align-items:center;gap:10px}.ad-recipients-head h4 span{font-size:12px;padding:3px 8px;border-radius:8px;background:#a58ade20;color:var(--ac-accent)}.ad-task-dialog .ad-recipients-head button{border:0;background:transparent;color:var(--ac-muted);min-height:32px;height:32px;padding:4px}.ad-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.ad-task-dialog .ad-task-people{max-height:none;overflow:visible;margin:14px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}.ad-task-dialog .ad-task-people label{display:flex;gap:10px;align-items:center;margin:0;min-height:64px;padding:12px;border:1px solid var(--ac-line);border-radius:12px;background:var(--ac-field);cursor:pointer}.ad-task-dialog .ad-task-people label:has(:checked){border-color:#a58ade;background:#a58ade18}.ad-task-people input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:#9876db}.ad-task-people span{min-width:0}.ad-task-people b{display:block;overflow-wrap:anywhere;font-size:12px}.ad-task-people small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.ad-compose-footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 28px;border-top:1px solid var(--ac-line);background:var(--ac-bg)}.ad-compose-footer>span{font-size:11px;color:var(--ac-muted)}.ad-compose-footer>div{display:flex;gap:8px}.ad-task-dialog .ad-create,.adm-root.adm-new .ad-task-toolbar .ad-create{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;height:auto;padding:12px 20px;border:1px solid #b498ed44;border-radius:13px;background:linear-gradient(120deg,#9371d6,#7252b9);color:#fff;font-size:13px;font-weight:700;box-shadow:0 5px 16px #7655ba20}.adm-root.adm-new .ad-task-toolbar .ad-create:hover{filter:brightness(1.08);box-shadow:0 7px 22px #7655ba35}.ad-task-toolbar .ad-create svg{display:block;width:18px;height:18px;flex-shrink:0}.ad-task-toolbar{padding:6px 0 22px;gap:20px}.ad-compose button:disabled{opacity:.45;cursor:not-allowed}
+:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-task-dialog{--ac-bg:#fff;--ac-field:#f5f4fa;--ac-line:#dedce9;--ac-text:#262438;--ac-muted:#68657c;--ac-accent:#7652b9}:is(html.light,body.light,.theme-light,[data-theme=light]) .ad-compose input{color-scheme:light!important}
+@media(max-width:560px){.ad-task-dialog{width:calc(100vw - 20px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border-radius:19px}.ad-task-dialog .ad-task-dialog-head{padding:18px 20px}.ad-task-dialog-head h3{font-size:21px}.ad-task-dialog .ad-compose-scroll{padding:20px}.ad-task-dialog .ad-compose :is(input:not([type=checkbox]),textarea){font-size:16px}.ad-compose .ad-task-pair{grid-template-columns:1fr;gap:0}.ad-task-dialog .ad-task-people{grid-template-columns:1fr}.ad-language-row{align-items:flex-start;flex-direction:column;gap:8px}.ad-language{width:100%}.ad-language button{flex:1}.ad-compose-footer{padding:14px 20px;flex-wrap:wrap;gap:8px}.ad-compose-footer>span{width:100%}.ad-compose-footer>div{width:100%}.ad-compose-footer .ad-create{flex:1}.ad-search-row{gap:8px}.ad-task-dialog .ad-search-row button{padding:8px 10px;font-size:11px}.ad-task-toolbar{align-items:flex-start;flex-direction:column}.adm-root.adm-new .ad-task-toolbar .ad-create{width:100%}}
+@media(prefers-reduced-motion:reduce){.ad-task-dialog *{animation:none!important;transition:none!important}}
 `;
   function AdminSections({
     children,
