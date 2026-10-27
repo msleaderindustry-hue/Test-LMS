@@ -2588,6 +2588,11 @@ function _extends() {
       [loading, setLoading] = useState(true),
       [filter, setFilter] = useState('all'),
       [clock, setClock] = useState(Date.now());
+    const [fieldErrors, setFieldErrors] = useState({});
+    const localDate = (days = 1) => {
+      const d = new Date(Date.now() + days * 86400000);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
     const formDialog = useRef(null),
       lock = useRef(false),
       draftId = useRef(null),
@@ -2665,8 +2670,28 @@ function _extends() {
       const ids = [...chosen],
         deadline = new Date(due).getTime();
       let normalized = text.normalize('NFC').replace(/[\r\n\t\u00a0]+/g, ' ').replace(/\s+/g, ' ').trim();
-      if (!title.trim() || !ids.length || ids.length > 100 || !Number.isFinite(deadline) || deadline <= Date.now() || module === 'typing' && (normalized.length < 20 || normalized.length > 1800 || accuracy < 50 || accuracy > 100) || module !== 'typing' && (!Number.isInteger(target) || target < 1 || target > 50)) {
-        setError('Проверьте название, будущий срок и получателей. Для печати: 20–1800 символов и точность 50–100%. Для других разделов: 1–50 занятий.');
+      const invalid = {};
+      if (!title.trim()) invalid.title = 'Введите название задания.';
+      if (!ids.length) invalid.people = 'Выберите хотя бы одного ученика.';else if (ids.length > 100) invalid.people = 'Выберите не более 100 учеников.';
+      if (!Number.isFinite(deadline)) invalid.due = 'Укажите дату и время выполнения.';else if (deadline <= Date.now()) invalid.due = 'Этот срок уже прошёл. Выберите будущую дату и время.';
+      if (module === 'typing') {
+        if (normalized.length < 20 || normalized.length > 1800) invalid.text = 'Нужно от 20 до 1800 символов. Сейчас: ' + normalized.length + '.';
+        if (!Number.isFinite(Number(accuracy)) || accuracy < 50 || accuracy > 100) invalid.accuracy = 'Точность должна быть от 50 до 100%.';
+      } else if (!Number.isInteger(target) || target < 1 || target > 50) invalid.target = 'Укажите целое число от 1 до 50.';
+      setFieldErrors(invalid);
+      if (Object.keys(invalid).length) {
+        setError(Object.values(invalid)[0]);
+        requestAnimationFrame(() => {
+          const field = formDialog.current?.querySelector('[data-field="' + Object.keys(invalid)[0] + '"]');
+          field?.focus({
+            preventScroll: true
+          });
+          const body = formDialog.current?.querySelector('.ax-modal-body');
+          if (field && body) body.scrollTo({
+            top: body.scrollTop + field.getBoundingClientRect().top - body.getBoundingClientRect().top - 35,
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+          });
+        });
         return;
       }
       if (module === 'typing' && ([...normalized].some(c => c.codePointAt(0) > 65535) || /[\u200b-\u200f\u202a-\u202e]/.test(normalized))) {
@@ -2741,11 +2766,21 @@ function _extends() {
       className: "ax-btn ax-primary",
       onClick: () => {
         setError('');
+        setFieldErrors({});
+        if (!due || new Date(due).getTime() <= Date.now()) setDue(localDate());
         setCreating(true);
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "17",
+      height: "17",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.8",
       "aria-hidden": "true"
-    }, "＋"), "Создать задание")), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M12 5v14M5 12h14"
+    })), "Создать задание")), rows.length > 0 && /*#__PURE__*/React.createElement("div", {
       className: "ax-toolbar"
     }, /*#__PURE__*/React.createElement("span", null, rows.length, " заданий"), /*#__PURE__*/React.createElement("label", {
       className: "ax-filter"
@@ -2820,14 +2855,19 @@ function _extends() {
         close();
       }
     }, /*#__PURE__*/React.createElement("form", {
-      onSubmit: save
+      onSubmit: save,
+      noValidate: true,
+      onChange: () => {
+        if (error) setError('');
+        if (Object.keys(fieldErrors).length) setFieldErrors({});
+      }
     }, /*#__PURE__*/React.createElement("header", {
       className: "ax-modal-head"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       className: "ax-eyebrow"
     }, "НОВОЕ ЗАДАНИЕ"), /*#__PURE__*/React.createElement("h3", {
       id: "ax-form-title"
-    }, "Цель для учеников")), /*#__PURE__*/React.createElement("button", {
+    }, "Новое задание")), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "ax-close",
       disabled: busy,
@@ -2840,25 +2880,37 @@ function _extends() {
     }, /*#__PURE__*/React.createElement("section", {
       className: "ax-form-section"
     }, /*#__PURE__*/React.createElement("h4", null, /*#__PURE__*/React.createElement("i", null, "01"), "Задание"), /*#__PURE__*/React.createElement("label", null, "Название", /*#__PURE__*/React.createElement("input", {
+      "data-field": "title",
+      "aria-describedby": fieldErrors.title ? "ax-error-title" : undefined,
+      "aria-invalid": !!fieldErrors.title,
       required: true,
       value: title,
       maxLength: 120,
       onChange: e => setTitle(e.target.value),
       placeholder: "Например: уверенная работа с клавиатурой"
-    })), /*#__PURE__*/React.createElement("label", null, "Раздел платформы", /*#__PURE__*/React.createElement("select", {
+    }), fieldErrors.title && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-title"
+    }, fieldErrors.title)), /*#__PURE__*/React.createElement("label", null, "Раздел платформы", /*#__PURE__*/React.createElement("select", {
       value: module,
       onChange: e => changeModule(e.target.value)
     }, Object.entries(definitions).map(([id, v]) => /*#__PURE__*/React.createElement("option", {
       key: id,
       value: id
     }, v[0]))), /*#__PURE__*/React.createElement("small", null, definitions[module][1])), /*#__PURE__*/React.createElement("label", null, module === 'typing' ? 'Текст для набора' : 'Инструкция ученику', /*#__PURE__*/React.createElement("textarea", {
+      "data-field": "text",
+      "aria-describedby": fieldErrors.text ? "ax-error-text" : undefined,
+      "aria-invalid": !!fieldErrors.text,
       rows: 4,
       required: module === 'typing',
       value: text,
       maxLength: 1800,
       onChange: e => setText(e.target.value),
       placeholder: module === 'typing' ? 'Введите связный текст. Переносы строк будут заменены пробелами.' : 'Например: потренируй сочетания клавиш Word.'
-    }), /*#__PURE__*/React.createElement("small", null, text.length, " / 1800 символов"))), /*#__PURE__*/React.createElement("section", {
+    }), /*#__PURE__*/React.createElement("small", null, text.length, " / 1800 символов"), fieldErrors.text && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-text"
+    }, fieldErrors.text))), /*#__PURE__*/React.createElement("section", {
       className: "ax-form-section",
       key: module
     }, /*#__PURE__*/React.createElement("h4", null, /*#__PURE__*/React.createElement("i", null, "02"), "Параметры"), /*#__PURE__*/React.createElement("div", {
@@ -2871,38 +2923,91 @@ function _extends() {
     }, "Русский"), /*#__PURE__*/React.createElement("option", {
       value: "en"
     }, "English"))), /*#__PURE__*/React.createElement("label", null, "Точность, %", /*#__PURE__*/React.createElement("input", {
+      "data-field": "accuracy",
+      "aria-describedby": fieldErrors.accuracy ? "ax-error-accuracy" : undefined,
+      "aria-invalid": !!fieldErrors.accuracy,
       type: "number",
       min: 50,
       max: 100,
       required: true,
       value: accuracy,
       onChange: e => setAccuracy(Number(e.target.value))
-    }))) : /*#__PURE__*/React.createElement("label", {
+    }), fieldErrors.accuracy && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-accuracy"
+    }, fieldErrors.accuracy))) : /*#__PURE__*/React.createElement("label", {
       className: "ax-wide"
     }, module === 'excel' ? 'Новых уроков' : 'Завершённых тренировок', /*#__PURE__*/React.createElement("input", {
+      "data-field": "target",
+      "aria-describedby": fieldErrors.target ? "ax-error-target" : undefined,
+      "aria-invalid": !!fieldErrors.target,
       type: "number",
       min: 1,
       max: 50,
       required: true,
       value: target,
       onChange: e => setTarget(Number(e.target.value))
-    }), /*#__PURE__*/React.createElement("small", null, "Считаются результаты, сохранённые после нажатия «Начать». ", module === 'excel' ? 'Повтор уже пройденного урока не считается новым.' : '')), /*#__PURE__*/React.createElement("label", {
+    }), fieldErrors.target && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-target"
+    }, fieldErrors.target), /*#__PURE__*/React.createElement("small", null, "Считаются результаты, сохранённые после нажатия «Начать». ", module === 'excel' ? 'Повтор уже пройденного урока не считается новым.' : '')), /*#__PURE__*/React.createElement("label", {
       className: "ax-wide"
     }, "Срок выполнения", /*#__PURE__*/React.createElement("input", {
+      "data-field": "due",
+      "aria-describedby": fieldErrors.due ? "ax-error-due" : undefined,
+      "aria-invalid": !!fieldErrors.due,
       type: "datetime-local",
       required: true,
       value: due,
       onChange: e => setDue(e.target.value)
-    }), /*#__PURE__*/React.createElement("small", null, "Часовой пояс вашего устройства. Просроченное задание можно закончить.")))), /*#__PURE__*/React.createElement("section", {
+    }), fieldErrors.due && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-due"
+    }, fieldErrors.due), /*#__PURE__*/React.createElement("small", null, "Местное время: ", Intl.DateTimeFormat().resolvedOptions().timeZone, ". Срок можно изменить.")), /*#__PURE__*/React.createElement("div", {
+      className: "ax-date-presets"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => {
+        setDue(localDate(1));
+        setFieldErrors(v => ({
+          ...v,
+          due: null
+        }));
+      }
+    }, "Завтра"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => {
+        setDue(localDate(3));
+        setFieldErrors(v => ({
+          ...v,
+          due: null
+        }));
+      }
+    }, "Через 3 дня"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => {
+        setDue(localDate(7));
+        setFieldErrors(v => ({
+          ...v,
+          due: null
+        }));
+      }
+    }, "Через неделю")))), /*#__PURE__*/React.createElement("section", {
       className: "ax-form-section"
     }, /*#__PURE__*/React.createElement("h4", null, /*#__PURE__*/React.createElement("i", null, "03"), "Получатели ", /*#__PURE__*/React.createElement("span", null, chosen.size, " выбрано")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
       className: "ax-sr"
     }, "Поиск учеников"), /*#__PURE__*/React.createElement("input", {
+      "data-field": "people",
+      "aria-describedby": fieldErrors.people ? "ax-error-people" : undefined,
+      "aria-invalid": !!fieldErrors.people,
       type: "search",
       value: query,
       onChange: e => setQuery(e.target.value),
       placeholder: "Имя или email ученика"
-    })), /*#__PURE__*/React.createElement("div", {
+    }), fieldErrors.people && /*#__PURE__*/React.createElement("small", {
+      className: "ax-field-error",
+      id: "ax-error-people"
+    }, fieldErrors.people)), /*#__PURE__*/React.createElement("div", {
       className: "ax-selection-actions"
     }, /*#__PURE__*/React.createElement("button", {
       type: "button",
@@ -2935,7 +3040,10 @@ function _extends() {
       role: "alert"
     }, error)), /*#__PURE__*/React.createElement("footer", {
       className: "ax-modal-footer"
-    }, /*#__PURE__*/React.createElement("span", null, chosen.size, " получателей"), /*#__PURE__*/React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: error ? "ax-footer-error" : "",
+      role: "status"
+    }, error || `Выбрано учеников: ${chosen.size}`), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "ax-btn",
       disabled: busy,
@@ -2943,10 +3051,10 @@ function _extends() {
     }, "Отмена"), /*#__PURE__*/React.createElement("button", {
       type: "submit",
       className: "ax-btn ax-primary",
-      disabled: busy || !chosen.size
+      disabled: busy
     }, busy ? 'Сохраняем…' : 'Назначить задание')))), document.body));
   }
-  const ASSIGNMENT_CSS = '.ax{--ax-bg:#171d2d;--ax-paper:#1e2538;--ax-input:#121827;--ax-line:#a994d62c;--ax-text:#edf0fa;--ax-muted:#a2acc2;--ax-accent:#b49aea;--ax-ink:#20162f;color:var(--ax-text);font-family:inherit;min-width:0;color-scheme:dark}.ax *{box-sizing:border-box}.ax button,.ax input,.ax textarea,.ax select{font-family:inherit;font-size:13px;letter-spacing:normal;text-transform:none}.ax button{cursor:pointer;transition:background .18s,transform .18s,border-color .18s}.ax button:disabled{opacity:.45;cursor:default}.ax button:active:not(:disabled){transform:scale(.98)}.ax :focus-visible{outline:2px solid var(--ax-accent);outline-offset:3px}.ax h3,.ax h4,.ax p{margin:0}.ax small{display:block;color:var(--ax-muted);font-size:11px;line-height:1.55}.ax-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}.ax-head h3{font-size:27px;letter-spacing:-.6px;margin:5px 0}.ax-head p{font-size:12px;color:var(--ax-muted)}.ax-eyebrow{font-size:9px;letter-spacing:1.6px;color:var(--ax-accent);font-weight:650}.ax .ax-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:auto;min-height:40px;padding:10px 14px;margin:0;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-paper);color:var(--ax-text);box-shadow:none;font-size:12px;line-height:1.4;font-weight:600}.ax .ax-primary{background:var(--ax-accent);color:var(--ax-ink);border-color:transparent}.ax-btn:hover:not(:disabled){filter:brightness(1.08)}.ax-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;font-size:12px;color:var(--ax-muted)}.ax-filter{display:flex;align-items:center;gap:10px!important;margin:0!important}.ax-filter select{width:auto!important;min-width:160px}.ax-list{display:grid;gap:9px}.ax .ax-task{display:flex;align-items:center;gap:14px;width:100%;padding:17px;border:1px solid var(--ax-line);border-radius:15px;background:var(--ax-bg);color:var(--ax-text);text-align:left;box-shadow:none;min-width:0}.ax-task.selected,.ax-task:hover{border-color:var(--ax-accent);background:var(--ax-paper)}.ax-task-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#a68bd615;color:var(--ax-accent);flex-shrink:0}.ax-task-copy{flex:1;min-width:0;overflow-wrap:anywhere}.ax-task b{font-size:13px}.ax-task small{margin-top:5px}.ax-task-date{font-size:11px;text-align:right;color:var(--ax-muted)}.ax-empty{display:flex;align-items:center;gap:16px;padding:28px;border:1px dashed var(--ax-line);border-radius:16px}.ax-empty>svg{color:var(--ax-accent);flex-shrink:0}.ax-empty b{font-size:14px}.ax-empty p{font-size:12px;color:var(--ax-muted);margin-top:7px;line-height:1.6}.ax-results{margin-top:17px;border:1px solid var(--ax-line);background:var(--ax-bg);border-radius:17px;padding:20px;animation:ax-in .2s ease-out}.ax-results-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ax-results h4{margin-top:5px;font-size:17px;overflow-wrap:anywhere}.ax-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.ax-summary>span{padding:12px;border-radius:11px;background:var(--ax-paper);font-size:10px;color:var(--ax-muted)}.ax-summary b{display:block;color:var(--ax-text);font-size:22px;margin-bottom:4px}.ax-result-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--ax-line);font-size:12px}.ax-result-row>div{min-width:0;overflow-wrap:anywhere}.ax-result-row small{margin-top:5px}.ax-badge{padding:5px 9px;border-radius:8px;white-space:nowrap;background:var(--ax-paper);font-size:10px;color:var(--ax-muted)}.ax-badge.done{color:#56bf9e;background:#56bf9e12}.ax-badge.active{color:var(--ax-accent);background:#a68bd615}.ax-badge.help,.ax-badge.late{color:#e5a970;background:#e5a97012}\n.ax-dialog{margin:auto;padding:0;width:min(760px,calc(100vw - 24px));max-width:none;height:min(830px,92dvh);max-height:92dvh;border:1px solid var(--ax-line);border-radius:23px;background:var(--ax-bg);overflow:hidden;box-shadow:0 30px 100px #0005}.ax-dialog::backdrop{background:#080c1955;backdrop-filter:blur(5px)}.ax-dialog[open]{animation:ax-in .22s ease-out}.ax-dialog.ax-closing{animation:ax-out .18s ease-in forwards}.ax-dialog>form{display:flex;flex-direction:column;height:100%;min-height:0}.ax-modal-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 25px;border-bottom:1px solid var(--ax-line);background:linear-gradient(130deg,#a68bd60c,transparent);flex-shrink:0}.ax-modal-head h3{font-size:23px;margin-top:5px}.ax .ax-close{display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;border:1px solid var(--ax-line);background:var(--ax-paper);color:var(--ax-muted);border-radius:11px;font-size:24px;flex-shrink:0}.ax-modal-body{padding:22px 25px;overflow:auto;min-height:0;flex:1;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--ax-line) transparent}.ax fieldset{border:0;margin:0;padding:0;min-width:0}.ax-form-section+ .ax-form-section{border-top:1px solid var(--ax-line);padding-top:19px;margin-top:20px}.ax-form-section h4{display:flex;align-items:center;gap:9px;margin:0 0 15px;font-size:13px}.ax-form-section h4 i{font-style:normal;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:var(--ax-accent);background:#a68bd614;font-size:10px}.ax-form-section h4>span{margin-left:auto;font-size:10px;color:var(--ax-muted);font-weight:400}.ax label{display:grid;gap:7px;margin:0 0 14px;font-size:12px;line-height:1.5}.ax input:not([type=checkbox]),.ax textarea,.ax select{width:100%;min-width:0;height:auto;min-height:43px;padding:11px 13px;margin:0;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-input);color:var(--ax-text);font-size:13px;line-height:1.5;box-shadow:none}.ax select option{background:var(--ax-bg);color:var(--ax-text)}.ax input::placeholder,.ax textarea::placeholder{color:var(--ax-muted);opacity:.75}.ax textarea{resize:vertical;min-height:110px}.ax-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.ax-wide{grid-column:1/-1}.ax-selection-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.ax-selection-actions>small{margin-left:auto}.ax-people{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:235px;overflow:auto;scrollbar-width:thin}.ax .ax-person{display:flex;align-items:center;gap:10px;min-width:0;margin:0;padding:12px;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-input);cursor:pointer}.ax-person>span{min-width:0}.ax-person b{font-size:12px}.ax-person small{overflow-wrap:anywhere;font-size:10px}.ax-person input{width:16px;height:16px;margin:0;accent-color:var(--ax-accent);flex-shrink:0}.ax-person:has(input:checked){border-color:var(--ax-accent);background:#a68bd612}.ax-person:has(input:disabled){opacity:.55}.ax-modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:9px;padding:15px 25px;border-top:1px solid var(--ax-line);background:var(--ax-bg);flex-shrink:0}.ax-modal-footer>span{margin-right:auto;font-size:11px;color:var(--ax-muted)}.ax-error{padding:12px;border:1px solid #ed799844;border-radius:11px;color:#e78ba3;font-size:12px;line-height:1.6;margin:12px 0!important}.ax-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) .ax{--ax-bg:#faf9ff;--ax-paper:#f1edf8;--ax-input:#fff;--ax-line:#7054932c;--ax-text:#293047;--ax-muted:#6c7186;--ax-accent:#7954c0;--ax-ink:#fff;color-scheme:light}@keyframes ax-in{from{opacity:0;transform:translateY(9px) scale(.99)}to{opacity:1;transform:none}}@keyframes ax-out{to{opacity:0;transform:translateY(7px) scale(.99)}}@media(max-width:600px){.ax-head{align-items:stretch;flex-direction:column;gap:15px}.ax-head .ax-btn{align-self:flex-start}.ax-head h3{font-size:23px}.ax-toolbar{align-items:flex-start;flex-direction:column}.ax-filter{width:100%}.ax-filter select{flex:1}.ax-task{flex-wrap:wrap}.ax-task-date{margin-left:56px;text-align:left;flex:1}.ax-task-copy{min-width:160px}.ax-results{padding:16px}.ax-result-row{flex-wrap:wrap}.ax-people{grid-template-columns:1fr}.ax-modal-body{padding:17px}.ax-modal-head{padding:18px}.ax-modal-head h3{font-size:20px}.ax-modal-footer{padding:13px 17px;flex-wrap:wrap}.ax-modal-footer>span{width:100%}.ax-modal-footer .ax-btn{flex:1}.ax-fields{grid-template-columns:1fr}.ax-selection-actions>small{width:100%;margin:0}.ax-dialog{height:94dvh;max-height:94dvh;border-radius:18px}}@media(prefers-reduced-motion:reduce){.ax-dialog[open],.ax-dialog.ax-closing,.ax-results{animation:none}.ax button{transition:none}}\n\n.ax-dialog{overflow:clip}.ax-dialog>form{max-height:100%;min-height:0}\n@media(max-width:600px){.ax-modal-footer .ax-btn{align-self:stretch;min-height:44px;white-space:nowrap;font-size:11px;padding:10px}}\n';
+  const ASSIGNMENT_CSS = '.ax{--ax-bg:#171d2d;--ax-paper:#1e2538;--ax-input:#121827;--ax-line:#a994d62c;--ax-text:#edf0fa;--ax-muted:#a2acc2;--ax-accent:#b49aea;--ax-ink:#20162f;color:var(--ax-text);font-family:inherit;min-width:0;color-scheme:dark}.ax *{box-sizing:border-box}.ax button,.ax input,.ax textarea,.ax select{font-family:inherit;font-size:13px;letter-spacing:normal;text-transform:none}.ax button{cursor:pointer;transition:background .18s,transform .18s,border-color .18s}.ax button:disabled{opacity:.45;cursor:default}.ax button:active:not(:disabled){transform:scale(.98)}.ax :focus-visible{outline:2px solid var(--ax-accent);outline-offset:3px}.ax h3,.ax h4,.ax p{margin:0}.ax small{display:block;color:var(--ax-muted);font-size:11px;line-height:1.55}.ax-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}.ax-head h3{font-size:27px;letter-spacing:-.6px;margin:5px 0}.ax-head p{font-size:12px;color:var(--ax-muted)}.ax-eyebrow{font-size:9px;letter-spacing:1.6px;color:var(--ax-accent);font-weight:650}.ax .ax-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:auto;min-height:40px;padding:10px 14px;margin:0;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-paper);color:var(--ax-text);box-shadow:none;font-size:12px;line-height:1.4;font-weight:600}.ax .ax-primary{background:var(--ax-accent);color:var(--ax-ink);border-color:transparent}.ax-btn:hover:not(:disabled){filter:brightness(1.08)}.ax-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;font-size:12px;color:var(--ax-muted)}.ax-filter{display:flex;align-items:center;gap:10px!important;margin:0!important}.ax-filter select{width:auto!important;min-width:160px}.ax-list{display:grid;gap:9px}.ax .ax-task{display:flex;align-items:center;gap:14px;width:100%;padding:17px;border:1px solid var(--ax-line);border-radius:15px;background:var(--ax-bg);color:var(--ax-text);text-align:left;box-shadow:none;min-width:0}.ax-task.selected,.ax-task:hover{border-color:var(--ax-accent);background:var(--ax-paper)}.ax-task-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#a68bd615;color:var(--ax-accent);flex-shrink:0}.ax-task-copy{flex:1;min-width:0;overflow-wrap:anywhere}.ax-task b{font-size:13px}.ax-task small{margin-top:5px}.ax-task-date{font-size:11px;text-align:right;color:var(--ax-muted)}.ax-empty{display:flex;align-items:center;gap:16px;padding:28px;border:1px dashed var(--ax-line);border-radius:16px}.ax-empty>svg{color:var(--ax-accent);flex-shrink:0}.ax-empty b{font-size:14px}.ax-empty p{font-size:12px;color:var(--ax-muted);margin-top:7px;line-height:1.6}.ax-results{margin-top:17px;border:1px solid var(--ax-line);background:var(--ax-bg);border-radius:17px;padding:20px;animation:ax-in .2s ease-out}.ax-results-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ax-results h4{margin-top:5px;font-size:17px;overflow-wrap:anywhere}.ax-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.ax-summary>span{padding:12px;border-radius:11px;background:var(--ax-paper);font-size:10px;color:var(--ax-muted)}.ax-summary b{display:block;color:var(--ax-text);font-size:22px;margin-bottom:4px}.ax-result-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--ax-line);font-size:12px}.ax-result-row>div{min-width:0;overflow-wrap:anywhere}.ax-result-row small{margin-top:5px}.ax-badge{padding:5px 9px;border-radius:8px;white-space:nowrap;background:var(--ax-paper);font-size:10px;color:var(--ax-muted)}.ax-badge.done{color:#56bf9e;background:#56bf9e12}.ax-badge.active{color:var(--ax-accent);background:#a68bd615}.ax-badge.help,.ax-badge.late{color:#e5a970;background:#e5a97012}\n.ax-dialog{margin:auto;padding:0;width:min(760px,calc(100vw - 24px));max-width:none;height:min(830px,92dvh);max-height:92dvh;border:1px solid var(--ax-line);border-radius:23px;background:var(--ax-bg);overflow:hidden;box-shadow:0 30px 100px #0005}.ax-dialog::backdrop{background:#080c1955;backdrop-filter:blur(5px)}.ax-dialog[open]{animation:ax-in .22s ease-out}.ax-dialog.ax-closing{animation:ax-out .18s ease-in forwards}.ax-dialog>form{display:flex;flex-direction:column;height:100%;min-height:0}.ax-modal-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 25px;border-bottom:1px solid var(--ax-line);background:linear-gradient(130deg,#a68bd60c,transparent);flex-shrink:0}.ax-modal-head h3{font-size:23px;margin-top:5px}.ax .ax-close{display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;border:1px solid var(--ax-line);background:var(--ax-paper);color:var(--ax-muted);border-radius:11px;font-size:24px;flex-shrink:0}.ax-modal-body{padding:22px 25px;overflow:auto;min-height:0;flex:1;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--ax-line) transparent}.ax fieldset{border:0;margin:0;padding:0;min-width:0}.ax-form-section+ .ax-form-section{border-top:1px solid var(--ax-line);padding-top:19px;margin-top:20px}.ax-form-section h4{display:flex;align-items:center;gap:9px;margin:0 0 15px;font-size:13px}.ax-form-section h4 i{font-style:normal;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:var(--ax-accent);background:#a68bd614;font-size:10px}.ax-form-section h4>span{margin-left:auto;font-size:10px;color:var(--ax-muted);font-weight:400}.ax label{display:grid;gap:7px;margin:0 0 14px;font-size:12px;line-height:1.5}.ax input:not([type=checkbox]),.ax textarea,.ax select{width:100%;min-width:0;height:auto;min-height:43px;padding:11px 13px;margin:0;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-input);color:var(--ax-text);font-size:13px;line-height:1.5;box-shadow:none}.ax select option{background:var(--ax-bg);color:var(--ax-text)}.ax input::placeholder,.ax textarea::placeholder{color:var(--ax-muted);opacity:.75}.ax textarea{resize:vertical;min-height:110px}.ax-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.ax-wide{grid-column:1/-1}.ax-selection-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.ax-selection-actions>small{margin-left:auto}.ax-people{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:235px;overflow:auto;scrollbar-width:thin}.ax .ax-person{display:flex;align-items:center;gap:10px;min-width:0;margin:0;padding:12px;border:1px solid var(--ax-line);border-radius:11px;background:var(--ax-input);cursor:pointer}.ax-person>span{min-width:0}.ax-person b{font-size:12px}.ax-person small{overflow-wrap:anywhere;font-size:10px}.ax-person input{width:16px;height:16px;margin:0;accent-color:var(--ax-accent);flex-shrink:0}.ax-person:has(input:checked){border-color:var(--ax-accent);background:#a68bd612}.ax-person:has(input:disabled){opacity:.55}.ax-modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:9px;padding:15px 25px;border-top:1px solid var(--ax-line);background:var(--ax-bg);flex-shrink:0}.ax-modal-footer>span{margin-right:auto;font-size:11px;color:var(--ax-muted)}.ax-error{padding:12px;border:1px solid #ed799844;border-radius:11px;color:#e78ba3;font-size:12px;line-height:1.6;margin:12px 0!important}.ax-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) .ax{--ax-bg:#faf9ff;--ax-paper:#f1edf8;--ax-input:#fff;--ax-line:#7054932c;--ax-text:#293047;--ax-muted:#6c7186;--ax-accent:#7954c0;--ax-ink:#fff;color-scheme:light}@keyframes ax-in{from{opacity:0;transform:translateY(9px) scale(.99)}to{opacity:1;transform:none}}@keyframes ax-out{to{opacity:0;transform:translateY(7px) scale(.99)}}@media(max-width:600px){.ax-head{align-items:stretch;flex-direction:column;gap:15px}.ax-head .ax-btn{align-self:flex-start}.ax-head h3{font-size:23px}.ax-toolbar{align-items:flex-start;flex-direction:column}.ax-filter{width:100%}.ax-filter select{flex:1}.ax-task{flex-wrap:wrap}.ax-task-date{margin-left:56px;text-align:left;flex:1}.ax-task-copy{min-width:160px}.ax-results{padding:16px}.ax-result-row{flex-wrap:wrap}.ax-people{grid-template-columns:1fr}.ax-modal-body{padding:17px}.ax-modal-head{padding:18px}.ax-modal-head h3{font-size:20px}.ax-modal-footer{padding:13px 17px;flex-wrap:wrap}.ax-modal-footer>span{width:100%}.ax-modal-footer .ax-btn{flex:1}.ax-fields{grid-template-columns:1fr}.ax-selection-actions>small{width:100%;margin:0}.ax-dialog{height:94dvh;max-height:94dvh;border-radius:18px}}@media(prefers-reduced-motion:reduce){.ax-dialog[open],.ax-dialog.ax-closing,.ax-results{animation:none}.ax button{transition:none}}\n\n.ax-dialog{overflow:clip}.ax-dialog>form{max-height:100%;min-height:0}\n@media(max-width:600px){.ax-modal-footer .ax-btn{align-self:stretch;min-height:44px;white-space:nowrap;font-size:11px;padding:10px}}\n/* Compact assignment workspace */\nsection.ax:not(.ax-dialog){padding:22px;border:1px solid var(--ax-line);border-radius:20px;background:radial-gradient(ellipse at 0 0,#a68bd610,transparent 60%),var(--ax-bg)}\n.ax .ax-head{margin:0 0 18px;padding:0;min-height:0}.ax-head h3{font-size:23px}.ax .ax-head .ax-primary{white-space:nowrap;background:linear-gradient(135deg,#ac8be8,#8963cc);color:#fff;box-shadow:0 5px 18px #8963cc24}.ax .ax-filter{display:flex}.ax-empty{padding:22px;border-style:solid;background:var(--ax-input);min-height:94px}.ax-empty>svg{padding:10px;box-sizing:content-box;border-radius:14px;background:#a68bd615}.ax-dialog{width:min(880px,calc(100vw - 24px));height:min(760px,92dvh)}.ax-modal-head{padding:17px 22px}.ax-modal-head h3{font-size:21px}.ax-modal-body{padding:18px 22px}.ax fieldset{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}.ax-form-section{padding:16px;border:1px solid var(--ax-line);border-radius:15px;background:var(--ax-input);min-width:0}.ax-form-section+.ax-form-section{padding:16px;margin:0;border:1px solid var(--ax-line)}.ax-form-section:last-child{grid-column:1/-1}.ax-form-section label:last-child{margin-bottom:0}.ax-form-section h4{margin-bottom:14px}.ax input:not([type=checkbox]),.ax textarea,.ax select{background:var(--ax-bg);min-height:42px}.ax textarea{min-height:160px}.ax .ax-date-presets{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.ax-date-presets button{border:1px solid var(--ax-line);background:var(--ax-bg);color:var(--ax-muted);border-radius:8px;padding:7px 9px;min-height:32px;font-size:10px;line-height:1.4}.ax-date-presets button:hover{color:var(--ax-accent);border-color:var(--ax-accent)}.ax .ax-field-error,.ax-footer-error{color:#ed91a7}.ax [aria-invalid=true]{border-color:#df7791!important}.ax-modal-footer{padding:14px 22px;gap:9px}.ax-modal-footer>span{font-size:11px;line-height:1.5;flex:1;min-width:0}.ax-modal-footer .ax-btn{flex-shrink:0}.ax-people{max-height:230px}.ax .ax-selection-actions{gap:8px}.ax-dialog .ax-fields{gap:0 10px}\n@media(max-width:620px){section.ax:not(.ax-dialog){padding:16px}.ax fieldset{grid-template-columns:minmax(0,1fr)}.ax-dialog{height:92dvh}.ax-modal-body{padding:12px}.ax-form-section,.ax-form-section+.ax-form-section{padding:14px}.ax-modal-head{padding:16px}.ax-modal-footer{padding:12px;flex-wrap:wrap}.ax-modal-footer>span{flex-basis:100%}.ax-modal-footer .ax-btn{flex:1}.ax .ax-head{align-items:stretch;gap:14px;flex-direction:column}.ax-head h3{font-size:22px}.ax-head .ax-btn{align-self:flex-start}.ax-empty{padding:17px;gap:12px}.ax textarea{min-height:120px}}\n';
   function AdminSections({
     children,
     users,
