@@ -4544,6 +4544,7 @@ resultValue рассчитан отдельным вычислителем. Не
     const requestRef = useRef(null);
     const requestIdRef = useRef(0);
     const solvedRef = useRef(false);
+    const assignmentLessonRef=useRef(null);
     const assistedRef = useRef(false);
     const formulaRef = useRef(null);
     const timersRef = useRef(new Set());
@@ -4566,21 +4567,27 @@ resultValue рассчитан отдельным вычислителем. Не
       requestIdRef.current += 1;
       timersRef.current.forEach(clearTimeout);
     }, []);
-    const persistProgress = next => {
+    const persistProgress = (next, assignmentResult=null) => {
       const uid = accountRef.current;
       if (!uid || !window.db) return;
       lastSaveRef.current = {
         uid,
-        next
+        next, assignmentResult
       };
       setSavePending(true);
       saveQueueRef.current = saveQueueRef.current.catch(() => {}).then(async () => {
         try {
+          if(window.auth?.currentUser?.uid!==uid)throw Error('Account changed');
           await window.db.collection('users').doc(uid).set({
             excelProgress: next
           }, {
             merge: true
           });
+          if(assignmentResult){
+            if(!window.lmsSubmitAssignmentResult)throw Error('Обновите модуль приложения для зачёта задания.');
+            const receipt=await window.lmsSubmitAssignmentResult(assignmentResult.context,assignmentResult.evidence);
+            window.dispatchEvent(new CustomEvent('lms-assignment-feedback',{detail:{id:assignmentResult.context.id,message:receipt.done?'Задание выполнено.':'Самостоятельное решение засчитано.'}}));
+          }
           if (accountRef.current === uid && lastSaveRef.current?.next === next) {
             setSaveError(false);
             setSavePending(false);
@@ -4680,6 +4687,7 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
     const generateAIFormula = async formulaName => {
       requestRef.current?.abort();
       const requestId = ++requestIdRef.current;
+      assignmentLessonRef.current=window.__lmsAssignmentContext?.module==='excel'?{context:{...window.__lmsAssignmentContext},id:window.crypto?.randomUUID?.()||String(Date.now())+Math.random()}:null;
       const controller = new AbortController();
       requestRef.current = controller;
       const deadline = setTimeout(() => controller.abort(), 90000);
@@ -4900,7 +4908,8 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
         };
         progressRef.current = next;
         setProgress(next);
-        persistProgress(next);
+        const assignment=assignmentLessonRef.current;
+        persistProgress(next,assignment?{context:assignment.context,evidence:{id:assignment.id,module:'excel',verified:currentLesson.resultVerified===true,correct:true,assisted:false}}:null);
       } else {
         setShake(true);
         setAnswerStatus('wrong');
@@ -5431,7 +5440,7 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
       role: "status"
     }, saveError ? /*#__PURE__*/React.createElement("button", {
       className: "et-hint-link",
-      onClick: () => lastSaveRef.current && persistProgress(lastSaveRef.current.next)
+      onClick: () => lastSaveRef.current && persistProgress(lastSaveRef.current.next,lastSaveRef.current.assignmentResult)
     }, lang === 'en' ? 'Progress not synced · retry' : lang === 'uz' ? 'Натижа сақланмади · такрорлаш' : 'Прогресс не синхронизирован · повторить') : savePending ? lang === 'en' ? 'Saving progress…' : lang === 'uz' ? 'Натижа сақланмоқда…' : 'Сохраняем прогресс…' : null), /*#__PURE__*/React.createElement("div", {
       className: "et-actions"
     }, !showSuccess ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
