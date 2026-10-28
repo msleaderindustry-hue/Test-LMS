@@ -7,10 +7,14 @@
     const token = {};
     const body = document.body;
     if (!locks.size) {
-      saved = { body, styles: ['overflow-x', 'overflow-y', 'padding-right'].map(name => ({
-        name, value: body.style.getPropertyValue(name),
-        priority: body.style.getPropertyPriority(name)
-      })) };
+      saved = {
+        body,
+        styles: ['overflow-x', 'overflow-y', 'padding-right'].map(name => ({
+          name,
+          value: body.style.getPropertyValue(name),
+          priority: body.style.getPropertyPriority(name)
+        }))
+      };
       const width = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
       const padding = parseFloat(getComputedStyle(body).paddingRight) || 0;
       if (width > 0) body.style.setProperty('padding-right', `${padding + width}px`);
@@ -26,15 +30,25 @@
       if (locks.size || !saved) return;
       const snapshot = saved;
       saved = null;
-      snapshot.styles.forEach(({ name, value, priority }) => {
-        if (value) snapshot.body.style.setProperty(name, value, priority);
-        else snapshot.body.style.removeProperty(name);
+      snapshot.styles.forEach(({
+        name,
+        value,
+        priority
+      }) => {
+        if (value) snapshot.body.style.setProperty(name, value, priority);else snapshot.body.style.removeProperty(name);
       });
     };
   };
 })();
-
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function (n) {
+    for (var e = 1; e < arguments.length; e++) {
+      var t = arguments[e];
+      for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]);
+    }
+    return n;
+  }, _extends.apply(null, arguments);
+}
 (function () {
   const {
     motion,
@@ -557,10 +571,57 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     strokeLinecap: "round"
   }));
   const ChessIcon = () => React.createElement(motion.svg, {
-    width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,
-    strokeLinecap:'round',strokeLinejoin:'round',variants:{rest:{rotate:0},hover:{rotate:[0,-8,5,0]}},transition:{duration:.45}
-  },React.createElement('path',{d:'M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8zm-2 0h14v4H6z'}),React.createElement('circle',{cx:11,cy:8,r:.7}));
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    variants: {
+      rest: {
+        rotate: 0
+      },
+      hover: {
+        rotate: [0, -8, 5, 0]
+      }
+    },
+    transition: {
+      duration: .45
+    }
+  }, React.createElement('path', {
+    d: 'M8 18l2-6-4 2-2-4 5-5 1-3 4 3c6 1 7 8 4 13H8zm-2 0h14v4H6z'
+  }), React.createElement('circle', {
+    cx: 11,
+    cy: 8,
+    r: .7
+  }));
+  const AssignmentIcon = () => React.createElement(motion.svg, {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round'
+  }, React.createElement('rect', {
+    x: 5,
+    y: 4,
+    width: 14,
+    height: 17,
+    rx: 3
+  }), React.createElement('path', {
+    d: 'M9 4V2h6v2M9 10h6M9 14h6M9 18h3'
+  }));
   const MENU_ITEMS = [{
+    id: 'assignments',
+    label: 'Задания',
+    hint: 'План, практика и результаты',
+    Icon: AssignmentIcon,
+    color: '#b49aea'
+  }, {
     id: 'typing',
     label: 'Тренажёр печати',
     hint: 'Скорость и точность',
@@ -935,14 +996,16 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     };
     const name = String(userNickname || user?.displayName || user?.email || 'Гость').trim() || 'Гость';
     const allowed = Array.isArray(allowedModules) ? allowedModules : [];
-    const modules = MENU_ITEMS.filter(item => allowed.includes(item.id));
+    const modules = MENU_ITEMS.filter(item => allowed.includes(item.id) && (item.id !== 'assignments' || !isAdmin));
     useEffect(() => {
       if (!show) return;
       setError('');
       setScrolled(false);
       const previous = document.activeElement;
       lockScroll();
-      const frame = requestAnimationFrame(() => panel.current?.querySelector('[data-close]')?.focus({ preventScroll: true }));
+      const frame = requestAnimationFrame(() => panel.current?.querySelector('[data-close]')?.focus({
+        preventScroll: true
+      }));
       const onKey = e => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -986,9 +1049,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         if (!window.auth?.signOut) throw Error('auth unavailable');
         await window.auth.signOut();
         onClose();
-      } catch (__lmsCaughtError)  {
-window.reportLmsError?.(__lmsCaughtError, {"section":"sidebar","source":"4_sidebar.js","line":989,"operation":"caught","handled":true});
-
+      } catch (__lmsCaughtError) {
+        window.reportLmsError?.(__lmsCaughtError, {
+          "section": "sidebar",
+          "source": "4_sidebar.js",
+          "line": 989,
+          "operation": "caught",
+          "handled": true
+        });
         setError('Не удалось выйти. Попробуй ещё раз.');
       } finally {
         busy.current = false;
@@ -1014,7 +1082,8 @@ window.reportLmsError?.(__lmsCaughtError, {"section":"sidebar","source":"4_sideb
         position: 'fixed',
         inset: 0,
         background: '#03091680',
-        backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+        backdropFilter: 'blur(5px)',
+        WebkitBackdropFilter: 'blur(5px)',
         willChange: 'opacity',
         zIndex: 2000
       }
