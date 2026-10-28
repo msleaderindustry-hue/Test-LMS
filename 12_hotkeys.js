@@ -3594,7 +3594,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
     const [settingsOpen, setSettingsOpen] = useState(false),
       [lang, setLang] = useState('ru'),
       [phase, setPhase] = useState('setup'),
-      [bank, setBank] = useState('word'),
+      [bank, setBank] = useState(()=>['word','windows','excel'].includes(window.__lmsAssignmentContext?.bank)?window.__lmsAssignmentContext.bank:'word'),
       [topic, setTopic] = useState('Microsoft Word'),
       [custom, setCustom] = useState(null),
       [useCustom, setUseCustom] = useState(false),
@@ -3796,6 +3796,8 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       if (!tasks.length) return;
       commit({
         id: token(),
+        assignment: window.__lmsAssignmentContext?.module==='hotkeys'?{...window.__lmsAssignmentContext}:null,
+        assignmentBank: tasks.every(t=>t.program===tasks[0]?.program)?tasks[0]?.program:'mixed',
         uid: window.auth?.currentUser?.uid || null,
         title,
         tasks,
@@ -3882,6 +3884,11 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
             merge: true
           });
         });
+        if(s.assignment){
+          if(!window.lmsSubmitAssignmentResult)throw Error('Обновите модуль приложения для зачёта задания.');
+          const receipt=await window.lmsSubmitAssignmentResult(s.assignment,{id:s.id,module:'hotkeys',bank:s.assignmentBank,total:s.tasks.length,records:s.records});
+          window.dispatchEvent(new CustomEvent('lms-assignment-feedback',{detail:{id:s.assignment.id,message:receipt.accepted===false?'Серия не засчитана: нужны минимум 5 верных ответов подряд без ошибок, подсказок и пропусков в выбранной категории.':receipt.done?'Задание выполнено.':'Серия засчитана. Продолжайте до цели задания.'}}));
+        }
         if (alive.current && sref.current?.id === s.id) setSaveState('saved');
       } catch {
         if (alive.current && sref.current?.id === s.id) setSaveState('saveError');
