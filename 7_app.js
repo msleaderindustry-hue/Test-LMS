@@ -271,7 +271,7 @@ function AssignmentAI({
     setError('');
     const timer = setTimeout(() => c.abort(), 45000);
     try {
-      const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; не обещай несуществующих функций. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
+      const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; Excel: ученик решает задачи с проверкой формулы внутри браузерного тренажёра; нет прикреплённых файлов, скачивания или загрузки ответов. Hotkeys: ученик проходит серии сочетаний клавиш. Не проси скачивать файлы, создавать сводные таблицы или загружать документы; не обещай несуществующих функций. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
         title: task.title,
         module: task.module,
         instruction: task.text
@@ -353,18 +353,14 @@ function lmsTaskMetric(profile, module) {
 function LmsMyAssignments({
   uid,
   onOpen,
+  onBack,
   modules,
   profile
 }) {
   const [items, setItems] = React.useState([]),
     [error, setError] = React.useState(''),
     [loading, setLoading] = React.useState(true),
-    [open, setOpen] = React.useState(false),
-    [closing, setClosing] = React.useState(false),
     [filter, setFilter] = React.useState('all');
-  const dialog = React.useRef(null),
-    trigger = React.useRef(null),
-    timer = React.useRef(null);
   React.useEffect(() => {
     setItems([]);
     setLoading(true);
@@ -372,7 +368,7 @@ function LmsMyAssignments({
       setItems(s.docs.map(d => ({
         id: d.id,
         ...d.data()
-      })).sort((a, b) => (a.dueAt?.toMillis?.() || Infinity) - (b.dueAt?.toMillis?.() || Infinity)));
+      })).filter(t => t.status === 'assigned').sort((a, b) => (a.dueAt?.toMillis?.() || Infinity) - (b.dueAt?.toMillis?.() || Infinity)));
       setLoading(false);
       setError('');
     }, e => {
@@ -380,80 +376,21 @@ function LmsMyAssignments({
       setLoading(false);
     });
   }, [uid]);
-  React.useEffect(() => {
-    const d = dialog.current;
-    if (open && !d.open) d.showModal();
-    if (!open && d.open) d.close();
-  }, [open]);
-  React.useEffect(() => () => clearTimeout(timer.current), []);
-  function close() {
-    setClosing(true);
-    timer.current = setTimeout(() => {
-      setOpen(false);
-      setClosing(false);
-      trigger.current?.focus({
-        preventScroll: true
-      });
-    }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 190);
-  }
   const list = filter === 'all' ? items : items.filter(t => t.module === filter);
-  return ReactDOM.createPortal(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS + LMS_ASSIGN_DRAWER_CSS), /*#__PURE__*/React.createElement("button", {
-    ref: trigger,
-    className: "la-launcher",
-    title: "Мои задания",
-    "aria-label": "Открыть мои задания",
-    "aria-expanded": open,
-    onClick: () => {
-      clearTimeout(timer.current);
-      setClosing(false);
-      setOpen(true);
-    }
-  }, /*#__PURE__*/React.createElement("svg", {
-    width: "21",
-    height: "21",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.7",
+  return /*#__PURE__*/React.createElement("section", {
+    className: "la-box la-page"
+  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("header", {
+    className: "la-page-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "la-page-icon",
     "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("rect", {
-    x: "5",
-    y: "4",
-    width: "14",
-    height: "17",
-    rx: "3"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M9 4V2h6v2M9 10h6M9 14h6M9 18h3"
-  }))), /*#__PURE__*/React.createElement("dialog", {
-    ref: dialog,
-    className: 'la-drawer' + (closing ? ' la-closing' : ''),
-    "aria-labelledby": "la-drawer-title",
-    onCancel: e => {
-      e.preventDefault();
-      close();
-    },
-    onClick: e => {
-      if (e.target === e.currentTarget) {
-        const r = e.currentTarget.getBoundingClientRect();
-        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
-      }
-    }
-  }, /*#__PURE__*/React.createElement("section", {
-    className: "la-box"
-  }, /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("span", {
-    className: "la-header-icon",
-    "aria-hidden": "true"
-  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), /*#__PURE__*/React.createElement("h3", {
-    id: "la-drawer-title"
-  }, "Мои задания")), /*#__PURE__*/React.createElement("button", {
-    className: "la-close",
-    "aria-label": "Закрыть задания",
-    onClick: close
-  }, "×")), items.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "la-drawer-toolbar"
-  }, /*#__PURE__*/React.createElement("span", null, items.length, " заданий"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "УЧЕБНЫЙ ПЛАН"), /*#__PURE__*/React.createElement("h3", null, "Мои задания"), /*#__PURE__*/React.createElement("p", null, "Практика, результаты и связь с преподавателем.")), /*#__PURE__*/React.createElement("button", {
+    onClick: onBack
+  }, "На главную")), /*#__PURE__*/React.createElement("div", {
+    className: "la-page-toolbar"
+  }, /*#__PURE__*/React.createElement("span", null, loading ? 'Загружаем…' : `Всего заданий: ${items.length}`), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
     className: "la-sr"
-  }, "Раздел"), /*#__PURE__*/React.createElement("select", {
+  }, "Раздел заданий"), /*#__PURE__*/React.createElement("select", {
     value: filter,
     onChange: e => setFilter(e.target.value)
   }, /*#__PURE__*/React.createElement("option", {
@@ -461,9 +398,7 @@ function LmsMyAssignments({
   }, "Все разделы"), Object.entries(LMS_TASK_MODULES).map(([id, name]) => /*#__PURE__*/React.createElement("option", {
     key: id,
     value: id
-  }, name))))), /*#__PURE__*/React.createElement("div", {
-    className: "la-drawer-scroll"
-  }, error && /*#__PURE__*/React.createElement("p", {
+  }, name))))), error && /*#__PURE__*/React.createElement("p", {
     role: "alert",
     className: "la-error"
   }, error), loading ? /*#__PURE__*/React.createElement("p", {
@@ -472,23 +407,16 @@ function LmsMyAssignments({
     className: "la-empty"
   }, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
-  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", null, items.length ? 'В этом разделе пусто' : 'Пока заданий нет'), /*#__PURE__*/React.createElement("p", null, items.length ? 'Выберите другой раздел в фильтре.' : 'Новые задания преподавателя появятся здесь.'))), /*#__PURE__*/React.createElement("div", {
-    className: "la-cards"
-  }, items.map(task => /*#__PURE__*/React.createElement("div", {
+  }, "✓"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", null, items.length ? 'В этом разделе пусто' : 'Пока заданий нет'), /*#__PURE__*/React.createElement("p", null, items.length ? 'Выберите другой раздел в фильтре.' : 'Задания преподавателя появятся здесь.'))), /*#__PURE__*/React.createElement("div", {
+    className: "la-cards la-page-cards"
+  }, list.map(task => /*#__PURE__*/React.createElement(LmsAssignmentCard, {
     key: task.id,
-    hidden: filter !== 'all' && task.module !== filter
-  }, /*#__PURE__*/React.createElement(LmsAssignmentCard, {
     task: task,
     uid: uid,
     profile: profile,
     modules: modules,
-    onOpen: t => {
-      setOpen(false);
-      onOpen(t);
-    }
-  })))))), /*#__PURE__*/React.createElement("footer", {
-    className: "la-drawer-footer"
-  }, "Результаты сохраняются после завершения упражнения.")))), document.body);
+    onOpen: onOpen
+  })))));
 }
 function LmsAssignmentCard({
   task,
@@ -565,15 +493,17 @@ function LmsAssignmentCard({
     className: "la-notice"
   }, "Прежний зачёт основан на счётчике сессий. Выполните задание по новым условиям."), helpOpen && /*#__PURE__*/React.createElement("div", {
     className: "la-help-form"
-  }, /*#__PURE__*/React.createElement("label", null, "Ваш вопрос", /*#__PURE__*/React.createElement("textarea", {
+  }, /*#__PURE__*/React.createElement("label", null, "Вопрос преподавателю", /*#__PURE__*/React.createElement("textarea", {
     value: question,
     maxLength: 1000,
     onChange: e => setQuestion(e.target.value),
-    placeholder: "Что не получается?"
-  })), /*#__PURE__*/React.createElement("button", {
+    placeholder: "Опишите, что не получается и на каком шаге…"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "la-help-footer"
+  }, /*#__PURE__*/React.createElement("small", null, question.length, " / 1000"), /*#__PURE__*/React.createElement("button", {
     disabled: busy || !question.trim(),
     onClick: () => act(true)
-  }, "Отправить вопрос")), p?.helpQuestion && /*#__PURE__*/React.createElement("div", {
+  }, busy ? 'Отправляем…' : 'Отправить вопрос'))), p?.helpQuestion && /*#__PURE__*/React.createElement("div", {
     className: "la-help-history"
   }, /*#__PURE__*/React.createElement("small", null, "Ваш вопрос"), /*#__PURE__*/React.createElement("p", null, p.helpQuestion), p.helpReply ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("small", null, "Ответ преподавателя"), /*#__PURE__*/React.createElement("p", null, p.helpReply)) : /*#__PURE__*/React.createElement("small", null, "Преподаватель увидит вопрос в результатах задания.")), !done && /*#__PURE__*/React.createElement(AssignmentAI, {
     task: task
@@ -805,18 +735,24 @@ function LmsAssignedTyping({
     setWrong(false);
     setStatus('');
     setPassed(false);
-    capture.current?.focus({
+    requestAnimationFrame(() => capture.current?.focus({
       preventScroll: true
-    });
+    }));
   }
   return /*#__PURE__*/React.createElement("section", {
-    className: "la-box"
-  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "ЗАДАНИЕ ПРЕПОДАВАТЕЛЯ"), /*#__PURE__*/React.createElement("h3", null, task.title)), /*#__PURE__*/React.createElement("button", {
+    className: "la-box la-run"
+  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("header", {
+    className: "la-run-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "ПРАКТИКА ПЕЧАТИ · ЗАДАНИЕ ПРЕПОДАВАТЕЛЯ"), /*#__PURE__*/React.createElement("h3", null, task.title)), /*#__PURE__*/React.createElement("button", {
     disabled: busy,
     onClick: onClose
   }, "К заданиям")), /*#__PURE__*/React.createElement("div", {
-    className: "la-metrics"
-  }, /*#__PURE__*/React.createElement("span", null, "Цель: ", task.minAccuracy, "%"), /*#__PURE__*/React.createElement("span", null, "Точность: ", index + errors ? Math.round(index / (index + errors) * 100) : 100, "%"), /*#__PURE__*/React.createElement("span", null, "Ошибки: ", errors), /*#__PURE__*/React.createElement("span", null, index, " / ", task.text.length)), /*#__PURE__*/React.createElement("div", {
+    className: "la-run-metrics"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Нужная точность"), /*#__PURE__*/React.createElement("strong", null, task.minAccuracy, /*#__PURE__*/React.createElement("i", null, "%"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ваша точность"), /*#__PURE__*/React.createElement("strong", null, index + errors ? Math.round(index / (index + errors) * 100) : 100, /*#__PURE__*/React.createElement("i", null, "%"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ошибки"), /*#__PURE__*/React.createElement("strong", null, errors)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Прогресс"), /*#__PURE__*/React.createElement("strong", null, Math.round(index / task.text.length * 100), /*#__PURE__*/React.createElement("i", null, "%")))), /*#__PURE__*/React.createElement("div", {
+    className: "la-run-paper"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "la-run-text-head"
+  }, /*#__PURE__*/React.createElement("span", null, task.lang === 'en' ? 'EN · Английский' : 'RU · Русский'), /*#__PURE__*/React.createElement("span", null, index, " / ", task.text.length, " символов")), /*#__PURE__*/React.createElement("div", {
     className: "la-text",
     ref: container,
     onClick: () => capture.current?.focus({
@@ -825,13 +761,28 @@ function LmsAssignedTyping({
   }, task.text.split('').map((c, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: i < index ? 'done' : i === index ? wrong ? 'current wrong' : 'current' : ''
-  }, c))), !finished && /*#__PURE__*/React.createElement("label", null, "Нажми здесь и печатай", /*#__PURE__*/React.createElement("input", {
+  }, c))), /*#__PURE__*/React.createElement("div", {
+    className: "la-run-progress",
+    role: "progressbar",
+    "aria-label": "Прогресс печати",
+    "aria-valuemin": 0,
+    "aria-valuemax": task.text.length,
+    "aria-valuenow": index
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: index / task.text.length * 100 + '%'
+    }
+  }))), !finished && /*#__PURE__*/React.createElement("label", {
+    className: "la-run-capture" + (wrong ? ' has-error' : '')
+  }, "Поле для печати", /*#__PURE__*/React.createElement("span", null, wrong ? 'Нужен символ: ' + (task.text[index] === ' ' ? 'пробел' : task.text[index]) : index ? 'Продолжайте в своём темпе' : 'Нажмите на поле и начните набирать текст выше'), /*#__PURE__*/React.createElement("input", {
     ref: capture,
     className: "la-input",
     autoComplete: "off",
     autoCorrect: "off",
     autoCapitalize: "off",
     spellCheck: false,
+    placeholder: "Печатайте здесь…",
+    "aria-invalid": wrong,
     "aria-label": "Ввод назначенного текста",
     onPaste: e => e.preventDefault(),
     onDrop: e => e.preventDefault(),
@@ -847,7 +798,10 @@ function LmsAssignedTyping({
       if (!['insertFromPaste', 'insertFromDrop', 'insertReplacementText'].includes(t)) accept(e.target.value);
       e.target.value = '';
     }
-  })), /*#__PURE__*/React.createElement("p", null, "Ошибка не пропускает букву. Результат сохраняется после полного текста."), /*#__PURE__*/React.createElement("p", {
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "la-run-note"
+  }, "Ошибка оставляет курсор на месте. Для зачёта наберите весь текст с нужной точностью."), status && /*#__PURE__*/React.createElement("div", {
+    className: "la-run-status" + (passed ? ' passed' : ''),
     role: "status"
   }, status), finished && /*#__PURE__*/React.createElement("div", {
     className: "la-actions"
@@ -859,7 +813,7 @@ function LmsAssignedTyping({
     onClick: restart
   }, "Повторить текст")));
 }
-const LMS_ASSIGN_CSS = '.la-box,.la-drawer,.la-launcher{--la-bg:#171d2d;--la-paper:#20273a;--la-line:#a994d62c;--la-text:#edf0fa;--la-muted:#a3acc3;--la-accent:#b49aea;--la-ink:#20162f;font-family:inherit;color-scheme:dark}.la-box{background:var(--la-bg);color:var(--la-text);border:1px solid var(--la-line);border-radius:20px;padding:23px;margin:0 0 20px;min-width:0}.la-box *{box-sizing:border-box}.la-box h3,.la-box h4,.la-box p{margin:0}.la-box header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.la-box header>div{flex:1;min-width:0}.la-box h3{font-size:22px;margin-top:4px}.la-box h4{font-size:15px;overflow-wrap:anywhere;line-height:1.5}.la-box p{font-size:12px;line-height:1.7;color:var(--la-muted);margin:9px 0}.la-box small{font-size:10px;color:var(--la-muted);line-height:1.6}.la-box button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;margin:0;padding:10px 13px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text);font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;cursor:pointer;box-shadow:none;text-transform:none;transition:background .18s,transform .18s}.la-box button:hover:not(:disabled){border-color:var(--la-accent)}.la-box button:active:not(:disabled){transform:scale(.97)}.la-box button:disabled{opacity:.45;cursor:default}.la-box .la-primary{background:var(--la-accent);color:var(--la-ink);border-color:transparent}.la-box :focus-visible,.la-launcher:focus-visible{outline:2px solid var(--la-accent);outline-offset:3px}.la-cards{display:grid;grid-template-columns:1fr;gap:12px}.la-cards article{background:var(--la-paper);border:1px solid var(--la-line);border-radius:15px;padding:17px;animation:la-card-in .2s ease-out}.la-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:10px;color:var(--la-muted)}.la-state{padding:4px 7px;background:#a68bd614;color:var(--la-accent);border-radius:7px;font-size:9px;white-space:nowrap}.la-state.done{color:#55b699;background:#55b69915}.la-state.help,.la-state.late{color:#e4aa73;background:#e4aa7312}.la-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.la-actions button{flex:1}.la-instruction{border-left:2px solid var(--la-line);padding-left:10px;white-space:pre-wrap;overflow-wrap:anywhere}.la-card-result{font-size:11px;color:var(--la-accent);padding-top:10px;margin-top:10px;border-top:1px solid var(--la-line)}.la-error{color:#e889a2!important;font-size:11px!important;overflow-wrap:anywhere}.la-metrics{display:flex;gap:12px;flex-wrap:wrap;padding:13px;background:var(--la-paper);border-radius:12px;font-size:12px}.la-text{max-height:250px;overflow:auto;font:23px/1.8 ui-monospace,monospace;margin:18px 0;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin}.la-text .done{color:var(--la-accent)}.la-text .current{background:var(--la-accent);color:var(--la-ink);border-radius:3px}.la-text .wrong{background:#ee9bb5}.la-input{display:block;width:100%;border:1px solid var(--la-line);background:var(--la-paper);color:inherit;font-family:inherit;font-size:16px;padding:13px;border-radius:11px;margin-top:8px}.la-box label{font-size:12px}\n.la-launcher{position:fixed!important;right:0!important;left:auto!important;top:42%;z-index:1100;display:grid;place-items:center;width:44px;height:50px;min-height:50px;margin:0!important;padding:0;border:1px solid var(--la-line);border-right:0;border-radius:15px 0 0 15px!important;background:var(--la-bg);color:var(--la-accent);cursor:pointer;box-shadow:-4px 5px 20px #0001;transition:width .2s,background .2s;transform:none}.la-launcher:hover{width:50px;background:var(--la-paper)}.la-launcher:active{width:46px}.la-launcher svg{display:block;flex-shrink:0}\n.la-drawer{padding:0;border:1px solid var(--la-line);border-right:0;border-radius:22px 0 0 22px;width:min(430px,calc(100vw - 12px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:var(--la-bg);color:var(--la-text);box-shadow:-20px 0 70px #0003}.la-drawer::backdrop{background:#080c1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .26s cubic-bezier(.2,.8,.2,1)}.la-drawer.la-closing{animation:la-slide-out .19s ease-in forwards}.la-drawer .la-box{height:100%;display:flex;flex-direction:column;border:0;border-radius:0;margin:0;padding:0;background:var(--la-bg)}.la-drawer header{margin:0;padding:24px 21px 20px;border-bottom:1px solid var(--la-line);flex-shrink:0}.la-drawer header small{font-size:9px;letter-spacing:1.2px}.la-header-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:var(--la-accent);background:#a68bd614;font-size:19px}.la-drawer .la-close{display:grid;place-items:center;width:33px;height:33px;min-height:33px;padding:0;font-size:22px;border-radius:10px;flex-shrink:0}.la-drawer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 21px;flex-shrink:0;font-size:11px;color:var(--la-muted)}.la-drawer-toolbar select{font-family:inherit;font-size:11px;border:1px solid var(--la-line);border-radius:9px;background:var(--la-paper);color:var(--la-text);padding:8px;max-width:180px}.la-drawer-toolbar option{background:var(--la-bg);color:var(--la-text)}.la-drawer-scroll{overflow:auto;min-height:0;flex:1;padding:18px 21px;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent;overscroll-behavior:contain}.la-drawer-footer{padding:14px 21px;border-top:1px solid var(--la-line);color:var(--la-muted);font-size:10px;line-height:1.6;flex-shrink:0}.la-empty{display:flex;align-items:center;gap:14px;padding:20px 15px;border:1px dashed var(--la-line);border-radius:14px}.la-empty>span{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:#a68bd610;color:var(--la-accent)}.la-empty h4{font-size:13px}.la-empty p{font-size:11px;margin:5px 0 0}.la-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) :is(.la-box,.la-drawer,.la-launcher){--la-bg:#faf9ff;--la-paper:#f0ecf7;--la-line:#7054932c;--la-text:#293047;--la-muted:#6b7288;--la-accent:#7954c0;--la-ink:#fff;color-scheme:light}@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-slide-out{to{opacity:0;transform:translateX(30px)}}@keyframes la-card-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:520px){.la-box{padding:17px}.la-box h3{font-size:19px}.la-text{font-size:20px}.la-drawer header{padding:20px 16px 17px}.la-drawer-scroll{padding:16px}.la-drawer-toolbar{padding:14px 16px}.la-drawer-footer{padding:13px 16px}.la-launcher{width:39px;height:46px;min-height:46px}.la-cards article{padding:15px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-drawer.la-closing,.la-cards article{animation:none}.la-launcher,.la-box button{transition:none}}\n/* Same edge-tab proportions as folded LMS AI assistant */\n.la-launcher{width:32px!important;height:60px!important;min-width:0!important;min-height:60px!important;border-radius:16px 0 0 16px!important;box-shadow:0 4px 16px #0002;border-color:var(--la-line);background:var(--la-bg);transition:background .2s,box-shadow .2s!important}.la-launcher:hover{width:32px!important;background:var(--la-paper);box-shadow:-3px 4px 20px #a68bd62a}.la-launcher:active{width:32px!important}.la-launcher svg{width:19px;height:19px}.la-launcher:focus-visible{outline-offset:-3px}\n@media(prefers-reduced-motion:reduce){.la-launcher{transition:none!important}}\n.la-box button,.la-drawer button{height:auto!important;max-height:none!important;min-height:42px;line-height:1.5;white-space:normal}.la-box .la-close{width:36px;min-height:36px;height:36px!important;flex-shrink:0}.la-drawer{width:min(420px,100vw)!important;max-width:100vw!important;overflow:clip}.la-box{width:100%;min-width:0}.la-cards article{height:auto;min-width:0}.la-drawer-toolbar{gap:10px;flex-wrap:wrap}.la-drawer-toolbar label{min-width:0;flex:1}.la-drawer-toolbar select{width:100%;height:42px;min-width:0;background:var(--la-paper);color:var(--la-text);border:1px solid var(--la-line);border-radius:10px;padding:8px}.la-help-form,.la-help-history{margin-top:12px;padding:12px;border:1px solid var(--la-line);border-radius:12px;background:var(--la-paper);font-size:12px}.la-help-form label{display:grid;gap:6px}.la-help-form textarea{width:100%;min-height:85px;resize:vertical;height:auto;border:1px solid var(--la-line);background:var(--la-bg);color:var(--la-text);border-radius:10px;padding:10px;font:inherit}.la-help-history p{white-space:pre-wrap;overflow-wrap:anywhere}.la-notice{color:var(--la-accent);line-height:1.6}.la-box [hidden]{display:none!important}.la-active{width:100%;max-width:800px;margin:0 auto 16px;padding:16px;border:1px solid var(--la-line,#a994d62c);border-radius:14px;background:var(--input-bg,#20273a);color:var(--text-main,#edf0fa);font:13px/1.6 inherit}.la-active h4{margin:0 0 5px}.la-active p{margin:5px 0}.la-active button{height:auto;min-height:40px;padding:8px 12px;border-radius:9px;background:#a68bd620;color:inherit;border:1px solid #a994d62c}.la-active small{display:block}.la-active strong{color:var(--text-main,inherit)}\n@media(max-width:480px){.la-drawer{border-radius:0!important}.la-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.la-actions button{width:100%}.la-card-top{flex-wrap:wrap}.la-box>header{padding:16px;gap:10px}.la-box>header h3{font-size:19px}}\n.assignment-ai{margin-top:14px;border:1px solid var(--ax-line,var(--la-line));border-radius:12px;overflow:hidden;font-size:12px;background:var(--ax-input,var(--la-paper));color:var(--ax-text,var(--la-text))}.assignment-ai summary{cursor:pointer;padding:13px;color:var(--ax-accent,var(--la-accent));font-weight:600;min-height:44px}.assignment-ai>div{padding:0 13px 13px}.assignment-ai label{display:grid;gap:6px}.assignment-ai textarea{width:100%;min-height:80px;height:auto;max-height:200px;resize:vertical;border:1px solid var(--ax-line,var(--la-line));border-radius:10px;padding:10px;background:var(--ax-bg,var(--la-bg));color:inherit;font:inherit;margin:7px 0}.assignment-ai button{height:auto!important;min-height:40px;border:1px solid var(--ax-line,var(--la-line));border-radius:9px;background:var(--ax-paper,var(--la-paper));color:inherit;font:inherit;padding:10px;line-height:1.4}.assignment-ai button:disabled{opacity:.5}.assignment-ai-actions{display:flex;gap:8px;flex-wrap:wrap}.assignment-ai .assignment-ai-answer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;margin:12px 0}.assignment-ai small{display:block;margin-top:8px;font-size:10px;color:var(--ax-muted,var(--la-muted))}\n';
+const LMS_ASSIGN_CSS = ".la-box,.la-drawer,.la-launcher{--la-bg:#171d2d;--la-paper:#20273a;--la-line:#a994d62c;--la-text:#edf0fa;--la-muted:#a3acc3;--la-accent:#b49aea;--la-ink:#20162f;font-family:inherit;color-scheme:dark}.la-box{background:var(--la-bg);color:var(--la-text);border:1px solid var(--la-line);border-radius:20px;padding:23px;margin:0 0 20px;min-width:0}.la-box *{box-sizing:border-box}.la-box h3,.la-box h4,.la-box p{margin:0}.la-box header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.la-box header>div{flex:1;min-width:0}.la-box h3{font-size:22px;margin-top:4px}.la-box h4{font-size:15px;overflow-wrap:anywhere;line-height:1.5}.la-box p{font-size:12px;line-height:1.7;color:var(--la-muted);margin:9px 0}.la-box small{font-size:10px;color:var(--la-muted);line-height:1.6}.la-box button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;margin:0;padding:10px 13px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text);font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;cursor:pointer;box-shadow:none;text-transform:none;transition:background .18s,transform .18s}.la-box button:hover:not(:disabled){border-color:var(--la-accent)}.la-box button:active:not(:disabled){transform:scale(.97)}.la-box button:disabled{opacity:.45;cursor:default}.la-box .la-primary{background:var(--la-accent);color:var(--la-ink);border-color:transparent}.la-box :focus-visible,.la-launcher:focus-visible{outline:2px solid var(--la-accent);outline-offset:3px}.la-cards{display:grid;grid-template-columns:1fr;gap:12px}.la-cards article{background:var(--la-paper);border:1px solid var(--la-line);border-radius:15px;padding:17px;animation:la-card-in .2s ease-out}.la-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:10px;color:var(--la-muted)}.la-state{padding:4px 7px;background:#a68bd614;color:var(--la-accent);border-radius:7px;font-size:9px;white-space:nowrap}.la-state.done{color:#55b699;background:#55b69915}.la-state.help,.la-state.late{color:#e4aa73;background:#e4aa7312}.la-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.la-actions button{flex:1}.la-instruction{border-left:2px solid var(--la-line);padding-left:10px;white-space:pre-wrap;overflow-wrap:anywhere}.la-card-result{font-size:11px;color:var(--la-accent);padding-top:10px;margin-top:10px;border-top:1px solid var(--la-line)}.la-error{color:#e889a2!important;font-size:11px!important;overflow-wrap:anywhere}.la-metrics{display:flex;gap:12px;flex-wrap:wrap;padding:13px;background:var(--la-paper);border-radius:12px;font-size:12px}.la-text{max-height:250px;overflow:auto;font:23px/1.8 ui-monospace,monospace;margin:18px 0;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin}.la-text .done{color:var(--la-accent)}.la-text .current{background:var(--la-accent);color:var(--la-ink);border-radius:3px}.la-text .wrong{background:#ee9bb5}.la-input{display:block;width:100%;border:1px solid var(--la-line);background:var(--la-paper);color:inherit;font-family:inherit;font-size:16px;padding:13px;border-radius:11px;margin-top:8px}.la-box label{font-size:12px}\n.la-launcher{position:fixed!important;right:0!important;left:auto!important;top:42%;z-index:1100;display:grid;place-items:center;width:44px;height:50px;min-height:50px;margin:0!important;padding:0;border:1px solid var(--la-line);border-right:0;border-radius:15px 0 0 15px!important;background:var(--la-bg);color:var(--la-accent);cursor:pointer;box-shadow:-4px 5px 20px #0001;transition:width .2s,background .2s;transform:none}.la-launcher:hover{width:50px;background:var(--la-paper)}.la-launcher:active{width:46px}.la-launcher svg{display:block;flex-shrink:0}\n.la-drawer{padding:0;border:1px solid var(--la-line);border-right:0;border-radius:22px 0 0 22px;width:min(430px,calc(100vw - 12px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:var(--la-bg);color:var(--la-text);box-shadow:-20px 0 70px #0003}.la-drawer::backdrop{background:#080c1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .26s cubic-bezier(.2,.8,.2,1)}.la-drawer.la-closing{animation:la-slide-out .19s ease-in forwards}.la-drawer .la-box{height:100%;display:flex;flex-direction:column;border:0;border-radius:0;margin:0;padding:0;background:var(--la-bg)}.la-drawer header{margin:0;padding:24px 21px 20px;border-bottom:1px solid var(--la-line);flex-shrink:0}.la-drawer header small{font-size:9px;letter-spacing:1.2px}.la-header-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:var(--la-accent);background:#a68bd614;font-size:19px}.la-drawer .la-close{display:grid;place-items:center;width:33px;height:33px;min-height:33px;padding:0;font-size:22px;border-radius:10px;flex-shrink:0}.la-drawer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 21px;flex-shrink:0;font-size:11px;color:var(--la-muted)}.la-drawer-toolbar select{font-family:inherit;font-size:11px;border:1px solid var(--la-line);border-radius:9px;background:var(--la-paper);color:var(--la-text);padding:8px;max-width:180px}.la-drawer-toolbar option{background:var(--la-bg);color:var(--la-text)}.la-drawer-scroll{overflow:auto;min-height:0;flex:1;padding:18px 21px;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent;overscroll-behavior:contain}.la-drawer-footer{padding:14px 21px;border-top:1px solid var(--la-line);color:var(--la-muted);font-size:10px;line-height:1.6;flex-shrink:0}.la-empty{display:flex;align-items:center;gap:14px;padding:20px 15px;border:1px dashed var(--la-line);border-radius:14px}.la-empty>span{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:#a68bd610;color:var(--la-accent)}.la-empty h4{font-size:13px}.la-empty p{font-size:11px;margin:5px 0 0}.la-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) :is(.la-box,.la-drawer,.la-launcher){--la-bg:#faf9ff;--la-paper:#f0ecf7;--la-line:#7054932c;--la-text:#293047;--la-muted:#6b7288;--la-accent:#7954c0;--la-ink:#fff;color-scheme:light}@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-slide-out{to{opacity:0;transform:translateX(30px)}}@keyframes la-card-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:520px){.la-box{padding:17px}.la-box h3{font-size:19px}.la-text{font-size:20px}.la-drawer header{padding:20px 16px 17px}.la-drawer-scroll{padding:16px}.la-drawer-toolbar{padding:14px 16px}.la-drawer-footer{padding:13px 16px}.la-launcher{width:39px;height:46px;min-height:46px}.la-cards article{padding:15px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-drawer.la-closing,.la-cards article{animation:none}.la-launcher,.la-box button{transition:none}}\n/* Same edge-tab proportions as folded LMS AI assistant */\n.la-launcher{width:32px!important;height:60px!important;min-width:0!important;min-height:60px!important;border-radius:16px 0 0 16px!important;box-shadow:0 4px 16px #0002;border-color:var(--la-line);background:var(--la-bg);transition:background .2s,box-shadow .2s!important}.la-launcher:hover{width:32px!important;background:var(--la-paper);box-shadow:-3px 4px 20px #a68bd62a}.la-launcher:active{width:32px!important}.la-launcher svg{width:19px;height:19px}.la-launcher:focus-visible{outline-offset:-3px}\n@media(prefers-reduced-motion:reduce){.la-launcher{transition:none!important}}\n.la-box button,.la-drawer button{height:auto!important;max-height:none!important;min-height:42px;line-height:1.5;white-space:normal}.la-box .la-close{width:36px;min-height:36px;height:36px!important;flex-shrink:0}.la-drawer{width:min(420px,100vw)!important;max-width:100vw!important;overflow:clip}.la-box{width:100%;min-width:0}.la-cards article{height:auto;min-width:0}.la-drawer-toolbar{gap:10px;flex-wrap:wrap}.la-drawer-toolbar label{min-width:0;flex:1}.la-drawer-toolbar select{width:100%;height:42px;min-width:0;background:var(--la-paper);color:var(--la-text);border:1px solid var(--la-line);border-radius:10px;padding:8px}.la-help-form,.la-help-history{margin-top:12px;padding:12px;border:1px solid var(--la-line);border-radius:12px;background:var(--la-paper);font-size:12px}.la-help-form label{display:grid;gap:6px}.la-help-form textarea{width:100%;min-height:85px;resize:vertical;height:auto;border:1px solid var(--la-line);background:var(--la-bg);color:var(--la-text);border-radius:10px;padding:10px;font:inherit}.la-help-history p{white-space:pre-wrap;overflow-wrap:anywhere}.la-notice{color:var(--la-accent);line-height:1.6}.la-box [hidden]{display:none!important}.la-active{width:100%;max-width:800px;margin:0 auto 16px;padding:16px;border:1px solid var(--la-line,#a994d62c);border-radius:14px;background:var(--input-bg,#20273a);color:var(--text-main,#edf0fa);font:13px/1.6 inherit}.la-active h4{margin:0 0 5px}.la-active p{margin:5px 0}.la-active button{height:auto;min-height:40px;padding:8px 12px;border-radius:9px;background:#a68bd620;color:inherit;border:1px solid #a994d62c}.la-active small{display:block}.la-active strong{color:var(--text-main,inherit)}\n@media(max-width:480px){.la-drawer{border-radius:0!important}.la-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.la-actions button{width:100%}.la-card-top{flex-wrap:wrap}.la-box>header{padding:16px;gap:10px}.la-box>header h3{font-size:19px}}\n.assignment-ai{margin-top:14px;border:1px solid var(--ax-line,var(--la-line));border-radius:12px;overflow:hidden;font-size:12px;background:var(--ax-input,var(--la-paper));color:var(--ax-text,var(--la-text))}.assignment-ai summary{cursor:pointer;padding:13px;color:var(--ax-accent,var(--la-accent));font-weight:600;min-height:44px}.assignment-ai>div{padding:0 13px 13px}.assignment-ai label{display:grid;gap:6px}.assignment-ai textarea{width:100%;min-height:80px;height:auto;max-height:200px;resize:vertical;border:1px solid var(--ax-line,var(--la-line));border-radius:10px;padding:10px;background:var(--ax-bg,var(--la-bg));color:inherit;font:inherit;margin:7px 0}.assignment-ai button{height:auto!important;min-height:40px;border:1px solid var(--ax-line,var(--la-line));border-radius:9px;background:var(--ax-paper,var(--la-paper));color:inherit;font:inherit;padding:10px;line-height:1.4}.assignment-ai button:disabled{opacity:.5}.assignment-ai-actions{display:flex;gap:8px;flex-wrap:wrap}.assignment-ai .assignment-ai-answer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;margin:12px 0}.assignment-ai small{display:block;margin-top:8px;font-size:10px;color:var(--ax-muted,var(--la-muted))}\n/* Compose form: field and actions have independent layout boxes. */\n.la-box .la-help-form{padding:14px;background:var(--la-paper);border-radius:15px;display:flex;flex-direction:column;gap:12px;min-width:0}.la-help-form>label{display:flex!important;flex-direction:column;gap:9px;margin:0!important;min-width:0;font-size:12px;font-weight:600}.la-box .la-help-form textarea{box-sizing:border-box!important;display:block;width:100%!important;max-width:100%!important;height:112px!important;min-height:90px;max-height:230px;padding:12px!important;margin:0!important;border-radius:12px;resize:vertical;font-size:14px;line-height:1.6;outline:none}.la-box .la-help-form textarea:focus{border-color:var(--la-accent);box-shadow:0 0 0 3px #a68bd61c;outline:none}.la-help-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--la-line);padding-top:12px}.la-help-footer small{font-size:10px;white-space:nowrap}.la-box .la-help-footer button{margin:0!important;min-height:40px;padding:9px 13px;border-radius:10px;font-size:12px;background:var(--la-accent);color:var(--la-ink);border:0;line-height:1.4}.la-box .la-help-footer button:disabled{opacity:.45}.la-help-history{line-height:1.6}\n/* Assigned typing workspace */\n.la-box.la-run{width:100%;max-width:1040px;margin:0 auto 24px;padding:24px;border-radius:24px;background:radial-gradient(ellipse at top left,#a68bd60c,transparent 65%),var(--la-bg);box-shadow:0 20px 60px #0000000d}.la-run .la-run-head{padding:0;margin:0 0 22px;align-items:flex-start;gap:18px}.la-run-head small{font-size:9px;letter-spacing:1.2px;color:var(--la-accent)}.la-run .la-run-head h3{font-size:24px;letter-spacing:-.6px;line-height:1.35;overflow-wrap:anywhere;margin:7px 0 0}.la-run-head button{flex-shrink:0;min-height:40px;padding:9px 13px;background:var(--la-paper);font-size:12px;border-radius:11px}.la-run-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.la-run-metrics>div{min-width:0;border:1px solid var(--la-line);border-radius:14px;padding:13px 15px;background:var(--la-paper)}.la-run-metrics small{font-size:10px;color:var(--la-muted)}.la-run-metrics strong{display:block;margin-top:5px;font-size:26px;line-height:1.2;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.la-run-metrics>div:nth-child(2) strong{color:var(--la-accent)}.la-run-metrics i{font-size:14px;font-style:normal;margin-left:3px;color:var(--la-muted)}.la-run-paper{border:1px solid var(--la-line);border-radius:16px;padding:18px 20px;background:var(--la-paper);overflow:hidden}.la-run-text-head{display:flex;justify-content:space-between;gap:12px;color:var(--la-muted);font-size:10px;line-height:1.5;margin-bottom:12px}.la-run .la-text{font:21px/1.85 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--la-muted);letter-spacing:0;min-height:100px;max-height:260px;margin:0;padding:2px 1px;white-space:pre-wrap;overflow-wrap:anywhere;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent}.la-run .la-text .done{color:var(--la-text)}.la-run .la-text .current{color:var(--la-ink);background:var(--la-accent);border-radius:3px;box-shadow:0 0 0 2px #a68bd622}.la-run .la-text .wrong{background:#c65070;color:#fff}.la-run-progress{height:4px;background:var(--la-line);margin-top:16px;border-radius:4px;overflow:hidden}.la-run-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--la-accent),#69bfa8);transition:width .15s ease}.la-run .la-run-capture{display:grid;gap:7px;margin-top:20px;font-size:12px;font-weight:600}.la-run-capture>span{font-size:11px;color:var(--la-muted);font-weight:400}.la-run .la-run-capture input{margin:4px 0 0!important;padding:13px 15px!important;height:50px!important;min-height:50px;width:100%;max-width:100%;border-radius:12px;background:var(--la-paper);border:1px solid var(--la-line);font-size:16px;box-shadow:none;outline:none;transition:border-color .2s,box-shadow .2s}.la-run .la-run-capture input:focus{border-color:var(--la-accent);box-shadow:0 0 0 3px #a68bd61c}.la-run-capture.has-error>span{color:#df7891}.la-run .la-run-capture input[aria-invalid=true]{border-color:#df7891}.la-run .la-run-note{font-size:10px;line-height:1.7;margin:12px 0 0;color:var(--la-muted)}.la-run-status{padding:14px;margin-top:16px;border:1px solid var(--la-line);border-radius:12px;background:var(--la-paper);font-size:12px;line-height:1.6}.la-run-status.passed{border-color:#52b79055;background:#52b79010}.la-run .la-actions{margin-top:12px}.la-run{animation:la-slide .25s ease both}\n@media(max-width:600px){.la-box.la-run{padding:16px;border-radius:18px}.la-run .la-run-head{gap:12px;margin-bottom:16px;flex-wrap:wrap}.la-run .la-run-head>div{flex-basis:100%}.la-run .la-run-head h3{font-size:20px}.la-run-head button{margin-left:auto!important}.la-run-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}.la-run-metrics>div{padding:11px 13px}.la-run-metrics strong{font-size:24px}.la-run-paper{padding:13px}.la-run .la-text{font-size:18px;line-height:1.8;max-height:235px}.la-run-text-head{font-size:9px;flex-wrap:wrap;gap:5px}.la-run .la-run-capture{margin-top:16px}.la-box .la-help-form{padding:12px}.la-help-footer{gap:8px}.la-box .la-help-footer button{font-size:11px;padding:9px 11px}}\n@media(prefers-reduced-motion:reduce){.la-run{animation:none}.la-run-progress i,.la-run .la-run-capture input{transition:none}}\n/* Page in the main menu, plus compact assignment context. */\n.la-box{box-sizing:border-box}\n.la-page{max-width:1100px;margin:0 auto 24px;padding:26px;animation:la-card-in .25s ease both}.la-page-head{align-items:center!important}.la-page-icon,.la-active-emblem{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid var(--la-line);border-radius:14px;background:#a68bd61a;color:var(--la-accent);font-size:22px}.la-page-head p{font-size:11px;margin:6px 0 0}.la-page-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:20px 0;padding:14px 0;border-block:1px solid var(--la-line);color:var(--la-muted);font-size:12px}.la-page-toolbar select{font:inherit;height:40px;max-width:100%;padding:8px 12px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text)}.la-page-cards{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.la-page-cards article{min-width:0}.la-page-head button{flex-shrink:0}.la-box.la-active{max-width:1100px;padding:20px 22px;margin:0 auto 20px;background:linear-gradient(110deg,#a68bd608,transparent),var(--la-bg);border-radius:20px;font-family:inherit;font-size:13px;line-height:1.6;animation:la-card-in .25s ease}.la-active-top{display:flex;align-items:center;gap:12px}.la-active-title{flex:1;min-width:0}.la-active-title small{font-size:9px;letter-spacing:1px;color:var(--la-accent)}.la-active-title h4{font-size:17px;margin-top:4px;line-height:1.4}.la-active-top button{flex-shrink:0;font-size:11px}.la-active-bottom{display:grid;grid-template-columns:minmax(0,1fr) 200px;align-items:center;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid var(--la-line)}.la-box .la-active-bottom p{font-size:11px;line-height:1.7;margin:0;max-width:660px}.la-active-meter>div:first-child{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:10px;color:var(--la-muted)}.la-active-meter strong{font-size:15px;color:var(--la-text)}.la-active-meter .la-run-progress{margin-top:7px;height:5px}.la-active-details{margin-top:16px;border:1px solid var(--la-line);border-radius:12px;overflow:hidden;background:var(--la-paper)}.la-active-details summary{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;font-size:11px;font-weight:600;cursor:pointer;color:var(--la-accent);list-style:none}.la-active-details summary::-webkit-details-marker{display:none}.la-active-details summary span{transition:transform .2s}.la-active-details[open] summary span{transform:rotate(180deg)}.la-box .la-active-details p{font-size:12px;line-height:1.8;margin:0;padding:0 14px 14px;white-space:pre-wrap;overflow-wrap:anywhere;animation:la-card-in .2s ease}.la-box .la-active-notice{padding:10px 12px;border-radius:10px;background:var(--la-paper);font-size:11px;margin:12px 0 0}\n@media(max-width:700px){.la-page-cards{grid-template-columns:minmax(0,1fr)}.la-page{padding:16px}.la-page .la-page-head{padding:0;flex-wrap:wrap}.la-page-head>div{flex-basis:calc(100% - 65px)!important}.la-page-head button{margin-left:auto}.la-page-toolbar{flex-wrap:wrap;font-size:11px}.la-box.la-active{padding:16px}.la-active-top{flex-wrap:wrap;gap:10px}.la-active-title{flex-basis:calc(100% - 60px)}.la-active-top button{margin-left:auto}.la-active-bottom{grid-template-columns:minmax(0,1fr);gap:14px}.la-active-title h4{font-size:16px}}\n@media(prefers-reduced-motion:reduce){.la-page,.la-box.la-active,.la-active-details p{animation:none}.la-active-details summary span{transition:none}}\n.la-run .la-run-capture input:focus{border-color:var(--la-accent)!important}.la-run .la-run-capture input[aria-invalid=true]{border-color:#df7891!important}\n";
 const LMS_ASSIGN_DRAWER_CSS = "";
 function AssignmentActive({
   task,
@@ -876,19 +830,51 @@ function AssignmentActive({
     window.addEventListener('lms-assignment-feedback', f);
     return () => window.removeEventListener('lms-assignment-feedback', f);
   }, [task.id]);
-  const done = progress?.status === 'completed' && progress?.receiptVersion === 2;
+  const done = progress?.status === 'completed' && progress?.receiptVersion === 2,
+    count = progress?.result?.count || 0,
+    total = task.target || 1,
+    percent = Math.min(100, Math.round(count / total * 100));
   return /*#__PURE__*/React.createElement("section", {
-    className: "la-active"
-  }, /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("small", null, task.module === 'hotkeys' ? `От 5 сочетаний в серии: все ответы верные, без ошибок, подсказок и пропусков. Категория: ${{
+    className: "la-box la-active"
+  }, /*#__PURE__*/React.createElement("style", null, LMS_ASSIGN_CSS), /*#__PURE__*/React.createElement("div", {
+    className: "la-active-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "la-active-emblem",
+    "aria-hidden": "true"
+  }, done ? '✓' : task.module === 'excel' ? 'ƒx' : '⌘'), /*#__PURE__*/React.createElement("div", {
+    className: "la-active-title"
+  }, /*#__PURE__*/React.createElement("small", null, "ЗАДАНИЕ · ", LMS_TASK_MODULES[task.module]), /*#__PURE__*/React.createElement("h4", null, task.title)), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose
+  }, "К заданиям ", /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "↗"))), /*#__PURE__*/React.createElement("div", {
+    className: "la-active-bottom"
+  }, /*#__PURE__*/React.createElement("p", null, task.module === 'hotkeys' ? `Серия от 5 сочетаний: без ошибок, подсказок и пропусков. Категория: ${{
     word: 'Word',
     windows: 'Windows',
     excel: 'Excel',
     any: 'любая'
-  }[task.hotkeyBank || 'any']}.` : 'Самостоятельно решайте задачи. Просмотр готового решения не засчитывается.'), task.text && /*#__PURE__*/React.createElement("p", null, task.text), /*#__PURE__*/React.createElement("strong", null, done ? 'Задание выполнено' : `Прогресс: ${progress?.result?.count || 0} / ${task.target || 1}`), notice && /*#__PURE__*/React.createElement("p", {
+  }[task.hotkeyBank || 'any']}.` : 'Решайте задачи в тренажёре самостоятельно. Ответы после просмотра решения не засчитываются.'), /*#__PURE__*/React.createElement("div", {
+    className: "la-active-meter"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", null, done ? 'Выполнено' : 'Ваш прогресс'), /*#__PURE__*/React.createElement("strong", null, count, " / ", total)), /*#__PURE__*/React.createElement("div", {
+    className: "la-run-progress",
+    role: "progressbar",
+    "aria-label": "Выполнение задания",
+    "aria-valuemin": 0,
+    "aria-valuemax": total,
+    "aria-valuenow": Math.min(count, total)
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: percent + '%'
+    }
+  })))), task.text && /*#__PURE__*/React.createElement("details", {
+    className: "la-active-details"
+  }, /*#__PURE__*/React.createElement("summary", null, "Инструкция преподавателя ", /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "⌄")), /*#__PURE__*/React.createElement("p", null, task.text)), notice && /*#__PURE__*/React.createElement("p", {
+    className: "la-active-notice",
     role: "status"
-  }, notice), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
-    onClick: onClose
-  }, "Вернуться к заданиям позже")));
+  }, notice));
 }
 function App() {
   const [assignedTask, setAssignedTask] = useState(null);
@@ -1175,6 +1161,7 @@ function App() {
       setAssignedTask(null);
     }
     const viewModule = {
+      assignments: 'assignments',
       stats: 'stats',
       typing: 'typing',
       hotkeys: 'hotkeys',
@@ -1599,13 +1586,14 @@ function App() {
     onClose: () => {
       window.__lmsAssignmentContext = null;
       setAssignedTask(null);
-      setView('menu');
+      setView('assignments');
     }
-  }), appReady && !isAdmin && allowedModules.includes('assignments') && React.createElement(LmsMyAssignments, {
+  }), appReady && view === 'assignments' && !isAdmin && allowedModules.includes('assignments') && React.createElement(LmsMyAssignments, {
     key: user.uid,
     uid: user.uid,
     modules: allowedModules,
     profile: userData,
+    onBack: () => setView('menu'),
     onOpen: task => {
       window.__lmsAssignmentContext = {
         id: task.id,
@@ -1662,7 +1650,7 @@ function App() {
     uid: user.uid,
     onClose: () => {
       setAssignedTask(null);
-      setView('menu');
+      setView('assignments');
     }
   }) : React.createElement(TypingTest, null)), appReady && view === 'hotkeys' && allowedModules.includes('hotkeys') && /*#__PURE__*/React.createElement(motion.div, {
     key: "hotkey_trainer",
