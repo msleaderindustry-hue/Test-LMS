@@ -249,6 +249,90 @@ function AppAssistantHost() {
 }
 
 // --- APP ---
+function AssignmentAI({
+  task,
+  onApply
+}) {
+  const [question, setQuestion] = React.useState(''),
+    [answer, setAnswer] = React.useState(''),
+    [busy, setBusy] = React.useState(false),
+    [error, setError] = React.useState('');
+  const job = React.useRef(null);
+  React.useEffect(() => () => {
+    const c = job.current;
+    job.current = null;
+    c?.abort();
+  }, []);
+  async function generate() {
+    if (job.current) return;
+    const c = new AbortController();
+    job.current = c;
+    setBusy(true);
+    setError('');
+    const timer = setTimeout(() => c.abort(), 45000);
+    try {
+      const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; не обещай несуществующих функций. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
+        title: task.title,
+        module: task.module,
+        instruction: task.text
+      })}. Вопрос ученика: ${JSON.stringify(question || 'Как подойти к этому заданию?')}. Ответь по-русски, до 1200 символов, без HTML.`;
+      const r = await fetch('https://gemini-proxy-lms.msleaderindustry.workers.dev', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        signal: c.signal,
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+      if (!r.ok) throw Error('ИИ временно недоступен (HTTP ' + r.status + '). Попробуйте позже.');
+      const data = await r.json();
+      const candidate = data.candidates?.[0];
+      if (candidate?.finishReason && candidate.finishReason !== 'STOP') throw Error('Ответ не завершён. Попробуйте ещё раз.');
+      const value = (candidate?.content?.parts || []).filter(p => !p.thought && typeof p.text === 'string').map(p => p.text).join(' ').normalize('NFC').trim();
+      if (value.length < 20 || value.length > 1800) throw Error('Ответ не подходит по длине. Повторите запрос.');
+      if (onApply && task.module === 'typing' && ([...value].some(c => c.codePointAt(0) > 65535) || /[\u200b-\u200f\u202a-\u202e]/.test(value))) throw Error('В ответе есть неподходящие для набора символы. Повторите запрос.');
+      if (!c.signal.aborted) setAnswer(value);
+    } catch (e) {
+      if (job.current === c) setError(e.name === 'AbortError' ? 'Генерация остановлена или время ожидания истекло.' : e.message);
+    } finally {
+      clearTimeout(timer);
+      if (job.current === c) {
+        job.current = null;
+        setBusy(false);
+      }
+    }
+  }
+  return /*#__PURE__*/React.createElement("details", {
+    className: "assignment-ai"
+  }, /*#__PURE__*/React.createElement("summary", null, "✦ ", onApply ? 'Подготовить с ИИ' : 'Объяснить с ИИ'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", null, onApply ? 'Тема материала' : 'Что непонятно?', /*#__PURE__*/React.createElement("textarea", {
+    value: question,
+    maxLength: 500,
+    onChange: e => setQuestion(e.target.value),
+    placeholder: onApply ? 'Например: путешествия и открытия' : 'Например: с чего начать?'
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "assignment-ai-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    disabled: busy,
+    onClick: generate
+  }, busy ? 'Готовим ответ…' : onApply ? 'Создать черновик' : 'Получить подсказку'), busy && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => job.current?.abort()
+  }, "Отмена")), error && /*#__PURE__*/React.createElement("p", {
+    role: "alert"
+  }, error), answer && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    className: "assignment-ai-answer"
+  }, answer), onApply && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => onApply(answer)
+  }, "Вставить в задание"), /*#__PURE__*/React.createElement("small", null, "Ответ ИИ может содержать ошибки. ", onApply ? 'Проверьте перед назначением.' : 'Подсказка не засчитывается как выполнение.'))));
+}
 const LMS_TASK_MODULES = {
   typing: 'Печать',
   hotkeys: 'Горячие клавиши',
@@ -428,23 +512,23 @@ function LmsAssignmentCard({
     const t = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(t);
   }, []);
-  const metric = JSON.stringify(lmsTaskMetric(profile, task.module));
-  React.useEffect(() => {
-    if (task.module === 'typing' || p?.status !== 'started' || !modules.includes(task.module)) return;
-    let active = true;
-    lmsAssignmentWrite(task.id, uid, 'sync').catch(e => {
-      if (active) setError(e.message);
-    });
-    return () => active = false;
-  }, [metric, p?.status, task.id, uid, modules.join(',')]);
+  const [helpOpen, setHelpOpen] = React.useState(false),
+    [question, setQuestion] = React.useState('');
   async function act(help) {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setError('');
     try {
-      const live = await lmsAssignmentWrite(task.id, uid, help ? 'help' : 'start');
-      if (!help && alive.current) onOpen(live);
+      const live = await lmsAssignmentWrite(task.id, uid, help ? 'help' : 'start', help ? {
+        question
+      } : undefined);
+      if (alive.current) {
+        if (help) {
+          setHelpOpen(false);
+          setQuestion('');
+        } else onOpen(live);
+      }
     } catch (e) {
       if (alive.current) setError(e.message);
     } finally {
@@ -452,7 +536,8 @@ function LmsAssignmentCard({
       if (alive.current) setBusy(false);
     }
   }
-  const done = p?.status === 'completed',
+  const legacy = p?.status === 'completed' && task.module !== 'typing' && p.receiptVersion !== 2,
+    done = p?.status === 'completed' && !legacy,
     late = task.dueAt?.toMillis?.() < now,
     canOpen = modules.includes(task.module) && !!LMS_TASK_MODULES[task.module];
   return /*#__PURE__*/React.createElement("article", {
@@ -461,9 +546,9 @@ function LmsAssignmentCard({
     className: "la-card-top"
   }, /*#__PURE__*/React.createElement("span", null, LMS_TASK_MODULES[task.module] || 'Раздел'), /*#__PURE__*/React.createElement("b", {
     className: 'la-state ' + (done ? 'done' : p?.needsHelp ? 'help' : late ? 'late' : '')
-  }, done ? 'Выполнено' : p?.needsHelp ? 'Нужна помощь' : late ? 'Просрочено' : p?.status === 'started' ? 'В процессе' : 'Новое')), /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `${task.lang?.toUpperCase()} · точность от ${task.minAccuracy}%` : task.module === 'excel' ? `Пройти новых уроков: ${task.target || 1}` : `Завершить тренировок: ${task.target || 1}`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
+  }, done ? 'Выполнено' : legacy ? 'Перепроверка' : p?.needsHelp ? 'Нужна помощь' : late ? 'Просрочено' : p?.status === 'started' ? 'В процессе' : 'Новое')), /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `${task.lang?.toUpperCase()} · точность от ${task.minAccuracy}%` : task.module === 'excel' ? `Решить самостоятельно задач: ${task.target || 1}` : `Успешных серий: ${task.target || 1}. От 5 сочетаний, всё верно, без ошибок, подсказок и пропусков.`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
     className: "la-instruction"
-  }, task.text), /*#__PURE__*/React.createElement("small", null, "До ", task.dueAt?.toDate?.().toLocaleString('ru-RU') || '—'), p?.result && /*#__PURE__*/React.createElement("div", {
+  }, task.text), /*#__PURE__*/React.createElement("small", null, "До ", task.dueAt?.toDate?.().toLocaleString('ru-RU') || '—'), p?.result && !legacy && /*#__PURE__*/React.createElement("div", {
     className: "la-card-result"
   }, task.module === 'typing' ? `${p.result.accuracy}% точности · ${p.result.wpm} WPM` : `Выполнено: ${p.result.count || 0} / ${task.target || 1}`), /*#__PURE__*/React.createElement("div", {
     className: "la-actions"
@@ -471,12 +556,30 @@ function LmsAssignmentCard({
     className: "la-primary",
     disabled: busy || !canOpen || !p || done,
     onClick: () => act(false)
-  }, busy ? 'Подождите…' : done ? 'Готово' : p?.status === 'started' ? 'Продолжить' : 'Начать', /*#__PURE__*/React.createElement("span", {
+  }, busy ? 'Подождите…' : done ? 'Готово' : legacy ? 'Пройти проверку' : p?.status === 'started' ? 'Продолжить' : 'Начать', /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, done ? '✓' : '→')), !done && /*#__PURE__*/React.createElement("button", {
-    disabled: busy || !canOpen || !p || p.needsHelp,
+    disabled: busy || !canOpen || !p,
+    onClick: () => setHelpOpen(v => !v)
+  }, helpOpen ? 'Закрыть вопрос' : 'Написать преподавателю')), legacy && /*#__PURE__*/React.createElement("p", {
+    className: "la-notice"
+  }, "Прежний зачёт основан на счётчике сессий. Выполните задание по новым условиям."), helpOpen && /*#__PURE__*/React.createElement("div", {
+    className: "la-help-form"
+  }, /*#__PURE__*/React.createElement("label", null, "Ваш вопрос", /*#__PURE__*/React.createElement("textarea", {
+    value: question,
+    maxLength: 1000,
+    onChange: e => setQuestion(e.target.value),
+    placeholder: "Что не получается?"
+  })), /*#__PURE__*/React.createElement("button", {
+    disabled: busy || !question.trim(),
     onClick: () => act(true)
-  }, p?.needsHelp ? 'Помощь запрошена' : 'Нужна помощь')), !canOpen && /*#__PURE__*/React.createElement("small", null, "Доступ к этому разделу отключён преподавателем."), error && /*#__PURE__*/React.createElement("p", {
+  }, "Отправить вопрос")), p?.helpQuestion && /*#__PURE__*/React.createElement("div", {
+    className: "la-help-history"
+  }, /*#__PURE__*/React.createElement("small", null, "Ваш вопрос"), /*#__PURE__*/React.createElement("p", null, p.helpQuestion), p.helpReply ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("small", null, "Ответ преподавателя"), /*#__PURE__*/React.createElement("p", null, p.helpReply)) : /*#__PURE__*/React.createElement("small", null, "Преподаватель увидит вопрос в результатах задания.")), !done && /*#__PURE__*/React.createElement(AssignmentAI, {
+    task: task
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "la-sr"
+  }, task.id), !canOpen && /*#__PURE__*/React.createElement("small", null, "Доступ к этому разделу отключён преподавателем."), error && /*#__PURE__*/React.createElement("p", {
     role: "alert",
     className: "la-error"
   }, error));
@@ -499,41 +602,31 @@ async function lmsAssignmentWrite(id, uid, action, result) {
       updatedAt: ts()
     };
     if (action === 'start') {
-      if (old.status === 'completed') throw Error('Задание уже выполнено.');
+      if (old.status === 'completed' && (task.module === 'typing' || old.receiptVersion === 2)) throw Error('Задание уже выполнено.');
+      if (task.module !== 'typing' && old.receiptVersion !== 2) {
+        next.receiptVersion = 2;
+        next.result = {
+          count: 0
+        };
+        next.acceptedAttemptIds = [];
+        next.completedAt = null;
+      }
       next.status = 'started';
       next.startedAt = old.startedAt || ts();
       if (task.module !== 'typing' && !old.baseline) next.baseline = lmsTaskMetric(profile, task.module);
     }
     if (action === 'help') {
-      if (old.status === 'completed') return {
-        ...task,
-        id
-      };
+      if (!result?.question?.trim() || result.question.length > 1000) throw Error('Введите вопрос до 1000 символов.');
+      next.helpQuestion = result.question.trim();
+      next.helpReply = '';
+      next.helpRequestedAt = ts();
       next.needsHelp = true;
       next.status = old.status || 'not_started';
     }
-    if (action === 'sync') {
-      if (task.module === 'typing' || old.status !== 'started' || !old.baseline) return {
-        ...task,
-        id
-      };
-      const current = lmsTaskMetric(profile, task.module),
-        baseline = old.baseline;
-      const count = Math.max(0, current.ids && baseline.ids ? new Set(current.ids.filter(v => !baseline.ids.includes(v))).size : current.count - baseline.count);
-      const done = count >= Number(task.target || 1);
-      if (old.result?.count === count && !done) return {
-        ...task,
-        id
-      };
-      next.result = {
-        count
-      };
-      if (done) {
-        next.status = 'completed';
-        next.completedAt = ts();
-        next.needsHelp = false;
-      }
-    }
+    if (action === 'sync') return {
+      ...task,
+      id
+    }; // General profile counters never grant credit.
     if (action === 'finish') {
       if (task.module !== 'typing' || !result || result.text !== task.text || result.lang !== task.lang || result.characters !== task.text.length) throw Error('Задание изменилось. Откройте его заново.');
       if (old.status === 'completed' || old.lastAttemptId === result.attemptId) return {
@@ -566,6 +659,62 @@ async function lmsAssignmentWrite(id, uid, action, result) {
     };
   });
 }
+// Only called by the actual exercise's successful completion path.
+window.lmsSubmitAssignmentResult = async function (context, evidence) {
+  if (!context?.id || context.uid !== window.auth?.currentUser?.uid) throw Error('Аккаунт изменился. Откройте задание заново.');
+  const db = window.db,
+    ref = db.collection('lmsAssignments').doc(context.id),
+    pr = ref.collection('progress').doc(context.uid);
+  return db.runTransaction(async tx => {
+    const [a, p, u] = await Promise.all([tx.get(ref), tx.get(pr), tx.get(db.collection('users').doc(context.uid))]);
+    const task = a.data(),
+      old = p.data() || {},
+      profile = u.data(),
+      allowed = id => profile?.allowedModules == null || profile.allowedModules.includes(id);
+    if (window.auth?.currentUser?.uid !== context.uid || !a.exists || !task.studentIds?.includes(context.uid) || !profile || profile.isBanned || !allowed('assignments') || !allowed(task.module) || task.status !== 'assigned') throw Error('Нет доступа к заданию.');
+    if (old.status === 'completed' && old.receiptVersion === 2) return {
+      done: true
+    };
+    if (old.status !== 'started' || task.module !== evidence.module || !evidence.id) throw Error('Сначала откройте назначенное задание.');
+    let accepted = false;
+    if (task.module === 'hotkeys') {
+      const r = evidence.records;
+      accepted = Array.isArray(r) && r.length >= 5 && r.length === evidence.total && r.every(x => x.status === 'solved' && !x.hint && x.errors === 0) && (!task.hotkeyBank || task.hotkeyBank === 'any' || task.hotkeyBank === evidence.bank);
+    }
+    if (task.module === 'excel') accepted = evidence.verified === true && evidence.correct === true && evidence.assisted === false;
+    if (!accepted) return {
+      done: false,
+      accepted: false
+    };
+    const ids = Array.isArray(old.acceptedAttemptIds) ? old.acceptedAttemptIds : [];
+    if (ids.includes(evidence.id)) return {
+      done: old.status === 'completed',
+      accepted: true
+    };
+    const acceptedAttemptIds = [...ids, evidence.id],
+      count = acceptedAttemptIds.length,
+      done = count >= Number(task.target || 1),
+      ts = window.firebase.firestore.FieldValue.serverTimestamp;
+    tx.set(pr, {
+      ...old,
+      status: done ? 'completed' : 'started',
+      receiptVersion: 2,
+      acceptedAttemptIds,
+      result: {
+        count
+      },
+      updatedAt: ts(),
+      ...(done ? {
+        completedAt: ts(),
+        needsHelp: false
+      } : {})
+    });
+    return {
+      done,
+      accepted: true
+    };
+  });
+};
 function LmsAssignedTyping({
   task,
   uid,
@@ -710,8 +859,37 @@ function LmsAssignedTyping({
     onClick: restart
   }, "Повторить текст")));
 }
-const LMS_ASSIGN_CSS = '.la-box,.la-drawer,.la-launcher{--la-bg:#171d2d;--la-paper:#20273a;--la-line:#a994d62c;--la-text:#edf0fa;--la-muted:#a3acc3;--la-accent:#b49aea;--la-ink:#20162f;font-family:inherit;color-scheme:dark}.la-box{background:var(--la-bg);color:var(--la-text);border:1px solid var(--la-line);border-radius:20px;padding:23px;margin:0 0 20px;min-width:0}.la-box *{box-sizing:border-box}.la-box h3,.la-box h4,.la-box p{margin:0}.la-box header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.la-box header>div{flex:1;min-width:0}.la-box h3{font-size:22px;margin-top:4px}.la-box h4{font-size:15px;overflow-wrap:anywhere;line-height:1.5}.la-box p{font-size:12px;line-height:1.7;color:var(--la-muted);margin:9px 0}.la-box small{font-size:10px;color:var(--la-muted);line-height:1.6}.la-box button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;margin:0;padding:10px 13px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text);font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;cursor:pointer;box-shadow:none;text-transform:none;transition:background .18s,transform .18s}.la-box button:hover:not(:disabled){border-color:var(--la-accent)}.la-box button:active:not(:disabled){transform:scale(.97)}.la-box button:disabled{opacity:.45;cursor:default}.la-box .la-primary{background:var(--la-accent);color:var(--la-ink);border-color:transparent}.la-box :focus-visible,.la-launcher:focus-visible{outline:2px solid var(--la-accent);outline-offset:3px}.la-cards{display:grid;grid-template-columns:1fr;gap:12px}.la-cards article{background:var(--la-paper);border:1px solid var(--la-line);border-radius:15px;padding:17px;animation:la-card-in .2s ease-out}.la-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:10px;color:var(--la-muted)}.la-state{padding:4px 7px;background:#a68bd614;color:var(--la-accent);border-radius:7px;font-size:9px;white-space:nowrap}.la-state.done{color:#55b699;background:#55b69915}.la-state.help,.la-state.late{color:#e4aa73;background:#e4aa7312}.la-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.la-actions button{flex:1}.la-instruction{border-left:2px solid var(--la-line);padding-left:10px;white-space:pre-wrap;overflow-wrap:anywhere}.la-card-result{font-size:11px;color:var(--la-accent);padding-top:10px;margin-top:10px;border-top:1px solid var(--la-line)}.la-error{color:#e889a2!important;font-size:11px!important;overflow-wrap:anywhere}.la-metrics{display:flex;gap:12px;flex-wrap:wrap;padding:13px;background:var(--la-paper);border-radius:12px;font-size:12px}.la-text{max-height:250px;overflow:auto;font:23px/1.8 ui-monospace,monospace;margin:18px 0;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin}.la-text .done{color:var(--la-accent)}.la-text .current{background:var(--la-accent);color:var(--la-ink);border-radius:3px}.la-text .wrong{background:#ee9bb5}.la-input{display:block;width:100%;border:1px solid var(--la-line);background:var(--la-paper);color:inherit;font-family:inherit;font-size:16px;padding:13px;border-radius:11px;margin-top:8px}.la-box label{font-size:12px}\n.la-launcher{position:fixed!important;right:0!important;left:auto!important;top:42%;z-index:1100;display:grid;place-items:center;width:44px;height:50px;min-height:50px;margin:0!important;padding:0;border:1px solid var(--la-line);border-right:0;border-radius:15px 0 0 15px!important;background:var(--la-bg);color:var(--la-accent);cursor:pointer;box-shadow:-4px 5px 20px #0001;transition:width .2s,background .2s;transform:none}.la-launcher:hover{width:50px;background:var(--la-paper)}.la-launcher:active{width:46px}.la-launcher svg{display:block;flex-shrink:0}\n.la-drawer{padding:0;border:1px solid var(--la-line);border-right:0;border-radius:22px 0 0 22px;width:min(430px,calc(100vw - 12px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:var(--la-bg);color:var(--la-text);box-shadow:-20px 0 70px #0003}.la-drawer::backdrop{background:#080c1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .26s cubic-bezier(.2,.8,.2,1)}.la-drawer.la-closing{animation:la-slide-out .19s ease-in forwards}.la-drawer .la-box{height:100%;display:flex;flex-direction:column;border:0;border-radius:0;margin:0;padding:0;background:var(--la-bg)}.la-drawer header{margin:0;padding:24px 21px 20px;border-bottom:1px solid var(--la-line);flex-shrink:0}.la-drawer header small{font-size:9px;letter-spacing:1.2px}.la-header-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:var(--la-accent);background:#a68bd614;font-size:19px}.la-drawer .la-close{display:grid;place-items:center;width:33px;height:33px;min-height:33px;padding:0;font-size:22px;border-radius:10px;flex-shrink:0}.la-drawer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 21px;flex-shrink:0;font-size:11px;color:var(--la-muted)}.la-drawer-toolbar select{font-family:inherit;font-size:11px;border:1px solid var(--la-line);border-radius:9px;background:var(--la-paper);color:var(--la-text);padding:8px;max-width:180px}.la-drawer-toolbar option{background:var(--la-bg);color:var(--la-text)}.la-drawer-scroll{overflow:auto;min-height:0;flex:1;padding:18px 21px;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent;overscroll-behavior:contain}.la-drawer-footer{padding:14px 21px;border-top:1px solid var(--la-line);color:var(--la-muted);font-size:10px;line-height:1.6;flex-shrink:0}.la-empty{display:flex;align-items:center;gap:14px;padding:20px 15px;border:1px dashed var(--la-line);border-radius:14px}.la-empty>span{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:#a68bd610;color:var(--la-accent)}.la-empty h4{font-size:13px}.la-empty p{font-size:11px;margin:5px 0 0}.la-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) :is(.la-box,.la-drawer,.la-launcher){--la-bg:#faf9ff;--la-paper:#f0ecf7;--la-line:#7054932c;--la-text:#293047;--la-muted:#6b7288;--la-accent:#7954c0;--la-ink:#fff;color-scheme:light}@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-slide-out{to{opacity:0;transform:translateX(30px)}}@keyframes la-card-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:520px){.la-box{padding:17px}.la-box h3{font-size:19px}.la-text{font-size:20px}.la-drawer header{padding:20px 16px 17px}.la-drawer-scroll{padding:16px}.la-drawer-toolbar{padding:14px 16px}.la-drawer-footer{padding:13px 16px}.la-launcher{width:39px;height:46px;min-height:46px}.la-cards article{padding:15px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-drawer.la-closing,.la-cards article{animation:none}.la-launcher,.la-box button{transition:none}}\n/* Same edge-tab proportions as folded LMS AI assistant */\n.la-launcher{width:32px!important;height:60px!important;min-width:0!important;min-height:60px!important;border-radius:16px 0 0 16px!important;box-shadow:0 4px 16px #0002;border-color:var(--la-line);background:var(--la-bg);transition:background .2s,box-shadow .2s!important}.la-launcher:hover{width:32px!important;background:var(--la-paper);box-shadow:-3px 4px 20px #a68bd62a}.la-launcher:active{width:32px!important}.la-launcher svg{width:19px;height:19px}.la-launcher:focus-visible{outline-offset:-3px}\n@media(prefers-reduced-motion:reduce){.la-launcher{transition:none!important}}\n';
+const LMS_ASSIGN_CSS = '.la-box,.la-drawer,.la-launcher{--la-bg:#171d2d;--la-paper:#20273a;--la-line:#a994d62c;--la-text:#edf0fa;--la-muted:#a3acc3;--la-accent:#b49aea;--la-ink:#20162f;font-family:inherit;color-scheme:dark}.la-box{background:var(--la-bg);color:var(--la-text);border:1px solid var(--la-line);border-radius:20px;padding:23px;margin:0 0 20px;min-width:0}.la-box *{box-sizing:border-box}.la-box h3,.la-box h4,.la-box p{margin:0}.la-box header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.la-box header>div{flex:1;min-width:0}.la-box h3{font-size:22px;margin-top:4px}.la-box h4{font-size:15px;overflow-wrap:anywhere;line-height:1.5}.la-box p{font-size:12px;line-height:1.7;color:var(--la-muted);margin:9px 0}.la-box small{font-size:10px;color:var(--la-muted);line-height:1.6}.la-box button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;height:auto;margin:0;padding:10px 13px;border:1px solid var(--la-line);border-radius:11px;background:var(--la-paper);color:var(--la-text);font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;cursor:pointer;box-shadow:none;text-transform:none;transition:background .18s,transform .18s}.la-box button:hover:not(:disabled){border-color:var(--la-accent)}.la-box button:active:not(:disabled){transform:scale(.97)}.la-box button:disabled{opacity:.45;cursor:default}.la-box .la-primary{background:var(--la-accent);color:var(--la-ink);border-color:transparent}.la-box :focus-visible,.la-launcher:focus-visible{outline:2px solid var(--la-accent);outline-offset:3px}.la-cards{display:grid;grid-template-columns:1fr;gap:12px}.la-cards article{background:var(--la-paper);border:1px solid var(--la-line);border-radius:15px;padding:17px;animation:la-card-in .2s ease-out}.la-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:10px;color:var(--la-muted)}.la-state{padding:4px 7px;background:#a68bd614;color:var(--la-accent);border-radius:7px;font-size:9px;white-space:nowrap}.la-state.done{color:#55b699;background:#55b69915}.la-state.help,.la-state.late{color:#e4aa73;background:#e4aa7312}.la-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.la-actions button{flex:1}.la-instruction{border-left:2px solid var(--la-line);padding-left:10px;white-space:pre-wrap;overflow-wrap:anywhere}.la-card-result{font-size:11px;color:var(--la-accent);padding-top:10px;margin-top:10px;border-top:1px solid var(--la-line)}.la-error{color:#e889a2!important;font-size:11px!important;overflow-wrap:anywhere}.la-metrics{display:flex;gap:12px;flex-wrap:wrap;padding:13px;background:var(--la-paper);border-radius:12px;font-size:12px}.la-text{max-height:250px;overflow:auto;font:23px/1.8 ui-monospace,monospace;margin:18px 0;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin}.la-text .done{color:var(--la-accent)}.la-text .current{background:var(--la-accent);color:var(--la-ink);border-radius:3px}.la-text .wrong{background:#ee9bb5}.la-input{display:block;width:100%;border:1px solid var(--la-line);background:var(--la-paper);color:inherit;font-family:inherit;font-size:16px;padding:13px;border-radius:11px;margin-top:8px}.la-box label{font-size:12px}\n.la-launcher{position:fixed!important;right:0!important;left:auto!important;top:42%;z-index:1100;display:grid;place-items:center;width:44px;height:50px;min-height:50px;margin:0!important;padding:0;border:1px solid var(--la-line);border-right:0;border-radius:15px 0 0 15px!important;background:var(--la-bg);color:var(--la-accent);cursor:pointer;box-shadow:-4px 5px 20px #0001;transition:width .2s,background .2s;transform:none}.la-launcher:hover{width:50px;background:var(--la-paper)}.la-launcher:active{width:46px}.la-launcher svg{display:block;flex-shrink:0}\n.la-drawer{padding:0;border:1px solid var(--la-line);border-right:0;border-radius:22px 0 0 22px;width:min(430px,calc(100vw - 12px));max-width:none;height:100dvh;max-height:100dvh;margin:0 0 0 auto;inset:0;overflow:hidden;background:var(--la-bg);color:var(--la-text);box-shadow:-20px 0 70px #0003}.la-drawer::backdrop{background:#080c1955;backdrop-filter:blur(4px)}.la-drawer[open]{animation:la-slide .26s cubic-bezier(.2,.8,.2,1)}.la-drawer.la-closing{animation:la-slide-out .19s ease-in forwards}.la-drawer .la-box{height:100%;display:flex;flex-direction:column;border:0;border-radius:0;margin:0;padding:0;background:var(--la-bg)}.la-drawer header{margin:0;padding:24px 21px 20px;border-bottom:1px solid var(--la-line);flex-shrink:0}.la-drawer header small{font-size:9px;letter-spacing:1.2px}.la-header-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:var(--la-accent);background:#a68bd614;font-size:19px}.la-drawer .la-close{display:grid;place-items:center;width:33px;height:33px;min-height:33px;padding:0;font-size:22px;border-radius:10px;flex-shrink:0}.la-drawer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 21px;flex-shrink:0;font-size:11px;color:var(--la-muted)}.la-drawer-toolbar select{font-family:inherit;font-size:11px;border:1px solid var(--la-line);border-radius:9px;background:var(--la-paper);color:var(--la-text);padding:8px;max-width:180px}.la-drawer-toolbar option{background:var(--la-bg);color:var(--la-text)}.la-drawer-scroll{overflow:auto;min-height:0;flex:1;padding:18px 21px;scrollbar-width:thin;scrollbar-color:var(--la-line) transparent;overscroll-behavior:contain}.la-drawer-footer{padding:14px 21px;border-top:1px solid var(--la-line);color:var(--la-muted);font-size:10px;line-height:1.6;flex-shrink:0}.la-empty{display:flex;align-items:center;gap:14px;padding:20px 15px;border:1px dashed var(--la-line);border-radius:14px}.la-empty>span{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:#a68bd610;color:var(--la-accent)}.la-empty h4{font-size:13px}.la-empty p{font-size:11px;margin:5px 0 0}.la-sr{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}\n:is(html.light,body.light,.theme-light,[data-theme=light]) :is(.la-box,.la-drawer,.la-launcher){--la-bg:#faf9ff;--la-paper:#f0ecf7;--la-line:#7054932c;--la-text:#293047;--la-muted:#6b7288;--la-accent:#7954c0;--la-ink:#fff;color-scheme:light}@keyframes la-slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}@keyframes la-slide-out{to{opacity:0;transform:translateX(30px)}}@keyframes la-card-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:520px){.la-box{padding:17px}.la-box h3{font-size:19px}.la-text{font-size:20px}.la-drawer header{padding:20px 16px 17px}.la-drawer-scroll{padding:16px}.la-drawer-toolbar{padding:14px 16px}.la-drawer-footer{padding:13px 16px}.la-launcher{width:39px;height:46px;min-height:46px}.la-cards article{padding:15px}}@media(prefers-reduced-motion:reduce){.la-drawer[open],.la-drawer.la-closing,.la-cards article{animation:none}.la-launcher,.la-box button{transition:none}}\n/* Same edge-tab proportions as folded LMS AI assistant */\n.la-launcher{width:32px!important;height:60px!important;min-width:0!important;min-height:60px!important;border-radius:16px 0 0 16px!important;box-shadow:0 4px 16px #0002;border-color:var(--la-line);background:var(--la-bg);transition:background .2s,box-shadow .2s!important}.la-launcher:hover{width:32px!important;background:var(--la-paper);box-shadow:-3px 4px 20px #a68bd62a}.la-launcher:active{width:32px!important}.la-launcher svg{width:19px;height:19px}.la-launcher:focus-visible{outline-offset:-3px}\n@media(prefers-reduced-motion:reduce){.la-launcher{transition:none!important}}\n.la-box button,.la-drawer button{height:auto!important;max-height:none!important;min-height:42px;line-height:1.5;white-space:normal}.la-box .la-close{width:36px;min-height:36px;height:36px!important;flex-shrink:0}.la-drawer{width:min(420px,100vw)!important;max-width:100vw!important;overflow:clip}.la-box{width:100%;min-width:0}.la-cards article{height:auto;min-width:0}.la-drawer-toolbar{gap:10px;flex-wrap:wrap}.la-drawer-toolbar label{min-width:0;flex:1}.la-drawer-toolbar select{width:100%;height:42px;min-width:0;background:var(--la-paper);color:var(--la-text);border:1px solid var(--la-line);border-radius:10px;padding:8px}.la-help-form,.la-help-history{margin-top:12px;padding:12px;border:1px solid var(--la-line);border-radius:12px;background:var(--la-paper);font-size:12px}.la-help-form label{display:grid;gap:6px}.la-help-form textarea{width:100%;min-height:85px;resize:vertical;height:auto;border:1px solid var(--la-line);background:var(--la-bg);color:var(--la-text);border-radius:10px;padding:10px;font:inherit}.la-help-history p{white-space:pre-wrap;overflow-wrap:anywhere}.la-notice{color:var(--la-accent);line-height:1.6}.la-box [hidden]{display:none!important}.la-active{width:100%;max-width:800px;margin:0 auto 16px;padding:16px;border:1px solid var(--la-line,#a994d62c);border-radius:14px;background:var(--input-bg,#20273a);color:var(--text-main,#edf0fa);font:13px/1.6 inherit}.la-active h4{margin:0 0 5px}.la-active p{margin:5px 0}.la-active button{height:auto;min-height:40px;padding:8px 12px;border-radius:9px;background:#a68bd620;color:inherit;border:1px solid #a994d62c}.la-active small{display:block}.la-active strong{color:var(--text-main,inherit)}\n@media(max-width:480px){.la-drawer{border-radius:0!important}.la-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.la-actions button{width:100%}.la-card-top{flex-wrap:wrap}.la-box>header{padding:16px;gap:10px}.la-box>header h3{font-size:19px}}\n.assignment-ai{margin-top:14px;border:1px solid var(--ax-line,var(--la-line));border-radius:12px;overflow:hidden;font-size:12px;background:var(--ax-input,var(--la-paper));color:var(--ax-text,var(--la-text))}.assignment-ai summary{cursor:pointer;padding:13px;color:var(--ax-accent,var(--la-accent));font-weight:600;min-height:44px}.assignment-ai>div{padding:0 13px 13px}.assignment-ai label{display:grid;gap:6px}.assignment-ai textarea{width:100%;min-height:80px;height:auto;max-height:200px;resize:vertical;border:1px solid var(--ax-line,var(--la-line));border-radius:10px;padding:10px;background:var(--ax-bg,var(--la-bg));color:inherit;font:inherit;margin:7px 0}.assignment-ai button{height:auto!important;min-height:40px;border:1px solid var(--ax-line,var(--la-line));border-radius:9px;background:var(--ax-paper,var(--la-paper));color:inherit;font:inherit;padding:10px;line-height:1.4}.assignment-ai button:disabled{opacity:.5}.assignment-ai-actions{display:flex;gap:8px;flex-wrap:wrap}.assignment-ai .assignment-ai-answer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;margin:12px 0}.assignment-ai small{display:block;margin-top:8px;font-size:10px;color:var(--ax-muted,var(--la-muted))}\n';
 const LMS_ASSIGN_DRAWER_CSS = "";
+function AssignmentActive({
+  task,
+  uid,
+  onClose
+}) {
+  const [progress, setProgress] = React.useState(null),
+    [notice, setNotice] = React.useState('');
+  React.useEffect(() => window.db.collection('lmsAssignments').doc(task.id).collection('progress').doc(uid).onSnapshot(s => setProgress(s.data()), e => setNotice(e.message)), [task.id, uid]);
+  React.useEffect(() => {
+    const f = e => {
+      if (e.detail?.id === task.id) setNotice(e.detail.message);
+    };
+    window.addEventListener('lms-assignment-feedback', f);
+    return () => window.removeEventListener('lms-assignment-feedback', f);
+  }, [task.id]);
+  const done = progress?.status === 'completed' && progress?.receiptVersion === 2;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "la-active"
+  }, /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("small", null, task.module === 'hotkeys' ? `От 5 сочетаний в серии: все ответы верные, без ошибок, подсказок и пропусков. Категория: ${{
+    word: 'Word',
+    windows: 'Windows',
+    excel: 'Excel',
+    any: 'любая'
+  }[task.hotkeyBank || 'any']}.` : 'Самостоятельно решайте задачи. Просмотр готового решения не засчитывается.'), task.text && /*#__PURE__*/React.createElement("p", null, task.text), /*#__PURE__*/React.createElement("strong", null, done ? 'Задание выполнено' : `Прогресс: ${progress?.result?.count || 0} / ${task.target || 1}`), notice && /*#__PURE__*/React.createElement("p", {
+    role: "status"
+  }, notice), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+    onClick: onClose
+  }, "Вернуться к заданиям позже")));
+}
 function App() {
   const [assignedTask, setAssignedTask] = useState(null);
   useEffect(() => {
@@ -985,7 +1163,14 @@ function App() {
   // -----------------------------------------------------------------------
 
   useEffect(() => {
-    if (!appReady) return;
+    if (!appReady) {
+      window.__lmsAssignmentContext = null;
+      return;
+    }
+    if (!assignedTask || view !== assignedTask.module || !allowedModules.includes('assignments') || !allowedModules.includes(assignedTask.module)) {
+      window.__lmsAssignmentContext = null;
+      if (assignedTask) setAssignedTask(null);
+    }
     if (!allowedModules.includes('assignments') && assignedTask) {
       setAssignedTask(null);
     }
@@ -1408,13 +1593,27 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement(LandingView, {
     onLogin: handleDirectLogin
-  })), appReady && allowedModules.includes('assignments') && React.createElement(LmsMyAssignments, {
+  })), appReady && assignedTask && assignedTask.module !== 'typing' && view === assignedTask.module && React.createElement(AssignmentActive, {
+    task: assignedTask,
+    uid: user.uid,
+    onClose: () => {
+      window.__lmsAssignmentContext = null;
+      setAssignedTask(null);
+      setView('menu');
+    }
+  }), appReady && !isAdmin && allowedModules.includes('assignments') && React.createElement(LmsMyAssignments, {
     key: user.uid,
     uid: user.uid,
     modules: allowedModules,
     profile: userData,
     onOpen: task => {
-      setAssignedTask(task.module === 'typing' ? task : null);
+      window.__lmsAssignmentContext = {
+        id: task.id,
+        uid: user.uid,
+        module: task.module,
+        bank: task.hotkeyBank || 'any'
+      };
+      setAssignedTask(task);
       setView(task.module);
     }
   }), appReady && view === 'admin' && isAdmin && /*#__PURE__*/React.createElement(AdminPanel, {
@@ -1457,7 +1656,7 @@ function App() {
       width: '100%',
       maxWidth: '1100px'
     }
-  }, /*#__PURE__*/assignedTask && allowedModules.includes('assignments') ? React.createElement(LmsAssignedTyping, {
+  }, /*#__PURE__*/assignedTask?.module === 'typing' && allowedModules.includes('assignments') ? React.createElement(LmsAssignedTyping, {
     key: user.uid + assignedTask.id,
     task: assignedTask,
     uid: user.uid,
@@ -1480,7 +1679,9 @@ function App() {
       width: '100%',
       maxWidth: '700px'
     }
-  }, /*#__PURE__*/React.createElement(HotkeyTrainer, null)), appReady && view === 'code' && allowedModules.includes('code') && /*#__PURE__*/React.createElement(motion.div, {
+  }, /*#__PURE__*/React.createElement(HotkeyTrainer, {
+    key: assignedTask?.id || 'practice'
+  })), appReady && view === 'code' && allowedModules.includes('code') && /*#__PURE__*/React.createElement(motion.div, {
     key: "code_playground",
     initial: {
       opacity: 0
@@ -1553,6 +1754,7 @@ function App() {
       maxWidth: '1000px'
     }
   }, /*#__PURE__*/React.createElement(LazyExcelTrainer, {
+    key: assignedTask?.id || 'practice',
     theme: theme,
     onBack: () => setView('menu')
   }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
