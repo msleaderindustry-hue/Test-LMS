@@ -613,9 +613,10 @@ function _extends() {
     height: 17,
     rx: 3
   }), React.createElement('path', {
-    d: 'M9 4V2h6v2M9 10h6M9 14h6M9 18h3'
+    d: 'M9 4V2h6v2M8 10l1 1 2-2m2 1h3M8 16l1 1 2-2m2 1h3'
   }));
-  const MENU_ITEMS = [{ id:'word', label:'Word Lab', hint:'Документы, оформление и практика', Icon:AssignmentIcon, color:'#b49aea' }, {
+  const WordDocumentIcon = () => React.createElement(motion.svg,{width:20,height:20,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},React.createElement('path',{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M7.5 11l1.5 6 3-4 3 4 1.5-6M8 20h8'}));
+  const MENU_ITEMS = [{ id:'word', label:'Word Lab', hint:'Документы, оформление и практика', Icon:WordDocumentIcon, color:'#b49aea' }, {
     id: 'assignments',
     label: 'Задания',
     hint: 'План, практика и результаты',
