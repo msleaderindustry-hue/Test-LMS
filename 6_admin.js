@@ -279,7 +279,7 @@ function _extends() {
       ...style
     }
   }, ADMIN_ICON_PATHS[name] || null);
-  const AVAILABLE_MODULES = [{
+  const AVAILABLE_MODULES = [{ id:'word', icon:'fileText', label:'Word Lab', color:'#b49aea' }, {
     id: 'assignments',
     icon: 'fileText',
     label: 'Задания',
@@ -610,6 +610,7 @@ function _extends() {
     hotkeys: 'Горячие клавиши',
     flashcards: 'Карточки',
     code: 'VS School',
+    word: 'Word Lab',
     excel: 'Excel',
     chess: 'Шахматы',
     chat: 'Чат',
@@ -2587,7 +2588,7 @@ function _extends() {
       setError('');
       const timer = setTimeout(() => c.abort(), 45000);
       try {
-        const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; Excel: ученик решает задачи с проверкой формулы внутри браузерного тренажёра; нет прикреплённых файлов, скачивания или загрузки ответов. Hotkeys: ученик проходит серии сочетаний клавиш. Не проси скачивать файлы, создавать сводные таблицы или загружать документы; не обещай несуществующих функций. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
+        const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; Excel: ученик решает задачи с проверкой формулы внутри браузерного тренажёра; нет прикреплённых файлов, скачивания или загрузки ответов. Hotkeys: ученик проходит серии сочетаний клавиш. Не проси скачивать файлы, создавать сводные таблицы или загружать документы; не обещай несуществующих функций. Для word верни краткую инструкцию к встроенному упражнению ${task.wordLesson || "memo"}; названия: memo — Служебная записка, report — Структура отчёта, table — План учебной встречи. Нужно выполнить четыре условия, показанные в панели Практика. Не придумывай другие критерии. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
           title: task.title,
           module: task.module,
           instruction: task.text
@@ -2870,6 +2871,7 @@ function _extends() {
       const d = new Date(Date.now() + days * 86400000);
       return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     };
+    const [wordLesson, setWordLesson] = useState('memo');
     const [hotkeyBank, setHotkeyBank] = useState('any');
     const formDialog = useRef(null),
       lock = useRef(false),
@@ -2883,6 +2885,7 @@ function _extends() {
       eligible = students.filter(u => allowed(u, 'assignments') && allowed(u, module));
     const visible = students.filter(u => (nameOf(u) + ' ' + (u.email || '')).toLowerCase().includes(query.toLowerCase()));
     const definitions = {
+      word: ['Word Lab', 'Оформить документ: четыре проверяемых условия'],
       typing: ['Печать', 'Набрать текст с нужной точностью'],
       hotkeys: ['Горячие клавиши', 'Серия от 5 ответов: всё верно, без пропусков и подсказок'],
       excel: ['Excel', 'Самостоятельно решить задачи с проверкой формулы']
@@ -2955,7 +2958,7 @@ function _extends() {
       if (module === 'typing') {
         if (normalized.length < 20 || normalized.length > 1800) invalid.text = 'Нужно от 20 до 1800 символов. Сейчас: ' + normalized.length + '.';
         if (!Number.isFinite(Number(accuracy)) || accuracy < 50 || accuracy > 100) invalid.accuracy = 'Точность должна быть от 50 до 100%.';
-      } else if (!Number.isInteger(target) || target < 1 || target > 50) invalid.target = 'Укажите целое число от 1 до 50.';
+      } else if (module === 'word' && !['memo','report','table'].includes(wordLesson)) invalid.target = 'Выберите упражнение Word.'; else if (module !== 'word' && (!Number.isInteger(target) || target < 1 || target > 50)) invalid.target = 'Укажите целое число от 1 до 50.';
       setFieldErrors(invalid);
       if (Object.keys(invalid).length) {
         setError(Object.values(invalid)[0]);
@@ -3002,7 +3005,8 @@ function _extends() {
             text: normalized,
             lang,
             minAccuracy: Number(accuracy),
-            target: module === 'typing' ? 1 : target,
+            target: ['typing','word'].includes(module) ? 1 : target,
+            wordLesson: module === 'word' ? wordLesson : null,
             dueAt: window.firebase.firestore.Timestamp.fromMillis(deadline),
             studentIds: ids,
             studentNames: Object.fromEntries(ids.map(id => [id, nameOf(students.find(u => u.id === id) || {
@@ -3243,12 +3247,13 @@ function _extends() {
       value: text,
       maxLength: 1800,
       onChange: e => setText(e.target.value),
-      placeholder: module === 'typing' ? 'Введите связный текст. Переносы строк будут заменены пробелами.' : 'Например: потренируй сочетания клавиш Word.'
+      placeholder: module === 'typing' ? 'Введите связный текст. Переносы строк будут заменены пробелами.' : module === 'word' ? 'Дополнительные пожелания к оформлению. Условия зачёта определяются выбранным упражнением.' : 'Например: потренируй сочетания клавиш Word.'
     }), /*#__PURE__*/React.createElement("small", null, text.length, " / 1800 символов"), fieldErrors.text && /*#__PURE__*/React.createElement("small", {
       className: "ax-field-error",
       id: "ax-error-text"
     }, fieldErrors.text)), /*#__PURE__*/React.createElement(AssignmentAI, {
       task: {
+        wordLesson,
         module,
         title,
         lang
@@ -3296,7 +3301,7 @@ function _extends() {
     }), fieldErrors.accuracy && /*#__PURE__*/React.createElement("small", {
       className: "ax-field-error",
       id: "ax-error-accuracy"
-    }, fieldErrors.accuracy))) : /*#__PURE__*/React.createElement("label", {
+    }, fieldErrors.accuracy))) : module === 'word' ? React.createElement("label", {className:"ax-wide"}, "Упражнение Word", React.createElement("select", {value:wordLesson,onChange:e=>setWordLesson(e.target.value)}, [['memo','Служебная записка'],['report','Структура отчёта'],['table','План учебной встречи']].map(([id,label])=>React.createElement('option',{key:id,value:id},label))),React.createElement('small',null,'Один документ. Зачёт после выполнения всех четырёх условий оформления; повторная проверка не увеличивает результат.')) : /*#__PURE__*/React.createElement("label", {
       className: "ax-wide"
     }, module === 'excel' ? 'Самостоятельных решений' : 'Успешных серий', /*#__PURE__*/React.createElement("input", {
       "data-field": "target",
