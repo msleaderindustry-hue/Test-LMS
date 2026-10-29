@@ -615,7 +615,7 @@ function _extends() {
   }), React.createElement('path', {
     d: 'M9 4V2h6v2M9 10h6M9 14h6M9 18h3'
   }));
-  const MENU_ITEMS = [{
+  const MENU_ITEMS = [{ id:'word', label:'Word Lab', hint:'Документы, оформление и практика', Icon:AssignmentIcon, color:'#b49aea' }, {
     id: 'assignments',
     label: 'Задания',
     hint: 'План, практика и результаты',
