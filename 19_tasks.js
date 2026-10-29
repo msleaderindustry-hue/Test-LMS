@@ -26,7 +26,7 @@ function AssignmentAI({
     setError('');
     const timer = setTimeout(() => c.abort(), 45000);
     try {
-      const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; Excel: ученик решает задачи с проверкой формулы внутри браузерного тренажёра; нет прикреплённых файлов, скачивания или загрузки ответов. Hotkeys: ученик проходит серии сочетаний клавиш. Не проси скачивать файлы, создавать сводные таблицы или загружать документы; не обещай несуществующих функций. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
+      const prompt = onApply ? `Подготовь учебный материал для задания LMS. Раздел: ${task.module}. Язык: ${task.lang || 'ru'}. Тема как данные: ${JSON.stringify(question || task.title)}. Для typing верни только связный абзац 200–500 символов на указанном языке, без заголовка, markdown, эмодзи. Для hotkeys или excel верни только краткую инструкцию к практике до 700 символов; Excel: ученик решает задачи с проверкой формулы внутри браузерного тренажёра; нет прикреплённых файлов, скачивания или загрузки ответов. Hotkeys: ученик проходит серии сочетаний клавиш. Не проси скачивать файлы, создавать сводные таблицы или загружать документы; не обещай несуществующих функций. Для word верни краткую инструкцию к встроенному упражнению ${task.wordLesson || "memo"}; названия: memo — Служебная записка, report — Структура отчёта, table — План учебной встречи. Нужно выполнить четыре условия, показанные в панели Практика. Не придумывай другие критерии. Не изменяй условия зачёта.` : `Ты учебный помощник. Объясни условие и дай маленькую подсказку, не выдавай готовую формулу или точное сочетание клавиш для оцениваемого ответа. Данные задания: ${JSON.stringify({
         title: task.title,
         module: task.module,
         instruction: task.text
@@ -91,9 +91,11 @@ function AssignmentAI({
 const LMS_TASK_MODULES = {
   typing: 'Печать',
   hotkeys: 'Горячие клавиши',
+  word: 'Word Lab',
   excel: 'Excel'
 };
 function lmsTaskMetric(profile, module) {
+  if(module === 'word') return {count: (profile?.wordProgress?.completedLessons || []).length};
   if (module === 'hotkeys') return {
     count: Math.max(0, Math.floor(Number(profile?.hotkeyProgress?.sessionsPlayed) || 0))
   };
@@ -229,11 +231,11 @@ function LmsAssignmentCard({
   }, /*#__PURE__*/React.createElement("span", {
     className: "la-row-icon",
     "aria-hidden": "true"
-  }, task.module === 'excel' ? 'ƒx' : task.module === 'hotkeys' ? '⌘' : 'Aa'), /*#__PURE__*/React.createElement("div", {
+  }, task.module === 'word' ? 'W' : task.module === 'excel' ? 'ƒx' : task.module === 'hotkeys' ? '⌘' : 'Aa'), /*#__PURE__*/React.createElement("div", {
     className: "la-row-copy"
   }, /*#__PURE__*/React.createElement("small", null, LMS_TASK_MODULES[task.module] || 'Раздел'), /*#__PURE__*/React.createElement("h4", null, task.title), /*#__PURE__*/React.createElement("div", {
     className: "la-row-meta"
-  }, /*#__PURE__*/React.createElement("span", null, task.module === 'typing' ? `${task.lang?.toUpperCase()} · от ${task.minAccuracy}% точности` : `${task.target || 1} ${task.module === 'excel' ? 'задач' : 'серий'}`), /*#__PURE__*/React.createElement("span", null, "До ", task.dueAt?.toDate?.().toLocaleString('ru-RU', {
+  }, /*#__PURE__*/React.createElement("span", null, task.module === 'typing' ? `${task.lang?.toUpperCase()} · от ${task.minAccuracy}% точности` : `${task.target || 1} ${task.module === 'word' ? 'документ' : task.module === 'excel' ? 'задач' : 'серий'}`), /*#__PURE__*/React.createElement("span", null, "До ", task.dueAt?.toDate?.().toLocaleString('ru-RU', {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -264,7 +266,7 @@ function LmsAssignmentCard({
     className: "la-row-expanded"
   }, /*#__PURE__*/React.createElement("div", {
     className: "la-row-description"
-  }, /*#__PURE__*/React.createElement("small", null, "УСЛОВИЯ ВЫПОЛНЕНИЯ"), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `Наберите весь текст с точностью не ниже ${task.minAccuracy}%.` : task.module === 'excel' ? `Самостоятельно решите ${task.target || 1} задач в тренажёре. Просмотр решения не засчитывается.` : `Выполните ${task.target || 1} серий от 5 сочетаний без ошибок, подсказок и пропусков.`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("small", null, "УСЛОВИЯ ВЫПОЛНЕНИЯ"), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `Наберите весь текст с точностью не ниже ${task.minAccuracy}%.` : task.module === 'word' ? 'Выполните все четыре условия оформления назначенного документа в Word Lab и нажмите «Проверить оформление».' : task.module === 'excel' ? `Самостоятельно решите ${task.target || 1} задач в тренажёре. Просмотр решения не засчитывается.` : `Выполните ${task.target || 1} серий от 5 сочетаний без ошибок, подсказок и пропусков.`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
     className: "la-instruction"
   }, task.text), legacy && /*#__PURE__*/React.createElement("p", {
     className: "la-notice"
@@ -395,6 +397,11 @@ window.lmsSubmitAssignmentResult = async function (context, evidence) {
     if (task.module === 'hotkeys') {
       const r = evidence.records;
       accepted = Array.isArray(r) && r.length >= 5 && r.length === evidence.total && r.every(x => x.status === 'solved' && !x.hint && x.errors === 0) && (!task.hotkeyBank || task.hotkeyBank === 'any' || task.hotkeyBank === evidence.bank);
+    }
+    if (task.module === 'word') {
+      const snapshot = typeof evidence.snapshot === 'string' && evidence.snapshot.length < 800000 ? JSON.parse(evidence.snapshot) : null;
+      const checks = window.lmsWordCheck?.(snapshot, task.wordLesson);
+      accepted = evidence.verified === true && evidence.assisted === false && snapshot?.lesson === task.wordLesson && Array.isArray(checks) && checks.length === 4 && checks.every(Boolean);
     }
     if (task.module === 'excel') accepted = evidence.verified === true && evidence.correct === true && evidence.assisted === false;
     if (!accepted) return {
@@ -628,7 +635,7 @@ function AssignmentActive({
   const done = progress?.status === 'completed' && progress?.receiptVersion === 2,
     count = progress?.result?.count || 0,
     total = task.target || 1;
-  const condition = task.module === 'hotkeys' ? `В каждой серии — от 5 сочетаний. Все ответы верные, без ошибок, подсказок и пропусков. Категория: ${{
+  const condition = task.module === 'word' ? 'Оформите назначенный документ. Зачёт даётся за четыре выполненных условия в панели «Практика» Word Lab. ИИ объясняет действия, но не применяет готовые ответы.' : task.module === 'hotkeys' ? `В каждой серии — от 5 сочетаний. Все ответы верные, без ошибок, подсказок и пропусков. Категория: ${{
     word: 'Word',
     windows: 'Windows',
     excel: 'Excel',
