@@ -109,7 +109,7 @@ const SidebarLauncher = ({
 window.LmsWordLoading=window.LmsWordLoading||function LmsWordLoading({theme='light',error='',onRetry,phase='module'}){
  const h=React.createElement;
  return h('section',{className:'wl-loading', 'data-theme':theme,role:error?'alert':'status','aria-busy':!error},
- h('style',null,`.wl-loading{--wl-ink:#ede8fa;--wl-muted:#ada3c0;--wl-panel:#1c1b2d;--wl-line:#ad8ae42b;--wl-accent:#b899ef;position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:center;gap:14px;box-sizing:border-box;min-height:220px;width:100%;max-width:600px;margin:16px auto;padding:24px 20px;border:1px solid var(--wl-line);border-radius:24px;background:radial-gradient(ellipse at 50% 25%,#a080d515,transparent 65%),var(--wl-panel);color:var(--wl-ink);text-align:center}.wl-loading[data-theme=light]{--wl-ink:#342b47;--wl-muted:#746880;--wl-panel:#fcfaff;--wl-line:#8f6bbd30;--wl-accent:#8152b9}.wl-loading::before{content:'';position:absolute;inset:0;z-index:-1;background-image:linear-gradient(var(--wl-line) 1px,transparent 1px),linear-gradient(90deg,var(--wl-line) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#0005,transparent 70%);pointer-events:none}.wl-loading .wl-document{width:44px;height:56px;position:relative;padding:10px 8px 8px;border:1px solid var(--wl-line);border-radius:8px 18px 8px 8px;background:var(--wl-panel);box-shadow:0 12px 35px #8051b620;transform:rotate(-5deg);animation:wl-breathe 2.4s ease-in-out infinite}.wl-document::before{content:'W';font:bold 24px Georgia;color:var(--wl-accent);display:block;margin-bottom:7px}.wl-document i{display:block;height:2px;margin-top:5px;border-radius:3px;background:var(--wl-accent);opacity:.5;transform-origin:left;animation:wl-write 2.4s ease-in-out infinite}.wl-document i:last-child{width:65%;animation-delay:.2s}.wl-loading small{font-size:9px;letter-spacing:2.5px;color:var(--wl-accent);margin-top:9px}.wl-loading h2{margin:0;font:650 19px/1.35 'Segoe UI',sans-serif;color:var(--wl-ink)}.wl-loading p{margin:0;max-width:390px;font:13px/1.7 'Segoe UI',sans-serif;color:var(--wl-muted)}.wl-loading .wl-progress{width:150px;height:3px;overflow:hidden;border-radius:6px;background:var(--wl-line);margin-top:8px}.wl-progress i{display:block;width:45%;height:100%;background:var(--wl-accent);animation:wl-progress 1.6s ease-in-out infinite}.wl-loading button{margin-top:6px;border:1px solid var(--wl-line);border-radius:12px;padding:12px 20px;background:var(--wl-accent);color:#fff;font:600 13px 'Segoe UI',sans-serif;cursor:pointer}.wl-loading:has(button) .wl-document{animation:none}@keyframes wl-breathe{50%{transform:translateY(-5px) rotate(2deg)}}@keyframes wl-write{0%,20%{transform:scaleX(.25);opacity:.2}60%,100%{transform:scaleX(1);opacity:.65}}@keyframes wl-progress{from{transform:translateX(-110%)}to{transform:translateX(330%)}}@media(max-width:480px){.wl-loading{min-height:210px;border-radius:18px;margin:10px auto}.wl-loading h2{font-size:18px}}@media(prefers-reduced-motion:reduce){.wl-loading *{animation:none!important}}`),
+ h('style',null,`.wl-loading{--wl-ink:#ede8fa;--wl-muted:#ada3c0;--wl-panel:#1c1b2d;--wl-line:#ad8ae42b;--wl-accent:#b899ef;position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:center;gap:14px;min-height:220px;width:100%;padding:24px 20px;border:1px solid var(--wl-line);border-radius:24px;background:radial-gradient(ellipse at 50% 25%,#a080d515,transparent 65%),var(--wl-panel);color:var(--wl-ink);text-align:center}.wl-loading[data-theme=light]{--wl-ink:#342b47;--wl-muted:#746880;--wl-panel:#fcfaff;--wl-line:#8f6bbd30;--wl-accent:#8152b9}.wl-loading::before{content:'';position:absolute;inset:0;z-index:-1;background-image:linear-gradient(var(--wl-line) 1px,transparent 1px),linear-gradient(90deg,var(--wl-line) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#0005,transparent 70%);pointer-events:none}.wl-loading .wl-document{width:64px;height:82px;position:relative;padding:21px 12px 12px;border:1px solid var(--wl-line);border-radius:8px 18px 8px 8px;background:var(--wl-panel);box-shadow:0 12px 35px #8051b620;transform:rotate(-5deg);animation:wl-breathe 2.4s ease-in-out infinite}.wl-document::before{content:'W';font:bold 24px Georgia;color:var(--wl-accent);display:block;margin-bottom:7px}.wl-document i{display:block;height:2px;margin-top:5px;border-radius:3px;background:var(--wl-accent);opacity:.5;transform-origin:left;animation:wl-write 2.4s ease-in-out infinite}.wl-document i:last-child{width:65%;animation-delay:.2s}.wl-loading small{font-size:9px;letter-spacing:2.5px;color:var(--wl-accent);margin-top:9px}.wl-loading h2{margin:0;font:650 23px/1.35 'Segoe UI',sans-serif;color:var(--wl-ink)}.wl-loading p{margin:0;max-width:390px;font:13px/1.7 'Segoe UI',sans-serif;color:var(--wl-muted)}.wl-loading .wl-progress{width:150px;height:3px;overflow:hidden;border-radius:6px;background:var(--wl-line);margin-top:8px}.wl-progress i{display:block;width:45%;height:100%;background:var(--wl-accent);animation:wl-progress 1.6s ease-in-out infinite}.wl-loading button{margin-top:6px;border:1px solid var(--wl-line);border-radius:12px;padding:12px 20px;background:var(--wl-accent);color:#fff;font:600 13px 'Segoe UI',sans-serif;cursor:pointer}.wl-loading:has(button) .wl-document{animation:none}@keyframes wl-breathe{50%{transform:translateY(-5px) rotate(2deg)}}@keyframes wl-write{0%,20%{transform:scaleX(.25);opacity:.2}60%,100%{transform:scaleX(1);opacity:.65}}@keyframes wl-progress{from{transform:translateX(-110%)}to{transform:translateX(330%)}}@media(max-width:480px){.wl-loading{min-height:210px;border-radius:18px}.wl-loading h2{font-size:21px}}@media(prefers-reduced-motion:reduce){.wl-loading *{animation:none!important}}`),
  h('div',{className:'wl-document','aria-hidden':true},h('i'),h('i')),h('small',null,'ULTIMATE · WORD LAB'),h('h2',null,error?'Не удалось открыть документ':'Ваше пространство для идей'),h('p',null,error||(phase==='module'?'Подготавливаем редактор и инструменты оформления…':'Открываем документ и проверяем сохранённую версию…')),!error&&h('div',{className:'wl-progress','aria-hidden':true},h('i')),error&&h('button',{type:'button',onClick:onRetry},'Попробовать ещё раз'));
 };
 
@@ -132,7 +132,7 @@ function loadWordModule() {
       } else resolve(window.WordLabLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Word заняла слишком много времени.')), 60000);
-    script.src = new URL('20_word.js?v=3.2-workspace', document.baseURI).href;
+    script.src = new URL('20_word.js?v=3.3', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.WordLabLMS ? null : new Error('Не удалось запустить Word.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Word. Проверь подключение.'));
@@ -168,6 +168,81 @@ function LazyWordLab(props) {
   }, [attempt]);
   if (Component) return React.createElement(Component, props);
   return React.createElement(window.LmsWordLoading,{theme:props.theme,error,onRetry:()=>setAttempt(x=>x+1),phase:'module'});
+}
+
+// Excel загружается только при первом открытии раздела.
+let excelModulePromise = null;
+function loadExcelModule() {
+  if (window.ExcelTrainerLMS) return Promise.resolve(window.ExcelTrainerLMS);
+  if (excelModulePromise) return excelModulePromise;
+  excelModulePromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    let settled = false;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      script.onload = script.onerror = null;
+      if (error) {
+        script.remove();
+        reject(error);
+      } else resolve(window.ExcelTrainerLMS);
+    };
+    const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
+    script.src = new URL('15_excel_trainer.js?v=3.3', document.baseURI).href;
+    script.async = true;
+    script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
+    script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
+    document.head.appendChild(script);
+  }).catch(error => {
+    window.reportLmsError?.(error, {
+      "section": "platform",
+      "source": "7_app.js",
+      "operation": "excel-module-load",
+      "handled": true
+    });
+    excelModulePromise = null;
+    throw error;
+  });
+  return excelModulePromise;
+}
+function LazyExcelTrainer(props) {
+  const [Component, setComponent] = React.useState(() => window.ExcelTrainerLMS || null);
+  const [error, setError] = React.useState('');
+  const [attempt, setAttempt] = React.useState(0);
+  React.useEffect(() => {
+    let active = true;
+    setError('');
+    loadExcelModule().then(value => {
+      if (active) setComponent(() => value);
+    }, reason => {
+      if (active) setError(reason.message);
+    });
+    return () => {
+      active = false;
+    };
+  }, [attempt]);
+  if (Component) return React.createElement(Component, props);
+  return React.createElement('div', {
+    role: error ? 'alert' : 'status',
+    style: {
+      padding: '40px 20px',
+      textAlign: 'center',
+      opacity: .85
+    }
+  }, error ? [React.createElement('p', {
+    key: 'm'
+  }, error), React.createElement('button', {
+    key: 'b',
+    type: 'button',
+    onClick: () => setAttempt(x => x + 1),
+    style: {
+      marginTop: 12,
+      padding: '10px 18px',
+      borderRadius: 10,
+      cursor: 'pointer'
+    }
+  }, 'Повторить')] : 'Загружаем Excel…');
 }
 
 function AppAssistantHost() {
