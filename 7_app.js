@@ -105,6 +105,14 @@ const SidebarLauncher = ({
   y2: "18"
 }))));
 
+// Shared across module download and Firebase document preparation.
+window.LmsWordLoading=window.LmsWordLoading||function LmsWordLoading({theme='light',error='',onRetry,phase='module'}){
+ const h=React.createElement;
+ return h('section',{className:'wl-loading', 'data-theme':theme,role:error?'alert':'status','aria-busy':!error},
+ h('style',null,`.wl-loading{--wl-ink:#ede8fa;--wl-muted:#ada3c0;--wl-panel:#1c1b2d;--wl-line:#ad8ae42b;--wl-accent:#b899ef;position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:center;gap:14px;min-height:390px;width:100%;padding:36px 20px;border:1px solid var(--wl-line);border-radius:24px;background:radial-gradient(ellipse at 50% 25%,#a080d515,transparent 65%),var(--wl-panel);color:var(--wl-ink);text-align:center}.wl-loading[data-theme=light]{--wl-ink:#342b47;--wl-muted:#746880;--wl-panel:#fcfaff;--wl-line:#8f6bbd30;--wl-accent:#8152b9}.wl-loading::before{content:'';position:absolute;inset:0;z-index:-1;background-image:linear-gradient(var(--wl-line) 1px,transparent 1px),linear-gradient(90deg,var(--wl-line) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#0005,transparent 70%);pointer-events:none}.wl-loading .wl-document{width:64px;height:82px;position:relative;padding:21px 12px 12px;border:1px solid var(--wl-line);border-radius:8px 18px 8px 8px;background:var(--wl-panel);box-shadow:0 12px 35px #8051b620;transform:rotate(-5deg);animation:wl-breathe 2.4s ease-in-out infinite}.wl-document::before{content:'W';font:bold 24px Georgia;color:var(--wl-accent);display:block;margin-bottom:7px}.wl-document i{display:block;height:2px;margin-top:5px;border-radius:3px;background:var(--wl-accent);opacity:.5;transform-origin:left;animation:wl-write 2.4s ease-in-out infinite}.wl-document i:last-child{width:65%;animation-delay:.2s}.wl-loading small{font-size:9px;letter-spacing:2.5px;color:var(--wl-accent);margin-top:9px}.wl-loading h2{margin:0;font:650 23px/1.35 'Segoe UI',sans-serif;color:var(--wl-ink)}.wl-loading p{margin:0;max-width:390px;font:13px/1.7 'Segoe UI',sans-serif;color:var(--wl-muted)}.wl-loading .wl-progress{width:150px;height:3px;overflow:hidden;border-radius:6px;background:var(--wl-line);margin-top:8px}.wl-progress i{display:block;width:45%;height:100%;background:var(--wl-accent);animation:wl-progress 1.6s ease-in-out infinite}.wl-loading button{margin-top:6px;border:1px solid var(--wl-line);border-radius:12px;padding:12px 20px;background:var(--wl-accent);color:#fff;font:600 13px 'Segoe UI',sans-serif;cursor:pointer}.wl-loading:has(button) .wl-document{animation:none}@keyframes wl-breathe{50%{transform:translateY(-5px) rotate(2deg)}}@keyframes wl-write{0%,20%{transform:scaleX(.25);opacity:.2}60%,100%{transform:scaleX(1);opacity:.65}}@keyframes wl-progress{from{transform:translateX(-110%)}to{transform:translateX(330%)}}@media(max-width:480px){.wl-loading{min-height:330px;border-radius:20px}.wl-loading h2{font-size:21px}}@media(prefers-reduced-motion:reduce){.wl-loading *{animation:none!important}}`),
+ h('div',{className:'wl-document','aria-hidden':true},h('i'),h('i')),h('small',null,'ULTIMATE · WORD LAB'),h('h2',null,error?'Не удалось открыть документ':'Ваше пространство для идей'),h('p',null,error||(phase==='module'?'Подготавливаем редактор и инструменты оформления…':'Открываем документ и проверяем сохранённую версию…')),!error&&h('div',{className:'wl-progress','aria-hidden':true},h('i')),error&&h('button',{type:'button',onClick:onRetry},'Попробовать ещё раз'));
+};
+
 // Word загружается только при первом открытии раздела.
 let wordModulePromise = null;
 function loadWordModule() {
@@ -124,7 +132,7 @@ function loadWordModule() {
       } else resolve(window.WordLabLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Word заняла слишком много времени.')), 60000);
-    script.src = new URL('20_word.js?v=1', document.baseURI).href;
+    script.src = new URL('20_word.js?v=3.1', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.WordLabLMS ? null : new Error('Не удалось запустить Word.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Word. Проверь подключение.'));
@@ -159,212 +167,9 @@ function LazyWordLab(props) {
     };
   }, [attempt]);
   if (Component) return React.createElement(Component, props);
-  return React.createElement(React.Fragment, null, React.createElement('style', null, `
-.lms-word-loading{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;width:100%!important;max-width:520px!important;min-width:0!important;margin:24px auto!important;padding:40px 28px!important;border:1px solid #a78bfa38!important;border-radius:26px!important;background:linear-gradient(145deg,#211934,#151322)!important;color:#f4efff!important;text-align:center!important;box-shadow:0 18px 55px #09061730;animation:lms-word-enter .35s ease-out both}
-.lms-word-loading *{box-sizing:border-box}
-.lms-word-loading .lel-icon{position:relative;display:grid;place-items:center;width:74px;height:74px;margin:0 0 24px;border-radius:23px;background:#a78bfa12;color:#c4b5fd}
-.lms-word-loading .lel-icon:before{content:'';position:absolute;inset:-5px;border:2px solid #a78bfa1c;border-top-color:#b69afa;border-right-color:#8b5cf6;border-radius:50%;animation:lms-word-spin 1.8s linear infinite}
-.lms-word-loading .lel-icon svg{display:block;width:30px;height:30px}
-.lms-word-loading .lel-label{margin:0 0 10px!important;font:600 10px/1.5 inherit;letter-spacing:2px;font-size:10px;font-weight:600;color:#b9a3eb!important}
-.lms-word-loading h2{display:block!important;width:100%!important;margin:0!important;padding:0!important;font-size:22px!important;font-weight:700!important;line-height:1.4!important;letter-spacing:-.4px!important;text-align:center!important;color:#f4efff!important}
-.lms-word-loading p.lel-copy{display:block!important;width:100%!important;max-width:340px!important;margin:12px 0 24px!important;padding:0!important;font-size:13px!important;line-height:1.7!important;text-align:center!important;color:#b5aec6!important;overflow-wrap:anywhere}
-.lms-word-loading .lel-track{width:150px;height:3px;overflow:hidden;border-radius:10px;background:#a78bfa20;margin:0 0 28px}
-.lms-word-loading .lel-track span{display:block;width:50%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#d8b4fe);animation:lms-word-slide 1.6s ease-in-out infinite alternate}
-.lms-word-loading .lel-actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
-.lms-word-loading .lel-actions button{appearance:none!important;position:static!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;float:none!important;width:auto!important;min-width:130px!important;max-width:100%!important;height:auto!important;min-height:44px!important;margin:0!important;padding:11px 18px!important;border:1px solid #a78bfa40!important;border-radius:12px!important;background:#a78bfa0c!important;color:#ded3f5!important;font:inherit!important;font-size:13px!important;font-weight:600!important;line-height:1.5!important;letter-spacing:normal!important;text-align:center!important;box-shadow:none!important;cursor:pointer!important;transform:none;transition:background .2s,border-color .2s,transform .2s;animation:none!important}
-.lms-word-loading .lel-actions button:before,.lms-word-loading .lel-actions button:after{display:none!important}
-.lms-word-loading .lel-actions button:hover{background:#a78bfa20!important;border-color:#c4b5fd80!important;transform:translateY(-1px)}
-.lms-word-loading .lel-actions button:focus-visible{outline:2px solid #c4b5fd!important;outline-offset:4px}
-.lms-word-loading .lel-actions button.lel-retry{background:#7952c8!important;color:white!important}
-.lms-word-loading.is-error .lel-icon:before{animation:none;border-color:#c4b5fd50}
-.lms-word-loading.theme-light{background:linear-gradient(145deg,#ffffff,#f0edf9)!important;color:#29213c!important;border-color:#d8cee9!important;box-shadow:0 18px 55px #45325f18}
-.lms-word-loading.theme-light .lel-icon{background:#8252d910;color:#7751b6}
-.lms-word-loading.theme-light .lel-icon:before{border-color:#8252d922;border-top-color:#8054cb;border-right-color:#9c79d9}
-.lms-word-loading.theme-light .lel-label{color:#7751a5!important}
-.lms-word-loading.theme-light h2{color:#29213c!important}
-.lms-word-loading.theme-light p.lel-copy{color:#665d78!important}
-.lms-word-loading.theme-light .lel-track{background:#8252d920}
-.lms-word-loading.theme-light .lel-actions button{background:#ffffffb8!important;color:#584170!important;border-color:#cfc0e4!important}
-.lms-word-loading.theme-light .lel-actions button:hover{background:#ebe2f8!important;border-color:#ab8bd3!important}
-.lms-word-loading.theme-light .lel-actions button:focus-visible{outline-color:#8054cb!important}
-.lms-word-loading.theme-light .lel-actions button.lel-retry{background:#7952c8!important;color:#fff!important}
-@keyframes lms-word-spin{to{transform:rotate(360deg)}}
-@keyframes lms-word-slide{from{transform:translateX(-60%)}to{transform:translateX(160%)}}
-@keyframes lms-word-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:480px){.lms-word-loading{margin:16px auto!important;padding:32px 20px!important;border-radius:22px!important}.lms-word-loading h2{font-size:20px!important}}
-@media(prefers-reduced-motion:reduce){.lms-word-loading,.lms-word-loading .lel-icon:before,.lms-word-loading .lel-track span{animation:none!important}.lms-word-loading .lel-actions button{transition:none!important}}
-`), React.createElement('section', {
-    className: 'lms-word-loading theme-' + (props.theme === 'dark' ? 'dark' : 'light') + (error ? ' is-error' : ''),
-    'aria-busy': !error
-  }, React.createElement('div', {
-    className: 'lel-icon',
-    'aria-hidden': true
-  }, React.createElement('svg', {
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.5,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round'
-  }, React.createElement('rect', {
-    x: 3,
-    y: 3,
-    width: 18,
-    height: 18,
-    rx: 4
-  }), React.createElement('path', {
-    d: 'M3 9h18M3 15h18M9 3v18M15 9v12'
-  }))), React.createElement('div', {
-    className: 'lel-label'
-  }, 'EXCEL • ПРАКТИКА'), React.createElement('h2', null, error ? 'Не удалось загрузить' : 'Открываем Word'), React.createElement('p', {
-    className: 'lel-copy',
-    role: error ? 'alert' : 'status'
-  }, error || 'Подготавливаем тренажёр. Скоро можно будет приступить к практике.'), !error && React.createElement('div', {
-    className: 'lel-track',
-    'aria-hidden': true
-  }, React.createElement('span')), React.createElement('div', {
-    className: 'lel-actions'
-  }, error && React.createElement('button', {
-    type: 'button',
-    className: 'lel-retry',
-    onClick: () => setAttempt(value => value + 1)
-  }, 'Повторить'), React.createElement('button', {
-    type: 'button',
-    onClick: props.onBack
-  }, 'Вернуться в меню'))));
+  return React.createElement(window.LmsWordLoading,{theme:props.theme,error,onRetry:()=>setAttempt(x=>x+1),phase:'module'});
 }
 
-// Keep the floating assistant out of the page layout and wait for its mount styles.
-// Excel загружается только при первом открытии раздела.
-let excelModulePromise = null;
-function loadExcelModule() {
-  if (window.ExcelTrainerLMS) return Promise.resolve(window.ExcelTrainerLMS);
-  if (excelModulePromise) return excelModulePromise;
-  excelModulePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    let settled = false;
-    const finish = error => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      script.onload = script.onerror = null;
-      if (error) {
-        script.remove();
-        reject(error);
-      } else resolve(window.ExcelTrainerLMS);
-    };
-    const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
-    script.src = new URL('15_excel_trainer.js?v=selected-181', document.baseURI).href;
-    script.async = true;
-    script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
-    script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
-    document.head.appendChild(script);
-  }).catch(error => {
-    window.reportLmsError?.(error, {
-      "section": "platform",
-      "source": "7_app.js",
-      "line": 126,
-      "operation": "promise-catch",
-      "handled": true
-    });
-    excelModulePromise = null;
-    throw error;
-  });
-  return excelModulePromise;
-}
-function LazyExcelTrainer(props) {
-  const [Component, setComponent] = React.useState(() => window.ExcelTrainerLMS || null);
-  const [error, setError] = React.useState('');
-  const [attempt, setAttempt] = React.useState(0);
-  React.useEffect(() => {
-    let active = true;
-    setError('');
-    loadExcelModule().then(value => {
-      if (active) setComponent(() => value);
-    }, reason => {
-      if (active) setError(reason.message);
-    });
-    return () => {
-      active = false;
-    };
-  }, [attempt]);
-  if (Component) return React.createElement(Component, props);
-  return React.createElement(React.Fragment, null, React.createElement('style', null, `
-.lms-excel-loading{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;width:100%!important;max-width:520px!important;min-width:0!important;margin:24px auto!important;padding:40px 28px!important;border:1px solid #a78bfa38!important;border-radius:26px!important;background:linear-gradient(145deg,#211934,#151322)!important;color:#f4efff!important;text-align:center!important;box-shadow:0 18px 55px #09061730;animation:lms-excel-enter .35s ease-out both}
-.lms-excel-loading *{box-sizing:border-box}
-.lms-excel-loading .lel-icon{position:relative;display:grid;place-items:center;width:74px;height:74px;margin:0 0 24px;border-radius:23px;background:#a78bfa12;color:#c4b5fd}
-.lms-excel-loading .lel-icon:before{content:'';position:absolute;inset:-5px;border:2px solid #a78bfa1c;border-top-color:#b69afa;border-right-color:#8b5cf6;border-radius:50%;animation:lms-excel-spin 1.8s linear infinite}
-.lms-excel-loading .lel-icon svg{display:block;width:30px;height:30px}
-.lms-excel-loading .lel-label{margin:0 0 10px!important;font:600 10px/1.5 inherit;letter-spacing:2px;font-size:10px;font-weight:600;color:#b9a3eb!important}
-.lms-excel-loading h2{display:block!important;width:100%!important;margin:0!important;padding:0!important;font-size:22px!important;font-weight:700!important;line-height:1.4!important;letter-spacing:-.4px!important;text-align:center!important;color:#f4efff!important}
-.lms-excel-loading p.lel-copy{display:block!important;width:100%!important;max-width:340px!important;margin:12px 0 24px!important;padding:0!important;font-size:13px!important;line-height:1.7!important;text-align:center!important;color:#b5aec6!important;overflow-wrap:anywhere}
-.lms-excel-loading .lel-track{width:150px;height:3px;overflow:hidden;border-radius:10px;background:#a78bfa20;margin:0 0 28px}
-.lms-excel-loading .lel-track span{display:block;width:50%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#d8b4fe);animation:lms-excel-slide 1.6s ease-in-out infinite alternate}
-.lms-excel-loading .lel-actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
-.lms-excel-loading .lel-actions button{appearance:none!important;position:static!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;float:none!important;width:auto!important;min-width:130px!important;max-width:100%!important;height:auto!important;min-height:44px!important;margin:0!important;padding:11px 18px!important;border:1px solid #a78bfa40!important;border-radius:12px!important;background:#a78bfa0c!important;color:#ded3f5!important;font:inherit!important;font-size:13px!important;font-weight:600!important;line-height:1.5!important;letter-spacing:normal!important;text-align:center!important;box-shadow:none!important;cursor:pointer!important;transform:none;transition:background .2s,border-color .2s,transform .2s;animation:none!important}
-.lms-excel-loading .lel-actions button:before,.lms-excel-loading .lel-actions button:after{display:none!important}
-.lms-excel-loading .lel-actions button:hover{background:#a78bfa20!important;border-color:#c4b5fd80!important;transform:translateY(-1px)}
-.lms-excel-loading .lel-actions button:focus-visible{outline:2px solid #c4b5fd!important;outline-offset:4px}
-.lms-excel-loading .lel-actions button.lel-retry{background:#7952c8!important;color:white!important}
-.lms-excel-loading.is-error .lel-icon:before{animation:none;border-color:#c4b5fd50}
-.lms-excel-loading.theme-light{background:linear-gradient(145deg,#ffffff,#f0edf9)!important;color:#29213c!important;border-color:#d8cee9!important;box-shadow:0 18px 55px #45325f18}
-.lms-excel-loading.theme-light .lel-icon{background:#8252d910;color:#7751b6}
-.lms-excel-loading.theme-light .lel-icon:before{border-color:#8252d922;border-top-color:#8054cb;border-right-color:#9c79d9}
-.lms-excel-loading.theme-light .lel-label{color:#7751a5!important}
-.lms-excel-loading.theme-light h2{color:#29213c!important}
-.lms-excel-loading.theme-light p.lel-copy{color:#665d78!important}
-.lms-excel-loading.theme-light .lel-track{background:#8252d920}
-.lms-excel-loading.theme-light .lel-actions button{background:#ffffffb8!important;color:#584170!important;border-color:#cfc0e4!important}
-.lms-excel-loading.theme-light .lel-actions button:hover{background:#ebe2f8!important;border-color:#ab8bd3!important}
-.lms-excel-loading.theme-light .lel-actions button:focus-visible{outline-color:#8054cb!important}
-.lms-excel-loading.theme-light .lel-actions button.lel-retry{background:#7952c8!important;color:#fff!important}
-@keyframes lms-excel-spin{to{transform:rotate(360deg)}}
-@keyframes lms-excel-slide{from{transform:translateX(-60%)}to{transform:translateX(160%)}}
-@keyframes lms-excel-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:480px){.lms-excel-loading{margin:16px auto!important;padding:32px 20px!important;border-radius:22px!important}.lms-excel-loading h2{font-size:20px!important}}
-@media(prefers-reduced-motion:reduce){.lms-excel-loading,.lms-excel-loading .lel-icon:before,.lms-excel-loading .lel-track span{animation:none!important}.lms-excel-loading .lel-actions button{transition:none!important}}
-`), React.createElement('section', {
-    className: 'lms-excel-loading theme-' + (props.theme === 'dark' ? 'dark' : 'light') + (error ? ' is-error' : ''),
-    'aria-busy': !error
-  }, React.createElement('div', {
-    className: 'lel-icon',
-    'aria-hidden': true
-  }, React.createElement('svg', {
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.5,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round'
-  }, React.createElement('rect', {
-    x: 3,
-    y: 3,
-    width: 18,
-    height: 18,
-    rx: 4
-  }), React.createElement('path', {
-    d: 'M3 9h18M3 15h18M9 3v18M15 9v12'
-  }))), React.createElement('div', {
-    className: 'lel-label'
-  }, 'EXCEL • ПРАКТИКА'), React.createElement('h2', null, error ? 'Не удалось загрузить' : 'Открываем Excel'), React.createElement('p', {
-    className: 'lel-copy',
-    role: error ? 'alert' : 'status'
-  }, error || 'Подготавливаем тренажёр. Скоро можно будет приступить к практике.'), !error && React.createElement('div', {
-    className: 'lel-track',
-    'aria-hidden': true
-  }, React.createElement('span')), React.createElement('div', {
-    className: 'lel-actions'
-  }, error && React.createElement('button', {
-    type: 'button',
-    className: 'lel-retry',
-    onClick: () => setAttempt(value => value + 1)
-  }, 'Повторить'), React.createElement('button', {
-    type: 'button',
-    onClick: props.onBack
-  }, 'Вернуться в меню'))));
-}
-
-// Keep the floating assistant out of the page layout and wait for its mount styles.
 function AppAssistantHost() {
   const [visible, setVisible] = React.useState(false);
   React.useEffect(() => {
