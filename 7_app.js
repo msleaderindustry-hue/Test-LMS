@@ -132,7 +132,7 @@ function loadWordModule() {
       } else resolve(window.WordLabLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Word заняла слишком много времени.')), 60000);
-    script.src = new URL('20_word.js?v=3.3', document.baseURI).href;
+    script.src = new URL('20_word.js?v=3.4', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.WordLabLMS ? null : new Error('Не удалось запустить Word.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Word. Проверь подключение.'));
@@ -1172,7 +1172,7 @@ function App() {
     user,
     userNickname,
     onThemeChange: setTheme
-  })), appReady && view === 'word' && allowedModules.includes('word') && React.createElement('div',{key:'word_view',className:'lms-word-fullscreen',style:{position:'fixed',inset:0,zIndex:1000,width:'100%',height:'100dvh',minWidth:0,overflow:'hidden',background:'var(--bg-color,#101320)'}},React.createElement(LazyWordLab,{key:user.uid+':' +(assignedTask?.id||'draft'),uid:user.uid,theme,task:assignedTask?.module==='word'?assignedTask:null,onMenu:()=>setIsSidebarOpen(true)})), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
+  })), appReady && view === 'word' && allowedModules.includes('word') && React.createElement('div',{key:'word_view',className:'lms-word-view',style:{width:'100%',maxWidth:'1760px',minWidth:0}},React.createElement(LazyWordLab,{key:user.uid+':' +(assignedTask?.id||'draft'),uid:user.uid,theme,task:assignedTask?.module==='word'?assignedTask:null,onMenu:()=>setIsSidebarOpen(true)})), appReady && view === 'excel' && allowedModules.includes('excel') && /*#__PURE__*/React.createElement(motion.div, {
     key: "excel_view",
     initial: {
       opacity: 0
