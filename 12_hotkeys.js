@@ -3302,6 +3302,11 @@
     return copy;
   };
   const token = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  // Категория серии для зачёта задания: word / windows / excel либо 'mixed'.
+  // Названия совпадают с task.hotkeyBank из 19_tasks.js.
+  const CATALOG_IDS = new Set(CATALOG.map(h => h.id));
+  const hotkeyBankOf = tasks => tasks.length && tasks.every(t => t.program && t.program === tasks[0].program) ? tasks[0].program : 'mixed';
+  const hotkeySourceOf = tasks => tasks.every(t => CATALOG_IDS.has(t.id)) ? 'catalog' : tasks.every(t => String(t.id).startsWith('legacy-')) ? 'legacy' : 'custom';
   const MODS = ['ctrl', 'shift', 'alt', 'meta'];
   const alias = {
     control: 'ctrl',
@@ -3594,7 +3599,10 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
     const [settingsOpen, setSettingsOpen] = useState(false),
       [lang, setLang] = useState('ru'),
       [phase, setPhase] = useState('setup'),
-      [bank, setBank] = useState(()=>['word','windows','excel'].includes(window.__lmsAssignmentContext?.bank)?window.__lmsAssignmentContext.bank:'word'),
+      [bank, setBank] = useState(() => {
+        const b = window.lmsGetActiveAssignmentContext?.('hotkeys')?.bank ?? window.__lmsAssignmentContext?.bank;
+        return ['word', 'windows', 'excel'].includes(b) ? b : 'word';
+      }),
       [topic, setTopic] = useState('Microsoft Word'),
       [custom, setCustom] = useState(null),
       [useCustom, setUseCustom] = useState(false),
@@ -3607,7 +3615,8 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       [pressedKeys, setPressedKeys] = useState(null),
       [inputMode, setInputMode] = useState(() => matchMedia('(pointer:coarse)').matches ? 'text' : 'physical'),
       [elapsed, setElapsed] = useState(0),
-      [saveState, setSaveState] = useState('');
+      [saveState, setSaveState] = useState(''),
+      [assignState, setAssignState] = useState(null);
     const alive = useRef(true),
       request = useRef(null),
       requestVersion = useRef(0),
@@ -3616,7 +3625,9 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       rootRef = useRef(null),
       heldKeys = useRef(new Map()),
       bags = useRef({}),
-      saving = useRef(new Set());
+      saving = useRef(new Set()),
+      assigning = useRef(new Set()),
+      receipts = useRef(new Map());
     const t = UI_TRANSLATIONS[lang],
       u = EXTRA[lang];
     const L = (ru, en, uz) => tr(lang, ru, en, uz);
@@ -3794,11 +3805,22 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
     function begin(items, study = true) {
       const tasks = items || takeTasks();
       if (!tasks.length) return;
+      const uid = window.auth?.currentUser?.uid || null,
+        ctx = uid ? window.lmsGetActiveAssignmentContext?.('hotkeys') : null;
+      // Серия привязывается к заданию только если задание сейчас открыто у этого же ученика.
+      // Обычная тренировка (панель задания закрыта) никогда не отправляется в задание.
+      const assignment = ctx && ctx.module === 'hotkeys' && ctx.id && ctx.uid === uid ? {
+        id: ctx.id,
+        uid,
+        module: 'hotkeys',
+        bank: ctx.bank || 'any'
+      } : null;
       commit({
         id: token(),
-        assignment: window.__lmsAssignmentContext?.module==='hotkeys'?{...window.__lmsAssignmentContext}:null,
-        assignmentBank: tasks.every(t=>t.program===tasks[0]?.program)?tasks[0]?.program:'mixed',
-        uid: window.auth?.currentUser?.uid || null,
+        assignment,
+        assignmentBank: hotkeyBankOf(tasks),
+        source: hotkeySourceOf(tasks),
+        uid,
         title,
         tasks,
         index: 0,
@@ -3812,6 +3834,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       });
       setQuery('');
       setSaveState('');
+      setAssignState(null);
       setPhase(study ? 'theory' : 'practice');
     }
     function attempt(a) {
@@ -3822,11 +3845,12 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
         ...s,
         records: s.records.map((r, i) => i === s.index ? {
           ...r,
-          status: ok ? 'solved' : 'failed',
+          status: ok ? 'solved' : s.assignment ? 'pending' : 'failed',
           errors: r.errors + (ok ? 0 : 1)
         } : r),
         feedback: ok ? 'correct' : 'wrong'
       });
+      if (!ok && s.assignment) setAnswer('');
     }
     function hint() {
       if (!hintsAllowedRef.current) return;
@@ -3840,7 +3864,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
         } : r)
       });
     }
-    async function saveResult(s) {
+    async function saveProfile(s) {
       if (!s.uid) {
         setSaveState('guest');
         return;
@@ -3884,17 +3908,76 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
             merge: true
           });
         });
-        if(s.assignment){
-          if(!window.lmsSubmitAssignmentResult)throw Error('Обновите модуль приложения для зачёта задания.');
-          const receipt=await window.lmsSubmitAssignmentResult(s.assignment,{id:s.id,module:'hotkeys',bank:s.assignmentBank,total:s.tasks.length,records:s.records});
-          window.dispatchEvent(new CustomEvent('lms-assignment-feedback',{detail:{id:s.assignment.id,message:receipt.accepted===false?'Серия не засчитана: нужны минимум 5 верных ответов подряд без ошибок, подсказок и пропусков в выбранной категории.':receipt.done?'Задание выполнено.':'Серия засчитана. Продолжайте до цели задания.'}}));
-        }
         if (alive.current && sref.current?.id === s.id) setSaveState('saved');
       } catch {
         if (alive.current && sref.current?.id === s.id) setSaveState('saveError');
       } finally {
         saving.current.delete(s.id);
       }
+    }
+    // Результат серии для задания. Статистика ответов сохраняется всегда, зачёт решает lmsSubmitAssignmentResult.
+    // Сбой сохранения (сеть, доступ) показывается отдельно от отказа в зачёте и повторяется без новой серии.
+    async function submitAssignment(s) {
+      if (!s.assignment || receipts.current.has(s.id) || assigning.current.has(s.id)) return;
+      const show = v => {
+        if (alive.current && sref.current?.id === s.id) setAssignState(v);
+      };
+      if (window.auth?.currentUser?.uid !== s.uid || s.assignment.uid !== s.uid) {
+        show({
+          kind: 'accountChanged'
+        });
+        return;
+      }
+      if (!window.lmsSubmitAssignmentResult) {
+        show({
+          kind: 'error',
+          retry: false,
+          message: 'Обновите модуль приложения для зачёта задания.'
+        });
+        return;
+      }
+      assigning.current.add(s.id);
+      show({
+        kind: 'saving'
+      });
+      try {
+        const receipt = await window.lmsSubmitAssignmentResult(s.assignment, {
+          id: s.id,
+          module: 'hotkeys',
+          bank: s.assignmentBank,
+          source: s.source,
+          total: s.tasks.length,
+          records: s.records.map((r, i) => ({
+            id: s.tasks[i].id,
+            status: r.status,
+            errors: r.errors,
+            hint: !!r.hint
+          }))
+        });
+        receipts.current.set(s.id, receipt);
+        window.dispatchEvent(new CustomEvent('lms-assignment-feedback', {
+          detail: {
+            id: s.assignment.id,
+            message: window.lmsDescribeHotkeyReceipt?.(receipt, 'ru') || (receipt.accepted ? 'Серия засчитана.' : 'Серия не засчитана.')
+          }
+        }));
+        show({
+          kind: 'receipt',
+          receipt
+        });
+      } catch (e) {
+        show({
+          kind: 'error',
+          retry: !e?.permanent,
+          message: e?.permanent ? e.message : ''
+        });
+      } finally {
+        assigning.current.delete(s.id);
+      }
+    }
+    async function saveResult(s) {
+      await saveProfile(s);
+      await submitAssignment(s);
     }
     function advance(skip = false) {
       const s = sref.current;
@@ -4002,6 +4085,7 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
     const filtered = (phase === 'theory' ? session?.tasks : active)?.filter(h => (desc(h, lang) + ' ' + combo(h).join(' ')).toLowerCase().includes(query.toLowerCase())) || [];
     const total = size === 'all' ? active.length : Math.min(size, active.length),
       step = phase === 'setup' ? 0 : phase === 'theory' ? 1 : 2;
+    const assignMessage = !assignState ? '' : assignState.kind === 'saving' ? L('Отправляем серию в задание…', 'Submitting the series to the assignment…', 'Серия топшириққа юборилмоқда…') : assignState.kind === 'accountChanged' ? L('Аккаунт изменился, серия не сохранена в задании. Войдите в нужный аккаунт и повторите сохранение.', 'The account has changed, so the series was not saved to the assignment. Sign in to the right account and retry.', 'Аккаунт ўзгарди, серия топшириқда сақланмади. Керакли аккаунтга киринг ва қайта сақланг.') : assignState.kind === 'error' ? L(`Не удалось сохранить серию в задании${assignState.message ? ': ' + assignState.message : ''}. Это не отказ в зачёте${assignState.retry ? ' — проходить серию заново не нужно.' : '.'}`, `Could not save the series to the assignment${assignState.message ? ': ' + assignState.message : ''}. This is not a refusal${assignState.retry ? ' — you do not need to redo the series.' : '.'}`, `Серияни топшириққа сақлаб бўлмади${assignState.message ? ': ' + assignState.message : ''}. Бу рад этиш эмас${assignState.retry ? ' — серияни қайта ўтиш шарт эмас.' : '.'}`) : window.lmsDescribeHotkeyReceipt?.(assignState.receipt, lang) || '';
     const stats = /*#__PURE__*/React.createElement("div", {
       className: "hx-metrics"
     }, [[u.solved, `${solved}/${session?.tasks.length || 0}`], [u.first, first], [u.mistakes, mistakes]].map(([label, value]) => /*#__PURE__*/React.createElement("div", {
@@ -4408,7 +4492,7 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
     }, session.feedback === 'correct' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
       name: "check",
       size: 18
-    }), u.correct) : session.feedback === 'wrong' ? L('Не совсем. Запомни правильное сочетание.', 'Not quite. Review the correct shortcut.', 'Тўлиқ тўғри эмас. Тўғри комбинацияни эслаб қолинг.') : textMode ? L('Нажми комбинацию или впиши её ниже', 'Press the shortcut or type it below', 'Комбинацияни босинг ёки қуйида ёзинг') : u.focus)), textMode && /*#__PURE__*/React.createElement("form", {
+    }), u.correct) : session.feedback === 'wrong' ? (session.assignment && record.status === 'pending' ? L('Не совсем. Попробуй ещё раз — ошибка сохранится в статистике, но серию не отменит.', 'Not quite. Try again — the mistake is recorded in your stats but does not cancel the series.', 'Тўлиқ тўғри эмас. Яна уриниб кўринг — хато статистикада сақланади, лекин серияни бекор қилмайди.') : L('Не совсем. Запомни правильное сочетание.', 'Not quite. Review the correct shortcut.', 'Тўлиқ тўғри эмас. Тўғри комбинацияни эслаб қолинг.')) : textMode ? L('Нажми комбинацию или впиши её ниже', 'Press the shortcut or type it below', 'Комбинацияни босинг ёки қуйида ёзинг') : u.focus)), textMode && /*#__PURE__*/React.createElement("form", {
       className: "hx-answer",
       onSubmit: e => {
         e.preventDefault();
@@ -4475,6 +4559,13 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
       type: "button",
       className: "hx-link",
       onClick: () => saveResult(session)
+    }, u.saveAgain)), assignState && /*#__PURE__*/React.createElement("div", {
+      className: "hx-save-status",
+      role: "status"
+    }, assignMessage, (assignState.kind === 'error' && assignState.retry || assignState.kind === 'accountChanged') && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "hx-link",
+      onClick: () => submitAssignment(session)
     }, u.saveAgain)), /*#__PURE__*/React.createElement("div", {
       className: "hx-result-actions"
     }, /*#__PURE__*/React.createElement("button", {
