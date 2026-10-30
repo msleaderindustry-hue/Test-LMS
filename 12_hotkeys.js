@@ -3302,11 +3302,34 @@
     return copy;
   };
   const token = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  // Категория серии для зачёта задания: word / windows / excel либо 'mixed'.
-  // Названия совпадают с task.hotkeyBank из 19_tasks.js.
-  const CATALOG_IDS = new Set(CATALOG.map(h => h.id));
-  const hotkeyBankOf = tasks => tasks.length && tasks.every(t => t.program && t.program === tasks[0].program) ? tasks[0].program : 'mixed';
-  const hotkeySourceOf = tasks => tasks.every(t => CATALOG_IDS.has(t.id)) ? 'catalog' : tasks.every(t => String(t.id).startsWith('legacy-')) ? 'legacy' : 'custom';
+  // ── Назначенные задания ────────────────────────────────────────────────────
+  // Серия засчитывается в 19_tasks.js (lmsSubmitAssignmentResult). Здесь — только
+  // сбор честных данных: контекст задания, записи ответов, повторная попытка после ошибки.
+  const ASSIGN_MAX_TRIES = 3; // в назначенной серии у сочетания 3 попытки: ошибку можно исправить
+  const programOf = h => h?.program || (String(h?.id || '').startsWith('legacy-') ? 'legacy' : 'custom');
+  const ASSIGN_BANK_TEXT = {
+    word: 'Word',
+    windows: 'Windows',
+    excel: 'Excel',
+    any: 'любая'
+  };
+  // Контекст берётся из реестра открытого задания (19_tasks.js), а не из глобальной
+  // переменной, которая могла остаться после закрытия задания: обычная тренировка не засчитывается.
+  function activeHotkeyAssignment() {
+    const uid = window.auth?.currentUser?.uid || null;
+    let ctx = null;
+    if (typeof window.lmsGetActiveAssignment === 'function') ctx = window.lmsGetActiveAssignment('hotkeys');
+    else if (window.__lmsAssignmentContext?.module === 'hotkeys') ctx = window.__lmsAssignmentContext;
+    if (!ctx || !ctx.id || !uid || ctx.uid !== uid) return null;
+    const bank = ctx.bank || ctx.hotkeyBank;
+    return {
+      id: String(ctx.id),
+      uid,
+      module: 'hotkeys',
+      bank: ['word', 'windows', 'excel'].includes(bank) ? bank : 'any'
+    };
+  }
+  const ASSIGN_CSS = ".hx-feedback.retry{color:var(--hx-red);animation:hx-shake .28s ease-out}" + ".hx-assign-banner{display:flex;flex-direction:column;gap:3px;margin:-8px 0 20px;padding:11px 15px;border:1px solid var(--hx-line);border-left:3px solid var(--hx-purple);border-radius:12px;background:var(--hx-panel);font-size:12px;line-height:1.55;color:var(--hx-muted)}" + ".hx-assign-banner strong{color:var(--hx-text);font-size:12px}" + ".hx-assign-banner.is-warn{border-left-color:#e4aa73}.hx-assign-banner.is-warn strong{color:#e4aa73}" + ".hx-assign-result{display:flex;align-items:flex-start;gap:13px;margin:16px 0;padding:15px 17px;border:1px solid var(--hx-line);border-radius:15px;background:var(--hx-panel);font-size:13px;line-height:1.6;animation:hx-assign-in .4s cubic-bezier(.2,.9,.25,1.1) both}" + ".hx-assign-result>div{flex:1;min-width:0}.hx-assign-result strong{display:block;color:var(--hx-text);font-size:13px}.hx-assign-result p{margin:2px 0 0;color:var(--hx-muted);font-size:12px;overflow-wrap:anywhere}" + ".hx-assign-icon{flex-shrink:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:14px;font-weight:700;background:var(--hx-tint);color:var(--hx-purple)}" + ".hx-assign-result.is-ok{border-color:#75e3b266}.hx-assign-result.is-ok .hx-assign-icon{background:#75e3b21f;color:var(--hx-green);animation:hx-assign-pop .5s cubic-bezier(.2,.9,.25,1.5) both}" + ".hx-assign-result.is-warn{border-color:#e4aa7366}.hx-assign-result.is-warn .hx-assign-icon{background:#e4aa7320;color:#e4aa73}" + ".hx-assign-result.is-error{border-color:#ffa6b966}.hx-assign-result.is-error .hx-assign-icon{background:#ffa6b91f;color:var(--hx-red)}" + ".hx-assign-meter{display:flex;align-items:center;gap:10px;margin-top:9px;font-size:11px;color:var(--hx-muted);font-variant-numeric:tabular-nums}.hx-assign-meter i{flex:1;max-width:180px;height:4px;border-radius:4px;background:var(--hx-line);overflow:hidden}.hx-assign-meter i b{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--hx-purple),var(--hx-green));transition:width .6s cubic-bezier(.2,.8,.2,1)}" + ".hx-assign-result .hx-link{margin-top:8px}" + "@keyframes hx-assign-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes hx-assign-pop{0%{transform:scale(.4)}100%{transform:scale(1)}}" + "@media(prefers-reduced-motion:reduce){.hx-assign-result,.hx-assign-result.is-ok .hx-assign-icon{animation:none}.hx-assign-meter i b{transition:none}}";
   const MODS = ['ctrl', 'shift', 'alt', 'meta'];
   const alias = {
     control: 'ctrl',
@@ -3600,7 +3623,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       [lang, setLang] = useState('ru'),
       [phase, setPhase] = useState('setup'),
       [bank, setBank] = useState(() => {
-        const b = window.lmsGetActiveAssignmentContext?.('hotkeys')?.bank ?? window.__lmsAssignmentContext?.bank;
+        const b = activeHotkeyAssignment()?.bank;
         return ['word', 'windows', 'excel'].includes(b) ? b : 'word';
       }),
       [topic, setTopic] = useState('Microsoft Word'),
@@ -3616,7 +3639,9 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       [inputMode, setInputMode] = useState(() => matchMedia('(pointer:coarse)').matches ? 'text' : 'physical'),
       [elapsed, setElapsed] = useState(0),
       [saveState, setSaveState] = useState(''),
-      [assignState, setAssignState] = useState(null);
+      [assignState, setAssignState] = useState(null),
+      [, bumpCtx] = useState(0);
+    const assignCtx = activeHotkeyAssignment();
     const alive = useRef(true),
       request = useRef(null),
       requestVersion = useRef(0),
@@ -3625,9 +3650,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       rootRef = useRef(null),
       heldKeys = useRef(new Map()),
       bags = useRef({}),
-      saving = useRef(new Set()),
-      assigning = useRef(new Set()),
-      receipts = useRef(new Map());
+      saving = useRef(new Set());
     const t = UI_TRANSLATIONS[lang],
       u = EXTRA[lang];
     const L = (ru, en, uz) => tr(lang, ru, en, uz);
@@ -3655,7 +3678,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
         style.id = 'hotkey-trainer-v5-styles';
         document.head.appendChild(style);
       }
-      style.textContent = CSS;
+      style.textContent = CSS + ASSIGN_CSS;
       return () => {
         alive.current = false;
         ++requestVersion.current;
@@ -3674,6 +3697,18 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
         preventScroll: true
       });
     }, [phase, session?.index, session?.paused, textMode]);
+    useEffect(() => {
+      const f = () => bumpCtx(n => n + 1);
+      window.addEventListener('lms-assignment-context', f);
+      return () => window.removeEventListener('lms-assignment-context', f);
+    }, []);
+    useEffect(() => {
+      if (phase === 'setup' && assignCtx && BANK_NAMES[assignCtx.bank]) {
+        setBank(assignCtx.bank);
+        setTopic(BANK_NAMES[assignCtx.bank]);
+        setUseCustom(false);
+      }
+    }, [assignCtx?.id, assignCtx?.bank]);
     // Single scoped capture listener for the active exercise. Only keyboard events
     // originating inside this trainer are handled; other LMS inputs are untouched.
     useEffect(() => {
@@ -3805,22 +3840,17 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
     function begin(items, study = true) {
       const tasks = items || takeTasks();
       if (!tasks.length) return;
-      const uid = window.auth?.currentUser?.uid || null,
-        ctx = uid ? window.lmsGetActiveAssignmentContext?.('hotkeys') : null;
-      // Серия привязывается к заданию только если задание сейчас открыто у этого же ученика.
-      // Обычная тренировка (панель задания закрыта) никогда не отправляется в задание.
-      const assignment = ctx && ctx.module === 'hotkeys' && ctx.id && ctx.uid === uid ? {
-        id: ctx.id,
-        uid,
-        module: 'hotkeys',
-        bank: ctx.bank || 'any'
-      } : null;
+      const attemptId = token(),
+        ctx = activeHotkeyAssignment();
       commit({
-        id: token(),
-        assignment,
-        assignmentBank: hotkeyBankOf(tasks),
-        source: hotkeySourceOf(tasks),
-        uid,
+        id: attemptId,
+        // Контекст задания фиксируется при запуске: ID задания, UID ученика, категория, ID попытки.
+        assignment: ctx ? {
+          ...ctx,
+          attemptId,
+          startedAt: Date.now()
+        } : null,
+        uid: window.auth?.currentUser?.uid || null,
         title,
         tasks,
         index: 0,
@@ -3841,16 +3871,21 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
       const s = sref.current;
       if (phase !== 'practice' || !s || s.paused || s.records[s.index]?.status !== 'pending') return;
       const ok = matches(s.tasks[s.index], a);
+      // В назначенной серии ошибку можно исправить сразу (до ASSIGN_MAX_TRIES попыток),
+      // ответ при этом не показывается. В обычной тренировке поведение прежнее.
+      const tries = s.assignment ? ASSIGN_MAX_TRIES : 1,
+        errors = s.records[s.index].errors + (ok ? 0 : 1),
+        status = ok ? 'solved' : errors >= tries ? 'failed' : 'pending';
       commit({
         ...s,
         records: s.records.map((r, i) => i === s.index ? {
           ...r,
-          status: ok ? 'solved' : s.assignment ? 'pending' : 'failed',
-          errors: r.errors + (ok ? 0 : 1)
+          status,
+          errors
         } : r),
-        feedback: ok ? 'correct' : 'wrong'
+        feedback: ok ? 'correct' : status === 'failed' ? 'wrong' : 'retry'
       });
-      if (!ok && s.assignment) setAnswer('');
+      if (status === 'pending') setAnswer('');
     }
     function hint() {
       if (!hintsAllowedRef.current) return;
@@ -3864,120 +3899,145 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
         } : r)
       });
     }
+    // Личная статистика ученика. Идемпотентна: повтор той же попытки ничего не добавляет.
     async function saveProfile(s) {
+      const points = s.records.filter(r => r.status === 'solved').length,
+        ref = window.db.collection('users').doc(s.uid);
+      await window.db.runTransaction(async tx => {
+        if (window.auth?.currentUser?.uid !== s.uid) throw Error('Account changed');
+        const snap = await tx.get(ref);
+        if (window.auth?.currentUser?.uid !== s.uid) throw Error('Account changed');
+        const old = snap.exists ? snap.data().hotkeyProgress || {} : {},
+          history = Array.isArray(old.history) ? old.history : [];
+        if (history.some(h => h.id === s.id)) return;
+        tx.set(ref, {
+          hotkeyProgress: {
+            ...old,
+            totalScore: (Number(old.totalScore) || 0) + points,
+            maxScore: Math.max(Number(old.maxScore) || 0, points),
+            sessionsPlayed: (Number(old.sessionsPlayed) || 0) + 1,
+            history: [...history, {
+              id: s.id,
+              date: Date.now(),
+              score: points,
+              total: s.tasks.length,
+              topic: s.title
+            }].slice(-100)
+          }
+        }, {
+          merge: true
+        });
+      });
+    }
+    // Отправка серии в задание. Результат «не засчитана» — это обычный ответ, а не ошибка:
+    // ошибкой считается только сбой сохранения (сеть, доступ, смена аккаунта).
+    async function submitAssignment(s, mine) {
+      const A = s.assignment,
+        say = (message, kind) => window.dispatchEvent(new CustomEvent('lms-assignment-feedback', {
+          detail: {
+            id: A.id,
+            message,
+            kind
+          }
+        }));
+      if (typeof window.lmsSubmitAssignmentResult !== 'function') {
+        const text = 'Модуль заданий не загружен. Обновите страницу и откройте задание заново.';
+        if (mine()) setAssignState({
+          kind: 'error',
+          retryable: false,
+          text
+        });
+        say(text, 'error');
+        return;
+      }
+      try {
+        const receipt = await window.lmsSubmitAssignmentResult(A, {
+          id: s.id,
+          module: 'hotkeys',
+          total: s.tasks.length,
+          records: s.records.map((r, i) => ({
+            status: r.status,
+            errors: r.errors,
+            hint: !!r.hint,
+            program: programOf(s.tasks[i]),
+            taskId: String(s.tasks[i]?.id || '')
+          }))
+        });
+        const kind = receipt.alreadyDone ? 'info' : receipt.accepted ? 'ok' : 'warn';
+        let text = receipt.alreadyDone ? 'Задание уже выполнено. Эта серия в счётчик не идёт.' : receipt.message || (receipt.accepted ? 'Серия засчитана.' : 'Серия не засчитана.');
+        if (receipt.statsSaved === false && !receipt.alreadyDone) text += ' Статистика ответов не записана: база данных не приняла новые поля.';
+        if (mine()) setAssignState({
+          kind,
+          text,
+          count: receipt.count,
+          target: receipt.target
+        });
+        say(text, kind);
+      } catch (e) {
+        window.reportLmsError?.(e, {
+          "section": "hotkeys",
+          "source": "12_hotkeys.js",
+          "operation": "assignment",
+          "handled": true
+        });
+        const text = e?.userMessage || e?.message || 'Не удалось сохранить результат задания.';
+        if (mine()) setAssignState({
+          kind: 'error',
+          retryable: e?.retryable === true,
+          text
+        });
+        say(text, 'error');
+      }
+    }
+    async function saveResult(s) {
       if (!s.uid) {
         setSaveState('guest');
         return;
       }
       if (window.auth?.currentUser?.uid !== s.uid) {
         setSaveState('accountChanged');
+        if (s.assignment) setAssignState({
+          kind: 'error',
+          retryable: false,
+          text: 'Аккаунт изменился. Результат этой серии не сохранён — откройте задание заново.'
+        });
         return;
       }
       if (!window.db?.runTransaction) {
         setSaveState('saveError');
+        if (s.assignment) setAssignState({
+          kind: 'error',
+          retryable: true,
+          text: 'Нет подключения к базе данных. Серия не потеряна — повторите сохранение.'
+        });
         return;
       }
       if (saving.current.has(s.id)) return;
       saving.current.add(s.id);
+      const mine = () => alive.current && sref.current?.id === s.id;
       setSaveState('saving');
+      if (s.assignment) setAssignState({
+        kind: 'saving',
+        text: 'Сохраняем серию в задание…'
+      });
       try {
-        const points = s.records.filter(r => r.status === 'solved').length,
-          ref = window.db.collection('users').doc(s.uid);
-        await window.db.runTransaction(async tx => {
-          if (window.auth?.currentUser?.uid !== s.uid) throw Error('Account changed');
-          const snap = await tx.get(ref);
-          if (window.auth?.currentUser?.uid !== s.uid) throw Error('Account changed');
-          const old = snap.exists ? snap.data().hotkeyProgress || {} : {},
-            history = Array.isArray(old.history) ? old.history : [];
-          if (history.some(h => h.id === s.id)) return;
-          tx.set(ref, {
-            hotkeyProgress: {
-              ...old,
-              totalScore: (Number(old.totalScore) || 0) + points,
-              maxScore: Math.max(Number(old.maxScore) || 0, points),
-              sessionsPlayed: (Number(old.sessionsPlayed) || 0) + 1,
-              history: [...history, {
-                id: s.id,
-                date: Date.now(),
-                score: points,
-                total: s.tasks.length,
-                topic: s.title
-              }].slice(-100)
-            }
-          }, {
-            merge: true
+        let profileOk = true;
+        try {
+          await saveProfile(s);
+        } catch (e) {
+          profileOk = false;
+          window.reportLmsError?.(e, {
+            "section": "hotkeys",
+            "source": "12_hotkeys.js",
+            "operation": "profile",
+            "handled": true
           });
-        });
-        if (alive.current && sref.current?.id === s.id) setSaveState('saved');
-      } catch {
-        if (alive.current && sref.current?.id === s.id) setSaveState('saveError');
+        }
+        if (mine()) setSaveState(profileOk ? 'saved' : 'saveError');
+        if (s.assignment) await submitAssignment(s, mine);
       } finally {
         saving.current.delete(s.id);
       }
-    }
-    // Результат серии для задания. Статистика ответов сохраняется всегда, зачёт решает lmsSubmitAssignmentResult.
-    // Сбой сохранения (сеть, доступ) показывается отдельно от отказа в зачёте и повторяется без новой серии.
-    async function submitAssignment(s) {
-      if (!s.assignment || receipts.current.has(s.id) || assigning.current.has(s.id)) return;
-      const show = v => {
-        if (alive.current && sref.current?.id === s.id) setAssignState(v);
-      };
-      if (window.auth?.currentUser?.uid !== s.uid || s.assignment.uid !== s.uid) {
-        show({
-          kind: 'accountChanged'
-        });
-        return;
-      }
-      if (!window.lmsSubmitAssignmentResult) {
-        show({
-          kind: 'error',
-          retry: false,
-          message: 'Обновите модуль приложения для зачёта задания.'
-        });
-        return;
-      }
-      assigning.current.add(s.id);
-      show({
-        kind: 'saving'
-      });
-      try {
-        const receipt = await window.lmsSubmitAssignmentResult(s.assignment, {
-          id: s.id,
-          module: 'hotkeys',
-          bank: s.assignmentBank,
-          source: s.source,
-          total: s.tasks.length,
-          records: s.records.map((r, i) => ({
-            id: s.tasks[i].id,
-            status: r.status,
-            errors: r.errors,
-            hint: !!r.hint
-          }))
-        });
-        receipts.current.set(s.id, receipt);
-        window.dispatchEvent(new CustomEvent('lms-assignment-feedback', {
-          detail: {
-            id: s.assignment.id,
-            message: window.lmsDescribeHotkeyReceipt?.(receipt, 'ru') || (receipt.accepted ? 'Серия засчитана.' : 'Серия не засчитана.')
-          }
-        }));
-        show({
-          kind: 'receipt',
-          receipt
-        });
-      } catch (e) {
-        show({
-          kind: 'error',
-          retry: !e?.permanent,
-          message: e?.permanent ? e.message : ''
-        });
-      } finally {
-        assigning.current.delete(s.id);
-      }
-    }
-    async function saveResult(s) {
-      await saveProfile(s);
-      await submitAssignment(s);
     }
     function advance(skip = false) {
       const s = sref.current;
@@ -4085,12 +4145,34 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
     const filtered = (phase === 'theory' ? session?.tasks : active)?.filter(h => (desc(h, lang) + ' ' + combo(h).join(' ')).toLowerCase().includes(query.toLowerCase())) || [];
     const total = size === 'all' ? active.length : Math.min(size, active.length),
       step = phase === 'setup' ? 0 : phase === 'theory' ? 1 : 2;
-    const assignMessage = !assignState ? '' : assignState.kind === 'saving' ? L('Отправляем серию в задание…', 'Submitting the series to the assignment…', 'Серия топшириққа юборилмоқда…') : assignState.kind === 'accountChanged' ? L('Аккаунт изменился, серия не сохранена в задании. Войдите в нужный аккаунт и повторите сохранение.', 'The account has changed, so the series was not saved to the assignment. Sign in to the right account and retry.', 'Аккаунт ўзгарди, серия топшириқда сақланмади. Керакли аккаунтга киринг ва қайта сақланг.') : assignState.kind === 'error' ? L(`Не удалось сохранить серию в задании${assignState.message ? ': ' + assignState.message : ''}. Это не отказ в зачёте${assignState.retry ? ' — проходить серию заново не нужно.' : '.'}`, `Could not save the series to the assignment${assignState.message ? ': ' + assignState.message : ''}. This is not a refusal${assignState.retry ? ' — you do not need to redo the series.' : '.'}`, `Серияни топшириққа сақлаб бўлмади${assignState.message ? ': ' + assignState.message : ''}. Бу рад этиш эмас${assignState.retry ? ' — серияни қайта ўтиш шарт эмас.' : '.'}`) : window.lmsDescribeHotkeyReceipt?.(assignState.receipt, lang) || '';
     const stats = /*#__PURE__*/React.createElement("div", {
       className: "hx-metrics"
     }, [[u.solved, `${solved}/${session?.tasks.length || 0}`], [u.first, first], [u.mistakes, mistakes]].map(([label, value]) => /*#__PURE__*/React.createElement("div", {
       key: label
     }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("strong", null, value))));
+    const activeProgram = useCustom && custom ? custom.known || 'custom' : bank,
+      categoryOk = !assignCtx ? true : assignCtx.bank === 'any' ? ['word', 'windows', 'excel', 'legacy'].includes(activeProgram) : activeProgram === assignCtx.bank;
+    const assignBanner = assignCtx && phase !== 'result' ? /*#__PURE__*/React.createElement("div", {
+      className: 'hx-assign-banner' + (categoryOk ? '' : ' is-warn'),
+      role: "note"
+    }, /*#__PURE__*/React.createElement("strong", null, categoryOk ? 'Идёт назначенное задание' : 'Другая категория: серия не будет засчитана'), /*#__PURE__*/React.createElement("span", null, categoryOk ? `Категория: ${ASSIGN_BANK_TEXT[assignCtx.bank]}. Серия — от 5 сочетаний. Ошибку можно исправить (до ${ASSIGN_MAX_TRIES} попыток), подсказка и пропуск серию не засчитывают.` : `В задании нужна категория ${ASSIGN_BANK_TEXT[assignCtx.bank]}. Статистика ответов всё равно сохранится.`)) : null;
+    const assignPanel = session?.assignment && assignState ? /*#__PURE__*/React.createElement("div", {
+      className: 'hx-assign-result is-' + assignState.kind,
+      role: "status"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "hx-assign-icon",
+      "aria-hidden": "true"
+    }, assignState.kind === 'ok' ? '✓' : assignState.kind === 'warn' ? '!' : assignState.kind === 'error' ? '×' : assignState.kind === 'saving' ? '…' : 'i'), /*#__PURE__*/React.createElement("div", null, assignState.kind === 'error' && /*#__PURE__*/React.createElement("strong", null, 'Не удалось сохранить результат задания'), /*#__PURE__*/React.createElement("p", null, assignState.text), assignState.count != null && assignState.target ? /*#__PURE__*/React.createElement("div", {
+      className: "hx-assign-meter"
+    }, /*#__PURE__*/React.createElement("span", null, "Засчитано серий: ", assignState.count, " / ", assignState.target), /*#__PURE__*/React.createElement("i", null, /*#__PURE__*/React.createElement("b", {
+      style: {
+        width: Math.min(100, assignState.count / assignState.target * 100) + '%'
+      }
+    }))) : null, assignState.kind === 'error' && assignState.retryable && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "hx-link",
+      onClick: () => saveResult(session)
+    }, 'Повторить сохранение'))) : null;
     const cards = items => /*#__PURE__*/React.createElement("div", {
       className: "hx-theory-grid"
     }, items.map((h, i) => /*#__PURE__*/React.createElement("article", {
@@ -4143,7 +4225,7 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
     }, /*#__PURE__*/React.createElement("i", null, step > i ? /*#__PURE__*/React.createElement(Icon, {
       name: "check",
       size: 12
-    }) : String(i + 1).padStart(2, '0')), v))), phase === 'setup' && /*#__PURE__*/React.createElement("div", {
+    }) : String(i + 1).padStart(2, '0')), v))), assignBanner, phase === 'setup' && /*#__PURE__*/React.createElement("div", {
       className: "hx-enter"
     }, /*#__PURE__*/React.createElement("div", {
       className: "hx-hero"
@@ -4488,11 +4570,12 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
       pressed: record.status === 'pending' ? pressedKeys : null
     })), /*#__PURE__*/React.createElement("div", {
       className: `hx-feedback ${session.feedback}`,
+      key: session.feedback === 'retry' ? 'retry' + record.errors : 'fb',
       role: "status"
     }, session.feedback === 'correct' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
       name: "check",
       size: 18
-    }), u.correct) : session.feedback === 'wrong' ? (session.assignment && record.status === 'pending' ? L('Не совсем. Попробуй ещё раз — ошибка сохранится в статистике, но серию не отменит.', 'Not quite. Try again — the mistake is recorded in your stats but does not cancel the series.', 'Тўлиқ тўғри эмас. Яна уриниб кўринг — хато статистикада сақланади, лекин серияни бекор қилмайди.') : L('Не совсем. Запомни правильное сочетание.', 'Not quite. Review the correct shortcut.', 'Тўлиқ тўғри эмас. Тўғри комбинацияни эслаб қолинг.')) : textMode ? L('Нажми комбинацию или впиши её ниже', 'Press the shortcut or type it below', 'Комбинацияни босинг ёки қуйида ёзинг') : u.focus)), textMode && /*#__PURE__*/React.createElement("form", {
+    }), u.correct) : session.feedback === 'retry' ? L(`Не совсем. Попробуй ещё раз. Осталось попыток: ${ASSIGN_MAX_TRIES - record.errors}.`, `Not quite. Try again. Attempts left: ${ASSIGN_MAX_TRIES - record.errors}.`, `Тўлиқ тўғри эмас. Яна уриниб кўринг. Қолган уринишлар: ${ASSIGN_MAX_TRIES - record.errors}.`) : session.feedback === 'wrong' ? L('Не совсем. Запомни правильное сочетание.', 'Not quite. Review the correct shortcut.', 'Тўлиқ тўғри эмас. Тўғри комбинацияни эслаб қолинг.') : textMode ? L('Нажми комбинацию или впиши её ниже', 'Press the shortcut or type it below', 'Комбинацияни босинг ёки қуйида ёзинг') : u.focus)), textMode && /*#__PURE__*/React.createElement("form", {
       className: "hx-answer",
       onSubmit: e => {
         e.preventDefault();
@@ -4559,14 +4642,7 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
       type: "button",
       className: "hx-link",
       onClick: () => saveResult(session)
-    }, u.saveAgain)), assignState && /*#__PURE__*/React.createElement("div", {
-      className: "hx-save-status",
-      role: "status"
-    }, assignMessage, (assignState.kind === 'error' && assignState.retry || assignState.kind === 'accountChanged') && /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "hx-link",
-      onClick: () => submitAssignment(session)
-    }, u.saveAgain)), /*#__PURE__*/React.createElement("div", {
+    }, u.saveAgain)), assignPanel, /*#__PURE__*/React.createElement("div", {
       className: "hx-result-actions"
     }, /*#__PURE__*/React.createElement("button", {
       className: "hx-button hx-primary hx-result-main",
