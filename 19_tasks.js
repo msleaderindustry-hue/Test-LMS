@@ -1,4 +1,6 @@
 // 19_tasks.js — задания учеников, интерфейс, ИИ и сохранение результатов.
+// Горячие клавиши: статистика серий хранится отдельно от зачёта (hotkeyStats / attemptLog),
+// зачёт считается в сериях (result.count). Проверка выполняется на клиенте и не заменяет серверную.
 // Подключить после React / ReactDOM и перед 7_app.js.
 (function () {
   "use strict";
@@ -266,13 +268,13 @@ function LmsAssignmentCard({
     className: "la-row-expanded"
   }, /*#__PURE__*/React.createElement("div", {
     className: "la-row-description"
-  }, /*#__PURE__*/React.createElement("small", null, "УСЛОВИЯ ВЫПОЛНЕНИЯ"), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `Наберите весь текст с точностью не ниже ${task.minAccuracy}%.` : task.module === 'word' ? 'Выполните все четыре условия оформления назначенного документа в Word Lab и нажмите «Проверить оформление».' : task.module === 'excel' ? `Самостоятельно решите ${task.target || 1} задач в тренажёре. Просмотр решения не засчитывается.` : `Выполните ${task.target || 1} серий от 5 сочетаний без ошибок, подсказок и пропусков.`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("small", null, "УСЛОВИЯ ВЫПОЛНЕНИЯ"), /*#__PURE__*/React.createElement("p", null, task.module === 'typing' ? `Наберите весь текст с точностью не ниже ${task.minAccuracy}%.` : task.module === 'word' ? 'Выполните все четыре условия оформления назначенного документа в Word Lab и нажмите «Проверить оформление».' : task.module === 'excel' ? `Самостоятельно решите ${task.target || 1} задач в тренажёре. Просмотр решения не засчитывается.` : `Выполните ${task.target || 1} ${lmsPlural(task.target || 1, 'серию', 'серии', 'серий')}. В серии — минимум 5 разных сочетаний категории «${LMS_HOTKEY_BANKS[task.hotkeyBank || 'any'] || task.hotkeyBank}», каждое нужно найти самостоятельно: без подсказок и пропусков. Ошибки допустимы, если вы сами нашли верное сочетание — они сохраняются в статистике, но серию не отменяют.`), task.module !== 'typing' && task.text && /*#__PURE__*/React.createElement("p", {
     className: "la-instruction"
   }, task.text), legacy && /*#__PURE__*/React.createElement("p", {
     className: "la-notice"
   }, "Нужно пройти задание заново: прежний результат не подтверждён по новым условиям."), p?.result && !legacy && /*#__PURE__*/React.createElement("div", {
     className: "la-card-result"
-  }, task.module === 'typing' ? `${p.result.accuracy}% точности · ${p.result.wpm} WPM` : `Выполнено: ${p.result.count || 0} / ${task.target || 1}`), !done && /*#__PURE__*/React.createElement(AssignmentAI, {
+  }, task.module === 'typing' ? `${p.result.accuracy}% точности · ${p.result.wpm} WPM` : task.module === 'hotkeys' ? lmsHotkeyResultNodes(p, task) : `Выполнено: ${p.result.count || 0} / ${task.target || 1}`), !done && /*#__PURE__*/React.createElement(AssignmentAI, {
     task: task
   })), /*#__PURE__*/React.createElement("div", {
     className: "la-row-help"
@@ -376,9 +378,234 @@ async function lmsAssignmentWrite(id, uid, action, result) {
     };
   });
 }
-// Only called by the actual exercise's successful completion path.
-window.lmsSubmitAssignmentResult = async function (context, evidence) {
-  if (!context?.id || context.uid !== window.auth?.currentUser?.uid) throw Error('Аккаунт изменился. Откройте задание заново.');
+// ---------- Горячие клавиши: серии, статистика и зачёт ----------
+// Проверка ниже выполняется в браузере ученика (клиентская транзакция Firestore).
+// Она защищает от случайных и повторных записей, но не от намеренной подделки:
+// для этого нужны серверная проверка (Cloud Function) и правила Firestore.
+const LMS_HOTKEY_BANKS = {
+  word: 'Word',
+  windows: 'Windows',
+  excel: 'Excel',
+  any: 'любая'
+};
+const LMS_HOTKEY_MIN_SERIES = 5;
+const lmsActiveAssignments = new Map();
+// Контекст открытого задания существует только пока открыта панель задания.
+window.lmsGetActiveAssignmentContext = function (module) {
+  const uid = window.auth?.currentUser?.uid;
+  if (!uid) return null;
+  for (const c of lmsActiveAssignments.values()) if (c.uid === uid && (!module || c.module === module)) return {
+    ...c
+  };
+  return null;
+};
+function lmsPlural(n, one, few, many) {
+  const a = Math.abs(Number(n) || 0),
+    m10 = a % 10,
+    m100 = a % 100;
+  return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+}
+function lmsPermanent(message) {
+  return Object.assign(Error(message), {
+    permanent: true
+  });
+}
+// Оценка одной серии. Статистика считается всегда, зачёт — только если reasons пуст.
+function lmsEvaluateHotkeySeries(task, ev) {
+  const r = ev?.records;
+  if (!Array.isArray(r) || !r.length || r.length > 500 || r.length !== Number(ev.total)) return {
+    invalid: true
+  };
+  const stats = {
+      total: r.length,
+      solved: 0,
+      errors: 0,
+      corrected: 0,
+      hints: 0,
+      skipped: 0,
+      unsolved: 0
+    },
+    ids = new Set();
+  for (const x of r) {
+    if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !x.id || x.id.length > 80 || !['solved', 'failed', 'skipped', 'pending'].includes(x.status) || !Number.isInteger(x.errors) || x.errors < 0 || x.errors > 1000 || typeof x.hint !== 'boolean') return {
+      invalid: true
+    };
+    ids.add(x.id);
+    stats.errors += x.errors;
+    if (x.hint) stats.hints++;
+    if (x.status === 'skipped') stats.skipped++;else if (x.status === 'solved') {
+      stats.solved++;
+      // ошибки в сочетании, которое затем найдено без подсказки, считаются исправленными
+      if (!x.hint) stats.corrected += x.errors;
+    } else stats.unsolved++;
+  }
+  const reasons = [],
+    need = task.hotkeyBank || 'any';
+  if (r.length < LMS_HOTKEY_MIN_SERIES) reasons.push('short');
+  if (stats.skipped) reasons.push('skipped');
+  if (stats.unsolved) reasons.push('unsolved');
+  if (stats.hints) reasons.push('hint');
+  if (need === 'any') {
+    if (!['catalog', 'legacy'].includes(ev.source) || ![...ids].every(id => /^(word|windows|excel|legacy)-/.test(id))) reasons.push('source');
+  } else if (!LMS_HOTKEY_BANKS[need] || ev.source !== 'catalog' || ev.bank !== need || ![...ids].every(id => id.startsWith(need + '-'))) reasons.push('bank');
+  if (ids.size !== r.length) reasons.push('duplicate');
+  return {
+    invalid: false,
+    accepted: reasons.length === 0,
+    reasons,
+    stats
+  };
+}
+// Понятный текст результата серии (ru / en / uz).
+function lmsDescribeHotkeyReceipt(rc, lang) {
+  if (!rc) return '';
+  const l = lang === 'en' || lang === 'uz' ? lang : 'ru',
+    s = rc.stats || {},
+    n = x => Number(x) || 0,
+    bank = LMS_HOTKEY_BANKS[rc.need] || rc.need || '';
+  const T = {
+    ru: {
+      completed: 'Задание уже выполнено — новая серия не добавлена.',
+      ok: `Серия засчитана: ${n(s.total)} ${lmsPlural(n(s.total), 'сочетание', 'сочетания', 'сочетаний')}, ${n(s.errors) ? `${n(s.errors)} ${lmsPlural(n(s.errors), 'ошибка исправлена', 'ошибки исправлены', 'ошибок исправлено')}` : 'без ошибок'}.`,
+      no: 'Серия не засчитана: ',
+      reasons: {
+        short: `в серии меньше ${LMS_HOTKEY_MIN_SERIES} сочетаний (${n(s.total)})`,
+        skipped: `есть пропущенные сочетания (${n(s.skipped)})`,
+        unsolved: `не все сочетания решены (${n(s.unsolved)})`,
+        hint: 'использована подсказка',
+        bank: `другая категория, нужна: ${bank}`,
+        source: 'нужен готовый набор Word, Windows или Excel',
+        duplicate: 'сочетания в серии повторяются',
+        invalid: 'данные серии повреждены'
+      },
+      saved: ' Статистика сохранена.',
+      notSaved: ' Статистика не сохранена.',
+      done: ' Задание выполнено.',
+      count: ` Засчитано серий: ${n(rc.count)} из ${n(rc.target)}.`,
+      dup: ' Эта серия уже была сохранена ранее и повторно не учтена.'
+    },
+    en: {
+      completed: 'The assignment is already completed — the series was not added.',
+      ok: `Series accepted: ${n(s.total)} ${n(s.total) === 1 ? 'shortcut' : 'shortcuts'}, ${n(s.errors) ? `${n(s.errors)} ${n(s.errors) === 1 ? 'mistake' : 'mistakes'} corrected` : 'no mistakes'}.`,
+      no: 'Series not accepted: ',
+      reasons: {
+        short: `fewer than ${LMS_HOTKEY_MIN_SERIES} shortcuts (${n(s.total)})`,
+        skipped: `some shortcuts were skipped (${n(s.skipped)})`,
+        unsolved: `not all shortcuts were solved (${n(s.unsolved)})`,
+        hint: 'a hint was used',
+        bank: `wrong category, required: ${bank}`,
+        source: 'a ready-made Word, Windows or Excel set is required',
+        duplicate: 'shortcuts repeat within the series',
+        invalid: 'the series data is damaged'
+      },
+      saved: ' Statistics saved.',
+      notSaved: ' Statistics not saved.',
+      done: ' Assignment completed.',
+      count: ` Series accepted: ${n(rc.count)} of ${n(rc.target)}.`,
+      dup: ' This series was already saved earlier and was not counted again.'
+    },
+    uz: {
+      completed: 'Топшириқ аллақачон бажарилган — янги серия қўшилмади.',
+      ok: `Серия ҳисобга олинди: ${n(s.total)} та комбинация, ${n(s.errors) ? `${n(s.errors)} та хато тузатилди` : 'хатосиз'}.`,
+      no: 'Серия ҳисобга олинмади: ',
+      reasons: {
+        short: `серияда ${LMS_HOTKEY_MIN_SERIES} тадан кам комбинация (${n(s.total)})`,
+        skipped: `ўтказиб юборилган комбинациялар бор (${n(s.skipped)})`,
+        unsolved: `ҳамма комбинациялар ҳал қилинмаган (${n(s.unsolved)})`,
+        hint: 'кўрсатма ишлатилган',
+        bank: `бошқа тоифа, керакли: ${bank}`,
+        source: 'Word, Windows ёки Excel тайёр тўплами керак',
+        duplicate: 'серияда комбинациялар такрорланган',
+        invalid: 'серия маълумотлари бузилган'
+      },
+      saved: ' Статистика сақланди.',
+      notSaved: ' Статистика сақланмади.',
+      done: ' Топшириқ бажарилди.',
+      count: ` Ҳисобга олинган серия: ${n(rc.count)} / ${n(rc.target)}.`,
+      dup: ' Бу серия илгари сақланган, қайта ҳисобга олинмади.'
+    }
+  }[l];
+  if (rc.alreadyCompleted) return T.completed;
+  let text;
+  if (rc.accepted) text = T.ok + (rc.done ? T.done : T.count);else {
+    text = T.no + (rc.reasons?.length ? rc.reasons : ['invalid']).map(x => T.reasons[x] || x).join('; ') + '.';
+    if (!rc.quiet) text += rc.recorded === false ? T.notSaved : T.saved;
+  }
+  return rc.duplicate ? text + T.dup : text;
+}
+window.lmsDescribeHotkeyReceipt = lmsDescribeHotkeyReceipt;
+function lmsHotkeyStatsLine(st) {
+  const n = x => Number(st?.[x]) || 0;
+  return `Попыток: ${n('series')} (засчитано ${n('accepted')}) · верных ответов: ${n('solved')} · ошибок: ${n('errors')} (исправлено ${n('corrected')}) · подсказок: ${n('hints')} · пропусков: ${n('skipped')}`;
+}
+function lmsHotkeyResultNodes(p, task) {
+  const h = React.createElement,
+    head = `Серий засчитано: ${p?.result?.count || 0} / ${task.target || 1}`;
+  if (!p?.hotkeyStats) return head;
+  return h(React.Fragment, null, head, h('br'), h('small', null, lmsHotkeyStatsLine(p.hotkeyStats)));
+}
+function lmsHotkeyStatsBlock(progress, task) {
+  const h = React.createElement,
+    st = progress?.hotkeyStats,
+    last = progress?.lastAttempt;
+  if (!st && !last) return null;
+  const rc = last ? {
+    accepted: !!last.accepted,
+    reasons: last.reasons || [],
+    stats: last,
+    need: last.need,
+    recorded: true,
+    quiet: true,
+    count: progress?.result?.count || 0,
+    target: task.target || 1,
+    done: progress?.status === 'completed' && progress?.receiptVersion === 2
+  } : null;
+  return h('div', {
+    className: 'la-condition'
+  }, h('small', null, 'Статистика ответов'), st && h('p', null, lmsHotkeyStatsLine(st)), rc && h('p', null, 'Последняя серия: ', lmsDescribeHotkeyReceipt(rc, 'ru')));
+}
+
+// ---------- Очередь повторной отправки (потеря соединения) ----------
+const LMS_PENDING_KEY = 'lmsPendingAssignmentResults.v1',
+  LMS_PENDING_TTL = 7 * 24 * 3600 * 1000;
+function lmsPendingRead() {
+  try {
+    const v = JSON.parse(localStorage.getItem(LMS_PENDING_KEY) || '[]');
+    return Array.isArray(v) ? v.filter(x => x?.evidence?.id && x?.context?.id && Date.now() - x.at < LMS_PENDING_TTL) : [];
+  } catch {
+    return [];
+  }
+}
+function lmsPendingWrite(list) {
+  try {
+    if (list.length) localStorage.setItem(LMS_PENDING_KEY, JSON.stringify(list.slice(-20)));else localStorage.removeItem(LMS_PENDING_KEY);
+  } catch {}
+}
+function lmsPendingRemove(id) {
+  if (id) lmsPendingWrite(lmsPendingRead().filter(x => x.evidence.id !== id));
+}
+function lmsPendingAdd(context, evidence) {
+  if (evidence?.module !== 'hotkeys' || !evidence.id) return;
+  const list = lmsPendingRead().filter(x => x.evidence.id !== evidence.id);
+  list.push({
+    at: Date.now(),
+    context: {
+      id: context.id,
+      uid: context.uid,
+      module: context.module || 'hotkeys'
+    },
+    evidence
+  });
+  lmsPendingWrite(list);
+}
+function lmsIsTransient(e) {
+  return !e?.permanent && (!e?.code || ['unavailable', 'deadline-exceeded', 'aborted', 'cancelled', 'resource-exhausted', 'internal', 'unknown'].includes(e.code));
+}
+
+// ---------- Транзакция сохранения результата ----------
+async function lmsSubmitCore(context, evidence) {
+  if (!context?.id || !evidence || typeof evidence.id !== 'string' || !evidence.id || evidence.id.length > 100) throw lmsPermanent('Некорректные данные результата.');
+  if (!window.auth?.currentUser || context.uid !== window.auth.currentUser.uid) throw lmsPermanent('Аккаунт изменился. Откройте задание заново.');
   const db = window.db,
     ref = db.collection('lmsAssignments').doc(context.id),
     pr = ref.collection('progress').doc(context.uid);
@@ -387,17 +614,119 @@ window.lmsSubmitAssignmentResult = async function (context, evidence) {
     const task = a.data(),
       old = p.data() || {},
       profile = u.data(),
-      allowed = id => profile?.allowedModules == null || profile.allowedModules.includes(id);
-    if (window.auth?.currentUser?.uid !== context.uid || !a.exists || !task.studentIds?.includes(context.uid) || !profile || profile.isBanned || !allowed('assignments') || !allowed(task.module) || task.status !== 'assigned') throw Error('Нет доступа к заданию.');
+      allowed = id => profile?.allowedModules == null || Array.isArray(profile.allowedModules) && profile.allowedModules.includes(id),
+      ts = window.firebase.firestore.FieldValue.serverTimestamp;
+    if (window.auth?.currentUser?.uid !== context.uid || !a.exists || !task.studentIds?.includes(context.uid) || !profile || profile.isBanned || !allowed('assignments') || !allowed(task.module) || task.status !== 'assigned') throw lmsPermanent('Нет доступа к заданию.');
+    if (task.module !== evidence.module) throw lmsPermanent('Сначала откройте назначенное задание.');
+    if (task.module === 'hotkeys') {
+      const log = Array.isArray(old.attemptLog) ? old.attemptLog : [],
+        ids = Array.isArray(old.acceptedAttemptIds) ? old.acceptedAttemptIds : [],
+        target = Math.max(1, Number(task.target) || 1),
+        finished = old.status === 'completed' && old.receiptVersion === 2;
+      // Повторная отправка той же попытки: ничего не меняем, возвращаем прежний итог.
+      const prev = log.find(x => x?.id === evidence.id);
+      if (prev) return {
+        done: finished,
+        accepted: !!prev.accepted,
+        reasons: prev.reasons || [],
+        stats: prev,
+        need: prev.need,
+        count: ids.length,
+        target,
+        recorded: true,
+        duplicate: true
+      };
+      if (ids.includes(evidence.id)) return {
+        done: finished,
+        accepted: true,
+        reasons: [],
+        stats: null,
+        count: ids.length,
+        target,
+        recorded: true,
+        duplicate: true
+      };
+      if (finished) return {
+        done: true,
+        accepted: null,
+        alreadyCompleted: true,
+        reasons: [],
+        count: ids.length,
+        target,
+        recorded: false
+      };
+      if (old.status !== 'started') throw lmsPermanent('Сначала откройте назначенное задание.');
+      const v = lmsEvaluateHotkeySeries(task, evidence);
+      if (v.invalid) return {
+        done: false,
+        accepted: false,
+        reasons: ['invalid'],
+        stats: null,
+        count: ids.length,
+        target,
+        recorded: false
+      };
+      const need = task.hotkeyBank || 'any',
+        entry = {
+          id: evidence.id,
+          at: Date.now(),
+          accepted: v.accepted,
+          reasons: v.reasons,
+          need,
+          bank: String(evidence.bank || '').slice(0, 20),
+          ...v.stats
+        },
+        hs = old.hotkeyStats || {},
+        add = k => (Number(hs[k]) || 0) + (v.stats[k] || 0),
+        hotkeyStats = {
+          series: (Number(hs.series) || 0) + 1,
+          accepted: (Number(hs.accepted) || 0) + (v.accepted ? 1 : 0),
+          rejected: (Number(hs.rejected) || 0) + (v.accepted ? 0 : 1),
+          total: add('total'),
+          solved: add('solved'),
+          errors: add('errors'),
+          corrected: add('corrected'),
+          hints: add('hints'),
+          skipped: add('skipped'),
+          unsolved: add('unsolved')
+        },
+        acceptedAttemptIds = v.accepted ? [...ids, evidence.id] : ids,
+        count = acceptedAttemptIds.length,
+        done = v.accepted && count >= target;
+      tx.set(pr, {
+        ...old,
+        status: done ? 'completed' : 'started',
+        receiptVersion: 2,
+        acceptedAttemptIds,
+        result: {
+          count
+        },
+        hotkeyStats,
+        lastAttempt: entry,
+        attemptLog: [...log, entry].slice(-30),
+        updatedAt: ts(),
+        ...(done ? {
+          completedAt: ts(),
+          needsHelp: false
+        } : {})
+      });
+      return {
+        done,
+        accepted: v.accepted,
+        reasons: v.reasons,
+        stats: v.stats,
+        need,
+        count,
+        target,
+        recorded: true,
+        duplicate: false
+      };
+    }
     if (old.status === 'completed' && old.receiptVersion === 2) return {
       done: true
     };
-    if (old.status !== 'started' || task.module !== evidence.module || !evidence.id) throw Error('Сначала откройте назначенное задание.');
+    if (old.status !== 'started') throw lmsPermanent('Сначала откройте назначенное задание.');
     let accepted = false;
-    if (task.module === 'hotkeys') {
-      const r = evidence.records;
-      accepted = Array.isArray(r) && r.length >= 5 && r.length === evidence.total && r.every(x => x.status === 'solved' && !x.hint && x.errors === 0) && (!task.hotkeyBank || task.hotkeyBank === 'any' || task.hotkeyBank === evidence.bank);
-    }
     if (task.module === 'word') {
       const snapshot = typeof evidence.snapshot === 'string' && evidence.snapshot.length < 800000 ? JSON.parse(evidence.snapshot) : null;
       const checks = window.lmsWordCheck?.(snapshot, task.wordLesson);
@@ -415,8 +744,7 @@ window.lmsSubmitAssignmentResult = async function (context, evidence) {
     };
     const acceptedAttemptIds = [...ids, evidence.id],
       count = acceptedAttemptIds.length,
-      done = count >= Number(task.target || 1),
-      ts = window.firebase.firestore.FieldValue.serverTimestamp;
+      done = count >= Number(task.target || 1);
     tx.set(pr, {
       ...old,
       status: done ? 'completed' : 'started',
@@ -436,6 +764,47 @@ window.lmsSubmitAssignmentResult = async function (context, evidence) {
       accepted: true
     };
   });
+}
+// Единая точка входа для упражнений (Hotkeys, Word, Excel).
+window.lmsSubmitAssignmentResult = async function (context, evidence) {
+  try {
+    const receipt = await lmsSubmitCore(context, evidence);
+    lmsPendingRemove(evidence?.id);
+    return receipt;
+  } catch (e) {
+    if (lmsIsTransient(e)) lmsPendingAdd(context, evidence);else lmsPendingRemove(evidence?.id);
+    throw e;
+  }
+};
+// Повторная отправка серий, не сохранённых из-за сбоя сети (без повторного прохождения).
+let lmsFlushing = false;
+window.lmsRetryPendingAssignmentResults = async function (assignmentId) {
+  const uid = window.auth?.currentUser?.uid;
+  lmsPendingWrite(lmsPendingRead());
+  if (!uid || lmsFlushing) return [];
+  const mine = lmsPendingRead().filter(x => x.context.uid === uid && (!assignmentId || x.context.id === assignmentId)),
+    out = [];
+  lmsFlushing = true;
+  try {
+    for (const item of mine) {
+      try {
+        const rc = await lmsSubmitCore(item.context, item.evidence);
+        lmsPendingRemove(item.evidence.id);
+        out.push(rc);
+        window.dispatchEvent(new CustomEvent('lms-assignment-feedback', {
+          detail: {
+            id: item.context.id,
+            message: 'Отправлена серия, не сохранённая ранее. ' + lmsDescribeHotkeyReceipt(rc, 'ru')
+          }
+        }));
+      } catch (e) {
+        if (!lmsIsTransient(e)) lmsPendingRemove(item.evidence.id);
+      }
+    }
+  } finally {
+    lmsFlushing = false;
+  }
+  return out;
 };
 function LmsAssignedTyping({
   task,
@@ -615,6 +984,31 @@ function AssignmentActive({
   const modal = React.useRef(null),
     trigger = React.useRef(null);
   React.useEffect(() => window.db.collection('lmsAssignments').doc(task.id).collection('progress').doc(uid).onSnapshot(s => setProgress(s.data()), e => setNotice(e.message)), [task.id, uid]);
+  // The open assignment is registered here so that a trainer can attach a series to it
+  // only while the assignment is really open (no stale global context).
+  React.useEffect(() => {
+    const key = task.id + ':' + uid;
+    lmsActiveAssignments.set(key, {
+      id: task.id,
+      uid,
+      module: task.module,
+      bank: task.hotkeyBank || 'any',
+      title: task.title,
+      target: task.target || 1
+    });
+    return () => {
+      lmsActiveAssignments.delete(key);
+    };
+  }, [task.id, task.module, task.hotkeyBank, task.title, task.target, uid]);
+  // Series whose saving failed on a network error are sent again without replaying the exercise.
+  React.useEffect(() => {
+    const run = () => {
+      window.lmsRetryPendingAssignmentResults?.(task.id).catch(() => {});
+    };
+    run();
+    window.addEventListener('online', run);
+    return () => window.removeEventListener('online', run);
+  }, [task.id, uid]);
   React.useEffect(() => {
     const f = e => {
       if (e.detail?.id === task.id) setNotice(e.detail.message);
@@ -635,12 +1029,7 @@ function AssignmentActive({
   const done = progress?.status === 'completed' && progress?.receiptVersion === 2,
     count = progress?.result?.count || 0,
     total = task.target || 1;
-  const condition = task.module === 'word' ? 'Оформите назначенный документ. Зачёт даётся за четыре выполненных условия в панели «Практика» Word Lab. ИИ объясняет действия, но не применяет готовые ответы.' : task.module === 'hotkeys' ? `В каждой серии — от 5 сочетаний. Все ответы верные, без ошибок, подсказок и пропусков. Категория: ${{
-    word: 'Word',
-    windows: 'Windows',
-    excel: 'Excel',
-    any: 'любая'
-  }[task.hotkeyBank || 'any']}.` : 'Самостоятельно решайте задачи внутри Excel Lab. Ответ после просмотра готового решения не засчитывается.';
+  const condition = task.module === 'word' ? 'Оформите назначенный документ. Зачёт даётся за четыре выполненных условия в панели «Практика» Word Lab. ИИ объясняет действия, но не применяет готовые ответы.' : task.module === 'hotkeys' ? `Серия — это минимум 5 разных сочетаний категории «${LMS_HOTKEY_BANKS[task.hotkeyBank || 'any'] || task.hotkeyBank}». Каждое сочетание нужно найти самостоятельно: подсказка или пропуск не дают зачёта серии. Если вы ошиблись и сами нашли верный вариант, ошибка сохранится в статистике, но серию не отменит. Цель задания — ${total} ${lmsPlural(total, 'серия', 'серии', 'серий')}; счётчик показывает засчитанные серии, а не нажатия.` : 'Самостоятельно решайте задачи внутри Excel Lab. Ответ после просмотра готового решения не засчитывается.';
   function close() {
     setOpen(false);
     requestAnimationFrame(() => trigger.current?.focus({
@@ -656,7 +1045,8 @@ function AssignmentActive({
     title: task.title
   }, task.title)), /*#__PURE__*/React.createElement("span", {
     className: "la-dock-count",
-    "aria-label": `Выполнено ${count} из ${total}`
+    "aria-label": task.module === 'hotkeys' ? `Засчитано серий: ${count} из ${total}` : `Выполнено ${count} из ${total}`,
+    title: task.module === 'hotkeys' ? 'Засчитанные серии' : undefined
   }, count, /*#__PURE__*/React.createElement("i", null, "/", total)), /*#__PURE__*/React.createElement("button", {
     ref: trigger,
     onClick: () => setOpen(true),
@@ -698,7 +1088,7 @@ function AssignmentActive({
     className: "la-condition"
   }, /*#__PURE__*/React.createElement("small", null, "От преподавателя"), /*#__PURE__*/React.createElement("p", null, task.text)), /*#__PURE__*/React.createElement("div", {
     className: "la-dialog-result"
-  }, /*#__PURE__*/React.createElement("span", null, done ? 'Задание выполнено' : 'Выполнено упражнений'), /*#__PURE__*/React.createElement("strong", null, count, " / ", total)), notice && /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("span", null, done ? 'Задание выполнено' : task.module === 'hotkeys' ? 'Засчитано серий' : 'Выполнено упражнений'), /*#__PURE__*/React.createElement("strong", null, count, " / ", total)), task.module === 'hotkeys' && lmsHotkeyStatsBlock(progress, task), notice && /*#__PURE__*/React.createElement("p", {
     role: "status",
     className: "la-notice"
   }, notice), /*#__PURE__*/React.createElement(AssignmentAI, {
