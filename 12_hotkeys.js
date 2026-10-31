@@ -3329,7 +3329,65 @@
       bank: ['word', 'windows', 'excel'].includes(bank) ? bank : 'any'
     };
   }
-  const ASSIGN_CSS = ".hx-feedback.retry{color:var(--hx-red);animation:hx-shake .28s ease-out}" + ".hx-assign-banner{display:flex;flex-direction:column;gap:3px;margin:-8px 0 20px;padding:11px 15px;border:1px solid var(--hx-line);border-left:3px solid var(--hx-purple);border-radius:12px;background:var(--hx-panel);font-size:12px;line-height:1.55;color:var(--hx-muted)}" + ".hx-assign-banner strong{color:var(--hx-text);font-size:12px}" + ".hx-assign-banner.is-warn{border-left-color:#e4aa73}.hx-assign-banner.is-warn strong{color:#e4aa73}" + ".hx-assign-result{display:flex;align-items:flex-start;gap:13px;margin:16px 0;padding:15px 17px;border:1px solid var(--hx-line);border-radius:15px;background:var(--hx-panel);font-size:13px;line-height:1.6;animation:hx-assign-in .4s cubic-bezier(.2,.9,.25,1.1) both}" + ".hx-assign-result>div{flex:1;min-width:0}.hx-assign-result strong{display:block;color:var(--hx-text);font-size:13px}.hx-assign-result p{margin:2px 0 0;color:var(--hx-muted);font-size:12px;overflow-wrap:anywhere}" + ".hx-assign-icon{flex-shrink:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:14px;font-weight:700;background:var(--hx-tint);color:var(--hx-purple)}" + ".hx-assign-result.is-ok{border-color:#75e3b266}.hx-assign-result.is-ok .hx-assign-icon{background:#75e3b21f;color:var(--hx-green);animation:hx-assign-pop .5s cubic-bezier(.2,.9,.25,1.5) both}" + ".hx-assign-result.is-warn{border-color:#e4aa7366}.hx-assign-result.is-warn .hx-assign-icon{background:#e4aa7320;color:#e4aa73}" + ".hx-assign-result.is-error{border-color:#ffa6b966}.hx-assign-result.is-error .hx-assign-icon{background:#ffa6b91f;color:var(--hx-red)}" + ".hx-assign-meter{display:flex;align-items:center;gap:10px;margin-top:9px;font-size:11px;color:var(--hx-muted);font-variant-numeric:tabular-nums}.hx-assign-meter i{flex:1;max-width:180px;height:4px;border-radius:4px;background:var(--hx-line);overflow:hidden}.hx-assign-meter i b{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--hx-purple),var(--hx-green));transition:width .6s cubic-bezier(.2,.8,.2,1)}" + ".hx-assign-result .hx-link{margin-top:8px}" + "@keyframes hx-assign-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes hx-assign-pop{0%{transform:scale(.4)}100%{transform:scale(1)}}" + "@media(prefers-reduced-motion:reduce){.hx-assign-result,.hx-assign-result.is-ok .hx-assign-icon{animation:none}.hx-assign-meter i b{transition:none}}";
+  const ASSIGN_CSS = `
+.hx-feedback.retry{color:var(--hx-red);animation:hx-shake .28s ease-out}
+.hx-assign-banner{display:flex;align-items:flex-start;gap:13px;margin:-8px 0 20px;padding:13px 16px;border:1px solid var(--hx-line);border-radius:16px;background:linear-gradient(110deg,var(--hx-tint),transparent 70%),var(--hx-panel);box-shadow:inset 3px 0 0 var(--hx-purple);animation:hx-assign-in .4s cubic-bezier(.2,.9,.25,1.1) both}
+.hx-assign-badge{flex-shrink:0;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--hx-tint);color:var(--hx-purple)}
+.hx-assign-banner>div{min-width:0;display:flex;flex-direction:column;gap:7px}
+.hx-assign-banner strong{font-size:13px;line-height:1.4;color:var(--hx-text)}
+.hx-assign-banner span.hx-assign-note{font-size:12px;line-height:1.55;color:var(--hx-muted)}
+.hx-assign-pills{display:flex;flex-wrap:wrap;gap:6px}
+.hx-assign-pills span{padding:3px 10px;border:1px solid var(--hx-line);border-radius:20px;background:var(--hx-bg);font-size:11px;line-height:1.6;color:var(--hx-muted);white-space:nowrap}
+.hx-assign-banner.is-warn{box-shadow:inset 3px 0 0 #e4aa73}.hx-assign-banner.is-warn .hx-assign-badge{background:#e4aa7320;color:#e4aa73}.hx-assign-banner.is-warn strong{color:#e4aa73}
+.hx-assign-result{--tone:var(--hx-purple);display:flex;align-items:flex-start;gap:14px;margin:16px 0;padding:16px 18px;border:1px solid var(--hx-line);border-radius:18px;background:var(--hx-panel);box-shadow:inset 3px 0 0 var(--tone);font-size:13px;line-height:1.6;animation:hx-assign-in .45s cubic-bezier(.2,.9,.25,1.1) both}
+.hx-assign-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.hx-assign-result strong{display:block;color:var(--hx-text);font-size:14px;line-height:1.4}
+.hx-assign-result p{margin:0;color:var(--hx-muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.hx-assign-icon{position:relative;flex-shrink:0;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb,var(--tone) 18%,transparent);color:var(--tone)}
+.hx-assign-result.is-ok{--tone:var(--hx-green)}.hx-assign-result.is-ok .hx-assign-icon{animation:hx-assign-pop .55s cubic-bezier(.2,.9,.25,1.5) both}
+.hx-assign-result.is-ok .hx-assign-icon svg path{stroke-dasharray:24;stroke-dashoffset:24;animation:hx-assign-draw .5s .2s ease-out forwards}
+.hx-assign-result.is-warn{--tone:#e4aa73}
+.hx-assign-result.is-error{--tone:var(--hx-red)}.hx-assign-result.is-error .hx-assign-icon{animation:hx-assign-shake .4s ease-out both}
+.hx-assign-result.is-info{--tone:#8fb8f0}
+.hx-assign-result.is-saving .hx-assign-icon{background:var(--hx-tint)}
+.hx-assign-result.is-saving .hx-assign-icon::after{content:'';position:absolute;inset:-1px;border-radius:50%;border:2px solid transparent;border-top-color:var(--hx-purple);animation:hx-assign-spin .8s linear infinite}
+.hx-assign-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.hx-assign-chips span{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 9px;border:1px solid var(--hx-line);border-radius:20px;background:var(--hx-bg);font-size:11px;line-height:1.6;color:var(--hx-muted)}
+.hx-assign-chips span::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--dot)}
+.hx-assign-chips b{color:var(--hx-text);font-variant-numeric:tabular-nums}
+.hx-assign-chips .c-solved{--dot:var(--hx-green)}.hx-assign-chips .c-errors{--dot:#e4aa73}.hx-assign-chips .c-hints{--dot:#8fb8f0}.hx-assign-chips .c-skipped{--dot:#8c8aa0}
+.hx-assign-meter{display:flex;align-items:center;gap:12px;margin-top:4px;font-size:11px;color:var(--hx-muted);font-variant-numeric:tabular-nums}
+.hx-assign-meter i{flex:1;max-width:220px;height:6px;border-radius:6px;background:var(--hx-line);overflow:hidden}
+.hx-assign-meter i b{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--hx-purple),var(--hx-green));transform-origin:left;animation:hx-assign-grow .9s cubic-bezier(.2,.8,.2,1) both}
+.hx-assign-retry{width:auto!important;align-self:flex-start;margin-top:6px;padding:9px 16px;font-size:12px!important}
+@keyframes hx-assign-in{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes hx-assign-pop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+@keyframes hx-assign-draw{to{stroke-dashoffset:0}}
+@keyframes hx-assign-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes hx-assign-spin{to{transform:rotate(360deg)}}
+@keyframes hx-assign-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+@media(max-width:560px){.hx-assign-result{padding:14px}.hx-assign-banner{padding:12px 14px}}
+@media(prefers-reduced-motion:reduce){.hx-assign-result,.hx-assign-banner,.hx-assign-result .hx-assign-icon,.hx-assign-result .hx-assign-icon svg path,.hx-assign-meter i b{animation:none!important}.hx-assign-result.is-ok .hx-assign-icon svg path{stroke-dashoffset:0}.hx-assign-result.is-saving .hx-assign-icon::after{animation-duration:2s}}
+`;
+  const assignIcon = (kind, size = 16) => React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.5",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, React.createElement("path", {
+    d: {
+      ok: 'm5 12.5 4.5 4.5L19 7.5',
+      warn: 'M12 7.5v6M12 17v.01',
+      error: 'M7 7l10 10M17 7 7 17',
+      info: 'M12 11v6M12 7.5v.01',
+      task: 'M5 12.5l4.5 4.5L19 7.5'
+    }[kind] || 'M12 11v6M12 7.5v.01'
+  }));
   const MODS = ['ctrl', 'shift', 'alt', 'meta'];
   const alias = {
     control: 'ctrl',
@@ -3970,7 +4028,13 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
           kind,
           text,
           count: receipt.count,
-          target: receipt.target
+          target: receipt.target,
+          stats: receipt.alreadyDone || !receipt.stats ? null : {
+            solved: receipt.stats.solved,
+            errors: receipt.stats.errors,
+            hints: receipt.stats.hints,
+            skipped: receipt.stats.skipped
+          }
         });
         say(text, kind);
       } catch (e) {
@@ -4155,14 +4219,41 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
     const assignBanner = assignCtx && phase !== 'result' ? /*#__PURE__*/React.createElement("div", {
       className: 'hx-assign-banner' + (categoryOk ? '' : ' is-warn'),
       role: "note"
-    }, /*#__PURE__*/React.createElement("strong", null, categoryOk ? 'Идёт назначенное задание' : 'Другая категория: серия не будет засчитана'), /*#__PURE__*/React.createElement("span", null, categoryOk ? `Категория: ${ASSIGN_BANK_TEXT[assignCtx.bank]}. Серия — от 5 сочетаний. Ошибку можно исправить (до ${ASSIGN_MAX_TRIES} попыток), подсказка и пропуск серию не засчитывают.` : `В задании нужна категория ${ASSIGN_BANK_TEXT[assignCtx.bank]}. Статистика ответов всё равно сохранится.`)) : null;
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "hx-assign-badge",
+      "aria-hidden": "true"
+    }, assignIcon(categoryOk ? 'task' : 'warn', 16)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, categoryOk ? 'Идёт назначенное задание' : 'Другая категория: серия не будет засчитана'), categoryOk ? /*#__PURE__*/React.createElement("div", {
+      className: "hx-assign-pills"
+    }, /*#__PURE__*/React.createElement("span", null, 'Категория: ', ASSIGN_BANK_TEXT[assignCtx.bank]), /*#__PURE__*/React.createElement("span", null, 'Серия от 5 сочетаний'), /*#__PURE__*/React.createElement("span", null, ASSIGN_MAX_TRIES, ' попытки на сочетание'), /*#__PURE__*/React.createElement("span", null, 'Подсказка и пропуск не засчитываются')) : /*#__PURE__*/React.createElement("span", {
+      className: "hx-assign-note"
+    }, `В задании нужна категория ${ASSIGN_BANK_TEXT[assignCtx.bank]}. Статистика ответов всё равно сохранится.`))) : null;
+    const ASSIGN_TITLES = {
+      ok: 'Серия засчитана',
+      warn: 'Серия не засчитана',
+      error: 'Не удалось сохранить результат задания',
+      saving: 'Сохраняем серию…',
+      info: 'Задание'
+    };
+    const assignStats = assignState?.stats;
     const assignPanel = session?.assignment && assignState ? /*#__PURE__*/React.createElement("div", {
       className: 'hx-assign-result is-' + assignState.kind,
-      role: "status"
+      role: assignState.kind === 'error' ? 'alert' : 'status'
     }, /*#__PURE__*/React.createElement("span", {
       className: "hx-assign-icon",
       "aria-hidden": "true"
-    }, assignState.kind === 'ok' ? '✓' : assignState.kind === 'warn' ? '!' : assignState.kind === 'error' ? '×' : assignState.kind === 'saving' ? '…' : 'i'), /*#__PURE__*/React.createElement("div", null, assignState.kind === 'error' && /*#__PURE__*/React.createElement("strong", null, 'Не удалось сохранить результат задания'), /*#__PURE__*/React.createElement("p", null, assignState.text), assignState.count != null && assignState.target ? /*#__PURE__*/React.createElement("div", {
+    }, assignState.kind === 'saving' ? null : assignIcon(assignState.kind, 16)), /*#__PURE__*/React.createElement("div", {
+      className: "hx-assign-body"
+    }, /*#__PURE__*/React.createElement("strong", null, ASSIGN_TITLES[assignState.kind] || ASSIGN_TITLES.info), assignState.text ? /*#__PURE__*/React.createElement("p", null, String(assignState.text).replace(/^Серия (не )?засчитана:\s*/i, '')) : null, assignStats ? /*#__PURE__*/React.createElement("div", {
+      className: "hx-assign-chips"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "c-solved"
+    }, "Верных ", /*#__PURE__*/React.createElement("b", null, assignStats.solved)), /*#__PURE__*/React.createElement("span", {
+      className: "c-errors"
+    }, "Ошибок ", /*#__PURE__*/React.createElement("b", null, assignStats.errors)), /*#__PURE__*/React.createElement("span", {
+      className: "c-hints"
+    }, "Подсказок ", /*#__PURE__*/React.createElement("b", null, assignStats.hints)), /*#__PURE__*/React.createElement("span", {
+      className: "c-skipped"
+    }, "Пропусков ", /*#__PURE__*/React.createElement("b", null, assignStats.skipped))) : null, assignState.count != null && assignState.target ? /*#__PURE__*/React.createElement("div", {
       className: "hx-assign-meter"
     }, /*#__PURE__*/React.createElement("span", null, "Засчитано серий: ", assignState.count, " / ", assignState.target), /*#__PURE__*/React.createElement("i", null, /*#__PURE__*/React.createElement("b", {
       style: {
@@ -4170,7 +4261,7 @@ window.reportLmsError?.(e, {"section":"hotkeys","source":"12_hotkeys.js","line":
       }
     }))) : null, assignState.kind === 'error' && assignState.retryable && /*#__PURE__*/React.createElement("button", {
       type: "button",
-      className: "hx-link",
+      className: "hx-button hx-assign-retry",
       onClick: () => saveResult(session)
     }, 'Повторить сохранение'))) : null;
     const cards = items => /*#__PURE__*/React.createElement("div", {
