@@ -1,4 +1,4 @@
-// Ultimate LMS — TypingTest + TypeDrive v5.4 / 26.10.2026
+// Ultimate LMS — TypingTest + TypeDrive v5.5 — Adaptive Coach / 26.10.2026
 // Полная замена 11_typing.js. Поиск стилей: TYPE_DRIVE_STYLES, TYPING_MODE_STYLES.
 // --- ProType / TypingTest — полная замена исходного файла (версия с анимациями) ---
 // React + существующий Firebase compat. JSX подключается как раньше.
@@ -53,7 +53,7 @@ function statsFor(session, now) {
     const ms = duration(session, now), attempts = session.index + session.errors;
     return { ms, wpm: ms >= 1000 ? Math.round((session.index / 5) / (ms / 60000)) : 0, accuracy: attempts ? Math.round(session.index / attempts * 100) : 100, progress: session.text.length ? Math.round(session.index / session.text.length * 100) : 0 };
 }
-function stopClock(session, now) { return { ...session, elapsed: duration(session, now), activeAt: null }; }
+function stopClock(session, now) { return { ...session, elapsed: duration(session, now), activeAt: null, lastStrokeAt: null }; }
 function typeCharacters(session, value, now, uid) {
     const characters = [...(value || '').normalize('NFC')].filter(char => !['\n', '\r', '\t'].includes(char));
     if (session.done || !characters.length) return session;
@@ -64,6 +64,14 @@ function typeCharacters(session, value, now, uid) {
         const expectedChar = next.text[next.index], id = weakId(expectedChar);
         const old = next.keyMetrics[id] || {char:expectedChar,attempts:0,errors:0,pairs:{}};
         const metric = {...old, attempts:old.attempts+1, pairs:{...old.pairs}};
+        // Only isolated, successful first attempts measure rhythm. Pauses and corrections do not.
+        const gap = session.lastStrokeAt == null ? 0 : now - session.lastStrokeAt;
+        if (characters.length === 1 && char === expectedChar && !session.correcting && gap >= 30 && gap <= 3000) {
+            metric.timeTotal = finite(old.timeTotal) + gap;
+            metric.timeCount = finite(old.timeCount) + 1;
+        }
+        next.lastStrokeAt = characters.length === 1 ? now : null;
+        next.correcting = char !== expectedChar;
         if(char!==expectedChar){metric.errors++;const wrong=weakId(char);metric.pairs[wrong]=(metric.pairs[wrong]||0)+1;}
         next.keyMetrics[id]=metric;
         if (char === next.text[next.index]) { next.index++; next.combo++; next.maxCombo = Math.max(next.maxCombo, next.combo); }
@@ -109,24 +117,63 @@ function weakMerge(base = {}, delta = {}) {
         for (const [k, n] of Object.entries(row.pairs || {})) if (/^u[0-9a-f]{1,6}$/.test(k)) pairs[k] = finite(pairs[k]) + finite(n);
         // Keep the most common confusions, bounding profile size.
         merged[key] = { char: row.char, attempts: finite(old.attempts) + finite(row.attempts), errors: finite(old.errors) + finite(row.errors),
+            timeTotal: finite(old.timeTotal)+finite(row.timeTotal), timeCount: finite(old.timeCount)+finite(row.timeCount),
             pairs: Object.fromEntries(Object.entries(pairs).sort((a,b)=>b[1]-a[1]).slice(0,5)) };
     }
     return merged;
 }
+// Recent windows let repaired weaknesses leave the priority list.
+function weakRecent(language = {}) {
+    const sessions = (language.history || []).filter(h => h.metrics).slice(-8);
+    return sessions.length ? sessions.reduce((all,h)=>weakMerge(all,h.metrics),{}) : language.keys || {};
+}
 function weakRank(rows = {}) {
-    return Object.values(rows).filter(r => r && typeof r.char === 'string' && finite(r.errors) > 0)
-        .map(r => ({ ...r, rate: Math.round(finite(r.errors) / Math.max(1,finite(r.attempts)) * 100) }))
-        .sort((a,b) => (b.errors/(b.attempts+5))-(a.errors/(a.attempts+5)) || b.errors-a.errors).slice(0,8);
+    const values=Object.values(rows).filter(r=>r && typeof r.char==='string' && finite(r.attempts)>0);
+    const measured=values.filter(r=>finite(r.timeCount)>=3);
+    const baseline=measured.length ? measured.reduce((a,r)=>a+finite(r.timeTotal),0)/measured.reduce((a,r)=>a+finite(r.timeCount),0) : 0;
+    return values.map(r=>{
+        const ms=finite(r.timeCount)?Math.round(finite(r.timeTotal)/r.timeCount):0;
+        const slow=finite(r.timeCount)>=5 && baseline>0 && ms>Math.max(350,baseline*1.4);
+        const rate=Math.round(finite(r.errors)/Math.max(1,r.attempts)*100);
+        return {...r,rate,ms,slow,score:finite(r.errors)/(r.attempts+5)+(slow?Math.min(.4,(ms/baseline-1)*.15):0)};
+    }).filter(r=>r.errors>0 || r.slow).sort((a,b)=>b.score-a.score).slice(0,8);
+}
+function weakEvidence(language = {}) {
+    const history=(language.history||[]).filter(h=>h.metrics);
+    const rows=weakRecent(language), rank=weakRank(rows);
+    const tested=Object.values(rows).filter(r=>r.attempts>=10).length;
+    const checks=history.filter(h=>h.source==='weak-check').slice(-3);
+    const stable=checks.length===3 && checks.every(h=>h.accuracy>=98 && h.attempts>=60);
+    return {rows,rank,tested,stable,checks:checks.length};
+}
+function weakFinger(char,lang) {
+    const code=targetFor(char,lang)?.code;
+    const groups=[['левый мизинец',['KeyQ','KeyA','KeyZ','Backquote','Digit1']],['левый безымянный',['KeyW','KeyS','KeyX','Digit2']],['левый средний',['KeyE','KeyD','KeyC','Digit3']],['левый указательный',['KeyR','KeyF','KeyV','KeyT','KeyG','KeyB','Digit4','Digit5']],['правый указательный',['KeyY','KeyH','KeyN','KeyU','KeyJ','KeyM','Digit6','Digit7']],['правый средний',['KeyI','KeyK','Comma','Digit8']],['правый безымянный',['KeyO','KeyL','Period','Digit9']]];
+    return code==='Space'?'большой палец':groups.find(([,codes])=>codes.includes(code))?.[0]||'правый мизинец';
+}
+function weakDiagnostic(lang,turn=0) {
+    const alphabet=lang==='ru'?'фыва олдж йцукен гшщзхъ ячсмить бюэё':'asdf jkl qwerty uiop zxcv bnm';
+    return Array.from({length:3},(_,i)=>WEAK_SENTENCES[lang][(turn+i*3)%WEAK_SENTENCES[lang].length]).join(' ')+' '+Array(3).fill(alphabet).join(' ')+' 1234567890, . ! ?';
+}
+function weakValidateAI(raw,lang,focus) {
+    if(typeof raw!=='string'||raw.length>12000)throw Error('Некорректный ответ ИИ.');
+    let data;try{data=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''));}catch{throw Error('ИИ вернул неверный формат.');}
+    if(!data || typeof data.text!=='string' || !Array.isArray(data.focus) || data.focus.length!==focus.length || new Set(data.focus).size!==focus.length || data.focus.some(c=>!focus.includes(c)))throw Error('ИИ изменил целевые клавиши.');
+    if(/<[^>]*>|https?:|```/i.test(data.text))throw Error('ИИ вернул разметку вместо упражнения.');
+    const text=normalizeAI(data.text,lang);
+    if(text.length>900 || focus.some(c=>[...text].filter(x=>x===c).length<5))throw Error('Текст ИИ недостаточно тренирует выбранные клавиши.');
+    return text;
 }
 function weakProfile(old, session) {
     const root = old && typeof old === 'object' ? old : {};
     const language = root[session.lang] || {}, history = Array.isArray(language.history) ? language.history : [];
+    if(history.some(h=>h.id===session.id))return root;
     const total = Object.values(session.keyMetrics || {}).reduce((a,r)=>({attempts:a.attempts+r.attempts,errors:a.errors+r.errors}),{attempts:0,errors:0});
-    return { ...root, version: 1, [session.lang]: {
+    return { ...root, version: 2, [session.lang]: {
         keys: weakMerge(language.keys, session.keyMetrics),
         history: [...history, { id:session.id, at:new Date().toISOString(), source:session.source,
             accuracy:total.attempts ? Math.round((total.attempts-total.errors)/total.attempts*100) : 100,
-            attempts:total.attempts, errors:total.errors }].slice(-16)
+            attempts:total.attempts, errors:total.errors, metrics: session.keyMetrics, wpm:statsFor(session,0).wpm, focus:session.weakFocus||[] }].slice(-16)
     }};
 }
 const WEAK_SENTENCES = {
@@ -136,7 +183,7 @@ const WEAK_SENTENCES = {
 function weakText(lang, focus, kind = 'words', turn = 0) {
     const chars = [...new Set(focus)].filter(c => targetFor(c,lang));
     const bank = WEAK_SENTENCES[lang];
-    const weight = text => [...text].reduce((sum,c)=>sum+(chars.includes(c)?1:0),0);
+    const weight = text => [...text].reduce((sum,c)=>sum+(chars.some(f=>f.toLowerCase()===c.toLowerCase())?1:0),0);
     const ranked = bank.map((text,i)=>({text,i})).sort((a,b)=>weight(b.text)-weight(a.text) || ((a.i+turn)%bank.length)-((b.i+turn)%bank.length));
     let text;
     if (kind === 'sentences') text = ranked.slice(0,3).map(x=>x.text).join(' ');
@@ -147,11 +194,17 @@ function weakText(lang, focus, kind = 'words', turn = 0) {
         text = Array.from({length:18},(_,i)=>chosen[(i+turn)%chosen.length]).join(' ');
     }
     // A short exact-symbol drill also covers uppercase, rare letters and punctuation.
-    const rare = chars.filter(c=>c!==' ' && text.split(c).length-1<3);
-    if(rare.length) text = rare.map(c=>[c,c,c].join(' ')).join(' ')+' '+text;
+    const rare = chars.filter(c=>c!==' ' && text.split(c).length-1<5);
+    if(rare.length) text = rare.map(c=>Array(5).fill(c).join(' ')).join(' ')+' '+text;
     return text;
 }
 const WEAK_STYLES = `
+.pt-root .pt-weak-coach{margin-top:14px;padding:14px;border:1px solid var(--pt-line);border-radius:14px;background:var(--pt-soft)}
+.pt-root .pt-weak-coach>b{font-size:13px;color:var(--pt-accent)}
+.pt-root .pt-weak-coach .pt-btn{margin-top:10px;white-space:normal}
+.pt-root .pt-weak-controls .pt-segment{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:480px){.pt-root .pt-weak-controls .pt-segment{grid-template-columns:1fr!important}}
+
 .pt-weak [hidden]{display:none!important}.pt-weak-switch{display:flex;gap:7px;align-items:center;margin:10px 0 18px;flex-wrap:wrap}.pt-weak-switch button{display:flex;align-items:center;gap:7px;min-height:38px;padding:9px 14px;border:1px solid var(--pt-line);border-radius:12px;background:var(--pt-panel);color:var(--pt-muted);font-size:12px}.pt-weak-switch button[aria-pressed=true]{background:var(--pt-soft);border-color:var(--pt-accent);color:var(--pt-accent)}.pt-weak-switch small{margin-left:auto;color:var(--pt-muted);font-size:10px}
 .pt-weak{padding:19px;border:1px solid var(--pt-line);border-radius:20px;background:linear-gradient(135deg,var(--pt-soft),transparent),var(--pt-paper);margin:0 0 20px;animation:pt-rise .3s both}.pt-weak-head{display:flex;gap:14px;justify-content:space-between;align-items:flex-start}.pt-weak h3{font-size:17px;letter-spacing:-.4px}.pt-weak p{font-size:11px;color:var(--pt-muted);line-height:1.65;margin-top:6px}.pt-weak-emblem{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:12px;background:var(--pt-soft);color:var(--pt-accent)}.pt-weak-cards{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.pt-weak-card{flex:0 1 145px;padding:12px;border:1px solid var(--pt-line);border-radius:13px;background:var(--pt-panel);min-width:0}.pt-weak-card b{font:600 23px ui-monospace,monospace;color:var(--pt-accent)}.pt-weak-card small{display:block;color:var(--pt-muted);font-size:9px;margin-top:5px;overflow-wrap:anywhere}.pt-weak-meter{height:3px;border-radius:4px;background:var(--pt-line);margin-top:10px;overflow:hidden}.pt-weak-meter i{display:block;height:100%;background:var(--pt-error);transition:width .3s}.pt-weak-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px}.pt-weak-trend{margin-top:13px;padding-top:12px;border-top:1px solid var(--pt-line);color:var(--pt-blue);font-size:11px;line-height:1.6}.pt-key.weak-key:before{content:'';position:absolute;top:4px;right:4px;width:4px;height:4px;border-radius:50%;background:var(--pt-error)}.pt-weak-empty{padding:14px 0 4px}.pt-weak-note{font-size:10px!important}.pt-weak .pt-segment{flex-wrap:wrap}.pt-weak-result{padding:12px 16px;background:var(--pt-soft);border-radius:13px;margin:16px auto;max-width:550px;color:var(--pt-accent);font-size:12px;line-height:1.6}
 @media(max-width:480px){.pt-weak{padding:15px}.pt-weak-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.pt-weak-controls>.pt-btn{width:100%;min-height:42px}.pt-weak-switch small{margin-left:0;width:100%}.pt-weak-head h3{font-size:16px}}
@@ -448,7 +501,7 @@ function ClassicTypingTest({ onBack }) {
         inputRef.current?.focus({ preventScroll: true });
     }
     function install(text, lang = current.current.lang, source = 'practice', focus = []) {
-        const next = { ...makeSession(text, lang, source), weakFocus: focus, weakBaseline: weakRef.current[lang]?.keys || {} };
+        const next = { ...makeSession(text, lang, source), weakFocus: focus, weakBaseline: weakRecent(weakRef.current[lang]) };
         commit(next); setPressed(new Set()); setWrongCode(null); setMistake(false); setNotice(null); setSaveState(null);
         composing.current = false; lastCode.current = null;
         if (inputRef.current) inputRef.current.value = '';
@@ -463,6 +516,7 @@ function ClassicTypingTest({ onBack }) {
         if (showNotice) setNotice({ text: 'Генерация остановлена. Предыдущий текст сохранён.', type: 'info' });
     }
     function openPractice() {
+        cancelGeneration(false);
         setShowMenu(false);
         setWeakMode(false);
         setShowAI(false);
@@ -476,18 +530,52 @@ function ClassicTypingTest({ onBack }) {
         cancelGeneration(false); install(localText(lang), lang);
     }
     function startWeak(kind = weakKind) {
-        cancelGeneration(false);setShowAI(false);setWeakMode(true);setWeakKind(kind);setWeakExpanded(false);
+        cancelGeneration(false);setShowAI(false);setWeakMode(true);setWeakKind(kind);setWeakExpanded(true);
         const lang=current.current.lang;
-        const rows=weakMerge(weakRef.current[lang]?.keys, current.current.done ? {} : current.current.keyMetrics);
-        const focus=weakRank(rows).slice(0,5).map(r=>r.char);
-        const diagnostic=lang==='ru'?'Съешь ещё этих мягких французских булок, да выпей чаю. Щётка, объём, цифры: 12345.':'The quick brown fox jumps over the lazy dog. Practice makes progress: 12345.';
-        install(focus.length?weakText(lang,focus,kind,weakTurn.current++):diagnostic,lang,focus.length?'weak-'+kind:'diagnostic',focus);
+        const rows=weakMerge(weakRecent(weakRef.current[lang]), current.current.done ? {} : current.current.keyMetrics);
+        const focus=weakRank(rows).slice(0,3).map(r=>r.char);
+        const turn=weakTurn.current++;
+        const diagnostic=weakDiagnostic(lang,turn);
+        const text=kind==='check' ? WEAK_SENTENCES[lang].filter((_,i)=>(i+turn)%2===0).join(' ') : focus.length?weakText(lang,focus,kind,turn):diagnostic;
+        install(text,lang,kind==='check'?'weak-check':focus.length?'weak-'+kind:'diagnostic',focus);
+        setShowKeyboard(kind!=='check');
+    }
+    async function generateWeak() {
+        if(request.current)return;
+        const lang=current.current.lang;
+        const rows=weakRank(weakMerge(weakRecent(weakRef.current[lang]),current.current.done?{}:current.current.keyMetrics)).slice(0,3);
+        if(!rows.length){startWeak();return;}
+        const focus=rows.map(r=>r.char), kind=weakKind;
+        inputRef.current?.blur();pause();setNotice(null);
+        const job={controller:new AbortController(),timer:null};request.current=job;setGenerating(true);
+        job.timer=setTimeout(()=>job.controller.abort(),30000);
+        // No identity, typed source text or arbitrary user prompt is sent.
+        const evidence=rows.map(r=>({symbol:r.char,attempts:r.attempts,errors:r.errors,meanMs:r.ms,timedSamples:finite(r.timeCount),confusions:r.pairs}));
+        const prompt=`Ты тренер слепой печати. Проанализируй измерения и составь упражнение: ${JSON.stringify(evidence)}. Статистика точная, не придумывай показатели или диагнозы. Язык ${lang==='ru'?'русский':'английский'}. Целевые символы ${JSON.stringify(focus)}. Каждый точный символ должен встретиться минимум 5 раз, регистр важен. ${kind==='words'?'Короткие обычные слова, затем 2 предложения.':'Связный понятный абзац.'} От 120 до 700 символов. Только символы стандартной раскладки, обычные пробелы и пунктуация. Верни только JSON {"text":"текст упражнения","focus":${JSON.stringify(focus)}}. Без Markdown и пояснений.`;
+        try {
+            const response=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},signal:job.controller.signal,body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+            if(!response.ok)throw Error('ИИ временно недоступен.');
+            const body=await response.text();if(body.length>100000)throw Error('Ответ ИИ слишком большой.');
+            const data=JSON.parse(body),parts=data.candidates?.[0]?.content?.parts;
+            const raw=Array.isArray(parts)?parts.filter(p=>!p.thought&&typeof p.text==='string').map(p=>p.text).join(''):'';
+            const text=weakValidateAI(raw,lang,focus);
+            if(!alive.current||request.current!==job||job.controller.signal.aborted||current.current.lang!==lang)return;
+            request.current=null;clearTimeout(job.timer);setGenerating(false);
+            install(text,lang,'weak-ai',focus);setShowKeyboard(true);setWeakMode(true);
+            setNotice({type:'info',text:'ИИ подготовил текст по твоим ошибкам и задержкам. Целевые символы проверены автоматически.'});
+        } catch(error) {
+            if(!alive.current||request.current!==job)return;
+            request.current=null;clearTimeout(job.timer);setGenerating(false);
+            install(weakText(lang,focus,kind==='words'?'words':'sentences',weakTurn.current++),lang,'weak-local',focus);
+            setShowKeyboard(true);
+            setNotice({type:'info',text:'Ответ ИИ недоступен или не прошёл проверку. Подготовлено локальное упражнение по тем же клавишам.'});
+        } finally {clearTimeout(job.timer);if(request.current===job){request.current=null;if(alive.current)setGenerating(false);}}
     }
     function reset(same = false) {
         if(saveJobs.current.has(current.current.id))return;
         cancelGeneration(false);
         const session = current.current;
-        if(!same && session.source.startsWith('weak-')){startWeak(session.source==='weak-words'?'sentences':weakKind);return;}
+        if(!same && (session.source==='diagnostic'||session.source.startsWith('weak-'))){startWeak(session.source==='weak-words'?'sentences':weakKind);return;}
         install(same ? session.text : localText(session.lang, session.text), session.lang, same ? session.source : 'practice', same ? session.weakFocus || [] : []);
     }
     function accept(value) {
@@ -587,7 +675,8 @@ window.reportLmsError?.(error, {"section":"typing","source":"11_typing.js","line
             if (alive.current && request.current === job) { request.current = null; setGenerating(false); }
         }
     }
-    const weakRows=weakRank(weakMerge(weakData[game.lang]?.keys,game.done?{}:game.keyMetrics));
+    const weakRows=weakRank(weakMerge(weakRecent(weakData[game.lang]),game.done?{}:game.keyMetrics));
+    const evidence=weakEvidence(weakData[game.lang]);
     const weakCodes=new Set(weakRows.map(r=>targetFor(r.char,game.lang)?.code).filter(Boolean));
     const recentWeak=(weakData[game.lang]?.history||[]).filter(r=>String(r.source).startsWith('weak-'));
     const lastWeak=recentWeak.slice(-2), trend=lastWeak.length===2?lastWeak[1].accuracy-lastWeak[0].accuracy:null;
@@ -604,10 +693,16 @@ window.reportLmsError?.(error, {"section":"typing","source":"11_typing.js","line
             <div hidden={!weakExpanded}>{weakRows.length ? <div className="pt-weak-cards">{weakRows.slice(0,6).map(row=>{
                 const pair=Object.entries(row.pairs||{}).sort((a,b)=>b[1]-a[1])[0];
                 const wrong=pair ? String.fromCodePoint(parseInt(pair[0].slice(1),16)) : null;
-                return <div className="pt-weak-card" key={weakId(row.char)}><b>{row.char===' '?'␣':row.char}</b><small>Ошибки: {row.errors} · нажатия: {row.attempts}</small><small>{row.rate}% ошибок{row.attempts<10?' · мало данных':''}</small>{wrong && <small>Нужно «{weakLabel(row.char)}», нажато «{weakLabel(wrong)}»</small>}<div className="pt-weak-meter"><i style={{width:row.rate+'%'}}/></div></div>;
+                return <div className="pt-weak-card" key={weakId(row.char)}><b>{row.char===' '?'␣':row.char}</b><small>Ошибки: {row.errors} · нажатия: {row.attempts}</small><small>{row.rate}% ошибок{row.attempts<10?' · мало данных':''}</small><small>{row.ms ? `${row.ms} мс · ${finite(row.timeCount)} замеров${row.slow?' · замедление':''}`:'Для оценки ритма мало данных'}</small><small>Палец: {weakFinger(row.char,game.lang)}</small>{wrong && <small>Нужно «{weakLabel(row.char)}», нажато «{weakLabel(wrong)}»</small>}<div className="pt-weak-meter"><i style={{width:row.rate+'%'}}/></div></div>;
             })}</div> : <div className="pt-weak-empty"><Icon name="keyboard" size={20}/><div><b>Короткий текст — точный подбор</b><p>{weakLoad==='loading'?'Загружаем сохранённую статистику…':'Пройди диагностику. Здесь появятся символы, которым стоит уделить внимание.'}</p></div></div>}</div>
-            <div className="pt-weak-controls"><div className="pt-segment" aria-label="Сложность тренировки">{[['words','Слова','01','Точность на символах'],['sentences','Предложения','02','Ритм в контексте']].map(([id,label,num,hint])=><button type="button" key={id} aria-pressed={weakKind===id} className={weakKind===id?'selected':''} onClick={()=>setWeakKind(id)}><span className="pt-weak-stepnum">{num}</span><span className="pt-weak-stepcopy"><b>{label}</b><small>{hint}</small></span></button>)}</div><Button variant="primary" disabled={generating || saveState?.state==='pending'} onClick={()=>startWeak()}><Icon name="play" size={14}/>{weakRows.length?'Начать тренировку':'Пройти диагностику'}</Button></div>
-            <p hidden={!weakExpanded} className="pt-weak-note">Прогресс сохранится после завершения текста.</p>
+            <div className="pt-weak-controls"><div className="pt-segment" aria-label="Сложность тренировки">{[['words','Слова','01','Точность на символах'],['sentences','Предложения','02','Ритм в контексте'],['check','Контроль','03','Без клавиатуры на экране']].map(([id,label,num,hint])=><button type="button" key={id} aria-pressed={weakKind===id} className={weakKind===id?'selected':''} onClick={()=>setWeakKind(id)}><span className="pt-weak-stepnum">{num}</span><span className="pt-weak-stepcopy"><b>{label}</b><small>{hint}</small></span></button>)}</div><Button variant="primary" disabled={generating || saveState?.state==='pending'} onClick={()=>startWeak()}><Icon name="play" size={14}/>{weakRows.length?'Начать тренировку':'Пройти диагностику'}</Button></div>
+            <p hidden={!weakExpanded} className="pt-weak-note">Анализ последних 8 завершённых текстов. Паузы дольше 3 секунд и исправления исключены из оценки ритма. Прогресс сохраняется после финиша.</p>
+            <div className="pt-weak-coach" role="status">
+                <b>{evidence.stable?'Контроль стабилен: три текста с точностью от 98%':weakRows.length?'План: точность → ритм → контроль':'Начни с диагностики'}</b>
+                <p>Поставь указательные пальцы на А/О (F/J), остальные — на домашний ряд. Смотри на текст. При ошибках снизь темп; цель — не менее 98% точности.</p>
+                <p>Символов с 10+ попытками: {evidence.tested}. Контрольных текстов: {evidence.checks}/3. Программа не определяет, смотришь ли ты на физическую клавиатуру.</p>
+                <Button disabled={generating || saveState?.state==='pending' || !weakRows.length || weakKind==='check'} onClick={generateWeak}><Icon name="spark" size={15}/>ИИ: персональный текст</Button>
+            </div>
             {weakLoad==='guest' && <p>Гостевой режим: данные сохраняются только до закрытия раздела.</p>}
             {weakLoad==='error' && <p role="status">Не удалось загрузить историю. Новые ошибки учитываются в текущей тренировке; состояние сохранения появится после финиша.</p>}
             {lastWeak.length>0 && <div className="pt-weak-trend">Последняя целевая тренировка: {lastWeak[lastWeak.length-1].accuracy}% точности.{trend!==null && <> Изменение к предыдущей: {trend>0?'+':''}{trend} п. п. (тексты могут отличаться).</>}</div>}
@@ -638,7 +733,7 @@ window.reportLmsError?.(error, {"section":"typing","source":"11_typing.js","line
                 <div className="pt-practice-bottom"><div className={`pt-feedback ${mistake ? 'error' : ''}`} role="status">{mistake ? <>Ожидается: <strong>{shownChar === 'пробел' ? 'пробел' : `«${shownChar}»`}</strong>. Проверьте регистр и раскладку.</> : caps ? 'Caps Lock включён' : focused ? (game.started ? 'Держите свой ритм.' : 'Таймер начнётся с первого символа.') : <button type="button" className="pt-start-hint" onClick={focusInput} disabled={generating}><Icon name="play" size={12}/>{game.started ? 'Пауза. Нажмите на текст, чтобы продолжить' : 'Нажмите на текст и начните печатать'}</button>}</div><span className="pt-pause-hint"><kbd>esc</kbd> пауза</span></div>
             </>}
         </div>
-        {showKeyboard && <section className="pt-keyboard-section" aria-label="Виртуальная клавиатура"><div className="pt-keyboard-heading"><h3>Клавиатура · {game.lang === 'ru' ? 'ЙЦУКЕН' : 'QWERTY'}</h3><div className="pt-legend"><span><i/>Следующая клавиша</span><span><i className="pressed"/>Нажата</span></div></div><Keyboard lang={game.lang} expected={game.done || generating ? null : expected} pressed={pressed} caps={caps} wrongCode={wrongCode} weakCodes={weakMode?weakCodes:new Set()}/><p className="pt-keyboard-note">Подсказка показывает физические клавиши. На телефоне печатайте в поле ввода; схему можно прокрутить вбок.</p></section>}
+        {showKeyboard && game.source!=='weak-check' && <section className="pt-keyboard-section" aria-label="Виртуальная клавиатура"><div className="pt-keyboard-heading"><h3>Клавиатура · {game.lang === 'ru' ? 'ЙЦУКЕН' : 'QWERTY'}</h3><div className="pt-legend"><span><i/>Следующая клавиша</span><span><i className="pressed"/>Нажата</span></div></div><Keyboard lang={game.lang} expected={game.done || generating || game.source==='weak-check' ? null : expected} pressed={pressed} caps={caps} wrongCode={wrongCode} weakCodes={weakMode?weakCodes:new Set()}/><p className="pt-keyboard-note">Подсказка показывает физические клавиши. На телефоне печатайте в поле ввода; схему можно прокрутить вбок.</p></section>}
         <footer className="pt-bottom"><span><Icon name="info" size={12}/>Ошибка не продвигает курсор. Введите нужный символ.</span><span className="pt-formula">WPM = символы ÷ 5 ÷ минуты</span></footer>
     </section></div>;
 }
