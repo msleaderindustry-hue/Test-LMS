@@ -3897,27 +3897,39 @@ resultValue рассчитан отдельным вычислителем. Не
      5. КОМПОНЕНТЫ ИНТЕРФЕЙСА
      ========================================================================= */
 
-  function LangSwitch({
-    lang,
-    setLang
-  }) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "et-langswitch"
-    }, [{
-      id: "ru",
-      label: "RU"
-    }, {
-      id: "en",
-      label: "EN"
-    }, {
-      id: "uz",
-      label: "UZ"
-    }].map(item => /*#__PURE__*/React.createElement("button", {
-      key: item.id,
-      className: `et-lang-btn ${lang === item.id ? "active" : ""}`,
-      "aria-pressed": lang === item.id,
-      onClick: () => setLang(item.id)
-    }, item.label)));
+  function LangSwitch({ lang, setLang }) {
+    const codes = ['ru', 'en', 'uz'];
+    const names = {ru: 'Русский', en: 'English', uz: 'Oʻzbekcha'};
+    const current = codes.includes(lang) ? lang : 'ru';
+    const next = codes[(codes.indexOf(current) + 1) % codes.length];
+    const label = current === 'ru' ? `Язык: ${names[current]}. Переключить на ${names[next]}`
+      : current === 'en' ? `Language: ${names[current]}. Switch to ${names[next]}`
+      : `Til: ${names[current]}. ${names[next]} tiliga oʻtish`;
+    return React.createElement(React.Fragment, null,
+      React.createElement('style', null, `
+.et-shell .et-lang-cycle{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:9px;flex-shrink:0;min-width:94px;height:44px;padding:0 13px;border:1px solid var(--border);border-radius:14px;background:var(--bg-card);color:var(--text-main);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;overflow:hidden;transition:transform .18s ease,opacity .18s ease}
+.et-shell .et-lang-cycle:hover{border-color:var(--accent-green);transform:translateY(-1px)}
+.et-shell .et-lang-cycle:active{transform:scale(.96)}
+.et-shell .et-lang-cycle:focus-visible{outline:3px solid var(--accent-green);outline-offset:3px}
+.et-lang-cycle .et-lang-globe{color:var(--accent-green)}
+.et-lang-cycle .et-lang-code{display:inline-block;min-width:22px;text-align:center;line-height:1;animation:et-language-in .2s ease-out both}
+.et-lang-cycle .et-lang-arrows{color:var(--text-sec)}
+@keyframes et-language-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:500px){.et-shell .et-lang-cycle{min-width:86px;gap:7px;padding:0 10px;border-radius:12px}}
+@media(prefers-reduced-motion:reduce){.et-shell .et-lang-cycle{transition:none}.et-lang-cycle .et-lang-code{animation:none}}
+`),
+      React.createElement('button', {
+        type: 'button', className: 'et-lang-cycle', title: label, 'aria-label': label,
+        onClick: () => setLang(previous => codes[(codes.indexOf(codes.includes(previous) ? previous : 'ru') + 1) % codes.length])
+      },
+        React.createElement('svg', {className:'et-lang-globe',width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,'aria-hidden':true},
+          React.createElement('circle',{cx:12,cy:12,r:9}),
+          React.createElement('path',{d:'M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18'})),
+        React.createElement('span', {key:current,className:'et-lang-code','aria-hidden':true}, current.toUpperCase()),
+        React.createElement('svg', {className:'et-lang-arrows',width:13,height:13,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},
+          React.createElement('path',{d:'M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4'}))
+      )
+    );
   }
   function GlobalSearch({
     t,
