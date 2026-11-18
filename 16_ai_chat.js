@@ -646,10 +646,9 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
         const nearBottom = useRef(true), teacherUntil = useRef(0), copyTimer = useRef(null);
         useEffect(() => {
             if (!window.LmsApi?.enabled) return;
-            const receive = event => { setOpen(true); setMessages(old => [...old, {id:uid(),role:'ai',text:event.detail.text||'Управление LMS',at:Date.now(),control:event.detail}]); };
             const clearAccount = () => { active.current?.controller.abort(); active.current=null;setMessages([]);setBusy(false);setFailure(null); };
-            window.addEventListener('lms-ai-card',receive);window.addEventListener('lms-account-changed',clearAccount);
-            return () => {window.removeEventListener('lms-ai-card',receive);window.removeEventListener('lms-account-changed',clearAccount);};
+            window.addEventListener('lms-account-changed',clearAccount);
+            return () => {window.removeEventListener('lms-account-changed',clearAccount);};
         }, []);
         useEffect(() => {
             mounted.current = true;
@@ -731,14 +730,8 @@ html.light .ula-widget,body.light .ula-widget,.theme-light .ula-widget,[data-the
             const history = next.slice(-CONFIG.contextTurns * 2).map(({ role, text: body }) => ({ role: role === 'ai' ? 'assistant' : 'user', text: body.slice(0, 10000) }));
             try {
                 if (window.LmsApi?.enabled) {
-                    let result;
-                    if(window.LmsApi.isOwner() && /^(мои |покажи )?предложения$/i.test(clean)) result={text:'Предложения, ожидающие подтверждения.',...await window.LmsApi.request('/proposals')};
-                    else if(window.LmsApi.isOwner() && /^(мои |покажи )?отч[её]ты$/i.test(clean)) result={text:'Сохранённые отчёты.',...await window.LmsApi.request('/reports')};
-                    else if(window.LmsApi.isOwner() && /^(мои |покажи )?(копии|очистки)$/i.test(clean)) result={text:'Резервные копии выполненных очисток.',...await window.LmsApi.request('/cleanups')};
-                    else if(window.LmsApi.isOwner() && /^ошибки отправки$/i.test(clean))result={text:'Задачи, которым требуется повторная попытка.',...await window.LmsApi.request('/jobs')};
-                    else if(window.LmsApi.isOwner() && /^(покажи |предложи )?критерии (профи|«профи»)$/i.test(clean))result={text:'Это предложение. Направления и пороги начнут применяться только после подтверждения.',...await window.LmsApi.request('/proposals/criteria',{})};
-                    else result=await window.LmsApi.request('/chat',{history,requestId:userMessage.id},{signal:job.controller.signal});
-                    if(mounted.current && active.current===job && !job.controller.signal.aborted)setMessages(previous=>[...previous,{id:uid(),role:'ai',text:result.text||'Готово.',at:Date.now(),control:result}]);
+                    const result=await window.LmsApi.request('/chat',{history,requestId:userMessage.id},{signal:job.controller.signal});
+                    if(mounted.current && active.current===job && !job.controller.signal.aborted)setMessages(previous=>[...previous,{id:uid(),role:'ai',text:result.text||'Готово.',at:Date.now()}]);
                     return;
                 }
                 const response = await fetch(CONFIG.aiURL, {
@@ -810,7 +803,6 @@ window.reportLmsError?.(__lmsCaughtError, {"section":"ai_chat","source":"16_ai_c
             if (!index || new Date(messages[index - 1].at).toDateString() !== new Date(message.at).toDateString()) messageNodes.push(h('div', { className: 'ula-date', key: `day-${message.id}` }, dayLabel(message.at)));
             if (message.role === 'ai') {
                 messageNodes.push(h(AiMessage, { key: message.id, message, onCopy: copyMessage, copied: copied === message.id, onTick: followScroll }));
-                if(message.control&&window.LmsControlCard)messageNodes.push(h(window.LmsControlCard,{key:message.id+'-control',value:message.control}));
             } else {
                 messageNodes.push(h('article', { key: message.id, className: 'ula-message user' },
                     h('div', { className: 'ula-msg-meta' }, 'Вы', h('time', { dateTime: new Date(message.at).toISOString() }, time(message.at))),

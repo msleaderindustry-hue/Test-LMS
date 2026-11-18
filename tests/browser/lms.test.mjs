@@ -26,7 +26,25 @@ async function pageFor(uid='student',{enabled=true}={}){
  await page.goto(base+'/index.html');await page.waitForFunction(()=>window.__lmsProfileReady?.uid===window.__testUid,{timeout:15000});await page.waitForFunction(()=>window.AIChatWidget&&window.LmsControlCard);return {page,errors,sent,store,backups};
 }
 test('student app boots, gateway authenticates AI, and account change clears chat',async()=>{const t=await pageFor();try{await t.page.getByRole('button',{name:'Открыть учебного ассистента',exact:true}).click();await t.page.getByRole('textbox',{name:'Твой вопрос'}).fill('Помоги с заданием');await t.page.getByRole('button',{name:'Отправить',exact:true}).click();await t.page.getByText('Давайте разберём задачу.',{exact:true}).waitFor();assert.ok(t.sent.some(x=>x.path==='/chat'&&x.headers.authorization==='Bearer student'));await t.page.evaluate(()=>window.__switchUser(null));await t.page.waitForFunction(()=>!document.body.innerText.includes('Давайте разберём задачу.'));assert.deepEqual(t.errors,[]);}finally{await t.page.close();}});
-test('owner cleanup card needs a click; backup restoration has a separate confirmation',async()=>{const t=await pageFor(OWNER_UID);try{await t.page.evaluate(()=>LmsApi.propose('cleanup',{kind:'activity',uid:'other'}));await t.page.getByRole('button',{name:'Подтвердить',exact:true}).waitFor();assert.ok(await t.store.get('users/other/activity/a'));await t.page.getByRole('button',{name:'Подтвердить',exact:true}).click();await t.page.getByRole('button',{name:'Подготовить восстановление'}).waitFor();assert.equal(await t.store.get('users/other/activity/a'),null);await t.page.getByRole('button',{name:'Подготовить восстановление'}).click();await t.page.getByRole('button',{name:'Подтвердить',exact:true}).waitFor();assert.equal(await t.store.get('users/other/activity/a'),null);await t.page.getByRole('button',{name:'Подтвердить',exact:true}).click();await t.page.getByText('Восстановлено записей: 1.',{exact:true}).waitFor();assert.ok(await t.store.get('users/other/activity/a'));await t.page.screenshot({path:'test-results/owner-confirmation.png'});assert.deepEqual(t.errors,[]);}finally{await t.page.close();}});
+async function openControl(t){
+ await t.page.getByRole('button',{name:'Открыть меню',exact:true}).click();
+ await t.page.getByRole('button',{name:'Панель администратора',exact:true}).click();
+ await t.page.getByRole('button',{name:'ИИ-управление',exact:true}).click();
+ await t.page.getByRole('region',{name:'ИИ-управление LMS',exact:true}).waitFor();
+}
+test('AI cleanup approval is in admin panel; manual deletion and restore never open support chat',async()=>{const t=await pageFor(OWNER_UID);try{
+ await openControl(t);await t.page.evaluate(()=>LmsApi.propose('cleanup',{kind:'activity',uid:'other'}));
+ const card=t.page.locator('.lms-admin-control').getByRole('button',{name:'Подтвердить',exact:true});await card.first().waitFor();assert.ok(await t.store.get('users/other/activity/a'));
+ assert.equal(await t.page.getByRole('dialog',{name:'Учебный ИИ-ассистент'}).count(),0);
+ await card.first().click();const restore=t.page.getByRole('button',{name:'Восстановить из копии'});await restore.waitFor();assert.equal(await t.store.get('users/other/activity/a'),null);
+ await restore.click();await t.page.getByText('Восстановлено записей: 1.',{exact:true}).waitFor();assert.ok(await t.store.get('users/other/activity/a'));
+ const result=await t.page.evaluate(()=>LmsApi.execute('cleanup',{kind:'activity',uid:'other'}));assert.equal(result.deleted,1);assert.equal(await t.store.get('users/other/activity/a'),null);
+ assert.equal(await t.page.getByRole('dialog',{name:'Учебный ИИ-ассистент'}).count(),0);await t.page.screenshot({path:'test-results/admin-control.png'});assert.deepEqual(t.errors,[]);
+ }finally{await t.page.close();}});
+test('owner chat remains tutoring and cannot open management or create proposals',async()=>{const t=await pageFor(OWNER_UID);try{
+ await t.page.getByRole('button',{name:'Открыть учебного ассистента',exact:true}).click();await t.page.getByRole('textbox',{name:'Твой вопрос'}).fill('Предложения');await t.page.getByRole('button',{name:'Отправить',exact:true}).click();await t.page.getByText('Давайте разберём задачу.',{exact:true}).waitFor();
+ assert.ok(t.sent.some(r=>r.path==='/chat'));assert.equal((await t.store.list('lmsProposals')).length,0);assert.equal(await t.page.locator('.ula-panel .lms-control-card').count(),0);assert.deepEqual(t.errors,[]);
+ }finally{await t.page.close();}});
 test('UI scopes local test data to the authenticated student',async()=>{const t=await pageFor();try{const keys=await t.page.evaluate(()=>[LmsApi.key('test_history_v1'),LmsApi.key('tests_a')]);assert.deepEqual(keys,['lms:student:test_history_v1','lms:student:tests_a']);assert.deepEqual(t.errors,[]);}finally{await t.page.close();}});
 
 test('unsent activity survives reload and never uploads another account outbox',async()=>{const t=await pageFor();try{
@@ -45,7 +63,7 @@ test('unsent activity survives reload and never uploads another account outbox',
 }finally{await t.page.close();}});
 
 test('saved report remains visible when Discord delivery failed',async()=>{const t=await pageFor(OWNER_UID);try{
-  const now=Date.now();await t.store.commit([{path:'lmsJobs/failed-report',version:null,data:{id:'failed-report',status:'failed'}},{path:'lmsReports/failed-report',version:null,data:{kind:'daily',start:now-86400000,end:now,studentCount:0,totals:{attempts:0}}}]);
+  await openControl(t);const now=Date.now();await t.store.commit([{path:'lmsJobs/failed-report',version:null,data:{id:'failed-report',status:'failed'}},{path:'lmsReports/failed-report',version:null,data:{kind:'daily',start:now-86400000,end:now,studentCount:0,totals:{attempts:0}}}]);
   await t.page.evaluate(()=>LmsApi.showCard({jobId:'failed-report'}));
   await t.page.getByText('Ученики: 0. Попытки: 0.',{exact:true}).waitFor();
   await t.page.getByText('Отчёт сохранён в LMS. Доставка в Discord не завершена; её можно повторить в журнале задач.',{exact:true}).waitFor();

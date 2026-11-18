@@ -2,6 +2,7 @@ import {digest,fail,reportWindow,initialPolicy,OWNER_UID,freshId} from './domain
 import {aggregate,reconcileWeek} from './metrics.mjs';
 import {summarizeEvents} from './events.mjs';
 import {loadReportData} from './report-data.mjs';
+import {discordEnvelope} from './discord-format.mjs';
 export function splitNotification(content,limit=1850){
   const chunks=[];let part='';for(const line of content.split('\n')){for(let offset=0;offset<line.length||offset===0;offset+=limit){const piece=line.slice(offset,offset+limit);if(part.length+piece.length+1>limit){chunks.push(part);part='';}part+=(part?'\n':'')+piece;}}if(part)chunks.push(part);return chunks;
 }
@@ -29,6 +30,11 @@ export class JobService {
       }
     }
     if(policy.pilotStartedAt!=null&&new Date(now).getUTCMinutes()===10)for(const u of await this.store.list('users',{limit:500}))if(!u.data.isBanned&&u.path!=='users/'+this.ownerUid)await this.enqueue('learning',{uid:u.path.split('/')[1]},u.path+':'+Math.floor(now/3600000));
+    if(policy.pilotStartedAt!=null&&new Date(now).getUTCMinutes()===15)await this.enqueue('maintenance',{},'maintenance:'+Math.floor(now/86400000));
+    for(const job of await this.store.query('lmsJobs',[['status','EQUAL','failed']],200)){
+      if(!job.data.recoverable||(job.data.recoveryCycles||0)>=3||now-(job.data.failedAt||now)<3600000)continue;
+      await this.store.commit([{path:job.path,version:job.version,data:{...job.data,status:'pending',tries:0,nextAt:0,leaseUntil:null,recoveryCycles:(job.data.recoveryCycles||0)+1}}]);
+    }
     const pending=await this.store.query('lmsJobs',[['status','EQUAL','pending']],1000),abandoned=(await this.store.query('lmsJobs',[['status','EQUAL','running']],1000)).filter(x=>x.data.leaseUntil<=now);
     if(this.queue)for(const job of [...pending,...abandoned].filter(x=>!x.data.nextAt||x.data.nextAt<=now).slice(0,50))await this.queue.send({id:job.data.id});
   }
@@ -47,8 +53,9 @@ export class JobService {
       report.reconciliation.savedComparison=payload.onDemand?'different-boundaries':'calendar-days';
     }
     const label=payload.onDemand?'Текущий':payload.kind==='weekly'?'Недельный':'Ежедневный',safe=s=>String(s).replace(/[\r\n@*_`~<>]/g,' ').slice(0,60);
-    const lines=students.slice(0,10).map(s=>`${safe(s.name)}: ${s.totals.attempts} попыток; ${Math.round(s.activeMs/60000)} мин активности; ${s.skills.some(k=>k.deltaPoints<0)?'есть снижение по навыку':s.skills.some(k=>k.deltaPoints>0)?'есть рост по навыку':'динамика пока не определена'}`);
-    report.notification=`${label} отчёт LMS.\n${lines.join('\n')}\nУченики: ${students.length}. Попытки: ${report.totals.attempts}.`+(report.reconciliation?`\nСверка 7 суток: ${report.reconciliation.consistent?'суммы совпадают':'расхождение'}.`+(!payload.onDemand?` Сохранённые сводки: ${report.reconciliation.savedDaily.filter(x=>x.status==='matches').length}/7 совпали.`:''):'')+`\nПолный отчёт: ${id}`;
+    const lines=students.slice(0,10).map(s=>`**${safe(s.name)}** — ${s.totals.attempts} попыток · ${Math.round(s.activeMs/60000)} мин\n${s.skills.some(k=>k.deltaPoints<0)?'↘ Есть снижение по навыку':s.skills.some(k=>k.deltaPoints>0)?'↗ Есть рост по навыку':'→ Пока мало данных для динамики'}${s.recommendations?.[0]?.reason?'\n💡 '+String(s.recommendations[0].reason).replace(/[\r\n@*_`~<>]/g,' ').slice(0,160):''}`);
+    const date=n=>new Date(n).toLocaleDateString('ru-RU',{timeZone:'Asia/Tashkent'});
+    report.notification=`**${label} отчёт** · ${date(start)} — ${date(end)}\n**Ученики: ${students.length} · Попытки: ${report.totals.attempts}**\n\n${lines.join('\n\n')}`+(report.reconciliation?`\n\n**Сверка 7 суток:** ${report.reconciliation.consistent?'суммы совпадают':'расхождение'}.`+(!payload.onDemand?` Сохранённые сводки: ${report.reconciliation.savedDaily.filter(x=>x.status==='matches').length}/7 совпали.`:''):'')+'\n\nПолный отчёт: **Админка → ИИ-управление → Отчёты**.';
     for(let i=0;i<students.length;i+=100){const batch=students.slice(i,i+100),paths=batch.map(student=>`lmsReports/${id}/students/${student.uid}`),old=await this.store.getMany(paths);await this.store.commit(batch.flatMap((student,j)=>old[j]?[]:[{path:paths[j],version:null,data:student}]));}
     try{await this.store.commit([{path:'lmsReports/'+id,version:null,data:report}]);}catch(e){if(e.code!=='conflict')throw e;}
     return {report,notification:report.notification};
@@ -63,18 +70,21 @@ export class JobService {
     try{
       let content='';
       if(claimed.kind==='report')content=(await this.buildReport(claimed.payload,id)).notification;
+      else if(claimed.kind==='report-delivery'){const report=await this.store.get('lmsReports/'+claimed.payload.reportId);if(!report)fail(404,'report-not-found','Отчёт не найден.');content=report.data.notification;}
+      else if(claimed.kind==='login'){const u=await this.store.get('users/'+claimed.payload.uid);const name=String(u?.data.nickname||u?.data.displayName||'Пользователь').replace(/[\r\n@*_`~<>]/g,' ').slice(0,80);content=`**${name}** ${claimed.payload.uid===this.ownerUid?'(владелец) ':''}вошёл в LMS.\n🕒 ${new Date(claimed.payload.at).toLocaleString('ru-RU',{timeZone:'Asia/Tashkent'})}`;}
       else if(claimed.kind==='events'){
         const events=(await this.store.query('lmsEvents',[['receivedAt','GREATER_THAN_OR_EQUAL',claimed.payload.start],['receivedAt','LESS_THAN',claimed.payload.end]],5000)).map(x=>x.data),names={};
         for(const uid of [...new Set(events.map(e=>e.uid))])names[uid]=(await this.store.get('users/'+uid))?.data.nickname||'Ученик';content=summarizeEvents(events,names);
       }else if(claimed.kind==='notification')content=claimed.payload.content;
       else if(claimed.kind==='learning'){if(this.planner)await this.planner.update(claimed.payload.uid);}
+      else if(claimed.kind==='maintenance'){if(this.maintenance){const result=await this.maintenance.inspect();if(result.created.length)content=`Подготовлены предложения очистки старых служебных данных: **${result.created.length}**.\nПосмотрите объём и причины в **Админка → ИИ-управление → Предложения**. Удаление ожидает вашей кнопки подтверждения.`;}}
       else fail(400,'unknown-job','Неизвестная фоновая задача.');
       const parts=splitNotification(content);
       for(let i=claimed.sentParts||0;i<parts.length;i++){
         if(!this.discord)fail(503,'discord-unconfigured','Discord не подключён.');
-        await this.discord(parts[i]);await update({sentParts:i+1,leaseUntil:this.now()+10*60000});
+        await this.discord(parts[i],discordEnvelope(parts[i],{kind:claimed.kind,at:this.now(),part:i+1,total:parts.length}));await update({sentParts:i+1,leaseUntil:this.now()+10*60000});
       }
       await update({status:'completed',finishedAt:this.now(),leaseUntil:null,nextAt:0});
-    }catch(e){const terminal=e.permanent||claimed.tries>=5;await update({status:terminal?'failed':'pending',lastError:e.code||'delivery-failed',leaseUntil:null,nextAt:this.now()+Math.max(10,Number(e.retryAfter)||2**claimed.tries*10)*1000});if(terminal)e.permanent=true;throw e;}
+    }catch(e){const terminal=e.permanent||claimed.tries>=5;await update({status:terminal?'failed':'pending',lastError:e.code||'delivery-failed',recoverable:!e.permanent,failedAt:terminal?this.now():null,leaseUntil:null,nextAt:this.now()+Math.max(10,Number(e.retryAfter)||2**claimed.tries*10)*1000});if(terminal)e.permanent=true;throw e;}
   }
 }

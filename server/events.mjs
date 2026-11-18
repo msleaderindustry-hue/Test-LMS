@@ -26,7 +26,7 @@ export class EventService {
 const labels={session:'вошёл в LMS',navigation:'переходы',typing:'печатает',hidden:'вкладка скрыта',visible:'вернулся во вкладку',blur:'LMS потеряла фокус',focus:'вернулся в LMS',idle:'бездействует',completed:'завершил работу',help:'просит помощи'};
 export function summarizeEvents(events,names={}){
   const groups=new Map();
-  for(const e of events){if(e.kind==='active')continue;const key=e.uid;if(!groups.has(key))groups.set(key,new Map());const counts=groups.get(key),label=e.kind==='result'?`результат ${e.section}: ${e.score==null?'практика сохранена':e.score+'%'}${e.cpm==null?'':', '+e.cpm+' зн/мин'}`:(labels[e.kind]||e.kind)+(e.kind==='navigation'?' → '+e.section:'');counts.set(label,(counts.get(label)||0)+1);}
+  for(const e of events){if(e.kind==='active'||e.kind==='session')continue;const key=e.uid;if(!groups.has(key))groups.set(key,new Map());const counts=groups.get(key),label=e.kind==='result'?`результат ${e.section}: ${e.score==null?'практика сохранена':e.score+'%'}${e.cpm==null?'':', '+e.cpm+' зн/мин'}`:(labels[e.kind]||e.kind)+(e.kind==='navigation'?' → '+e.section:'');counts.set(label,(counts.get(label)||0)+1);}
   const safe=v=>String(v).replace(/[\r\n@*_`~<>]/g,' ').slice(0,100);
   return [...groups].map(([uid,counts])=>`${safe(names[uid]||'Ученик')}: ${[...counts].map(([label,n])=>label+(n>1?' ×'+n:'')).join('; ')}`).join('\n');
 }

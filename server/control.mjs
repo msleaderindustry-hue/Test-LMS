@@ -1,5 +1,5 @@
 import { owner, OWNER_UID, fail, freshId, digest, canonical, requireId, validateTask, enabled, initialPolicy, setAutomatic, DAY } from './domain.mjs';
-import { timestamp } from './firestore.mjs';
+import { timestamp, millis } from './firestore.mjs';
 import { validateCriteria } from './proficiency.mjs';
 import { excelNameForSkill } from './generated/excel-checker.mjs';
 const clearFields={tests:'testHistory',typing:'typingProgress',hotkeys:'hotkeyProgress',excel:'excelProgress',audit:'adminAudit','teacher-tests':'assignedTests'};
@@ -9,43 +9,45 @@ export class ControlService {
   constructor({store,backups,ownerUid=OWNER_UID,now=()=>Date.now()}){this.store=store;this.backups=backups;this.ownerUid=ownerUid;this.now=now;}
   check(actor){owner(actor,this.ownerUid);}
   async policy(){return (await this.store.get('lmsSettings/control'))?.data||initialPolicy();}
-  async proposal(actor,type,payload,summary){
+  async proposal(actor,type,payload,summary,{source='assistant',ttl}={}){
     this.check(actor);const id=freshId(),now=this.now();
-    const value={id,type,ownerUid:actor.uid,payload,summary,status:'pending',createdAt:now,expiresAt:now+(type==='assignment'?24*60:30)*60000};
+    const value={id,type,ownerUid:actor.uid,payload,summary,source,status:'pending',createdAt:now,expiresAt:now+(ttl||(type==='assignment'?24*60:30))*60000};
     value.digest=await digest({id,type,ownerUid:actor.uid,payload,expiresAt:value.expiresAt});
     await this.store.commit([{path:'lmsProposals/'+id,version:null,data:value}]);
     return this.publicProposal(value);
   }
   publicProposal(p){const {payload,...result}=p;return {...result,details:p.type==='assignment'?payload:p.type==='cleanup'?{kind:payload.kind,uid:payload.uid,count:payload.count,documents:payload.entries.length,paths:payload.entries.map(e=>e.path+(e.field?' → '+e.field:''))}:p.type==='restore'?{backupId:payload.backupId,count:payload.count}:payload};}
-  async proposeAssignment(actor,input){
+  async proposeAssignment(actor,input,options){
     this.check(actor);const task=validateTask(input,this.now());task.studentNames={};
     if(task.excelSkill&&!excelNameForSkill(task.excelSkill))fail(400,'unknown-excel-skill','Неизвестная функция Excel.');
     const students=await this.store.getMany(task.studentIds.map(uid=>'users/'+uid));
     for(const [i,uid] of task.studentIds.entries()){const u=students[i];if(uid===this.ownerUid||!enabled(u?.data,'assignments')||!enabled(u?.data,task.module))fail(409,'student-access','У ученика закрыт доступ к заданиям или выбранному разделу.');task.studentNames[uid]=String(u.data.nickname||u.data.displayName||uid).slice(0,80);}
-    return this.proposal(actor,'assignment',task,`Назначить «${task.title}»: учеников ${task.studentIds.length}. ${task.reason}`);
+    return this.proposal(actor,'assignment',task,`Назначить «${task.title}»: учеников ${task.studentIds.length}. ${task.reason}`,options);
   }
-  async proposeCleanup(actor,{kind,uid,assignmentId,recordId,recordIds}){
+  async proposeCleanup(actor,{kind,uid,assignmentId,recordId,recordIds,before,mode},options={}){
     this.check(actor);if(!['activity','diagnostics','assignments','chat','chess','drive',...Object.keys(clearFields)].includes(kind))fail(400,'cleanup-kind','Выберите категорию очистки.');
+    if(before!=null&&(!Number.isFinite(before)||before<=0||before>=this.now()||!['activity','diagnostics','chess','drive'].includes(kind)))fail(400,'cleanup-date','Некорректная дата отбора старых записей.');
     if(uid)requireId(uid);const entries=[],limit=kind==='assignments'?201:180;let count=0;
-    const append=(doc,field,after,records=1)=>{if(!doc)return;if(entries.some(x=>x.path===doc.path))return;if(entries.length>=limit)fail(413,'cleanup-limit','Выберите меньше данных: не более '+limit+' документов за подтверждение.');entries.push({path:doc.path,version:doc.version,field:field||null,after:field?after:null,before:doc.data});count+=records;};
+    const append=(doc,field,after,records=1)=>{if(!doc)return;if(before!=null){const at=millis(doc.data.endedAt??doc.data.at??doc.data.createdAt??doc.data.timestamp);if(!Number.isFinite(at)||at>=before)return;}if(entries.some(x=>x.path===doc.path))return;if(entries.length>=limit){if(before!=null)return;fail(413,'cleanup-limit','Выберите меньше данных: не более '+limit+' документов за операцию.');}entries.push({path:doc.path,version:doc.version,field:field||null,after:field?after:null,before:doc.data});count+=records;};
     if(kind==='diagnostics'){
       if(recordIds){if(!Array.isArray(recordIds)||recordIds.length>180)fail(400,'cleanup-limit','Выберите до 180 записей.');for(const doc of await this.store.getMany([...new Set(recordIds)].map(id=>'platformErrors/'+requireId(id))))append(doc);}
-      else for(const d of await this.store.list('platformErrors',{limit:180}))append(d);
+      else for(const d of before!=null?await this.store.query('platformErrors',[['at','LESS_THAN',timestamp(before)]],180,{partial:true}):await this.store.list('platformErrors',{limit:180}))append(d);
     }
     else if(kind==='assignments'){
       requireId(assignmentId);const d=await this.store.get('lmsAssignments/'+assignmentId);if(d){append(d);for(const p of await this.store.list(d.path+'/progress',{limit:100}))append(p);for(const p of await this.store.getMany((d.data.studentIds||[]).map(id=>`users/${requireId(id)}/assignments/${assignmentId}`)))append(p);}
     } else if(kind==='chess'||kind==='drive'){
-      for(const collection of kind==='chess'?['chessRooms']:['typeDriveRooms','typeDrivePresence'])for(const d of await this.store.list(collection,{limit:180})){
+      const collections=kind==='chess'?['chessRooms']:mode==='drivePresence'?['typeDrivePresence']:mode==='driveFinished'?['typeDriveRooms']:['typeDriveRooms','typeDrivePresence'];
+      for(const collection of collections)for(const d of await this.store.list(collection,{limit:180})){
         const terminal=['finished','cancelled'].includes(d.data.status||d.data.stage);
-        if(collection==='typeDrivePresence'?!d.data.online:terminal)append(d);
+        if(mode==='all'&&before==null|| (collection==='typeDrivePresence'?!d.data.online||this.now()-(millis(d.data.lastSeen)||0)>90000:terminal))append(d);
       }
     } else if(kind==='chat'){
       // Explicit chat identifier, no collection-group scan of unrelated data.
-      const chat=requireId(assignmentId);for(const d of await this.store.list(`private_chats/${chat}/messages`,{limit:180}))append(d);
+      const chats=assignmentId?[{path:'private_chats/'+requireId(assignmentId)}]:await this.store.list('private_chats',{limit:20});for(const chat of chats)for(const d of await this.store.list(chat.path+'/messages',{limit:180}))append(d);
     } else {
       const users=uid?[await this.store.get('users/'+uid)].filter(Boolean):await this.store.list('users',{limit:500});
       for(const u of users){
-        if(kind==='activity')for(const d of await this.store.list(u.path+'/activity',{limit:180}))append(d);
+        if(kind==='activity')for(const d of before!=null?await this.store.query(u.path+'/activity',[['at','LESS_THAN',timestamp(before)]],180,{partial:true}):await this.store.list(u.path+'/activity',{limit:180}))append(d);
         else {const field=clearFields[kind],old=u.data[field];if(old==null)continue;
           let after=emptyField[field],records=Array.isArray(old)?old.length:1;
           if(recordId!=null){if(!['tests','teacher-tests'].includes(kind)||!uid)fail(400,'invalid-selection','Выбор записи доступен только для тестов конкретного ученика.');after=old.filter(x=>String(x.id)!==String(recordId));records=old.length-after.length;}
@@ -53,7 +55,7 @@ export class ControlService {
         }
       }
     }
-    if(kind==='activity')for(const d of await this.store.query('lmsEvents',uid?[['uid','EQUAL',uid]]:[],180))append(d);
+    if(kind==='activity')for(const d of await this.store.query('lmsEvents',[...(uid?[['uid','EQUAL',uid]]:[]),...(before!=null?[['at','LESS_THAN',before]]:[])],180,{partial:before!=null}))append(d);
     if(['tests','typing','hotkeys','excel'].includes(kind))for(const d of await this.store.query('lmsAttempts',[['module','EQUAL',kind],...(uid?[['uid','EQUAL',uid]]:[]),...(recordId?[['id','EQUAL',String(recordId)]]:[])],180))append(d);
     if(!entries.length)fail(409,'nothing-to-clean','По выбранным условиям нет записей для очистки.');
     if(new TextEncoder().encode(JSON.stringify(entries)).length>4_000_000)fail(413,'backup-limit','Слишком большая копия. Выберите меньше данных.');
@@ -64,7 +66,19 @@ export class ControlService {
     const verify=await this.backups.get('snapshots/'+snapshotId+'.json');
     if(!verify||await digest(JSON.parse(await verify.text()))!==checksum)fail(503,'backup-unverified','Не удалось проверить резервную копию. Ничего не удалено.');
     const manifest=entries.map(({before,after,...entry})=>entry);
-    return this.proposal(actor,'cleanup',{kind,uid:uid||null,count,snapshotId,checksum,entries:manifest},`Очистить ${kind}: ${count} записей в ${entries.length} документах. Резервная копия проверена.`);
+    const label={diagnostics:'диагностику',activity:'активность',tests:'результаты тестов',typing:'результаты печати',hotkeys:'результаты сочетаний',excel:'результаты Excel',audit:'журнал администратора','teacher-tests':'назначенные тесты',assignments:'задание',chat:'переписку',chess:'шахматные комнаты',drive:'заезды TypeDrive'}[kind];
+    return this.proposal(actor,'cleanup',{kind,uid:uid||null,count,snapshotId,checksum,entries:manifest},`Очистить ${label}: ${count} записей в ${entries.length} документах.${before?' Старше '+new Date(before).toLocaleDateString('ru-RU',{timeZone:'Asia/Tashkent'})+'.':''} Резервная копия проверена.`,options);
+  }
+  // An explicit owner button is the authorization; no assistant approval round trip.
+  async manual(actor,type,input,requestId){
+    this.check(actor);requireId(requestId);if(!['cleanup','assignment','restore'].includes(type))fail(400,'manual-action','Неизвестное действие.');
+    const path='lmsManualActions/'+actor.uid+':'+requestId,hash=await digest({type,input});let receipt=await this.store.get(path);
+    if(receipt&&receipt.data.digest!==hash)fail(409,'request-reused','Идентификатор операции уже использован.');
+    if(!receipt){const p=type==='cleanup'?await this.proposeCleanup(actor,input,{source:'manual'}):type==='assignment'?await this.proposeAssignment(actor,input,{source:'manual'}):await this.proposeRestore(actor,input.backupId);
+      await this.store.atomic(async()=>{receipt=await this.store.get(path);if(!receipt)await this.store.commit([{path,version:null,data:{actorUid:actor.uid,digest:hash,proposalId:p.id,createdAt:this.now()}}]);});receipt=await this.store.get(path);
+    }
+    if(receipt.data.digest!==hash)fail(409,'request-reused','Идентификатор операции уже использован.');
+    const p=await this.store.get('lmsProposals/'+receipt.data.proposalId);return this.approve(actor,p.data.id,p.data.digest);
   }
   async archive(payload){const file=await this.backups?.get('snapshots/'+payload.snapshotId+'.json');if(!file)fail(503,'backup-missing','Резервная копия недоступна. Операция остановлена.');const data=JSON.parse(await file.text());if(await digest(data)!==payload.checksum)fail(503,'backup-corrupt','Проверка резервной копии не пройдена.');return data;}
   async proposeRestore(actor,id){this.check(actor);requireId(id);const p=await this.store.get('lmsProposals/'+id);if(!p||p.data.type!=='cleanup'||p.data.status!=='completed'||p.data.restoredAt)fail(409,'not-restorable','Эта очистка недоступна для восстановления.');await this.archive(p.data.payload);return this.proposal(actor,'restore',{backupId:id,count:p.data.payload.count},`Восстановить ${p.data.payload.count} записей из копии очистки ${id}.`);}

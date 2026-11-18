@@ -2264,8 +2264,8 @@ function _extends() {
       if (lock.current) return;
       if(window.LmsApi?.enabled){
         const mapping={finished:'chess',rooms:'chess',driveFinished:'drive',drivePresence:'drive',driveAll:'drive'};
-        if(kind==='chat'){setFailure('Для очистки переписки укажите конкретный ID чата в ИИ-чате.');return;}
-        lock.current=true;try{await window.LmsApi.propose('cleanup',{kind:mapping[kind]||kind,uid:targetUser?.id||null});setMessage('Предложение открыто в ИИ-чате. Данные пока сохранены.');}catch(e){setFailure(e.message);}finally{lock.current=false;}return;
+        if(personal&&scope==='one'&&!targetUser){setFailure('Выберите пользователя из списка.');return;}
+        lock.current=true;setPhase('delete');setFailure('');setMessage('Сохраняем копию и удаляем…');try{const r=await window.LmsApi.execute('cleanup',{kind:mapping[kind]||kind,uid:personal&&scope==='one'?targetUser.id:null,mode:['rooms','driveAll'].includes(kind)?'all':kind.startsWith('drive')?kind:undefined});setMessage('Удалено записей: '+r.deleted+'. Копия доступна в ИИ-управление → Копии.');setPhase('done');window.dispatchEvent(new Event('lms:activity-cleaned'));}catch(e){setFailure(e.message);setPhase('idle');}finally{lock.current=false;}return;
       }
       if (personal && scope === 'one' && !targetUser) {
         setFailure('Выберите пользователя из списка.');
@@ -2500,7 +2500,7 @@ function _extends() {
     }, /*#__PURE__*/React.createElement(AdminIcon, {
       name: "search",
       size: 16
-    }), "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435"))), message && /*#__PURE__*/React.createElement("div", {
+    }), window.LmsApi?.enabled?(busy?'Сохраняем копию и удаляем…':'Удалить выбранные данные'):"\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435"))), message && /*#__PURE__*/React.createElement("div", {
       className: "adm-maint-status",
       role: "status"
     }, busy && /*#__PURE__*/React.createElement("i", {
@@ -2714,7 +2714,7 @@ function _extends() {
     }, error));
   }
   async function deleteLmsAssignment(id, actor) {
-    if(window.LmsApi?.enabled){await window.LmsApi.propose('cleanup',{kind:'assignments',assignmentId:id});throw Error('Предложение открыто в ИИ-чате. Подтвердите там; задание пока сохранено.');}
+    if(window.LmsApi?.enabled){await window.LmsApi.execute('cleanup',{kind:'assignments',assignmentId:id});return true;}
     const db = window.db,
       ref = db.collection('lmsAssignments').doc(id),
       user = db.collection('users').doc(actor);
@@ -2779,7 +2779,6 @@ function _extends() {
     }, []);
     async function remove() {
       if (working.current || items.length > 1 && phrase !== 'УДАЛИТЬ') return;
-      if(window.LmsApi?.enabled){working.current=true;setBusy(true);setError('');try{for(const item of remaining.current)await window.LmsApi.propose('cleanup',{kind:'assignments',assignmentId:item.id});if(alive.current)onClose(false);}catch(e){if(alive.current)setError(e.message);}finally{working.current=false;if(alive.current)setBusy(false);}return;}
       working.current = true;
       setBusy(true);
       setError('');
@@ -3024,7 +3023,7 @@ function _extends() {
       draftId.current = ref.id;
       try {
         if(window.LmsApi?.enabled){
-          await window.LmsApi.propose('assignment',{module,title:title.trim(),text:normalized,studentIds:ids,dueAt:deadline,lang,minAccuracy:Number(accuracy),target:['typing','word'].includes(module)?1:target,wordLesson:module==='word'?wordLesson:null,hotkeyBank,reason:'Задание подготовлено преподавателем.'});
+          await window.LmsApi.execute('assignment',{module,title:title.trim(),text:normalized,studentIds:ids,dueAt:deadline,lang,minAccuracy:Number(accuracy),target:['typing','word'].includes(module)?1:target,wordLesson:module==='word'?wordLesson:null,hotkeyBank,reason:'Задание подготовлено преподавателем.'});
           if(alive.current){setCreating(false);setClosing(false);draftId.current=null;}return;
         }
         await db.runTransaction(async tx => {
@@ -3483,7 +3482,7 @@ function _extends() {
       setProfile(false);
     };
     const parts = React.Children.toArray(children);
-    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['assignments', 'Задания', 'fileText'], ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
+    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['assignments', 'Задания', 'fileText'], ...(window.LmsApi?.enabled?[['control','ИИ-управление','settings']]:[]), ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
     const recent = array(users).filter(u => lastActivity(u)).sort((a, b) => lastActivity(b) - lastActivity(a)).slice(0, 5);
     const recentRows = recent.map(u => h('button', {
       type: 'button',
@@ -3591,7 +3590,7 @@ function _extends() {
       size: 18
     }), h('span', null, label)))), h('div', {
       className: 'av-stage'
-    }, overview, students, screen === 'assignments' && h(AssignmentDesk, {
+    }, overview, students, screen === 'control' && window.LmsAdminControl && h(window.LmsAdminControl,{users}), screen === 'assignments' && h(AssignmentDesk, {
       users
     }), visited.has('diagnostics') && h('section', {
       className: 'av-scene',
@@ -3892,7 +3891,7 @@ function _extends() {
       if (!selected) return;
       if(window.LmsApi?.enabled&&kind==='role'){toast('Серверное управление закреплено за владельцем LMS. Поле роли не выдаёт административных полномочий.','error');return;}
       if(window.LmsApi?.enabled&&kind==='reset'){
-        (async()=>{try{for(const part of parts)await window.LmsApi.propose('cleanup',{kind:part,uid:selected.id});}catch(e){toast(e.message,'error');}})();return;
+        if(locks.current.has(selected.id))return;const target=selected.id;locks.current.add(target);setPending(new Set(locks.current));(async()=>{let deleted=0;try{for(const part of parts){const r=await window.LmsApi.execute('cleanup',{kind:part,uid:target});deleted+=r.deleted;}toast('Удалено записей: '+deleted+'. Резервные копии сохранены.');}catch(e){toast(e.message,'error');}finally{locks.current.delete(target);if(alive.current)setPending(new Set(locks.current));}})();return;
       }
       if (kind === 'reset' && !parts.length) return;
       const user = selected;
@@ -3932,7 +3931,7 @@ function _extends() {
     async function confirmAction() {
       if (!confirm || locks.current.has(confirm.uid)) return;
       const job = confirm;
-      if(window.LmsApi?.enabled&&job.kind==='remove'){try{await window.LmsApi.propose('cleanup',{kind:'teacher-tests',uid:job.uid,recordId:String(job.testId)});setConfirm(null);}catch(e){setDialogError(e.message);}return;}
+      if(window.LmsApi?.enabled&&job.kind==='remove'){locks.current.add(job.uid);setPending(new Set(locks.current));try{await window.LmsApi.execute('cleanup',{kind:'teacher-tests',uid:job.uid,recordId:String(job.testId)});setConfirm(null);toast('Тест удалён. Резервная копия сохранена.');}catch(e){setDialogError(e.message);}finally{locks.current.delete(job.uid);if(alive.current)setPending(new Set(locks.current));}return;}
       setDialogError('');
       try {
         await mutate(job.uid, (current, actorUid) => {

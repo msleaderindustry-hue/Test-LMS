@@ -231,7 +231,7 @@
     async function remove() {
       if (lock.current || word !== 'УДАЛИТЬ' || !selected.length) return;
       const ids = [...selected];
-      if(window.LmsApi?.enabled){setBusy(true);setError('');try{await window.LmsApi.propose('cleanup',{kind:'diagnostics',recordIds:ids});setConfirm(false);setNote('Предложение открыто в ИИ-чате. Записи пока сохранены.');}catch(e){setError(e.message);}finally{setBusy(false);}return;}
+      if(window.LmsApi?.enabled){lock.current=true;setBusy(true);setError('');let deleted=0;try{for(let i=0;i<ids.length;i+=150){const chunk=ids.slice(i,i+150),r=await window.LmsApi.execute('cleanup',{kind:'diagnostics',recordIds:chunk});deleted+=r.deleted;setRows(prev=>prev.filter(row=>!chunk.includes(row.id)));setSelected(prev=>prev.filter(id=>!chunk.includes(id)));}setConfirm(false);setWord('');setNote('Удалено записей: '+deleted+'. Копии сохранены.');}catch(e){setError(e.message+' Удалено: '+deleted+'.');}finally{lock.current=false;setBusy(false);}return;}
       lock.current = true;
       setBusy(true);
       setError('');

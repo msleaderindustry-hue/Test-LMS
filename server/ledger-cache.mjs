@@ -56,9 +56,9 @@ export class LedgerCacheStore {
   get(...args){return this.source.get(...args);}
   getMany(...args){return this.source.getMany(...args);}
   list(...args){return this.source.list(...args);}
-  async query(collection,filters=[],limit=1000){
+  async query(collection,filters=[],limit=1000,options){
     const uid=filters.find(([f,op])=>f==='uid'&&op==='EQUAL')?.[2],start=filters.find(([f,op])=>f==='at'&&op==='GREATER_THAN_OR_EQUAL')?.[2],end=filters.find(([f,op])=>f==='at'&&op==='LESS_THAN')?.[2];
-    if(!collections.has(collection)||filters.length!==3||typeof uid!=='string'||!Number.isFinite(start)||!Number.isFinite(end)||start>=end)return this.source.query(collection,filters,limit);
+    if(options?.partial||!collections.has(collection)||filters.length!==3||typeof uid!=='string'||!Number.isFinite(start)||!Number.isFinite(end)||start>=end)return this.source.query(collection,filters,limit,options);
     const key=collection+'/'+uid,state=this.cache.read(key),cached=state.entry;
     let rows;
     if(!state.pending&&cached&&cached.start<=start&&cached.end>=end&&this.now()-cached.fetchedAt<DAY)rows=cached.rows;

@@ -69,17 +69,17 @@ export class FirestoreStore {
     const found=new Map(result.filter(r=>r.found).map(r=>{const doc=this.document(r.found);return [doc.path,doc];}));
     return paths.map(path=>found.get(path)||null);
   }
-  async list(collection,{limit=1000}={}) {
+  async list(collection,{limit=1000,partial=false}={}) {
     if(!validPath(collection)||collection.split('/').length%2!==1)fail(400,'invalid-path','Некорректный путь коллекции.');
     const rows=[];let page='';
-    do {const result=await this.request('/'+urlPath(collection)+'?pageSize='+Math.min(200,limit+1-rows.length)+(page?'&pageToken='+encodeURIComponent(page):''));rows.push(...(result?.documents||[]).map(x=>this.document(x)));page=result?.nextPageToken||'';if(rows.length>limit)fail(413,'scan-limit','Объём превышает лимит одной операции. Выберите меньший период или группу.');}while(page);
+    do {const result=await this.request('/'+urlPath(collection)+'?pageSize='+Math.min(200,limit+(partial?0:1)-rows.length)+(page?'&pageToken='+encodeURIComponent(page):''));rows.push(...(result?.documents||[]).map(x=>this.document(x)));page=result?.nextPageToken||'';if(partial&&rows.length>=limit)return rows.slice(0,limit);if(rows.length>limit)fail(413,'scan-limit','Объём превышает лимит одной операции. Выберите меньший период или группу.');}while(page);
     return rows;
   }
-  async query(collection,filters=[],limit=1000) {
+  async query(collection,filters=[],limit=1000,{partial=false}={}) {
     if(!validPath(collection)||collection.split('/').length%2!==1)fail(400,'invalid-path','Некорректный путь коллекции.');
     const segments=collection.split('/'),id=segments.pop(),parent=segments.length?'/'+urlPath(segments.join('/')):'';
     const fieldFilters=filters.map(([field,op,value])=>({fieldFilter:{field:{fieldPath:field},op,value:encode(value)}}));
-    const q={from:[{collectionId:id}],limit:limit+1};if(fieldFilters.length)q.where=fieldFilters.length===1?fieldFilters[0]:{compositeFilter:{op:'AND',filters:fieldFilters}};
+    const q={from:[{collectionId:id}],limit:limit+(partial?0:1)};if(fieldFilters.length)q.where=fieldFilters.length===1?fieldFilters[0]:{compositeFilter:{op:'AND',filters:fieldFilters}};
     const result=await this.request(parent+':runQuery',{method:'POST',body:JSON.stringify({structuredQuery:q})});
     const rows=(result||[]).filter(x=>x.document).map(x=>this.document(x.document));if(rows.length>limit)fail(413,'scan-limit','Слишком много данных для одного отчёта.');return rows;
   }

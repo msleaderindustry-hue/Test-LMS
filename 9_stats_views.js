@@ -880,7 +880,7 @@ window.reportLmsError?.(e, {"section":"stats","source":"9_stats_views.js","line"
     async function removeEntry(target) {
       if(window.LmsApi?.enabled){
         if(!window.LmsApi.isOwner())throw Error('Удаление результатов доступно только преподавателю.');
-        await window.LmsApi.propose('cleanup',{kind:'tests',uid,recordId:String(target.id)});return;
+        if(writeLock.current)return;writeLock.current=true;try{await window.LmsApi.execute('cleanup',{kind:'tests',uid,recordId:String(target.id)});const updated=activeHistory.filter(x=>String(x.id)!==String(target.id));setOverride({uid,base:sourceSignature,value:updated});if(typeof setHistory==='function')setHistory(updated);}finally{writeLock.current=false;}return;
       }
       if (writeLock.current) throw new Error('Дождитесь завершения удаления.');
       writeLock.current = true;

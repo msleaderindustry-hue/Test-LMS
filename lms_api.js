@@ -16,12 +16,13 @@
       if(epoch!==mine||window.auth?.currentUser?.uid!==uid)throw Error('Аккаунт изменился. Ответ скрыт.');return data;
     }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',abort);}
   }
-  function showCard(value){window.dispatchEvent(new CustomEvent('lms-ai-card',{detail:value}));}
+  function showCard(value){window.dispatchEvent(new CustomEvent('lms-admin-card',{detail:value}));}
   async function propose(kind,body){const result=await request('/proposals/'+kind,body);showCard({text:'Проверьте предложение перед подтверждением.',...result});return result;}
+  const execute=(kind,selection,requestId=id())=>request('/admin/'+kind,{selection,requestId},{timeout:90000});
   function watchDirectory(next,error){let dead=false,timer;const tick=async()=>{try{const result=await request('/directory');if(!dead)next({docs:result.users.map(u=>({id:u.uid,data:()=>u}))});}catch(e){if(!dead)error?.(e);}finally{if(!dead)timer=setTimeout(tick,60000);}};tick();return()=>{dead=true;clearTimeout(timer);};}
   function watchChat(peer,subscribe,error){let dead=false,stop;request('/chat/open',{uid:peer}).then(()=>{if(!dead)stop=subscribe();}).catch(e=>{if(!dead)error?.(e);});return()=>{dead=true;stop?.();};}
   function emit(kind,section=currentSection,extra={}){
-    if(!enabled||!account||account===config.ownerUid)return;
+    if(!enabled||!account||(account===config.ownerUid&&kind!=='session'))return;
     const event={id:id(),sessionId:session,kind,section,at:Date.now(),...extra};events.push(event);
     window.LmsEventOutbox.put(account,event).then(({dropped})=>{if(dropped)notifySync('Не все события удалось отправить: очередь заполнена.');}).catch(()=>notifySync('Локальное сохранение событий недоступно. Оставьте страницу открытой до синхронизации.'));
     if(events.length>300){events=events.slice(-300);notifySync('Не все события удалось отправить: очередь заполнена.');}
@@ -29,7 +30,7 @@
   function clearSync(){errorShown=false;document.getElementById('lms-sync-status')?.remove();}
   function notifySync(message){if(errorShown)return;errorShown=true;const notice=document.createElement('div');notice.id='lms-sync-status';notice.setAttribute('role','status');notice.textContent=message;notice.style.cssText='position:fixed;left:16px;bottom:16px;max-width:min(400px,calc(100vw - 32px));padding:10px 14px;border-radius:10px;background:#334155;color:#fff;font:13px/1.5 system-ui;z-index:200000;pointer-events:none';document.body.appendChild(notice);}
   async function flush(){
-    if(!enabled||flushing||!account||account===config.ownerUid||Date.now()<retryAt)return;
+    if(!enabled||flushing||!account||Date.now()<retryAt)return;
     const uid=account,mine=epoch;flushing=true;
     try{
       const persisted=await window.LmsEventOutbox.list(uid).catch(()=>[]);if(mine!==epoch)return;
@@ -53,7 +54,7 @@
     for(const name of ['keydown','pointerdown','pointermove'])w.addEventListener(name,interaction,{passive:true});
   }
   const key=name=>enabled?'lms:'+String(window.auth?.currentUser?.uid||'guest')+':'+name:name;
-  const api={enabled,request,revive,id,key,bindTrustedFrame,showCard,propose,watchDirectory,watchChat,chatSource,emit,navigate,record:(body,options)=>request('/attempts',body,options),isOwner:()=>window.auth?.currentUser?.uid===config.ownerUid};
+  const api={enabled,request,revive,id,key,bindTrustedFrame,showCard,propose,execute,watchDirectory,watchChat,chatSource,emit,navigate,record:(body,options)=>request('/attempts',body,options),isOwner:()=>window.auth?.currentUser?.uid===config.ownerUid};
   window.LmsApi=api;
   if(!enabled)return;
   // Auth headers are attached to exactly the known AI endpoint. Never to code previews.
@@ -70,6 +71,7 @@
     return nativeFetch(input,init);
   };
   window.auth.onAuthStateChanged(user=>{epoch++;account=user?.uid||null;events=[];retryAt=0;clearSync();session=id();lastInput=lastPulse=Date.now();idle=false;if(account)emit('session');window.dispatchEvent(new CustomEvent('lms-account-changed'));});
+  window.addEventListener('lms:profile-ready',e=>{if(e.detail?.uid===account){retryAt=0;setTimeout(flush,250);}});
   for(const name of ['keydown','pointerdown','pointermove','touchstart'])window.addEventListener(name,interaction,{passive:true});
   document.addEventListener('visibilitychange',()=>{pulse();emit(document.hidden?'hidden':'visible');lastPulse=Date.now();if(document.hidden)flush();});
   window.addEventListener('blur',()=>{pulse();focused=false;emit('blur');});window.addEventListener('focus',()=>{focused=true;lastInput=lastPulse=Date.now();idle=false;emit('focus');});

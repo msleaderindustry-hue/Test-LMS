@@ -132,7 +132,7 @@ function loadWordModule() {
       } else resolve(window.WordLabLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Word заняла слишком много времени.')), 60000);
-    script.src = new URL('20_word.js?v=20261118-ai2', document.baseURI).href;
+    script.src = new URL('20_word.js?v=20261119-admin1', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.WordLabLMS ? null : new Error('Не удалось запустить Word.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Word. Проверь подключение.'));
@@ -189,7 +189,7 @@ function loadExcelModule() {
       } else resolve(window.ExcelTrainerLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
-    script.src = new URL('15_excel_trainer.js?v=20261118-ai2', document.baseURI).href;
+    script.src = new URL('15_excel_trainer.js?v=20261119-admin1', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
