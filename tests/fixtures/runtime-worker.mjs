@@ -5,6 +5,7 @@ import {MemoryStore} from '../helpers/memory-store.mjs';
 import {LedgerCacheStore,SqlLedgerCache} from '../../server/ledger-cache.mjs';
 import {OWNER_UID,fail} from '../../server/domain.mjs';
 import {calculateExcel} from '../../server/generated/excel-checker.mjs';
+import {FirestoreStore} from '../../server/firestore.mjs';
 const now=Date.parse('2026-11-22T15:05Z');
 export class LmsRuntime extends Runtime {
   constructor(ctx,env){
@@ -23,6 +24,12 @@ export default {...gateway,async fetch(request,env){
   const path=new URL(request.url).pathname,stub=env.LMS_RUNTIME.getByName('lms-v1');
   if(path==='/__fixture/inspect')return stub.inspect().then(Response.json);
   if(path==='/__fixture/checker')return stub.checker().then(Response.json);
+  if(path==='/__fixture/firestore-transport'){
+    const store=new FirestoreStore({FIREBASE_PROJECT_ID:'fixture-lms'});
+    store.token=async()=> 'synthetic-token';
+    store.base='http://127.0.0.1:'+new URL(request.url).searchParams.get('port');
+    return Response.json(await store.get('users/student'));
+  }
   if(path==='/__fixture/queue'){
     const body=await request.json();let outcome='none';
     await gateway.queue({messages:[{body,attempts:1,ack(){outcome='ack';},retry(){outcome='retry';}}]},env);

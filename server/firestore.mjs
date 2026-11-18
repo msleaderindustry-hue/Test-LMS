@@ -32,8 +32,11 @@ export function decode(value) {
   fail(502,'unknown-value','Неизвестный формат поля базы данных.');
 }
 const validPath = path => typeof path==='string' && /^(?:[A-Za-z0-9_.:-]+\/)*[A-Za-z0-9_.:-]+$/.test(path) && !path.split('/').some(x=>x==='.'||x==='..');
+// Firestore reserves suffixes such as :write for RPCs; document IDs may also
+// contain colons. Escape path segments without escaping intentional RPC suffixes.
+const urlPath = path => path.split('/').map(encodeURIComponent).join('/');
 export class FirestoreStore {
-  constructor(env, transport=fetch) {
+  constructor(env, transport=globalThis.fetch.bind(globalThis)) {
     if(!/^[a-z][a-z0-9-]{4,61}[a-z0-9]$/.test(env.FIREBASE_PROJECT_ID||''))fail(503,'configuration','Сервер базы данных не настроен.');
     this.env=env;this.fetch=transport;this.root=`projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
     this.base='https://firestore.googleapis.com/v1/'+this.root;
@@ -58,7 +61,7 @@ export class FirestoreStore {
     return data;
   }
   document(raw) {return raw?{path:raw.name.slice(this.root.length+1),data:decode({mapValue:{fields:raw.fields||{}}}),version:raw.updateTime}:null;}
-  async get(path) {if(!validPath(path)||path.split('/').length%2)fail(400,'invalid-path','Некорректный путь документа.');return this.document(await this.request('/'+path));}
+  async get(path) {if(!validPath(path)||path.split('/').length%2)fail(400,'invalid-path','Некорректный путь документа.');return this.document(await this.request('/'+urlPath(path)));}
   async getMany(paths){
     if(paths.length>400||paths.some(path=>!validPath(path)||path.split('/').length%2))fail(400,'invalid-path','Некорректный список документов.');
     if(!paths.length)return [];
@@ -69,12 +72,12 @@ export class FirestoreStore {
   async list(collection,{limit=1000}={}) {
     if(!validPath(collection)||collection.split('/').length%2!==1)fail(400,'invalid-path','Некорректный путь коллекции.');
     const rows=[];let page='';
-    do {const result=await this.request('/'+collection+'?pageSize='+Math.min(200,limit+1-rows.length)+(page?'&pageToken='+encodeURIComponent(page):''));rows.push(...(result?.documents||[]).map(x=>this.document(x)));page=result?.nextPageToken||'';if(rows.length>limit)fail(413,'scan-limit','Объём превышает лимит одной операции. Выберите меньший период или группу.');}while(page);
+    do {const result=await this.request('/'+urlPath(collection)+'?pageSize='+Math.min(200,limit+1-rows.length)+(page?'&pageToken='+encodeURIComponent(page):''));rows.push(...(result?.documents||[]).map(x=>this.document(x)));page=result?.nextPageToken||'';if(rows.length>limit)fail(413,'scan-limit','Объём превышает лимит одной операции. Выберите меньший период или группу.');}while(page);
     return rows;
   }
   async query(collection,filters=[],limit=1000) {
     if(!validPath(collection)||collection.split('/').length%2!==1)fail(400,'invalid-path','Некорректный путь коллекции.');
-    const segments=collection.split('/'),id=segments.pop(),parent=segments.length?'/'+segments.join('/'):'';
+    const segments=collection.split('/'),id=segments.pop(),parent=segments.length?'/'+urlPath(segments.join('/')):'';
     const fieldFilters=filters.map(([field,op,value])=>({fieldFilter:{field:{fieldPath:field},op,value:encode(value)}}));
     const q={from:[{collectionId:id}],limit:limit+1};if(fieldFilters.length)q.where=fieldFilters.length===1?fieldFilters[0]:{compositeFilter:{op:'AND',filters:fieldFilters}};
     const result=await this.request(parent+':runQuery',{method:'POST',body:JSON.stringify({structuredQuery:q})});

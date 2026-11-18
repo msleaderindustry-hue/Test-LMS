@@ -144,6 +144,8 @@ export async function handle(request,env,dependencies={}){
     return new Response(JSON.stringify(result),{headers});
   }catch(error){
     const status=Number.isInteger(error.status)?error.status:500;
+    // No request body, headers, tokens, user data or upstream response text.
+    if(status===500)console.error('lms-api-error',String(error.name||'Error').slice(0,80),String(error.stack||'').split('\n').slice(1,5).join('\n'));
     return new Response(JSON.stringify({error:{code:error.code||'internal',message:status===500?'Не удалось завершить операцию. Повторите позже.':error.message}}),{status,headers});
   }
 }

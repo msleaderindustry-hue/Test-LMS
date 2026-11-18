@@ -1,7 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {unstable_startWorker} from 'wrangler';import {OWNER_UID} from '../../server/domain.mjs';
+import {createServer} from 'node:http';import {once} from 'node:events';
 test('Free gateway runs authenticated API, SQLite cache, queue and Excel checker in real workerd',async t=>{
   const worker=await unstable_startWorker({config:'tests/fixtures/wrangler.runtime.toml',dev:{remote:false,persist:false,logLevel:'error'}});t.after(()=>worker.dispose());await worker.ready;
+  const database=createServer((req,res)=>{
+    assert.equal(req.url,'/users/student');assert.equal(req.headers.authorization,'Bearer synthetic-token');
+    res.setHeader('Content-Type','application/json');res.end(JSON.stringify({name:'projects/fixture-lms/databases/(default)/documents/users/student',fields:{nickname:{stringValue:'Fixture'}},updateTime:'2026-11-18T00:00:00Z'}));
+  });database.listen(0,'127.0.0.1');await once(database,'listening');t.after(()=>new Promise(resolve=>database.close(resolve)));
+  const stored=await worker.fetch('https://local.test/__fixture/firestore-transport?port='+database.address().port);
+  assert.equal(stored.status,200,await stored.clone().text());assert.equal((await stored.json()).data.nickname,'Fixture');
   const request=(path,body,uid='student')=>worker.fetch('https://local.test'+path,{method:body===undefined?'GET':'POST',headers:{Origin:'https://lms.test',Authorization:'Bearer '+uid,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body)});
   assert.equal((await request('/health',undefined,'invalid')).status,401);
   assert.equal((await request('/health')).status,200);
