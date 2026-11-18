@@ -3983,6 +3983,7 @@ window.reportLmsError?.(error, {"section":"hotkeys","source":"12_hotkeys.js","li
     }
     // Личная статистика ученика. Идемпотентна: повтор той же попытки ничего не добавляет.
     async function saveProfile(s) {
+      if(window.LmsApi?.enabled){return window.LmsApi.record({id:s.id,module:'hotkeys',correct:s.records.filter(r=>r.status==='solved').length,total:s.tasks.length,hints:s.records.filter(r=>r.hint).length,skipped:s.records.filter(r=>r.status==='skipped').length,skill:s.title||'hotkeys',mode:s.assignment?'assignment-practice':'practice'},{uid:s.uid});}
       const points = s.records.filter(r => r.status === 'solved').length,
         ref = window.db.collection('users').doc(s.uid);
       await window.db.runTransaction(async tx => {

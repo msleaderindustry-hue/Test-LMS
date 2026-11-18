@@ -597,7 +597,7 @@ window.reportLmsError?.(__lmsCaughtError, {"section":"stats","source":"9_stats_v
       setError('');
       Promise.resolve().then(() => {
         if (!window.db?.collection) throw new Error('База данных пока не подключена.');
-        return window.db.collection('users').get();
+        return window.LmsApi?.enabled&&!window.LmsApi.isOwner() ? window.db.collection('users').doc(window.auth.currentUser.uid).get().then(doc=>({docs:doc.exists?[doc]:[]})) : window.db.collection('users').get();
       }).then(snap => {
         if (active) {
           setUsers(snap.docs.map(d => ({
@@ -878,6 +878,10 @@ window.reportLmsError?.(e, {"section":"stats","source":"9_stats_views.js","line"
     const rows = useMemo(() => normalizeHistory(activeHistory), [activeHistory]);
     const summary = useMemo(() => testSummary(activeHistory), [activeHistory]);
     async function removeEntry(target) {
+      if(window.LmsApi?.enabled){
+        if(!window.LmsApi.isOwner())throw Error('Удаление результатов доступно только преподавателю.');
+        await window.LmsApi.propose('cleanup',{kind:'tests',uid,recordId:String(target.id)});return;
+      }
       if (writeLock.current) throw new Error('Дождитесь завершения удаления.');
       writeLock.current = true;
       const actor = window.auth?.currentUser?.uid || null;
@@ -917,7 +921,7 @@ window.reportLmsError?.(e, {"section":"stats","source":"9_stats_views.js","line"
         if (typeof setHistory === 'function') setHistory(updated);
         // Сохраняем прежний ключ для совместимости с родительским приложением.
         try {
-          localStorage.setItem('test_history_v1', JSON.stringify(updated));
+          localStorage.setItem(window.LmsApi?.key('test_history_v1')||'test_history_v1', JSON.stringify(updated));
         } catch {}
       } finally {
         writeLock.current = false;

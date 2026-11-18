@@ -2262,6 +2262,11 @@ function _extends() {
     };
     async function inspect(kind) {
       if (lock.current) return;
+      if(window.LmsApi?.enabled){
+        const mapping={finished:'chess',rooms:'chess',driveFinished:'drive',drivePresence:'drive',driveAll:'drive'};
+        if(kind==='chat'){setFailure('Для очистки переписки укажите конкретный ID чата в ИИ-чате.');return;}
+        lock.current=true;try{await window.LmsApi.propose('cleanup',{kind:mapping[kind]||kind,uid:targetUser?.id||null});setMessage('Предложение открыто в ИИ-чате. Данные пока сохранены.');}catch(e){setFailure(e.message);}finally{lock.current=false;}return;
+      }
       if (personal && scope === 'one' && !targetUser) {
         setFailure('Выберите пользователя из списка.');
         return;
@@ -2669,6 +2674,7 @@ function _extends() {
       const question = progress.helpQuestion || '',
         uid = window.auth?.currentUser?.uid;
       try {
+        if(window.LmsApi?.enabled){await window.LmsApi.request('/assignments/'+task.id+'/reply',{uid:studentId,text:text.trim(),question});setText('');return;}
         const db = window.db,
           ref = db.collection('lmsAssignments').doc(task.id),
           pr = ref.collection('progress').doc(studentId);
@@ -2708,6 +2714,7 @@ function _extends() {
     }, error));
   }
   async function deleteLmsAssignment(id, actor) {
+    if(window.LmsApi?.enabled){await window.LmsApi.propose('cleanup',{kind:'assignments',assignmentId:id});throw Error('Предложение открыто в ИИ-чате. Подтвердите там; задание пока сохранено.');}
     const db = window.db,
       ref = db.collection('lmsAssignments').doc(id),
       user = db.collection('users').doc(actor);
@@ -2772,6 +2779,7 @@ function _extends() {
     }, []);
     async function remove() {
       if (working.current || items.length > 1 && phrase !== 'УДАЛИТЬ') return;
+      if(window.LmsApi?.enabled){working.current=true;setBusy(true);setError('');try{for(const item of remaining.current)await window.LmsApi.propose('cleanup',{kind:'assignments',assignmentId:item.id});if(alive.current)onClose(false);}catch(e){if(alive.current)setError(e.message);}finally{working.current=false;if(alive.current)setBusy(false);}return;}
       working.current = true;
       setBusy(true);
       setError('');
@@ -3015,6 +3023,10 @@ function _extends() {
         ref = draftId.current ? db.collection('lmsAssignments').doc(draftId.current) : db.collection('lmsAssignments').doc();
       draftId.current = ref.id;
       try {
+        if(window.LmsApi?.enabled){
+          await window.LmsApi.propose('assignment',{module,title:title.trim(),text:normalized,studentIds:ids,dueAt:deadline,lang,minAccuracy:Number(accuracy),target:['typing','word'].includes(module)?1:target,wordLesson:module==='word'?wordLesson:null,hotkeyBank,reason:'Задание подготовлено преподавателем.'});
+          if(alive.current){setCreating(false);setClosing(false);draftId.current=null;}return;
+        }
         await db.runTransaction(async tx => {
           const admin = await tx.get(db.collection('users').doc(actor)),
             existing = await tx.get(ref),
@@ -3878,6 +3890,10 @@ function _extends() {
     }
     function ask(kind, parts = []) {
       if (!selected) return;
+      if(window.LmsApi?.enabled&&kind==='role'){toast('Серверное управление закреплено за владельцем LMS. Поле роли не выдаёт административных полномочий.','error');return;}
+      if(window.LmsApi?.enabled&&kind==='reset'){
+        (async()=>{try{for(const part of parts)await window.LmsApi.propose('cleanup',{kind:part,uid:selected.id});}catch(e){toast(e.message,'error');}})();return;
+      }
       if (kind === 'reset' && !parts.length) return;
       const user = selected;
       const names = SUBJECTS.filter(s => parts.includes(s.id)).map(s => s.label).join(', ');
@@ -3916,6 +3932,7 @@ function _extends() {
     async function confirmAction() {
       if (!confirm || locks.current.has(confirm.uid)) return;
       const job = confirm;
+      if(window.LmsApi?.enabled&&job.kind==='remove'){try{await window.LmsApi.propose('cleanup',{kind:'teacher-tests',uid:job.uid,recordId:String(job.testId)});setConfirm(null);}catch(e){setDialogError(e.message);}return;}
       setDialogError('');
       try {
         await mutate(job.uid, (current, actorUid) => {

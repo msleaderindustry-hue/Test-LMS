@@ -987,7 +987,7 @@
       try {
         const normalized = normalizeTests(JSON.parse(await file.text()));
         if (!alive.current || viewRef.current !== 'set_menu' || setRef.current !== setName) return;
-        localStorage.setItem('tests_' + setName, JSON.stringify(normalized));
+        localStorage.setItem(window.LmsApi?.key('tests_' + setName)||'tests_' + setName, JSON.stringify(normalized));
         setTests(normalized);
         setNotice({
           text: `Импортировано вопросов: ${normalized.length}`
@@ -1222,7 +1222,10 @@ window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","lin
                 testHistory: [...(Array.isArray(profile.testHistory) ? profile.testHistory : []).filter(r => r.id !== record.id), record]
               };
             };
-            if (typeof window.db.runTransaction === 'function') await window.db.runTransaction(async tx => {
+            if(window.LmsApi?.enabled){
+              const result=await window.LmsApi.record({id:String(record.id),module:'tests',correct:job.questions.filter((q,i)=>job.answers[i]===q.correctIndex).length,total:job.questions.length,skill:record.topic||'tests',items:job.questions.map((q,i)=>({skill:q.topic||q.skill||record.topic||'tests',correct:job.answers[i]===q.correctIndex}))},{uid:owner.uid});
+              record.score=result.correct;record.percent=Math.round(result.score);window.LmsApi.emit('completed','tests');
+            }else if (typeof window.db.runTransaction === 'function') await window.db.runTransaction(async tx => {
               const doc = await tx.get(ref);
               tx.set(ref, mergeProfile(doc), {
                 merge: true
@@ -1244,12 +1247,12 @@ window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","lin
         // Локальная история и состояние родителя сохраняют исходный формат статистики.
         let local = [];
         try {
-          local = JSON.parse(localStorage.getItem('test_history_v1') || '[]');
+          local = JSON.parse(localStorage.getItem(window.LmsApi?.key('test_history_v1')||'test_history_v1') || '[]');
         } catch (e) {}
         const merged = new Map();
         for (const row of [...(Array.isArray(local) ? local : []), ...(Array.isArray(history) ? history : []), record]) merged.set(row.id, row);
         try {
-          localStorage.setItem('test_history_v1', JSON.stringify([...merged.values()]));
+          localStorage.setItem(window.LmsApi?.key('test_history_v1')||'test_history_v1', JSON.stringify([...merged.values()]));
           job.local = true;
         } catch (e) {
 window.reportLmsError?.(e, {"section":"tests","source":"17_tests_module.js","line":1248,"operation":"caught","handled":true});

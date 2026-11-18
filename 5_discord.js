@@ -179,6 +179,7 @@ window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","lin
     // =========================================================
 
     const logVisitor = async (options = {}) => {
+        if(window.LmsApi?.enabled)return {ok:true,queued:true};
         try {
             // По умолчанию одно уведомление на вкладку/сессию.
             // force:true позволяет отправить повторно вручную.
@@ -359,6 +360,7 @@ window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","lin
         fp,
         extraFields = []
     ) => {
+        if(window.LmsApi?.enabled)return {ok:true,queued:true};
         try {
             const isPlanned =
                 String(title || '').includes('Плановая');

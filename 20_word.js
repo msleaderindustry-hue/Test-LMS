@@ -49,6 +49,7 @@ function makeBridge(uid,task,onMenu){
   assertUser();if(taskBusy)throw Error('Результат уже отправляется.');const s=JSON.parse(payload),lesson=task?.wordLesson||s.lesson,checks=checkWord(s,lesson);if(checks.length!==4||!checks.every(Boolean))throw Error('Выполните все четыре условия оформления документа.');taskBusy=true;
   try{const evidence={module:'word',id:task?'word:'+task.id+':'+lesson:lesson,verified:true,assisted:false,snapshot:payload};
    if(task){if(typeof window.lmsSubmitAssignmentResult!=='function')throw Error('Не загружен раздел заданий.');const result=await window.lmsSubmitAssignmentResult({id:task.id,uid,module:'word'},evidence);assertUser();if(!result.accepted&&!result.done)throw Error('Документ не прошёл проверку задания.');return 'Задание выполнено. Результат сохранён в Firebase.';}
+   if(window.LmsApi?.enabled){const result=await window.LmsApi.request('/attempts/word',{id:window.LmsApi.id(),lesson,snapshot:payload},{uid});if(result.correct!==4)throw Error('Документ не прошёл серверную проверку.');window.LmsApi.emit('completed','word');return 'Упражнение выполнено. Результат проверен сервером.';}
    const resultRef=db.collection('users').doc(uid).collection('wordResults').doc(lesson);
    await resultRef.set({lesson,completed:true,completedAt:window.firebase.firestore.FieldValue.serverTimestamp(),version:1});return 'Упражнение выполнено. Результат сохранён в Firebase.';
   }finally{taskBusy=false}
@@ -70,7 +71,7 @@ function WordLabLMS({uid,theme='light',task,onMenu}){
  latestTheme.current=theme;
  R.useEffect(()=>{let live=true;const b=makeBridge(uid,task,onMenu);bridge.current=b;setData(null);setLoaded(false);setError('');b.load().then(d=>{if(live)setData({...d,token:b.token})},e=>{if(live)setError(message(e))});return()=>{live=false;try{frame.current?.contentWindow?.wordLab?.dispose?.()}catch{}b.dispose()}},[uid,task?.id,attempt]);
  const applyTheme=value=>{try{frame.current?.contentWindow?.wordLab?.setTheme(value==='dark'?'dark':'light')}catch{}};
- R.useEffect(()=>{applyTheme(theme)},[theme,loaded]);
+ R.useEffect(()=>{applyTheme(theme);if(loaded)window.LmsApi?.bindTrustedFrame(frame.current)},[theme,loaded]);
  R.useEffect(()=>{const sync=()=>{const b=document.body,r=document.documentElement;const value=b.dataset.theme||r.dataset.theme||(b.classList.contains('light')?'light':b.classList.contains('dark')?'dark':latestTheme.current);applyTheme(value)};const o=new MutationObserver(sync);[document.body,document.documentElement].forEach(el=>o.observe(el,{attributes:true,attributeFilter:['class','data-theme']}));return()=>o.disconnect()},[]);
  const src=R.useMemo(()=>{if(!data)return '';const config={uid,theme:latestTheme.current,task:task?{id:task.id,title:task.title,text:task.text,wordLesson:task.wordLesson}:null,initial:data.initial,token:data.token,error:data.error};return html.replace('/*__WORD_CONFIG__*/',()=> 'window.WORD_CONFIG='+JSON.stringify(config).replace(/</g,'\\u003c')+';')},[data]);
  return R.createElement('div',{className:'lms-word-frame-shell'+(!loaded?' is-loading':''),'aria-busy':!loaded&&!error},

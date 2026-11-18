@@ -584,6 +584,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       h.lastAt = 0;
     }
     function runNow() {
+      if(window.LmsApi?.enabled)window.LmsApi.record({id:window.LmsApi.id(),module:'code',correct:0,total:0,mode:'preview',skill:'html-css-js'}).catch(()=>{});
       setRuntimeError(null);
       setSrcDoc(siteDocument(codeRef.current, true));
       setRunVersion(v => v + 1);

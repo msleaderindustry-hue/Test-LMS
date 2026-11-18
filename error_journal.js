@@ -231,6 +231,7 @@
     async function remove() {
       if (lock.current || word !== 'УДАЛИТЬ' || !selected.length) return;
       const ids = [...selected];
+      if(window.LmsApi?.enabled){setBusy(true);setError('');try{await window.LmsApi.propose('cleanup',{kind:'diagnostics',recordIds:ids});setConfirm(false);setNote('Предложение открыто в ИИ-чате. Записи пока сохранены.');}catch(e){setError(e.message);}finally{setBusy(false);}return;}
       lock.current = true;
       setBusy(true);
       setError('');

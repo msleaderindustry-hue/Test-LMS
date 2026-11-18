@@ -3375,7 +3375,9 @@ finish(Object.assign(error,{code:'ENGINE'}));}
     if(data.error)throw Object.assign(new Error('AI service rejected the request'),{code:'NETWORK'});
     const text=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
     if(text.length>90000)throw Object.assign(new Error('Response is too large'),{code:'STRUCTURE'});
-    return JSON.parse(text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
+    const parsed=JSON.parse(text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
+    if(data.lmsMaterialId)parsed.lmsMaterialId=data.lmsMaterialId;
+    return parsed;
   }
   async function auditLesson(lesson,signal) {
     // A second model pass checks language/intent; arithmetic comes ONLY from the worker.
@@ -4477,8 +4479,11 @@ resultValue рассчитан отдельным вычислителем. Не
   }) => {
     useInjectStyles();
     const categories = Object.keys(EXCEL_DATABASE);
-    const [activeCategory, setActiveCategory] = useState(categories[0]);
-    const [activeFormulaName, setActiveFormulaName] = useState(EXCEL_DATABASE[categories[0]][0]);
+    const assignedSkill=window.LmsApi?.enabled?window.__lmsAssignmentContext?.excelSkill:null;
+    const assignedName=assignedSkill?Object.keys(FUNCTION_META).find(name=>FUNCTION_META[name].en===assignedSkill):null;
+    const initialCategory=categories.find(c=>EXCEL_DATABASE[c].includes(assignedName))||categories[0];
+    const [activeCategory, setActiveCategory] = useState(initialCategory);
+    const [activeFormulaName, setActiveFormulaName] = useState(assignedName||EXCEL_DATABASE[categories[0]][0]);
     const activeNameRef = useRef(activeFormulaName);
     activeNameRef.current = activeFormulaName;
     const [openCats, setOpenCats] = useState(new Set([categories[0]]));
@@ -4590,7 +4595,7 @@ resultValue рассчитан отдельным вычислителем. Не
       saveQueueRef.current = saveQueueRef.current.catch(() => {}).then(async () => {
         try {
           if(window.auth?.currentUser?.uid!==uid)throw Error('Account changed');
-          await window.db.collection('users').doc(uid).set({
+          if(!window.LmsApi?.enabled)await window.db.collection('users').doc(uid).set({
             excelProgress: next
           }, {
             merge: true
@@ -4880,6 +4885,7 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
     const checkAnswer = async () => {
       if (!currentLesson?.resultVerified || isGenerating || checkingRef.current || solvedRef.current || inputValue.trim() === '=') return;
       const checkedRequestId = requestIdRef.current;
+      const serverAttemptId=window.LmsApi?.enabled?window.LmsApi.id():null;
       checkingRef.current = true;
       setIsChecking(true);
       let isCorrect = false;
@@ -4902,6 +4908,10 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
         }
       }
       if (checkedRequestId !== requestIdRef.current || solvedRef.current) return;
+      if(window.LmsApi?.enabled){
+        try{const result=await window.LmsApi.request('/attempts/excel',{id:serverAttemptId,materialId:currentLesson.lmsMaterialId,formula:inputValue,assisted:assistedRef.current},{uid:accountRef.current});isCorrect=result.correct===1;if(result.progress?.excelProgress){progressRef.current=result.progress.excelProgress;setProgress(result.progress.excelProgress);}}
+        catch(e){pushToast(e.message);return;}
+      }
       setAttempts(prev => prev + 1);
       if (isCorrect) {
         solvedRef.current = true;
@@ -4911,17 +4921,17 @@ window.reportLmsError?.(error, {"section":"excel","source":"15_excel_trainer.js"
         if (assistedRef.current) return;
         setMasteryCount(prev => prev + 1);
         const previous = progressRef.current;
-        const xp = previous.xp + getXp(currentLesson, getDifficulty(activeFormulaName, currentLesson));
+        const xp = previous.xp + (window.LmsApi?.enabled?0:getXp(currentLesson, getDifficulty(activeFormulaName, currentLesson)));
         const next = {
           xp,
           level: 1 + Math.floor(xp / 500),
-          completedLessons: previous.completedLessons + 1,
-          streak: previous.streak + 1
+          completedLessons: previous.completedLessons + (window.LmsApi?.enabled?0:1),
+          streak: previous.streak + (window.LmsApi?.enabled?0:1)
         };
         progressRef.current = next;
         setProgress(next);
         const assignment=assignmentLessonRef.current;
-        persistProgress(next,assignment?{context:assignment.context,evidence:{id:assignment.id,module:'excel',verified:currentLesson.resultVerified===true,correct:true,assisted:false}}:null);
+        persistProgress(next,assignment?{context:assignment.context,evidence:{id:serverAttemptId||assignment.id,module:'excel',materialId:currentLesson.lmsMaterialId,formula:inputValue,verified:currentLesson.resultVerified===true,correct:true,assisted:false}}:null);
       } else {
         setShake(true);
         setAnswerStatus('wrong');

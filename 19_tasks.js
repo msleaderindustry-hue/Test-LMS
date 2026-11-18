@@ -121,7 +121,7 @@ function LmsMyAssignments({
   React.useEffect(() => {
     setItems([]);
     setLoading(true);
-    return window.db.collection('lmsAssignments').where('studentIds', 'array-contains', uid).onSnapshot(s => {
+    return (window.LmsApi?.enabled ? window.db.collection('users').doc(uid).collection('assignments') : window.db.collection('lmsAssignments').where('studentIds', 'array-contains', uid)).onSnapshot(s => {
       setItems(s.docs.map(d => ({
         id: d.id,
         ...d.data()
@@ -321,6 +321,7 @@ function LmsAssignmentCard({
   }, error));
 }
 async function lmsAssignmentWrite(id, uid, action, result) {
+  if(window.LmsApi?.enabled){const response=await window.LmsApi.request('/assignments/'+id+'/'+action,result||{}, {uid});return {...window.LmsApi.revive(response.task),_serverDone:response.done===true};}
   const db = window.db,
     ref = db.collection('lmsAssignments').doc(id),
     pr = ref.collection('progress').doc(uid);
@@ -679,6 +680,7 @@ function lmsSubmitTx(context, evidence, minimal) {
 window.lmsSubmitAssignmentResult = async function (context, evidence) {
   if (!context?.id || context.uid !== window.auth?.currentUser?.uid) throw lmsErr('Аккаунт изменился. Откройте задание заново.', 'lms/account', false);
   if (!evidence) throw lmsErr('Нет данных результата. Откройте задание заново.', 'lms/evidence', false);
+  if(window.LmsApi?.enabled)return window.LmsApi.request('/assignments/'+context.id+'/finish',evidence,{uid:context.uid});
   try {
     return await lmsSubmitTx(context, evidence, false);
   } catch (e) {
@@ -767,7 +769,7 @@ function LmsAssignedTyping({
     setStatus('Сохраняем результат…');
     try {
       const live = await lmsAssignmentWrite(task.id, uid, 'finish', data.current.final);
-      const ok = Math.round(data.current.index / (data.current.index + data.current.errors) * 100) >= live.minAccuracy;
+      const ok = window.LmsApi?.enabled ? live._serverDone===true : Math.round(data.current.index / (data.current.index + data.current.errors) * 100) >= live.minAccuracy;
       setPassed(ok);
       setStatus(ok ? 'Задание выполнено. Преподаватель увидит результат.' : 'Результат сохранён. Нужно повысить точность — попробуй ещё раз.');
     } catch (e) {
@@ -800,7 +802,7 @@ function LmsAssignedTyping({
     className: "la-run-head"
   }, React.createElement("span", {className:"la-practice-icon", "aria-hidden":true}, "⌨"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "ПРАКТИКА · ПЕЧАТЬ"), /*#__PURE__*/React.createElement("h3", null, task.title)), React.createElement("span", {className:"la-run-goal"}, "Цель · ", task.minAccuracy, "% точности")), /*#__PURE__*/React.createElement("div", {
     className: "la-run-metrics"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ваша точность"), /*#__PURE__*/React.createElement("strong", null, index + errors ? Math.round(index / (index + errors) * 100) : 100, /*#__PURE__*/React.createElement("i", null, "%"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ошибки"), /*#__PURE__*/React.createElement("strong", null, errors)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Прогресс"), /*#__PURE__*/React.createElement("strong", null, Math.round(index / task.text.length * 100), /*#__PURE__*/React.createElement("i", null, "%")))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ваша точность"), /*#__PURE__*/React.createElement("strong", null, index + errors ? Math.round(index / (index + errors) * (window.LmsApi?.enabled?10000:100))/(window.LmsApi?.enabled?100:1) : 100, /*#__PURE__*/React.createElement("i", null, "%"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Ошибки"), /*#__PURE__*/React.createElement("strong", null, errors)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "Прогресс"), /*#__PURE__*/React.createElement("strong", null, Math.round(index / task.text.length * 100), /*#__PURE__*/React.createElement("i", null, "%")))), /*#__PURE__*/React.createElement("div", {
     className: "la-run-paper"
   }, /*#__PURE__*/React.createElement("div", {
     className: "la-run-text-head"
@@ -1435,7 +1437,7 @@ function AssignmentActive({
   const task = live || initialTask,
     stale = !!live && live.status !== 'assigned';
   // Актуальная версия задания: преподаватель мог изменить цель или категорию.
-  React.useEffect(() => window.db.collection('lmsAssignments').doc(initialTask.id).onSnapshot(s => setLive(s.exists ? {
+  React.useEffect(() => (window.LmsApi?.enabled?window.db.collection('users').doc(uid).collection('assignments'):window.db.collection('lmsAssignments')).doc(initialTask.id).onSnapshot(s => setLive(s.exists ? {
     ...s.data(),
     id: s.id
   } : {
@@ -1453,6 +1455,7 @@ function AssignmentActive({
       uid,
       module: task.module,
       bank: task.hotkeyBank || 'any',
+      excelSkill: task.excelSkill || null,
       target: Number(task.target) || 1
     };
     lmsSetActiveAssignment(ctx);

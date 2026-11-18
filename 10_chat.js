@@ -230,7 +230,8 @@ window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.
           setContactError('Не удалось получить настройки доступа к контактам.');
         }
       });
-      const b = db.collection('users').onSnapshot(s => {
+      const contactsWatch = window.LmsApi?.enabled ? window.LmsApi.watchDirectory : db.collection('users').onSnapshot.bind(db.collection('users'));
+      const b = contactsWatch(s => {
         if (dead) return;
         setContacts(s.docs.map(d => ({
           ...d.data(),
@@ -263,7 +264,8 @@ window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.
       let dead = false;
       const stops = allowed.map(u => {
         const id = [uid, u.uid].sort().join('_');
-        return db.collection('private_chats').doc(id).collection('messages').where('senderId', '==', u.uid).where('read', '==', false).onSnapshot(s => {
+        const query=db.collection('private_chats').doc(id).collection('messages').where('senderId', '==', u.uid).where('read', '==', false);
+        return (window.LmsApi?.enabled?window.LmsApi.chatSource(u.uid,query):query).onSnapshot(s => {
           if (!dead) setCounts(p => ({
             ...p,
             [u.uid]: s.docs.filter(d => visible(d.data(), uid)).length
@@ -281,7 +283,8 @@ window.reportLmsError?.(__lmsSnapshotError, {"section":"chat","source":"10_chat.
       setLoading(true);
       const id = [uid, peerId].sort().join('_');
       // Existing history mixes ISO strings and Firestore Timestamp values: normalize before sorting.
-      const stop = db.collection('private_chats').doc(id).collection('messages').onSnapshot({
+      const query=db.collection('private_chats').doc(id).collection('messages');
+      const stop = (window.LmsApi?.enabled?window.LmsApi.chatSource(peerId,query):query).onSnapshot({
         includeMetadataChanges: true
       }, s => {
         if (dead) return;
@@ -401,6 +404,7 @@ window.reportLmsError?.(__lmsCaughtError, {"section":"chat","source":"10_chat.js
     };
     const remove = async all => {
       if (!menu || deleting || !peerId) return;
+      if(window.LmsApi?.enabled&&all){notify('Удаление для всех доступно преподавателю через подтверждение очистки.',true);return;}
       const m = messages.find(x => x.id === menu.id);
       if (!m || all && m.senderId !== uid) return;
       setDeleting(true);

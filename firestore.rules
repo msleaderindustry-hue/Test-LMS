@@ -1,0 +1,227 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function owner() { return signed() && request.auth.uid == '1qhlWSbqAxd1dAvo2Nw92gdJhNk1'; }
+    function self(uid) { return signed() && request.auth.uid == uid; }
+    function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)).data; }
+    function active() { return signed() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && profile(request.auth.uid).get('isBanned',false) != true; }
+    function moduleAllowed(name) { return active() && (profile(request.auth.uid).get('allowedModules',null) == null || name in profile(request.auth.uid).allowedModules); }
+    function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+    function wordLesson(id) { return id in ['memo','report','table','letter','resume','contract','announce','fonts','poster','quote','steps','menu','checklist','sources','schedule','tariffs','essay','final','links']; }
+
+    match /users/{uid} {
+      allow get: if owner() || self(uid);
+      allow list: if owner();
+      allow create: if self(uid)
+        && request.resource.data.keys().hasOnly(['email','nickname','displayName','photoURL','role','isBanned','allowedModules','excelHintsEnabled','chatContactMode','chatAllowedUsers','assignedTests','registeredAt','loginCount','profileVersion'])
+        && request.resource.data.role == 'student' && request.resource.data.isBanned == false
+        && request.resource.data.allowedModules == ['chat','ai_chat','typing','hotkeys','code','flashcards','excel','stats']
+        && request.resource.data.assignedTests == [] && request.resource.data.chatAllowedUsers == []
+        && request.resource.data.chatContactMode == 'all' && request.resource.data.excelHintsEnabled == true
+        && request.resource.data.loginCount == 0 && request.resource.data.profileVersion == 3
+        && request.resource.data.registeredAt == request.time
+        && request.resource.data.email == request.auth.token.get('email','')
+        && request.resource.data.nickname is string && request.resource.data.nickname.size() <= 150
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 200
+        && request.resource.data.photoURL is string && request.resource.data.photoURL.size() <= 2000;
+      // Administrative settings remain compatible; destructive resets use the server's
+      // proposal/backup flow. An editable profile role is never an authorization source.
+      allow update: if owner() && changedOnly(['nickname','allowedModules','excelHintsEnabled','hotkeyHintsEnabled','chatContactMode','chatAllowedUsers','isBanned','adminAudit','assignedTests','role'])
+        && (uid != request.auth.uid || request.resource.data.role == resource.data.role && request.resource.data.isBanned == resource.data.isBanned)
+        && request.resource.data.get('assignedTests',[]).size() >= resource.data.get('assignedTests',[]).size()
+        && request.resource.data.get('assignedTests',[]).hasAll(resource.data.get('assignedTests',[]));
+      // Result projections are written only by the authenticated server.
+      allow update: if self(uid) && active()
+        && changedOnly(['nickname','lastSeenAt','lastVisitAt','lastLoginAt','loginCount'])
+        && request.resource.data.nickname is string && request.resource.data.nickname.size() > 0 && request.resource.data.nickname.size() <= 150
+        && request.resource.data.get('loginCount',0) >= resource.data.get('loginCount',0)
+        && request.resource.data.get('loginCount',0) <= resource.data.get('loginCount',0) + 1
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastSeenAt']) || request.resource.data.lastSeenAt == request.time)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastVisitAt']) || request.resource.data.lastVisitAt == request.time)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastLoginAt']) || request.resource.data.lastLoginAt == request.time)
+        && request.resource.data.get('testHistory',[]).size() >= resource.data.get('testHistory',[]).size()
+        && request.resource.data.get('testHistory',[]).size() <= resource.data.get('testHistory',[]).size() + 1
+        && request.resource.data.get('testHistory',[]).hasAll(resource.data.get('testHistory',[]))
+        && request.resource.data.get('typingProgress',{}).get('testsCompleted',0) >= resource.data.get('typingProgress',{}).get('testsCompleted',0)
+        && request.resource.data.get('typingProgress',{}).get('testsCompleted',0) <= resource.data.get('typingProgress',{}).get('testsCompleted',0) + 1
+        && request.resource.data.get('hotkeyProgress',{}).get('sessionsPlayed',0) >= resource.data.get('hotkeyProgress',{}).get('sessionsPlayed',0)
+        && request.resource.data.get('hotkeyProgress',{}).get('sessionsPlayed',0) <= resource.data.get('hotkeyProgress',{}).get('sessionsPlayed',0) + 1
+        && request.resource.data.get('excelProgress',{}).get('completedLessons',0) >= resource.data.get('excelProgress',{}).get('completedLessons',0)
+        && request.resource.data.get('excelProgress',{}).get('completedLessons',0) <= resource.data.get('excelProgress',{}).get('completedLessons',0) + 1;
+      allow delete: if false;
+
+      match /activity/{eventId} {
+        allow read: if owner() || self(uid) && active();
+        allow create: if self(uid) && active()
+          && request.resource.data.keys().hasOnly(['at','type','section','sectionLabel','action','label','path','view','details','duration','device'])
+          && request.resource.data.at == request.time
+          && request.resource.data.type is string && request.resource.data.type.size() <= 50
+          && request.resource.data.section is string && request.resource.data.section.size() <= 50;
+        allow update, delete: if false;
+      }
+      match /assignments/{assignmentId} { allow read: if owner() || self(uid) && moduleAllowed('assignments'); allow write: if false; }
+      match /wordDocuments/{documentId} {
+        function validDraft() {
+          let d=request.resource.data;
+          return d.keys().hasAll(['version','payload','title','revision','updatedAt'])
+            && d.keys().hasOnly(['version','payload','title','revision','updatedAt'])
+            && d.version == 1 && d.payload is string && d.payload.size() > 0 && d.payload.size() <= 800000
+            && d.title is string && d.title.size() <= 120 && d.revision is int && d.revision >= 1 && d.updatedAt == request.time;
+        }
+        allow read: if owner() || self(uid) && moduleAllowed('word');
+        allow create: if self(uid) && moduleAllowed('word') && validDraft() && request.resource.data.revision == 1;
+        allow update: if self(uid) && moduleAllowed('word') && validDraft() && request.resource.data.revision == resource.data.revision + 1;
+        allow delete: if false;
+      }
+      match /wordResults/{lessonId} {
+        allow read: if owner() || self(uid) && moduleAllowed('word');
+        allow write: if false;
+      }
+    }
+    match /lmsAssignments/{assignmentId} {
+      allow read: if owner(); allow write: if false;
+      match /progress/{uid} { allow read: if owner() || self(uid) && moduleAllowed('assignments'); allow write: if false; }
+    }
+    match /private_chats/{chatId} {
+      function permits(a,b) {
+        let p=profile(a);
+        return p.get('isBanned',false) != true && (p.get('allowedModules',null) == null || 'chat' in p.allowedModules)
+          && (a == '1qhlWSbqAxd1dAvo2Nw92gdJhNk1' || b == '1qhlWSbqAxd1dAvo2Nw92gdJhNk1'
+            || p.get('chatContactMode','all') == 'all' || p.get('chatContactMode','all') == 'selected' && b in p.get('chatAllowedUsers',[]));
+      }
+      function participant() {
+        let ids=get(/databases/$(database)/documents/private_chats/$(chatId)).data.participants;
+        return moduleAllowed('chat') && ids.size() == 2 && request.auth.uid in ids && permits(ids[0],ids[1]) && permits(ids[1],ids[0]);
+      }
+      allow get: if owner() || participant(); allow list, write: if false;
+      match /messages/{messageId} {
+        allow read: if owner() || participant();
+        allow create: if participant() && request.resource.data.keys().hasOnly(['text','senderId','createdAt','clientCreatedAt','deletedFor','deletedForEveryone','read'])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 4000
+          && request.resource.data.createdAt == request.time && request.resource.data.clientCreatedAt is int
+          && request.resource.data.deletedFor == [] && request.resource.data.deletedForEveryone == false && request.resource.data.read == false;
+        allow update: if participant()
+          && ((changedOnly(['read']) && resource.data.senderId != request.auth.uid && request.resource.data.read == true)
+            || (changedOnly(['deletedFor']) && request.resource.data.deletedFor.hasAll(resource.data.deletedFor)
+              && request.resource.data.deletedFor.hasOnly(resource.data.deletedFor.concat([request.auth.uid]))));
+        allow delete: if false;
+      }
+    }
+    match /platformErrors/{eventId} {
+      allow read: if owner(); allow update, delete: if false;
+      allow create: if active()
+        && request.resource.data.keys().hasAll(['uid','section','source','line','operation','code','message','status','severity','count','clientAt','device','version','at'])
+        && request.resource.data.keys().hasOnly(['uid','section','source','line','operation','code','message','status','severity','count','clientAt','device','version','at'])
+        && request.resource.data.uid == request.auth.uid && request.resource.data.version == 1 && request.resource.data.at == request.time
+        && request.resource.data.section in ['platform','auth','admin','chat','typing','hotkeys','code','flashcards','excel','ai_chat','tests','chess','activity','sidebar','stats','landing','discord','word','assignments']
+        && request.resource.data.source is string && request.resource.data.source.size() <= 80
+        && request.resource.data.operation is string && request.resource.data.operation.size() <= 80
+        && request.resource.data.code is string && request.resource.data.code.size() <= 40
+        && request.resource.data.message is string && request.resource.data.message.size() <= 180
+        && request.resource.data.line is int && request.resource.data.line >= 0 && request.resource.data.line <= 1000000
+        && request.resource.data.status is int && request.resource.data.status >= 0 && request.resource.data.status <= 599
+        && request.resource.data.count is int && request.resource.data.count > 0 && request.resource.data.count <= 10000
+        && request.resource.data.clientAt is int && request.resource.data.clientAt > 0
+        && request.resource.data.device in ['mobile','desktop'] && request.resource.data.severity in ['warning','error'];
+    }
+    // Existing real-time game transports are isolated from educational and admin data.
+    match /typeDrivePresence/{uid} {
+      allow read: if moduleAllowed('typing') || owner();
+      allow create, update: if self(uid) && moduleAllowed('typing')
+        && request.resource.data.keys().hasOnly(['name','vehicle','online','lastSeen','session','roomId'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 150
+        && request.resource.data.vehicle in ['car','bike','heli'] && request.resource.data.online is bool
+        && request.resource.data.lastSeen == request.time && request.resource.data.session is string
+        && request.resource.data.roomId is string && request.resource.data.roomId.size() <= 128;
+      allow delete: if false;
+    }
+    match /typeDriveRooms/{roomId} {
+      function member(d) { return request.auth.uid == d.hostUid || request.auth.uid == d.guestUid; }
+      allow read: if owner() || moduleAllowed('typing') && member(resource.data);
+      allow create: if moduleAllowed('typing') && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.guestUid is string && request.resource.data.guestUid != request.auth.uid
+        && request.resource.data.participants == [request.auth.uid,request.resource.data.guestUid]
+        && request.resource.data.stage == 'invited' && request.resource.data.createdAt == request.time;
+      allow update: if moduleAllowed('typing') && member(resource.data)
+        && request.resource.data.hostUid == resource.data.hostUid && request.resource.data.guestUid == resource.data.guestUid
+        && request.resource.data.participants == resource.data.participants && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    match /chessRooms/{roomId} {
+      function access() { return moduleAllowed('chess'); }
+      function member(d) { return request.auth.uid == d.wUid || request.auth.uid == d.bUid; }
+      function side(d) { return request.auth.uid == d.wUid ? 'w' : 'b'; }
+      function initialFen() { return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'; }
+      function bank(d,c) { return (c == 'w' ? d.wMs : d.bMs) - (d.debtSide == c ? d.turnAt.toMillis()-d.debtSince.toMillis() : 0); }
+      function schema(d) {
+        return d.keys().hasOnly(['version','wUid','wName','bUid','bName','initialMs','incrementMs','wMs','bMs','turn','turnAt','debtSide','debtSince','status','fen','moves','ply','round','revision','offer','rematch','result','resultBy','createdAt','updatedAt','endedAt'])
+          && d.version == 1 && d.wUid is string && d.bUid is string
+          && d.wName is string && d.wName.size()>0 && d.wName.size()<=32 && d.bName is string && d.bName.size()<=32
+          && d.initialMs in [180000,300000,600000,900000] && d.incrementMs in [0,2000,5000]
+          && d.wMs is int && d.bMs is int && d.wMs>=0 && d.bMs>=0
+          && d.moves is list && d.moves.size()<=1200 && d.ply==d.moves.size()
+          && d.fen is string && d.fen.size()>=15 && d.fen.size()<=128
+          && d.turn in ['w','b'] && d.status in ['waiting','playing','finished','cancelled']
+          && d.round is int && d.round>=0 && d.revision is int && d.offer in ['','w','b'] && d.rematch in ['','w','b']
+          && d.debtSide in ['','w','b'] && (d.debtSince==null || d.debtSince is timestamp)
+          && (d.turnAt==null || d.turnAt is timestamp) && d.createdAt is timestamp && d.updatedAt is timestamp
+          && (d.endedAt==null || d.endedAt is timestamp) && d.result in ['','mate','draw','agreement','resign','timeout','cancelled'] && d.resultBy in ['','w','b'];
+      }
+      function join(d,n) {
+        return d.status=='waiting' && d.bUid=='' && request.auth.uid!=d.wUid && request.time<d.createdAt+duration.value(7,'d')
+          && changedOnly(['wUid','wName','bUid','bName','status','turnAt','revision','updatedAt'])
+          && ((n.wUid==d.wUid && n.wName==d.wName && n.bUid==request.auth.uid && n.bName.size()>0)
+            || (n.bUid==d.wUid && n.bName==d.wName && n.wUid==request.auth.uid && n.wName.size()>0))
+          && n.status=='playing' && n.turnAt==request.time;
+      }
+      function move(d,n) {
+        let c=side(d);
+        return d.status=='playing' && c==d.turn
+          && changedOnly(['fen','moves','ply','turn','wMs','bMs','debtSide','debtSince','turnAt','offer','status','result','resultBy','endedAt','revision','updatedAt'])
+          && n.moves.size()==d.moves.size()+1 && n.moves==d.moves.concat([n.moves[d.moves.size()]])
+          && n.moves[d.moves.size()] is string && n.moves[d.moves.size()].size()<=16 && n.turn==(c=='w'?'b':'w')
+          && n.wMs==bank(d,'w')+(c=='w'?d.incrementMs:0) && n.bMs==bank(d,'b')+(c=='b'?d.incrementMs:0)
+          && request.time.toMillis()-d.turnAt.toMillis()<bank(d,c)
+          && n.debtSide==c && n.debtSince==d.turnAt && n.turnAt==request.time && n.offer==''
+          && ((n.status=='playing' && n.result=='' && n.resultBy=='' && n.endedAt==null)
+            || (n.status=='finished' && n.endedAt==request.time && ((n.result=='mate' && n.resultBy==c)||(n.result=='draw'&&n.resultBy==''))));
+      }
+      function offerDraw(d,n) { return d.status=='playing' && changedOnly(['offer','revision','updatedAt']) && (n.offer==side(d)||(d.offer!=''&&n.offer=='')); }
+      function finish(d,n) {
+        return d.status=='playing' && n.status=='finished' && n.endedAt==request.time && n.offer==''
+          && changedOnly(['status','endedAt','result','resultBy','offer','revision','updatedAt'])
+          && ((n.result=='resign' && n.resultBy==(side(d)=='w'?'b':'w'))
+            || (n.result=='agreement' && d.offer!='' && d.offer!=side(d) && n.resultBy=='')
+            || (request.time.toMillis()-d.turnAt.toMillis()>=bank(d,d.turn) && ((n.result=='timeout'&&n.resultBy==(d.turn=='w'?'b':'w'))||(n.result=='draw'&&n.resultBy==''))));
+      }
+      function rematchVote(d,n) { return d.status=='finished' && changedOnly(['rematch','revision','updatedAt']) && n.rematch==side(d); }
+      function samePlayers(d,n) { return (n.wUid==d.wUid && n.wName==d.wName && n.bUid==d.bUid && n.bName==d.bName)||(n.wUid==d.bUid && n.wName==d.bName && n.bUid==d.wUid && n.bName==d.wName); }
+      function rematchStart(d,n) {
+        return d.status=='finished' && d.rematch!='' && d.rematch!=side(d)
+          && changedOnly(['wUid','wName','bUid','bName','fen','moves','ply','turn','wMs','bMs','debtSide','debtSince','turnAt','status','result','resultBy','endedAt','offer','rematch','round','revision','updatedAt'])
+          && samePlayers(d,n) && n.round==d.round+1 && n.moves==[] && n.fen==initialFen() && n.turn=='w'
+          && n.wMs==d.initialMs && n.bMs==d.initialMs && n.debtSide=='' && n.debtSince==null
+          && n.turnAt==request.time && n.status=='playing' && n.result=='' && n.resultBy=='' && n.endedAt==null && n.offer=='' && n.rematch=='';
+      }
+      function cancelRoom(d,n) { return d.status=='waiting' && request.auth.uid==d.wUid && changedOnly(['status','result','resultBy','endedAt','revision','updatedAt']) && n.status=='cancelled' && n.result=='cancelled' && n.resultBy=='' && n.endedAt==request.time; }
+      function actionAllowed(d,n) { return d.status=='waiting' ? (n.status=='playing'?join(d,n):cancelRoom(d,n)) : (member(d)&&(d.status=='playing' ? (n.ply==d.ply+1?move(d,n):(n.status=='finished'?finish(d,n):offerDraw(d,n))) : (d.status=='finished'&&(n.round==d.round+1?rematchStart(d,n):rematchVote(d,n))))); }
+      allow get: if owner() || access() && (!exists(/databases/$(database)/documents/chessRooms/$(roomId)) || resource.data.status=='waiting' || member(resource.data));
+      allow list: if owner();
+      allow create: if access() && roomId.matches('^[a-f0-9]{12}$') && schema(request.resource.data)
+        && request.resource.data.wUid==request.auth.uid && request.resource.data.bUid=='' && request.resource.data.bName=='' && request.resource.data.status=='waiting'
+        && request.resource.data.fen==initialFen() && request.resource.data.moves==[]
+        && request.resource.data.wMs==request.resource.data.initialMs && request.resource.data.bMs==request.resource.data.initialMs
+        && request.resource.data.turn=='w' && request.resource.data.turnAt==null && request.resource.data.debtSide=='' && request.resource.data.debtSince==null
+        && request.resource.data.round==0 && request.resource.data.revision==0 && request.resource.data.offer=='' && request.resource.data.rematch==''
+        && request.resource.data.result=='' && request.resource.data.resultBy=='' && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && request.resource.data.endedAt==null;
+      allow update: if access() && schema(request.resource.data) && request.resource.data.revision==resource.data.revision+1 && request.resource.data.updatedAt==request.time && actionAllowed(resource.data,request.resource.data);
+      allow delete: if false;
+    }
+    // All control, backup, audit, ledger and future collections are server-only.
+    // A permissive recursive rule here would invalidate every restriction above.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -58,6 +58,7 @@ console.warn('[activity] presence:',e);}
   }
   function selectSection(section,options={}) {
     const value=short(section).toLowerCase();
+    window.LmsApi?.navigate(sectionOf(value));
     if(!value || ['loading','login','auth'].includes(value))return;
     explicit=true;
     screen={section:sectionOf(value),view:short(options.view || value),label:short(options.label || '')};

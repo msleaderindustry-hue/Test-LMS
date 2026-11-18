@@ -182,6 +182,7 @@
         serial: s.serial + 1,
         direction: 1
       });
+      if(next<0&&window.LmsApi?.enabled)window.LmsApi.record({id:window.LmsApi.id(),module:'flashcards',correct:ratings.filter(x=>x==='known').length,total:ratings.length,mode:'self-assessment',skill:'flashcards'}).catch(()=>window.LmsApi.showCard({text:'Оценки карточек не синхронизированы. Повторите занятие при наличии связи.'}));
     }
     function restart(difficult = false) {
       const s = state.current;

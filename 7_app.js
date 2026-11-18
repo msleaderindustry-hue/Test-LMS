@@ -132,7 +132,7 @@ function loadWordModule() {
       } else resolve(window.WordLabLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Word заняла слишком много времени.')), 60000);
-    script.src = new URL('20_word.js?v=3.4', document.baseURI).href;
+    script.src = new URL('20_word.js?v=20261118-ai2', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.WordLabLMS ? null : new Error('Не удалось запустить Word.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Word. Проверь подключение.'));
@@ -189,7 +189,7 @@ function loadExcelModule() {
       } else resolve(window.ExcelTrainerLMS);
     };
     const timer = setTimeout(() => finish(new Error('Загрузка Excel заняла слишком много времени.')), 60000);
-    script.src = new URL('15_excel_trainer.js?v=selected-181', document.baseURI).href;
+    script.src = new URL('15_excel_trainer.js?v=20261118-ai2', document.baseURI).href;
     script.async = true;
     script.onload = () => finish(window.ExcelTrainerLMS ? null : new Error('Не удалось запустить Excel.'));
     script.onerror = () => finish(new Error('Не удалось загрузить Excel. Проверь подключение.'));
@@ -349,7 +349,7 @@ function App() {
   const [profileRetry, setProfileRetry] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const isAdmin = userRole === 'admin';
+  const isAdmin = window.LmsApi?.enabled ? window.LmsApi.isOwner() : userRole === 'admin';
   const appReady = !isAuthLoading && !!user && !!userData && Array.isArray(teacherTests) && Array.isArray(allowedModules);
 
   // Показывается ли сейчас бургер — от этого зависит верхний отступ контента
@@ -361,12 +361,12 @@ function App() {
 
   const loadData = () => {
     try {
-      const raw = localStorage.getItem('test_sets_list');
+      const raw = localStorage.getItem(window.LmsApi?.key('test_sets_list')||'test_sets_list');
       setSets(raw ? JSON.parse(raw) : []);
       if (!raw) {
-        localStorage.setItem('test_sets_list', JSON.stringify([]));
+        localStorage.setItem(window.LmsApi?.key('test_sets_list')||'test_sets_list', JSON.stringify([]));
       }
-      setHistory(JSON.parse(localStorage.getItem('test_history_v1') || '[]'));
+      setHistory(JSON.parse(localStorage.getItem(window.LmsApi?.key('test_history_v1')||'test_history_v1') || '[]'));
     } catch (error) {
       window.reportLmsError?.(error, {
         "section": "platform",
@@ -400,6 +400,7 @@ function App() {
     // Только здесь пользователь считается полностью готовым.
     setUser(currentUser);
   };
+  useEffect(()=>{if(window.LmsApi?.enabled)loadData();},[user?.uid]);
 
   // -----------------------------------------------------------------------
   // FIREBASE AUTH + ПРОФИЛЬ FIRESTORE
@@ -739,18 +740,18 @@ function App() {
     if (sets.includes(name)) return alert('Уже есть!');
     const newSets = [...sets, name];
     setSets(newSets);
-    localStorage.setItem('test_sets_list', JSON.stringify(newSets));
-    localStorage.setItem('tests_' + name, JSON.stringify([]));
+    localStorage.setItem(window.LmsApi?.key('test_sets_list')||'test_sets_list', JSON.stringify(newSets));
+    localStorage.setItem(window.LmsApi?.key('tests_' + name)||'tests_' + name, JSON.stringify([]));
   };
   const deleteSet = name => {
     const newSets = sets.filter(s => s !== name);
     setSets(newSets);
-    localStorage.setItem('test_sets_list', JSON.stringify(newSets));
-    localStorage.removeItem('tests_' + name);
+    localStorage.setItem(window.LmsApi?.key('test_sets_list')||'test_sets_list', JSON.stringify(newSets));
+    localStorage.removeItem(window.LmsApi?.key('tests_' + name)||'tests_' + name);
   };
   const openSet = name => {
     setCurrentSet(name);
-    setTests(JSON.parse(localStorage.getItem('tests_' + name)) || []);
+    setTests(JSON.parse(localStorage.getItem(window.LmsApi?.key('tests_' + name)||'tests_' + name)) || []);
     setView('set_menu');
   };
   const openTeacherAssignedTest = testInfo => {
@@ -759,6 +760,7 @@ function App() {
     setView('set_menu');
   };
   const removeTeacherTestStudent = async (testId, testTitle) => {
+    if(window.LmsApi?.enabled){window.LmsApi.showCard({text:'Назначенные тесты может убрать только преподаватель через подтверждение очистки.'});return;}
     if (!user?.uid || !Array.isArray(teacherTests)) return;
     try {
       const updatedTests = teacherTests.filter(t => t.id !== testId);
@@ -1045,7 +1047,8 @@ function App() {
         id: task.id,
         uid: user.uid,
         module: task.module,
-        bank: task.hotkeyBank || 'any'
+        bank: task.hotkeyBank || 'any',
+        excelSkill: task.excelSkill || null
       };
       setAssignedTask(task);
       setView(task.module);
@@ -1191,7 +1194,7 @@ function App() {
     key: assignedTask?.id || 'practice',
     theme: theme,
     onBack: () => setView('menu')
-  }))), appReady && allowedModules.includes('ai_chat') && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
+  }))), appReady && (isAdmin || allowedModules.includes('ai_chat')) && window.AIChatWidget && /*#__PURE__*/React.createElement(AppAssistantHost, null)));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(window.LmsErrorBoundary || React.Fragment, null, React.createElement(App, null)));
