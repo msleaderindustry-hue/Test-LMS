@@ -1,9 +1,0 @@
-# Local development only. Never commit real values.
-# Configure production secrets with wrangler secret put --config <worker-config>.
-GEMINI_API_KEY=
-FIREBASE_SERVICE_ACCOUNT=
-INTERNAL_DISCORD_TOKEN=
-# API Worker only; 32 random bytes encoded as Base64. Preserve across redeploys.
-BACKUP_ENCRYPTION_KEY=
-# Discord Worker only:
-DISCORD_WEBHOOK_URL=
