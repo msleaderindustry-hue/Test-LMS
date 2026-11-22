@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v8) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v9) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 8) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 9) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1031,7 +1031,22 @@
         background:linear-gradient(90deg,var(--surface) 25%,var(--surface-hover) 50%,var(--surface) 75%);
         background-size:200% 100%;animation:lmmShimmer 1.4s infinite linear;border:1px solid var(--border);
       }
-      @media(max-width:860px){.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
+      .lmm-charts-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;}
+      .lmm-chart-card{
+        background:var(--surface);border:1px solid var(--border);border-radius:18px;
+        padding:18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-card);
+        animation:lmmFadeUp .38s var(--ease) both;
+      }
+      .lmm-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+      .lmm-chart-head strong{font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
+      .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;}
+      .lmm-select{
+        font:inherit;font-size:12px;font-weight:700;color:var(--text);
+        background:var(--surface-2);border:1px solid var(--border-2);border-radius:10px;
+        padding:7px 10px;max-width:210px;cursor:pointer;
+      }
+      .lmm-chart-box{position:relative;height:255px;width:100%;}
+      @media(max-width:860px){.lmm-charts-grid{grid-template-columns:1fr;}.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
       @media(max-width:560px){.lmm-clean-grid{grid-template-columns:1fr;}.lmm-hero{padding:18px;}}
       @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
     `;
@@ -1076,7 +1091,161 @@
 
     let activeTab = 'group';
     let groupFilter = 'all';
+    let selectedChartUid = null;
     let lastCleanupPreview = null;
+    let activeCharts = [];
+
+    function destroyCharts() {
+      activeCharts.forEach(ch => { try { ch.destroy(); } catch (_) {} });
+      activeCharts = [];
+    }
+
+    function isDarkNow() {
+      const r = document.documentElement, b = document.body;
+      return b?.classList.contains('dark') || r.classList.contains('dark') || r.getAttribute('data-theme') === 'dark';
+    }
+
+    function renderGroupCharts(body, g) {
+      destroyCharts();
+      if (typeof window.Chart !== 'function') {
+        const host = body.querySelector('#lmmChartsHost');
+        if (host) host.innerHTML = '<div class="lmm-notice">Библиотека Chart.js не загрузилась — графики временно недоступны.</div>';
+        return;
+      }
+      if (!g.students.length) return;
+
+      const dark = isDarkNow();
+      const gridColor = dark ? 'rgba(148,163,184,0.14)' : 'rgba(22,32,51,0.08)';
+      const textColor = dark ? '#9fb0cf' : '#556582';
+      const titleColor = dark ? '#f1f5ff' : '#162033';
+
+      // Bar Chart: Готовность каждого ученика к уровню «профи»
+      const barCanvas = body.querySelector('#lmmBarChart');
+      if (barCanvas) {
+        const ordered = g.students.slice().sort((a, b) => b.pro.readiness - a.pro.readiness).slice(0, 12);
+        const barColors = ordered.map(s =>
+          s.pro.readiness >= 90 ? 'rgba(34,197,94,0.85)'
+          : s.pro.readiness >= 35 ? 'rgba(124,93,250,0.85)'
+          : 'rgba(245,158,11,0.85)'
+        );
+        const barChart = new window.Chart(barCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ordered.map(s => s.name.length > 14 ? s.name.slice(0, 13) + '…' : s.name),
+            datasets: [{
+              label: 'Готовность к «профи» (%)',
+              data: ordered.map(s => s.pro.readiness),
+              backgroundColor: barColors,
+              borderRadius: 8,
+              borderSkipped: false,
+              maxBarThickness: 34
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 550 },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: dark ? '#0f1626' : '#162033',
+                titleColor: '#ffffff',
+                bodyColor: '#dbe4ff',
+                padding: 10,
+                cornerRadius: 10,
+                callbacks: {
+                  afterLabel: ctx => {
+                    const st = ordered[ctx.dataIndex];
+                    return st ? [`Тесты: ${st.tests.avg}%`, `Печать: ${st.typing.cpm} зн/мин`] : '';
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                grid: { color: gridColor },
+                ticks: { color: textColor, font: { family: 'Montserrat', size: 11, weight: '600' }, callback: v => v + '%' }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { family: 'Montserrat', size: 11, weight: '600' } }
+              }
+            }
+          }
+        });
+        activeCharts.push(barChart);
+      }
+
+      // Radar Chart: Навыки выбранного ученика vs Среднее по группе
+      const radarCanvas = body.querySelector('#lmmRadarChart');
+      if (radarCanvas) {
+        const student = g.students.find(s => s.uid === selectedChartUid) || g.students[0];
+        selectedChartUid = student.uid;
+        const avgSkills = ['typing', 'tests', 'hotkeys', 'excel', 'word'].map(k =>
+          Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0)))
+        );
+        const stSkills = ['typing', 'tests', 'hotkeys', 'excel', 'word'].map(k =>
+          Number(student.pro.breakdown[k]) || 0
+        );
+        const radarChart = new window.Chart(radarCanvas.getContext('2d'), {
+          type: 'radar',
+          data: {
+            labels: ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'],
+            datasets: [
+              {
+                label: student.name,
+                data: stSkills,
+                backgroundColor: 'rgba(124,93,250,0.22)',
+                borderColor: '#7c5dfa',
+                borderWidth: 2.2,
+                pointBackgroundColor: '#7c5dfa',
+                pointRadius: 3.5
+              },
+              {
+                label: 'Среднее группы',
+                data: avgSkills,
+                backgroundColor: 'rgba(34,197,94,0.13)',
+                borderColor: '#22c55e',
+                borderWidth: 1.8,
+                borderDash: [4, 4],
+                pointBackgroundColor: '#22c55e',
+                pointRadius: 3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 480 },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: titleColor, boxWidth: 12, padding: 14, font: { family: 'Montserrat', size: 11.5, weight: '700' } }
+              },
+              tooltip: {
+                backgroundColor: dark ? '#0f1626' : '#162033',
+                padding: 10,
+                cornerRadius: 10,
+                callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` }
+              }
+            },
+            scales: {
+              r: {
+                beginAtZero: true,
+                max: 100,
+                ticks: { stepSize: 25, display: false },
+                grid: { color: gridColor },
+                angleLines: { color: gridColor },
+                pointLabels: { color: titleColor, font: { family: 'Montserrat', size: 11.5, weight: '700' } }
+              }
+            }
+          }
+        });
+        activeCharts.push(radarChart);
+      }
+    }
 
     wrap.querySelectorAll('.lmm-tab').forEach(btn => {
       btn.onclick = () => {
@@ -1087,6 +1256,7 @@
     });
 
     async function renderTab() {
+      destroyCharts();
       
       const body = wrap.querySelector('#lmmBody');
       if (!isOwner()) {
@@ -1119,6 +1289,21 @@
           <div class="lmm-kpi lmm-glow" style="--i:2"><div class="lmm-kpi-ic">${svgIcon('chart', 20)}</div><div><span>Средний тест</span><b>${g.avgTests}%</b></div></div>
           <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b>${g.avgCpm} зн/м</b></div></div>
         </div>
+        <div id="lmmChartsHost" class="lmm-charts-grid">
+          <div class="lmm-chart-card lmm-glow">
+            <div class="lmm-chart-head">
+              <div><strong>${svgIcon('chart', 16)}<span>Готовность группы до «профи»</span></strong><small>Сравнение прогресса всех учеников (0–100%)</small></div>
+            </div>
+            <div class="lmm-chart-box"><canvas id="lmmBarChart"></canvas></div>
+          </div>
+          <div class="lmm-chart-card lmm-glow">
+            <div class="lmm-chart-head">
+              <div><strong>${svgIcon('shield', 16)}<span>Профиль навыков</span></strong><small>Ученик против среднего по группе</small></div>
+              <select class="lmm-select" id="lmmRadarSelect" aria-label="Выбор ученика для графика"></select>
+            </div>
+            <div class="lmm-chart-box"><canvas id="lmmRadarChart"></canvas></div>
+          </div>
+        </div>
         <div class="lmm-toolbar">
           <div class="lmm-filters">
             <button type="button" class="lmm-fbtn ${groupFilter === 'all' ? 'active' : ''}" data-gf="all">Все (${g.students.length})</button>
@@ -1135,6 +1320,13 @@
         b.onclick = () => { groupFilter = b.dataset.gf; renderGroupTab(body); };
       });
       body.querySelector('#lmmRefreshGroup').onclick = async () => { await analyzeGroup(true); renderTab(); };
+      const sel = body.querySelector('#lmmRadarSelect');
+      if (sel && g.students.length) {
+        if (!selectedChartUid || !g.students.some(s => s.uid === selectedChartUid)) selectedChartUid = g.students[0].uid;
+        sel.innerHTML = g.students.map(s => `<option value="${escHtml(s.uid)}"${s.uid === selectedChartUid ? ' selected' : ''}>${escHtml(s.name)} (${s.pro.readiness}%)</option>`).join('');
+        sel.onchange = () => { selectedChartUid = sel.value; renderGroupCharts(body, g); };
+      }
+      renderGroupCharts(body, g);
 
       const list = body.querySelector('#lmmStudentList');
       if (!filtered.length) {
@@ -1174,11 +1366,19 @@
                 <b style="font-size:13px;">${s.pro.readiness}%</b>
                 <div class="lmm-bar"><i style="width:${s.pro.readiness}%"></i></div>
               </div>
+              <button type="button" class="lmm-btn" data-chart title="Показать навыки на графике">${svgIcon('chart', 14)}<span>График</span></button>
               <button type="button" class="lmm-btn primary" data-plan>${svgIcon('sparkle', 14)}<span>План ИИ</span></button>
               <button type="button" class="lmm-btn" data-prop>${svgIcon('plus', 14)}<span>Задание</span></button>
             </div>
           </div>
         `;
+        card.querySelector('[data-chart]').onclick = () => {
+          selectedChartUid = s.uid;
+          const selEl = body.querySelector('#lmmRadarSelect');
+          if (selEl) selEl.value = s.uid;
+          renderGroupCharts(body, g);
+          body.querySelector('#lmmChartsHost')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
         card.querySelector('[data-plan]').onclick = async ev => {
           const b = ev.currentTarget; b.disabled = true; b.innerHTML = `${svgIcon('refresh', 14)}<span>Анализирует…</span>`;
           try {
@@ -1465,14 +1665,27 @@
       });
     }
 
+    const themeObs = new MutationObserver(() => {
+      if (activeTab === 'group' && cache.group && wrap.isConnected) {
+        const body = wrap.querySelector('#lmmBody');
+        if (body && body.querySelector('#lmmBarChart')) renderGroupCharts(body, cache.group);
+      }
+    });
+    if (document.body) themeObs.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+
     renderTab();
+    return () => { destroyCharts(); themeObs.disconnect(); };
   }
 
   function LMSMentorSection() {
     const ref = React.useRef(null);
     React.useEffect(() => {
-      if (ref.current) mountInto(ref.current);
-      return () => { if (ref.current) ref.current.innerHTML = ''; };
+      const cleanup = ref.current ? mountInto(ref.current) : null;
+      return () => {
+        if (typeof cleanup === 'function') cleanup();
+        if (ref.current) ref.current.innerHTML = '';
+      };
     }, []);
     return React.createElement('div', { ref });
   }
@@ -1482,7 +1695,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 8,
+    version: 9,
     OWNER_UID,
     isOwner,
     mountInto,
