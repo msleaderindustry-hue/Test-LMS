@@ -203,7 +203,7 @@ window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","lin
                 REQUEST_TIMEOUT
             );
 
-            let ipData;
+            let ipData = {};
 
             try {
                 const ipReq = await fetch(IP_INFO_URL, {
@@ -215,13 +215,12 @@ window.reportLmsError?.(error, {"section":"discord","source":"5_discord.js","lin
                     cache: 'no-store'
                 });
 
-                if (!ipReq.ok) {
-                    throw new Error(
-                        `ipapi HTTP ${ipReq.status}`
-                    );
+                if (ipReq.ok) {
+                    ipData = await ipReq.json();
                 }
-
-                ipData = await ipReq.json();
+            } catch (_) {
+                // Если ipapi.co временно недоступен (429/блокировщик), всё равно отправляем уведомление о входе
+                ipData = {};
             } finally {
                 clearTimeout(timeout);
             }

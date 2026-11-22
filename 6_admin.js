@@ -3471,7 +3471,7 @@ function _extends() {
       setProfile(false);
     };
     const parts = React.Children.toArray(children);
-    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['assignments', 'Задания', 'fileText'], ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
+    const names = [['overview', 'Обзор', 'shield'], ['students', 'Ученики', 'users'], ['assignments', 'Задания', 'fileText'], ['ai_manager', 'ИИ-менеджер', 'barChart'], ['diagnostics', 'Диагностика', 'alertTriangle'], ['maintenance', 'Обслуживание', 'settings']];
     const recent = array(users).filter(u => lastActivity(u)).sort((a, b) => lastActivity(b) - lastActivity(a)).slice(0, 5);
     const recentRows = recent.map(u => h('button', {
       type: 'button',
@@ -3490,7 +3490,7 @@ function _extends() {
     })), h('span', {
       'aria-hidden': true
     }, '→')));
-    const tools = [['diagnostics', 'alertTriangle', 'Диагностика', 'Сбои платформы и повторяющиеся ошибки'], ['maintenance', 'settings', 'Обслуживание данных', 'История, активность, шахматы и TypeDrive']].map(([id, icon, title, desc]) => h('button', {
+    const tools = [['ai_manager', 'barChart', 'ИИ-менеджер', 'Путь к «профи», отчёты в Discord, согласование заданий и авто-уборка'], ['diagnostics', 'alertTriangle', 'Диагностика', 'Сбои платформы и повторяющиеся ошибки'], ['maintenance', 'settings', 'Обслуживание данных', 'История, активность, шахматы и TypeDrive']].map(([id, icon, title, desc]) => h('button', {
       type: 'button',
       className: 'av-shortcut',
       key: id,
@@ -3581,7 +3581,11 @@ function _extends() {
       className: 'av-stage'
     }, overview, students, screen === 'assignments' && h(AssignmentDesk, {
       users
-    }), visited.has('diagnostics') && h('section', {
+    }), screen === 'ai_manager' && h('section', {
+      className: 'av-scene'
+    }, window.LMSMentorSection ? h(window.LMSMentorSection) : h('p', {
+      className: 'av-muted'
+    }, 'Модуль 21_ai_mentor.js не загружен.')), visited.has('diagnostics') && h('section', {
       className: 'av-scene',
       hidden: screen !== 'diagnostics'
     }, React.cloneElement(parts[0], {
