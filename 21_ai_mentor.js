@@ -1,8 +1,7 @@
-// 21_ai_mentor.js (v5) — Встроенный раздел «ИИ-менеджер» для Админки (6_admin.js) + аналитика кодом + Discord Embed-отчёты.
-// Никаких плавающих кнопок в углу; чат поддержки студентов (16_ai_chat.js) и ручное удаление в админке не затрагиваются.
+// 21_ai_mentor.js (v6) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 5) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 6) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -22,6 +21,31 @@
 
   let proCriteria = Object.assign({}, DEFAULT_PRO_CRITERIA);
   const cache = { group: null, groupAt: 0, students: new Map() };
+
+  // Чистые линейные SVG-иконки (ноль эмодзи в интерфейсе)
+  function svgIcon(name, size = 16) {
+    const p = {
+      sparkle: '<path d="M12 3l2 5.4L19.4 10.4 14 12.4 12 17.8l-2-5.4-5.4-2 5.4-2L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      chart: '<path d="M4 19h16M7 16v-5M12 16V7M17 16v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+      clipboard: '<rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M9 4.5h6M9 10h6M9 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      trash: '<path d="M4 7h16M9 7V4.8c0-.44.36-.8.8-.8h4.4c.44 0 .8.36.8.8V7m2 0v12.2c0 1-.8 1.8-1.8 1.8H8.8c-1 0-1.8-.8-1.8-1.8V7h10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      refresh: '<path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16.8 3.6v3.6h-3.6M7.2 20.4v-3.6h3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+      send: '<path d="M21 3L10 14M21 3l-6.5 18-3.5-7.5L3.5 10 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      check: '<path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>',
+      x: '<path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>',
+      plus: '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>',
+      shield: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      alert: '<path d="M12 9v4m0 4h.01M10.3 3.9L2 18a1.5 1.5 0 0 0 1.3 2.2h17.4A1.5 1.5 0 0 0 22 18L13.7 3.9a1.5 1.5 0 0 0-3.4 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      message: '<path d="M4 6a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6v8a2.5 2.5 0 0 1-2.5 2.5H9l-4.5 3.5v-3.5H6.5A2.5 2.5 0 0 1 4 14V6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      activity: '<path d="M3 12h4l2.5-7 5 14 2.5-7H21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+      chess: '<path d="M8 20h8M9 17h6l-1-6h2l-1-4h-6l-1 4h2l-1 6zM12 3v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+      keyboard: '<rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M7 9h1m3 0h1m3 0h2M7 13h2m3 0h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      archive: '<rect x="3" y="4" width="18" height="4.5" rx="1.2" stroke="currentColor" stroke-width="1.8"/><path d="M5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V8.5M10 13h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      rotateCcw: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    };
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" aria-hidden="true">' + (p[name] || p.sparkle) + '</svg>';
+  }
 
   function isOwner() {
     return !!(window.auth && window.auth.currentUser && window.auth.currentUser.uid === OWNER_UID);
@@ -56,7 +80,7 @@
     const safe = escHtml(raw || '');
     return safe
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^[-•]\s+(.+)$/gm, '<div class="lmm-li"><span>•</span><span>$1</span></div>')
+      .replace(/^[-•]\s+(.+)$/gm, '<div class="lmm-li"><span class="lmm-bullet"></span><span>$1</span></div>')
       .replace(/\n/g, '<br>');
   }
   function initialsOf(name) {
@@ -255,7 +279,6 @@
     requireOwner('анализ ученика');
     const cached = cache.students.get(targetUid);
     if (!force && cached && (Date.now() - cached.at) < CACHE_TTL_MS) return cached.data;
-
     const userRef = window.db.collection('users').doc(targetUid);
     const [uSnap, wordSnap, attSnap] = await Promise.all([
       userRef.get(),
@@ -274,7 +297,6 @@
   async function analyzeGroup(force = false) {
     requireOwner('анализ группы');
     if (!force && cache.group && (Date.now() - cache.groupAt) < CACHE_TTL_MS) return cache.group;
-
     const snap = await window.db.collection('users').get();
     const students = [];
     for (const doc of snap.docs) {
@@ -289,11 +311,9 @@
         attempts: attSnap.docs.map(d => d.data())
       }));
     }
-
     const groupMedianReadiness = round1(median(students.map(s => s.pro.readiness)));
     const groupAvgTests = round1(avg(students.map(s => s.tests.avg).filter(v => v > 0)));
     const groupAvgCpm = Math.round(avg(students.map(s => s.typing.cpm).filter(v => v > 0)));
-
     students.forEach(s => {
       s.vsGroup = {
         readinessDiff: round1(s.pro.readiness - groupMedianReadiness),
@@ -301,7 +321,6 @@
         cpmDiff: Math.round(s.typing.cpm - groupAvgCpm)
       };
     });
-
     const summary = {
       generatedAt: new Date().toISOString(),
       criteria: Object.assign({}, proCriteria),
@@ -318,14 +337,14 @@
     return summary;
   }
 
-  // 3. Планы и красиво оформленные Embed-отчёты в Discord
+  // 3. Планы и Discord Embed-отчёты
   async function generateStudentPlanWithAi(targetUid) {
     requireOwner('личный план ученика');
     const [student, group] = await Promise.all([analyzeStudent(targetUid, true), analyzeGroup()]);
     const prompt =
       'Ты ИИ-методист Ultimate LMS. Все цифры ниже уже посчитаны кодом — НЕ выдумывай новых чисел.\n' +
-      'Составь краткий, конкретный личный план для ученика до уровня «профи» (3–5 шагов, списком через дефис).\n' +
-      'К КАЖДОЙ рекомендации коротко укажи «Почему: ...», опираясь на переданные факты. Без приветствий.\n' +
+      'Составь краткий, конкретный личный план для ученика до уровня «профи» (3–5 шагов, списком через дефис, без эмодзи и без приветствий).\n' +
+      'К КАЖДОЙ рекомендации коротко укажи «Почему: ...», опираясь на переданные факты.\n' +
       'Ученик: ' + JSON.stringify(student) + '\n' +
       'Группа: ' + JSON.stringify({ medianReadiness: group.medianReadiness, avgTests: group.avgTests, avgCpm: group.avgCpm }) + '\n' +
       'Критерии «профи»: ' + JSON.stringify(proCriteria);
@@ -337,26 +356,26 @@
   function buildReportEmbed(compact, aiText, periodLabel) {
     const color = compact.medianReadiness >= 70 ? 0x16a34a : (compact.medianReadiness >= 35 ? 0x6a52e5 : 0xf59e0b);
     const leadersText = compact.leaders.length
-      ? compact.leaders.slice(0, 3).map((s, i) => `${['🥇', '🥈', '🥉'][i] || '•'} **${s.name}** — ${s.readiness}% профи · тесты ${s.testsAvg}% · ${s.cpm} зн/мин`).join('\n')
+      ? compact.leaders.slice(0, 3).map((s, i) => `${i + 1}. **${s.name}** — ${s.readiness}% профи · тесты ${s.testsAvg}% · ${s.cpm} зн/мин`).join('\n')
       : 'Пока нет данных';
     const laggingText = compact.lagging.length
-      ? compact.lagging.slice(0, 4).map(s => `⚠️ **${s.name}** — ${s.readiness}% профи${s.inactiveDays != null && s.inactiveDays >= 3 ? ` · не заходил ${s.inactiveDays} дн.` : ''}`).join('\n')
-      : '✅ Отстающих нет';
+      ? compact.lagging.slice(0, 4).map(s => `- **${s.name}** — ${s.readiness}% профи${s.inactiveDays != null && s.inactiveDays >= 3 ? ` · не заходил ${s.inactiveDays} дн.` : ''}`).join('\n')
+      : 'Отстающих нет';
 
     return {
       username: 'Ultimate LMS · ИИ-отчёт',
       embeds: [{
-        title: `📊 Сводка успеваемости LMS (${periodLabel})`,
+        title: `Сводка успеваемости LMS (${periodLabel})`,
         color,
         fields: [
-          { name: '👥 Учеников', value: `**${compact.totalStudents}**`, inline: true },
-          { name: '🎯 Медиана «профи»', value: `**${compact.medianReadiness}%**`, inline: true },
-          { name: '📝 Тесты / ⌨️ Печать', value: `**${compact.avgTests}%** · **${compact.avgCpm} зн/мин**`, inline: true },
-          { name: '🏆 Лидеры группы', value: leadersText.slice(0, 1000), inline: false },
-          { name: '🚨 Требуют внимания', value: laggingText.slice(0, 1000), inline: false },
-          { name: '🧠 Выводы и рекомендации ИИ', value: String(aiText || 'Нет текста').slice(0, 1020), inline: false }
+          { name: 'Учеников', value: `**${compact.totalStudents}**`, inline: true },
+          { name: 'Медиана «профи»', value: `**${compact.medianReadiness}%**`, inline: true },
+          { name: 'Тесты / Печать', value: `**${compact.avgTests}%** · **${compact.avgCpm} зн/мин**`, inline: true },
+          { name: 'Лидеры группы', value: leadersText.slice(0, 1000), inline: false },
+          { name: 'Требуют внимания', value: laggingText.slice(0, 1000), inline: false },
+          { name: 'Выводы и рекомендации ИИ', value: String(aiText || 'Нет текста').slice(0, 1020), inline: false }
         ],
-        footer: { text: 'Ultimate LMS · Цифры рассчитаны кодом, рекомендации подготовлены ИИ' },
+        footer: { text: 'Ultimate LMS · Расчёт кодом, рекомендации ИИ' },
         timestamp: new Date().toISOString()
       }]
     };
@@ -374,10 +393,9 @@
       lagging: group.lagging.slice(0, 8).map(s => ({ name: s.name, readiness: s.pro.readiness, testsAvg: s.tests.avg, delta: s.tests.delta, inactiveDays: s.activity.inactiveDays }))
     };
     const prompt =
-      'Ты ИИ-методист Ultimate LMS. Напиши ОЧЕНЬ краткую, деловую выжимку (до 700 символов) для Discord-карточки администратора строго по JSON ниже:\n' +
+      'Ты ИИ-методист Ultimate LMS. Напиши краткую, деловую выжимку (до 700 символов, без эмодзи и приветствий) строго по JSON ниже:\n' +
       '- 1–2 предложения про главную тенденцию группы;\n' +
       '- 3 конкретных шага на неделю списком через дефис с коротким «Почему: ...».\n' +
-      'Без приветствий, без воды, без выдуманных цифр.\n' +
       'Данные: ' + JSON.stringify(compact);
 
     const text = await callAi(prompt);
@@ -426,7 +444,7 @@
       .sort((a, c) => a[1] - c[1])[0][0];
 
     const prompt =
-      'Верни СТРОГО чистый JSON без markdown: {"title":"короткое название до 60 символов","text":"короткий учебный текст на русском 45-65 слов без эмодзи (для typing) или чёткая инструкция (для других модулей)","reason":"почему выбрано это задание (1 предложение)"}.\n' +
+      'Верни СТРОГО чистый JSON без markdown и эмодзи: {"title":"короткое название до 60 символов","text":"короткий учебный текст на русском 45-65 слов (для typing) или чёткая инструкция (для других модулей)","reason":"почему выбрано это задание (1 предложение)"}.\n' +
       'Ученик: ' + st.name + ', самый слабый модуль: ' + weakest + ', данные: ' + JSON.stringify({ typing: st.typing, hotkeys: st.hotkeys, excel: st.excel, word: st.word });
 
     const raw = await callAi(prompt);
@@ -470,23 +488,14 @@
       : new Date(dueMs).toISOString();
 
     const assignmentRef = await window.db.collection('lmsAssignments').add({
-      version: 3,
-      assessmentVersion: 2,
+      version: 3, assessmentVersion: 2,
       hotkeyBank: p.module === 'hotkeys' ? (p.hotkeyBank || 'any') : 'any',
-      title: p.title,
-      module: p.module,
-      text: p.text || '',
-      lang: p.lang || 'ru',
+      title: p.title, module: p.module, text: p.text || '', lang: p.lang || 'ru',
       minAccuracy: Number(p.minAccuracy) || 92,
       target: ['typing', 'word'].includes(p.module) ? 1 : (Number(p.target) || 5),
       wordLesson: p.module === 'word' ? (p.wordLesson || 'memo') : null,
-      dueAt,
-      studentIds: p.studentIds,
-      studentNames,
-      createdBy: OWNER_UID,
-      sourceProposalId: proposalId,
-      createdAt: serverTime(),
-      status: 'assigned'
+      dueAt, studentIds: p.studentIds, studentNames,
+      createdBy: OWNER_UID, sourceProposalId: proposalId, createdAt: serverTime(), status: 'assigned'
     });
     await ref.update({ status: 'approved', assignmentId: assignmentRef.id, approvedAt: serverTime() });
     return { ok: true, assignmentId: assignmentRef.id };
@@ -500,59 +509,142 @@
     return { ok: true };
   }
 
-  // 5. Восстановимая уборка (только для уборки ИИ; ручное удаление админа не трогаем)
+  // ---------------------------------------------------------------------------
+  // 5. Полная восстановимая уборка (журнал, активность, СМС, шахматы, TypeDrive, отменённые задания) + удаление бэкапов
+  // ---------------------------------------------------------------------------
+  const CLEANUP_CATALOG = [
+    { id: 'platformErrors', label: 'Журнал ошибок', desc: 'Системные ошибки platformErrors', icon: 'alert' },
+    { id: 'allActivity', label: 'Активность учеников', desc: 'Журналы посещений и переходов users/*/activity', icon: 'activity' },
+    { id: 'chatMessages', label: 'Сообщения (СМС)', desc: 'Личная переписка private_chats/*/messages', icon: 'message' },
+    { id: 'chessRooms', label: 'Шахматы', desc: 'Комнаты партий chessRooms', icon: 'chess' },
+    { id: 'typeDrive', label: 'TypeDrive', desc: 'Комнаты и присутствие typeDriveRooms / Presence', icon: 'keyboard' },
+    { id: 'cancelledAssignments', label: 'Отменённые задания', desc: 'Отменённые/архивные lmsAssignments и отклонённые aiProposals', icon: 'clipboard' }
+  ];
+
+  async function collectCleanupDocs(target, olderThanDays) {
+    const cutoff = olderThanDays > 0 ? Date.now() - olderThanDays * 86400000 : Infinity;
+    const matchAge = data => {
+      if (olderThanDays === 0) return true;
+      const ts = toMillis(data.at || data.clientAt || data.createdAt || data.updatedAt || data.timestamp || data.endedAt);
+      return ts > 0 && ts < cutoff;
+    };
+    const docs = [];
+
+    if (target === 'platformErrors') {
+      const s = await window.db.collection('platformErrors').get();
+      s.docs.forEach(d => { if (matchAge(d.data() || {})) docs.push(d); });
+    } else if (target === 'allActivity') {
+      const uSnap = await window.db.collection('users').get();
+      for (const u of uSnap.docs) {
+        const aSnap = await u.ref.collection('activity').get().catch(() => ({ docs: [] }));
+        aSnap.docs.forEach(d => { if (matchAge(d.data() || {})) docs.push(d); });
+      }
+    } else if (target === 'chatMessages') {
+      const s = await window.db.collectionGroup('messages').get();
+      s.docs.forEach(d => {
+        if (d.ref.path.startsWith('private_chats/') && matchAge(d.data() || {})) docs.push(d);
+      });
+    } else if (target === 'chessRooms') {
+      const s = await window.db.collection('chessRooms').get();
+      s.docs.forEach(d => {
+        const data = d.data() || {};
+        if (matchAge(data)) docs.push(d);
+      });
+    } else if (target === 'typeDrive') {
+      const [rSnap, pSnap] = await Promise.all([
+        window.db.collection('typeDriveRooms').get().catch(() => ({ docs: [] })),
+        window.db.collection('typeDrivePresence').get().catch(() => ({ docs: [] }))
+      ]);
+      rSnap.docs.forEach(d => { if (matchAge(d.data() || {})) docs.push(d); });
+      pSnap.docs.forEach(d => { if (matchAge(d.data() || {})) docs.push(d); });
+    } else if (target === 'cancelledAssignments') {
+      const [aSnap, pSnap] = await Promise.all([
+        window.db.collection('lmsAssignments').get().catch(() => ({ docs: [] })),
+        window.db.collection('aiProposals').get().catch(() => ({ docs: [] }))
+      ]);
+      aSnap.docs.forEach(d => {
+        const st = String((d.data() || {}).status || '').toLowerCase();
+        if (['cancelled', 'canceled', 'archived', 'deleted', 'closed'].includes(st) && matchAge(d.data() || {})) docs.push(d);
+      });
+      pSnap.docs.forEach(d => {
+        const st = String((d.data() || {}).status || '').toLowerCase();
+        if (['rejected', 'cancelled'].includes(st) && matchAge(d.data() || {})) docs.push(d);
+      });
+    } else {
+      throw new Error('Неизвестная категория очистки: ' + target);
+    }
+    return docs;
+  }
+
   async function previewCleanup(options = {}) {
     requireOwner('предпросмотр очистки');
     const target = options.target;
     const olderThanDays = Math.max(0, Number(options.olderThanDays || 0));
-    const cutoff = olderThanDays > 0 ? Date.now() - olderThanDays * 86400000 : Infinity;
-    let colRef;
-    if (target === 'platformErrors') colRef = window.db.collection('platformErrors');
-    else if (target === 'userActivity' && options.uid) colRef = window.db.collection('users').doc(options.uid).collection('activity');
-    else if (target === 'userAttempts' && options.uid) colRef = window.db.collection('users').doc(options.uid).collection('attempts');
-    else throw new Error('Неизвестная цель очистки.');
-
-    const snap = await colRef.get();
-    const matched = snap.docs.filter(d => {
-      const data = d.data() || {};
-      const ts = toMillis(data.at || data.clientAt);
-      return olderThanDays === 0 || (ts > 0 && ts < cutoff);
-    });
-    return { target, uid: options.uid || null, olderThanDays, count: matched.length, ids: matched.map(d => d.id) };
+    const docs = await collectCleanupDocs(target, olderThanDays);
+    return {
+      target,
+      olderThanDays,
+      count: docs.length,
+      paths: docs.map(d => d.ref.path)
+    };
   }
 
   async function executeCleanup(preview, confirmed) {
     requireOwner('выполнение очистки');
-    if (confirmed !== true) throw new Error('Очистка отменена: требуется подтверждение администратора.');
-    if (!preview || !Array.isArray(preview.ids) || !preview.ids.length) return { ok: true, deleted: 0, backupId: null };
-
-    let colRef, pathLabel;
-    if (preview.target === 'platformErrors') { colRef = window.db.collection('platformErrors'); pathLabel = 'platformErrors'; }
-    else if (preview.target === 'userActivity' && preview.uid) { colRef = window.db.collection('users').doc(preview.uid).collection('activity'); pathLabel = 'users/' + preview.uid + '/activity'; }
-    else if (preview.target === 'userAttempts' && preview.uid) { colRef = window.db.collection('users').doc(preview.uid).collection('attempts'); pathLabel = 'users/' + preview.uid + '/attempts'; }
-    else throw new Error('Некорректные параметры очистки.');
+    if (confirmed !== true) throw new Error('Требуется подтверждение администратора.');
+    if (!preview || !Array.isArray(preview.paths) || !preview.paths.length) return { ok: true, deleted: 0, backupIds: [] };
 
     const records = [];
-    for (const id of preview.ids) {
-      const d = await colRef.doc(id).get();
-      if (d.exists) records.push({ id: d.id, data: d.data() });
+    for (const p of preview.paths) {
+      const snap = await window.db.doc(p).get().catch(() => null);
+      if (snap && snap.exists) records.push({ path: p, data: snap.data() });
     }
-    if (!records.length) return { ok: true, deleted: 0, backupId: null };
+    if (!records.length) return { ok: true, deleted: 0, backupIds: [] };
 
-    const serialized = JSON.stringify(records);
-    if (serialized.length > 850000) throw new Error('Слишком большой объём для одного бэкапа (>850 КБ). Укажите меньший период.');
-    const backupRef = await window.db.collection('lmsBackups').add({
-      path: pathLabel, count: records.length, createdAt: serverTime(), clientAt: Date.now(), restored: false, payloadJson: serialized
-    });
+    // Автоматически делим бэкап на части до ~700 КБ, чтобы Firestore никогда не упёрся в лимит 1 МБ
+    const chunks = [];
+    let current = [], size = 2;
+    for (const r of records) {
+      const str = JSON.stringify(r);
+      if (current.length && (size + str.length) > 700000) {
+        chunks.push(current);
+        current = [r];
+        size = str.length + 2;
+      } else {
+        current.push(r);
+        size += str.length + 1;
+      }
+    }
+    if (current.length) chunks.push(current);
 
+    const cat = CLEANUP_CATALOG.find(c => c.id === preview.target);
+    const label = cat ? cat.label : preview.target;
+    const backupIds = [];
+
+    for (let idx = 0; idx < chunks.length; idx++) {
+      const part = chunks[idx];
+      const bRef = await window.db.collection('lmsBackups').add({
+        target: preview.target,
+        label: chunks.length > 1 ? `${label} (часть ${idx + 1}/${chunks.length})` : label,
+        count: part.length,
+        createdAt: serverTime(),
+        clientAt: Date.now(),
+        restored: false,
+        format: 'paths_v2',
+        payloadJson: JSON.stringify(part)
+      });
+      backupIds.push(bRef.id);
+    }
+
+    // Удаление батчами по 400 документов
     let deleted = 0;
     for (let i = 0; i < records.length; i += 400) {
       const batch = window.db.batch();
-      records.slice(i, i + 400).forEach(r => batch.delete(colRef.doc(r.id)));
+      records.slice(i, i + 400).forEach(r => batch.delete(window.db.doc(r.path)));
       await batch.commit();
       deleted += Math.min(400, records.length - i);
     }
-    return { ok: true, deleted, backupId: backupRef.id };
+    return { ok: true, deleted, backupIds };
   }
 
   async function restoreBackup(backupId) {
@@ -562,19 +654,38 @@
     if (!snap.exists) throw new Error('Резервная копия не найдена.');
     const b = snap.data();
     const records = JSON.parse(b.payloadJson || '[]');
-    const parts = String(b.path || '').split('/');
-    let colRef;
-    if (parts.length === 1) colRef = window.db.collection(parts[0]);
-    else if (parts.length === 3) colRef = window.db.collection(parts[0]).doc(parts[1]).collection(parts[2]);
-    else throw new Error('Некорректный путь в резервной копии.');
 
     for (let i = 0; i < records.length; i += 400) {
       const batch = window.db.batch();
-      records.slice(i, i + 400).forEach(r => batch.set(colRef.doc(r.id), reviveFirestoreTypes(r.data)));
+      records.slice(i, i + 400).forEach(r => {
+        if (b.format === 'paths_v2' && r.path) {
+          batch.set(window.db.doc(r.path), reviveFirestoreTypes(r.data));
+        } else if (b.path && r.id) {
+          batch.set(window.db.doc(b.path + '/' + r.id), reviveFirestoreTypes(r.data));
+        }
+      });
       await batch.commit();
     }
     await bRef.update({ restored: true, restoredAt: serverTime() });
     return { ok: true, restoredCount: records.length };
+  }
+
+  async function deleteBackup(backupId) {
+    requireOwner('удаление резервной копии');
+    await window.db.collection('lmsBackups').doc(backupId).delete();
+    return { ok: true };
+  }
+
+  async function deleteAllRestoredBackups() {
+    requireOwner('очистка восстановленных копий');
+    const snap = await window.db.collection('lmsBackups').get();
+    const targets = snap.docs.filter(d => d.data()?.restored === true);
+    for (let i = 0; i < targets.length; i += 400) {
+      const batch = window.db.batch();
+      targets.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    return { ok: true, deleted: targets.length };
   }
 
   function setProCriteria(patch) {
@@ -586,129 +697,215 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 6. Встроенный раздел «ИИ-менеджер» для Админ-панели (без плавающих кнопок!)
+  // 6. Премиальный встроенный интерфейс «ИИ-менеджер» (без эмодзи, SVG + анимации)
   // ---------------------------------------------------------------------------
   function injectSectionStyles() {
-    if (document.getElementById('lms-mentor-styles')) return;
+    const old = document.getElementById('lms-mentor-styles');
+    if (old) old.remove();
     const style = document.createElement('style');
     style.id = 'lms-mentor-styles';
     style.textContent = `
       @keyframes lmmSpin{to{transform:rotate(360deg)}}
-      @keyframes lmmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+      @keyframes lmmFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+      @keyframes lmmShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      @keyframes lmmPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.45)}50%{box-shadow:0 0 0 7px transparent}}
 
       .lmm-wrap{
-        --bg:transparent;--surface:#161e31;--surface-2:#101727;--border:#26324e;--border-2:#36466b;
-        --text:#f1f5ff;--muted:#93a5c6;--accent:#7c5dfa;--accent-soft:rgba(124,93,250,.15);
-        --green:#22c55e;--green-soft:rgba(34,197,94,.14);--amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);
+        --surface:#151d30;--surface-2:#0f1626;--surface-hover:#1d2740;
+        --border:#25314d;--border-2:#35456b;
+        --text:#f1f5ff;--muted:#90a3c4;
+        --accent:#7c5dfa;--accent-2:#a28bff;--accent-soft:rgba(124,93,250,.15);
+        --green:#22c55e;--green-soft:rgba(34,197,94,.14);
+        --amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);
         --red:#ef4444;--red-soft:rgba(239,68,68,.14);
+        --ease:cubic-bezier(.22,1,.36,1);
         display:flex;flex-direction:column;gap:18px;color:var(--text);
-        font-family:Montserrat,system-ui,sans-serif;animation:lmmIn .25s ease both;
+        font-family:Montserrat,system-ui,sans-serif;animation:lmmFadeUp .35s var(--ease) both;
       }
       .lmm-wrap.lmm-light{
-        --surface:#ffffff;--surface-2:#f2f5fb;--border:#dde3f0;--border-2:#c7d0e5;
-        --text:#172033;--muted:#5c6b89;--accent:#6a52e5;--accent-soft:rgba(106,82,229,.10);
-        --green:#16a34a;--green-soft:rgba(22,163,74,.11);--amber:#d97706;--amber-soft:rgba(217,119,6,.12);
+        --surface:#ffffff;--surface-2:#f2f5fb;--surface-hover:#e8edf8;
+        --border:#dde3f0;--border-2:#c4cee5;
+        --text:#162033;--muted:#5b6a88;
+        --accent:#6a52e5;--accent-2:#8d75ff;--accent-soft:rgba(106,82,229,.10);
+        --green:#16a34a;--green-soft:rgba(22,163,74,.11);
+        --amber:#d97706;--amber-soft:rgba(217,119,6,.12);
         --red:#dc2626;--red-soft:rgba(220,38,38,.11);
       }
+
+      /* Spotlight hover effect on desktop */
+      .lmm-glow{position:relative;overflow:hidden;}
+      @media(hover:hover){
+        .lmm-glow::after{
+          content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+          background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),var(--accent-soft),transparent 65%);
+          transition:opacity .28s ease;z-index:0;
+        }
+        .lmm-glow:hover::after{opacity:1;}
+        .lmm-glow > *{position:relative;z-index:1;}
+      }
+
       .lmm-hero{
-        display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
-        padding:22px 24px;border-radius:20px;border:1px solid var(--border);
-        background:radial-gradient(ellipse at 95% 0%,var(--accent-soft),transparent 58%),var(--surface);
+        display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+        padding:24px 26px;border-radius:22px;border:1px solid var(--border);
+        background:radial-gradient(ellipse at 92% 0%,var(--accent-soft),transparent 60%),var(--surface);
+        box-shadow:0 12px 32px rgba(0,0,0,.14);
       }
-      .lmm-hero-left{display:flex;align-items:center;gap:14px;}
+      .lmm-hero-left{display:flex;align-items:center;gap:16px;}
       .lmm-hero-ic{
-        width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex-shrink:0;
-        background:linear-gradient(135deg,#7c5dfa,#5336d6);color:#fff;font-size:20px;
-        box-shadow:0 8px 22px rgba(106,82,229,.3);
+        width:48px;height:48px;border-radius:15px;display:grid;place-items:center;flex-shrink:0;
+        background:linear-gradient(140deg,var(--accent-2),var(--accent));color:#fff;
+        box-shadow:0 8px 24px rgba(106,82,229,.35);
       }
-      .lmm-hero h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.02em;}
-      .lmm-hero p{margin:4px 0 0;font-size:12.5px;color:var(--muted);}
+      .lmm-hero h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em;}
+      .lmm-hero p{margin:5px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+      .lmm-live-pill{
+        display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+        background:var(--surface-2);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);
+      }
+      .lmm-live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:lmmPulse 2.4s infinite;}
 
       .lmm-tabs{
-        display:flex;gap:8px;flex-wrap:wrap;padding:6px;border-radius:16px;
+        display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:16px;
         background:var(--surface);border:1px solid var(--border);
       }
       .lmm-tab{
         padding:10px 16px;border-radius:12px;border:1px solid transparent;
-        background:transparent;color:var(--muted);font-weight:700;font-size:13px;
-        cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .18s;
+        background:transparent;color:var(--muted);font-weight:700;font-size:12.5px;
+        cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+        transition:background .18s var(--ease),color .18s,border-color .18s,transform .15s;
       }
       .lmm-tab:hover{background:var(--surface-2);color:var(--text);}
-      .lmm-tab.active{background:var(--accent-soft);color:var(--accent);border-color:rgba(124,93,250,.3);}
+      .lmm-tab.active{
+        background:var(--accent-soft);color:var(--accent);
+        border-color:rgba(124,93,250,.32);box-shadow:0 4px 12px rgba(124,93,250,.12);
+      }
 
-      .lmm-panel{display:flex;flex-direction:column;gap:14px;}
+      .lmm-panel{display:flex;flex-direction:column;gap:14px;animation:lmmFadeUp .28s var(--ease) both;}
       .lmm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
       .lmm-kpi{
-        background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;
-        display:flex;flex-direction:column;gap:6px;
+        background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;
+        display:flex;align-items:center;gap:14px;
+        animation:lmmFadeUp .35s var(--ease) both;animation-delay:calc(var(--i,0)*45ms);
+        transition:transform .2s var(--ease),border-color .2s;
       }
-      .lmm-kpi span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
-      .lmm-kpi b{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
+      .lmm-kpi:hover{transform:translateY(-2px);border-color:var(--border-2);}
+      .lmm-kpi-ic{
+        width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex-shrink:0;
+        background:var(--accent-soft);color:var(--accent);
+      }
+      .lmm-kpi:nth-child(2) .lmm-kpi-ic{background:var(--green-soft);color:var(--green);}
+      .lmm-kpi:nth-child(3) .lmm-kpi-ic{background:var(--amber-soft);color:var(--amber);}
+      .lmm-kpi span{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+      .lmm-kpi b{display:block;font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:2px;color:var(--text);}
 
       .lmm-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
       .lmm-filters{display:flex;gap:6px;flex-wrap:wrap;}
       .lmm-fbtn{
-        padding:7px 14px;border-radius:999px;border:1px solid var(--border);
-        background:var(--surface);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;
+        padding:8px 14px;border-radius:999px;border:1px solid var(--border);
+        background:var(--surface);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
+        transition:all .16s var(--ease);
       }
+      .lmm-fbtn:hover{border-color:var(--border-2);color:var(--text);}
       .lmm-fbtn.active{background:var(--text);color:var(--surface);border-color:var(--text);}
 
       .lmm-card{
         background:var(--surface);border:1px solid var(--border);border-radius:18px;
-        padding:16px 18px;display:flex;flex-direction:column;gap:12px;transition:border-color .18s;
+        padding:16px 18px;display:flex;flex-direction:column;gap:12px;
+        animation:lmmFadeUp .34s var(--ease) both;animation-delay:calc(min(var(--i,0),10)*35ms);
+        transition:border-color .18s,transform .18s var(--ease);
       }
       .lmm-card:hover{border-color:var(--border-2);}
       .lmm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 
-      .lmm-student-head{display:flex;align-items:center;gap:12px;min-width:0;}
+      .lmm-student-head{display:flex;align-items:center;gap:13px;min-width:0;}
       .lmm-avatar{
         width:42px;height:42px;border-radius:13px;flex-shrink:0;
         display:grid;place-items:center;font-weight:800;font-size:13px;
-        background:var(--accent-soft);color:var(--accent);border:1.5px solid rgba(124,93,250,.3);
+        background:var(--accent-soft);color:var(--accent);border:1.5px solid rgba(124,93,250,.32);
       }
-      .lmm-avatar.st-pro{background:var(--green-soft);color:var(--green);border-color:rgba(34,197,94,.35);}
-      .lmm-avatar.st-warn{background:var(--amber-soft);color:var(--amber);border-color:rgba(245,158,11,.35);}
+      .lmm-avatar.st-pro{background:var(--green-soft);color:var(--green);border-color:rgba(34,197,94,.38);}
+      .lmm-avatar.st-warn{background:var(--amber-soft);color:var(--amber);border-color:rgba(245,158,11,.38);}
 
-      .lmm-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+      .lmm-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
       .lmm-pill{
         font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;
         background:var(--surface-2);color:var(--muted);border:1px solid var(--border);
       }
-      .lmm-badge{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;}
+      .lmm-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;}
       .lmm-badge.ok{background:var(--green-soft);color:var(--green);}
       .lmm-badge.warn{background:var(--amber-soft);color:var(--amber);}
       .lmm-badge.err{background:var(--red-soft);color:var(--red);}
       .lmm-badge.info{background:var(--accent-soft);color:var(--accent);}
 
       .lmm-prog-wrap{display:flex;align-items:center;gap:10px;}
-      .lmm-bar{height:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;overflow:hidden;width:116px;}
-      .lmm-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7c5dfa,#22c55e);transition:width .4s ease;}
+      .lmm-bar{height:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;overflow:hidden;width:118px;}
+      .lmm-bar i{
+        display:block;height:100%;border-radius:99px;position:relative;overflow:hidden;
+        background:linear-gradient(90deg,var(--accent),var(--green));transition:width .5s var(--ease);
+      }
+      .lmm-bar i::after{
+        content:"";position:absolute;inset:0;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+        background-size:200% 100%;animation:lmmShimmer 2.4s linear infinite;
+      }
 
       .lmm-btn{
-        padding:9px 14px;border-radius:11px;border:1px solid var(--border-2);
+        padding:9px 14px;border-radius:11px;border:1px solid var(--border-2);border-bottom-width:2px;
         background:var(--surface-2);color:var(--text);font-weight:700;font-size:12px;
-        cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .16s;
+        cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+        transition:transform .16s var(--ease),background .16s,border-color .16s,color .16s;
       }
-      .lmm-btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--accent);}
-      .lmm-btn.primary{background:linear-gradient(135deg,#7c5dfa,#5a3ed8);border-color:#5a3ed8;color:#fff;}
-      .lmm-btn.good{background:var(--green);border-color:var(--green);color:#fff;}
-      .lmm-btn.danger{background:var(--red-soft);border-color:var(--red);color:var(--red);}
-      .lmm-btn.danger:hover:not(:disabled){background:var(--red);color:#fff;}
-      .lmm-btn:disabled{opacity:.52;cursor:not-allowed;transform:none;}
+      .lmm-btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--accent);background:var(--surface-hover);}
+      .lmm-btn:active:not(:disabled){transform:translateY(1px);}
+      .lmm-btn.primary{background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:#4b33be;color:#fff;}
+      .lmm-btn.primary:hover:not(:disabled){background:linear-gradient(135deg,#ad98ff,#7458f2);}
+      .lmm-btn.good{background:var(--green);border-color:#15803d;color:#fff;}
+      .lmm-btn.danger{background:var(--red-soft);border-color:rgba(239,68,68,.45);color:var(--red);}
+      .lmm-btn.danger:hover:not(:disabled){background:var(--red);color:#fff;border-color:var(--red);}
+      .lmm-btn.sm{padding:7px 11px;font-size:11.5px;border-radius:9px;}
+      .lmm-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 
       .lmm-rich{
         font-size:13px;line-height:1.68;color:var(--text);
-        background:var(--surface-2);padding:15px 16px;border-radius:14px;border:1px solid var(--border);
+        background:var(--surface-2);padding:15px 17px;border-radius:14px;border:1px solid var(--border);
       }
-      .lmm-li{display:flex;gap:8px;margin:4px 0;}
-      .lmm-li span:first-child{color:var(--accent);font-weight:800;}
+      .lmm-li{display:flex;align-items:flex-start;gap:10px;margin:5px 0;}
+      .lmm-bullet{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:8px;flex-shrink:0;}
+
       .lmm-notice{
-        font-size:12.5px;font-weight:600;padding:11px 15px;border-radius:12px;
-        background:var(--accent-soft);color:var(--accent);border:1px solid rgba(124,93,250,.22);
+        display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;
+        padding:11px 15px;border-radius:13px;
+        background:var(--accent-soft);color:var(--accent);border:1px solid rgba(124,93,250,.25);
       }
-      .lmm-loader{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:16px 4px;}
-      .lmm-spin{width:17px;height:17px;border-radius:50%;border:2.5px solid var(--border-2);border-top-color:var(--accent);animation:lmmSpin .7s linear infinite;}
-      @media(max-width:720px){.lmm-grid{grid-template-columns:repeat(2,1fr);}.lmm-hero{padding:18px;}}
+      .lmm-clean-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+      .lmm-clean-item{
+        background:var(--surface-2);border:1px solid var(--border);border-radius:16px;
+        padding:15px;display:flex;flex-direction:column;gap:10px;
+        transition:border-color .18s,transform .18s var(--ease);
+      }
+      .lmm-clean-item:hover{border-color:var(--accent);transform:translateY(-2px);}
+      .lmm-clean-head{display:flex;align-items:center;gap:10px;}
+      .lmm-clean-ic{
+        width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+        background:var(--accent-soft);color:var(--accent);
+      }
+      .lmm-clean-item strong{font-size:13.5px;display:block;}
+      .lmm-clean-item small{font-size:11.5px;color:var(--muted);line-height:1.4;display:block;}
+      .lmm-clean-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;}
+
+      .lmm-backup-row{
+        padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);
+        border-radius:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      }
+      .lmm-skel-wrap{display:flex;flex-direction:column;gap:10px;}
+      .lmm-skel{
+        height:68px;border-radius:16px;
+        background:linear-gradient(90deg,var(--surface) 25%,var(--surface-hover) 50%,var(--surface) 75%);
+        background-size:200% 100%;animation:lmmShimmer 1.4s infinite linear;border:1px solid var(--border);
+      }
+      @media(max-width:860px){.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
+      @media(max-width:560px){.lmm-clean-grid{grid-template-columns:1fr;}.lmm-hero{padding:18px;}}
+      @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
     `;
     document.head.appendChild(style);
   }
@@ -720,21 +917,30 @@
 
     const wrap = document.createElement('div');
     wrap.className = 'lmm-wrap' + (isLightTheme() ? ' lmm-light' : '');
+    wrap.addEventListener('pointermove', e => {
+      const card = e.target.closest('.lmm-glow');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+
     wrap.innerHTML = `
-      <div class="lmm-hero">
+      <div class="lmm-hero lmm-glow">
         <div class="lmm-hero-left">
-          <div class="lmm-hero-ic">⚡</div>
+          <div class="lmm-hero-ic">${svgIcon('sparkle', 22)}</div>
           <div>
             <h3>ИИ-менеджер LMS</h3>
-            <p>Расчёты успеваемости кодом · Личные планы до «профи» · Красивые отчёты в Discord · Согласование заданий и авто-уборка</p>
+            <p>Расчёт успеваемости кодом · Личные планы до «профи» · Отчёты в Discord · Согласование заданий и безопасная уборка</p>
           </div>
         </div>
+        <div class="lmm-live-pill"><span class="lmm-live-dot"></span><span>Прокси ИИ и Discord активны</span></div>
       </div>
       <div class="lmm-tabs" id="lmmTabs">
-        <button type="button" class="lmm-tab active" data-tab="group">👥 Группа и «Профи»</button>
-        <button type="button" class="lmm-tab" data-tab="reports">📊 Отчёты → Discord</button>
-        <button type="button" class="lmm-tab" data-tab="proposals">📋 Задания на согласование</button>
-        <button type="button" class="lmm-tab" data-tab="cleanup">🧹 Уборка ИИ и бэкапы</button>
+        <button type="button" class="lmm-tab active" data-tab="group">${svgIcon('users', 15)}<span>Группа и «Профи»</span></button>
+        <button type="button" class="lmm-tab" data-tab="reports">${svgIcon('chart', 15)}<span>Отчёты в Discord</span></button>
+        <button type="button" class="lmm-tab" data-tab="proposals">${svgIcon('clipboard', 15)}<span>Задания</span></button>
+        <button type="button" class="lmm-tab" data-tab="cleanup">${svgIcon('trash', 15)}<span>Уборка и бэкапы</span></button>
       </div>
       <div class="lmm-panel" id="lmmBody"></div>
     `;
@@ -759,14 +965,14 @@
         body.innerHTML = '<div class="lmm-card">Раздел доступен только владельцу LMS.</div>';
         return;
       }
-      body.innerHTML = '<div class="lmm-loader"><span class="lmm-spin"></span><span>Загружаем актуальные данные…</span></div>';
+      body.innerHTML = '<div class="lmm-skel-wrap"><div class="lmm-skel"></div><div class="lmm-skel"></div><div class="lmm-skel"></div></div>';
       try {
         if (activeTab === 'group') await renderGroupTab(body);
         else if (activeTab === 'reports') await renderReportsTab(body);
         else if (activeTab === 'proposals') await renderProposalsTab(body);
         else await renderCleanupTab(body);
       } catch (e) {
-        body.innerHTML = `<div class="lmm-card"><span class="lmm-badge err">Ошибка</span><div>${escHtml(e.message)}</div></div>`;
+        body.innerHTML = `<div class="lmm-card"><span class="lmm-badge err">${svgIcon('alert', 13)}Ошибка</span><div>${escHtml(e.message)}</div></div>`;
       }
     }
 
@@ -780,10 +986,10 @@
 
       body.innerHTML = `
         <div class="lmm-grid">
-          <div class="lmm-kpi"><span>Учеников</span><b>${g.totalStudents}</b></div>
-          <div class="lmm-kpi"><span>Медиана «профи»</span><b>${g.medianReadiness}%</b></div>
-          <div class="lmm-kpi"><span>Средний тест</span><b>${g.avgTests}%</b></div>
-          <div class="lmm-kpi"><span>Средняя печать</span><b>${g.avgCpm} зн/м</b></div>
+          <div class="lmm-kpi lmm-glow" style="--i:0"><div class="lmm-kpi-ic">${svgIcon('users', 20)}</div><div><span>Учеников</span><b>${g.totalStudents}</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:1"><div class="lmm-kpi-ic">${svgIcon('shield', 20)}</div><div><span>Медиана «профи»</span><b>${g.medianReadiness}%</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:2"><div class="lmm-kpi-ic">${svgIcon('chart', 20)}</div><div><span>Средний тест</span><b>${g.avgTests}%</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b>${g.avgCpm} зн/м</b></div></div>
         </div>
         <div class="lmm-toolbar">
           <div class="lmm-filters">
@@ -791,7 +997,7 @@
             <button type="button" class="lmm-fbtn ${groupFilter === 'warn' ? 'active' : ''}" data-gf="warn">Требуют внимания (${g.lagging.length})</button>
             <button type="button" class="lmm-fbtn ${groupFilter === 'top' ? 'active' : ''}" data-gf="top">Выше медианы</button>
           </div>
-          <button type="button" class="lmm-btn" id="lmmRefreshGroup">↻ Пересчитать</button>
+          <button type="button" class="lmm-btn" id="lmmRefreshGroup">${svgIcon('refresh', 14)}<span>Пересчитать</span></button>
         </div>
         <div id="lmmNoticeBox"></div>
         <div id="lmmPlanBox"></div>
@@ -807,7 +1013,7 @@
         list.innerHTML = '<div class="lmm-card" style="color:var(--muted);">В этом фильтре учеников пока нет.</div>';
         return;
       }
-      filtered.forEach(s => {
+      filtered.forEach((s, idx) => {
         const avCls = s.pro.status === 'pro_ready' ? 'st-pro' : (s.pro.status === 'needs_attention' ? 'st-warn' : '');
         const badgeHtml = s.pro.status === 'pro_ready'
           ? '<span class="lmm-badge ok">Готов к профи</span>'
@@ -816,7 +1022,8 @@
             : '<span class="lmm-badge info">В темпе</span>';
 
         const card = document.createElement('div');
-        card.className = 'lmm-card';
+        card.className = 'lmm-card lmm-glow';
+        card.style.setProperty('--i', idx);
         card.innerHTML = `
           <div class="lmm-row">
             <div class="lmm-student-head">
@@ -839,32 +1046,32 @@
                 <b style="font-size:13px;">${s.pro.readiness}%</b>
                 <div class="lmm-bar"><i style="width:${s.pro.readiness}%"></i></div>
               </div>
-              <button type="button" class="lmm-btn primary" data-plan>План ИИ</button>
-              <button type="button" class="lmm-btn" data-prop>+ Задание</button>
+              <button type="button" class="lmm-btn primary" data-plan>${svgIcon('sparkle', 14)}<span>План ИИ</span></button>
+              <button type="button" class="lmm-btn" data-prop>${svgIcon('plus', 14)}<span>Задание</span></button>
             </div>
           </div>
         `;
         card.querySelector('[data-plan]').onclick = async ev => {
-          const b = ev.currentTarget; b.disabled = true; b.textContent = 'Анализирует…';
+          const b = ev.currentTarget; b.disabled = true; b.innerHTML = `${svgIcon('refresh', 14)}<span>Анализирует…</span>`;
           try {
             const res = await generateStudentPlanWithAi(s.uid);
             body.querySelector('#lmmPlanBox').innerHTML = `
               <div class="lmm-card">
-                <div class="lmm-row"><strong>🎯 Личный план до «профи»: ${escHtml(s.name)}</strong><span class="lmm-badge info">${s.pro.readiness}% готовности</span></div>
+                <div class="lmm-row"><strong>Личный план до «профи»: ${escHtml(s.name)}</strong><span class="lmm-badge info">${s.pro.readiness}% готовности</span></div>
                 <div class="lmm-rich">${formatRichText(res.explanation)}</div>
               </div>`;
           } catch (err) {
-            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">Ошибка: ${escHtml(err.message)}</div>`;
-          } finally { b.disabled = false; b.textContent = 'План ИИ'; }
+            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка: ${escHtml(err.message)}</span></div>`;
+          } finally { b.disabled = false; b.innerHTML = `${svgIcon('sparkle', 14)}<span>План ИИ</span>`; }
         };
         card.querySelector('[data-prop]').onclick = async ev => {
-          const b = ev.currentTarget; b.disabled = true; b.textContent = 'Подбирает…';
+          const b = ev.currentTarget; b.disabled = true; b.innerHTML = `${svgIcon('refresh', 14)}<span>Подбирает…</span>`;
           try {
             await proposeSmartAssignmentWithAi(s.uid);
-            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">✅ Предложение задания для <b>${escHtml(s.name)}</b> создано — открой вкладку «Задания на согласование».</div>`;
+            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">${svgIcon('check', 15)}<span>Предложение задания для <b>${escHtml(s.name)}</b> создано — открой вкладку «Задания».</span></div>`;
           } catch (err) {
-            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">Ошибка: ${escHtml(err.message)}</div>`;
-          } finally { b.disabled = false; b.textContent = '+ Задание'; }
+            body.querySelector('#lmmNoticeBox').innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка: ${escHtml(err.message)}</span></div>`;
+          } finally { b.disabled = false; b.innerHTML = `${svgIcon('plus', 14)}<span>Задание</span>`; }
         };
         list.appendChild(card);
       });
@@ -873,35 +1080,36 @@
     async function renderReportsTab(body) {
       const snap = await window.db.collection('aiReports').orderBy('clientAt', 'desc').limit(8).get().catch(() => ({ docs: [] }));
       body.innerHTML = `
-        <div class="lmm-card">
+        <div class="lmm-card lmm-glow">
           <div class="lmm-row">
             <div>
-              <strong>Сводка по группе + Discord Embed</strong>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px;">Цифры считаются кодом, отчёт сохраняется в LMS и красиво уходит карточкой в Discord.</div>
+              <strong>Сводка по группе и отправка в Discord</strong>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px;">Цифры считаются кодом, отчёт сохраняется в LMS и уходит оформленной Embed-карточкой в Discord.</div>
             </div>
-            <button type="button" class="lmm-btn primary" id="lmmSendRep">📊 Отправить отчёт в Discord</button>
+            <button type="button" class="lmm-btn primary" id="lmmSendRep">${svgIcon('send', 14)}<span>Отправить отчёт в Discord</span></button>
           </div>
           <div id="lmmRepNotice"></div>
         </div>
         <div id="lmmRepList" style="display:flex;flex-direction:column;gap:10px;"></div>
       `;
       body.querySelector('#lmmSendRep').onclick = async e => {
-        const b = e.currentTarget; b.disabled = true; b.textContent = 'Формируем и отправляем…';
+        const b = e.currentTarget; b.disabled = true; b.innerHTML = `${svgIcon('refresh', 14)}<span>Формируем и отправляем…</span>`;
         try {
           await generateGroupReport({ period: 'по команде', sendToDiscord: true });
           renderTab();
         } catch (err) {
-          body.querySelector('#lmmRepNotice').innerHTML = `<div class="lmm-notice">Ошибка: ${escHtml(err.message)}</div>`;
-          b.disabled = false; b.textContent = '📊 Отправить отчёт в Discord';
+          body.querySelector('#lmmRepNotice').innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка: ${escHtml(err.message)}</span></div>`;
+          b.disabled = false; b.innerHTML = `${svgIcon('send', 14)}<span>Отправить отчёт в Discord</span>`;
         }
       };
       const list = body.querySelector('#lmmRepList');
       if (!snap.docs.length) { list.innerHTML = '<div class="lmm-card" style="color:var(--muted);">Сохранённых отчётов пока нет.</div>'; return; }
-      snap.docs.forEach(d => {
+      snap.docs.forEach((d, idx) => {
         const r = d.data() || {};
         const dt = r.clientAt ? new Date(r.clientAt).toLocaleString('ru-RU') : '';
         const card = document.createElement('div');
         card.className = 'lmm-card';
+        card.style.setProperty('--i', idx);
         card.innerHTML = `
           <div class="lmm-row">
             <strong>Отчёт (${escHtml(r.type || 'по команде')})</strong>
@@ -916,12 +1124,12 @@
     async function renderProposalsTab(body) {
       const snap = await window.db.collection('aiProposals').orderBy('clientAt', 'desc').limit(15).get().catch(() => ({ docs: [] }));
       body.innerHTML = `
-        <div class="lmm-notice">Режим согласования (14 дней): задания от ИИ попадают к ученикам только после нажатия «Подтвердить и выдать».</div>
+        <div class="lmm-notice">${svgIcon('shield', 15)}<span>Режим согласования (14 дней): задания от ИИ выдаются ученикам только после твоего подтверждения.</span></div>
         <div id="lmmPropList" style="display:flex;flex-direction:column;gap:10px;"></div>
       `;
       const list = body.querySelector('#lmmPropList');
       if (!snap.docs.length) {
-        list.innerHTML = '<div class="lmm-card" style="color:var(--muted);">Пока нет предложений. Нажми «+ Задание» напротив любого ученика во вкладке «Группа и Профи».</div>';
+        list.innerHTML = '<div class="lmm-card" style="color:var(--muted);">Пока нет предложений. Нажми «Задание» напротив любого ученика во вкладке «Группа и Профи».</div>';
         return;
       }
       const statusMap = {
@@ -929,12 +1137,13 @@
         approved: ['ok', 'Выдано ученику'],
         rejected: ['err', 'Отклонено']
       };
-      snap.docs.forEach(d => {
+      snap.docs.forEach((d, idx) => {
         const p = d.data() || {};
         const st = statusMap[p.status] || ['info', p.status];
         const pending = p.status === 'pending_approval';
         const card = document.createElement('div');
         card.className = 'lmm-card';
+        card.style.setProperty('--i', idx);
         card.innerHTML = `
           <div class="lmm-row">
             <div>
@@ -949,7 +1158,7 @@
           </div>
           <div style="font-size:12.5px;color:var(--muted);"><b>Почему:</b> ${escHtml(p.reason || '')}</div>
           <div class="lmm-rich">${escHtml(p.text || '')}</div>
-          ${pending ? '<div class="lmm-row" style="justify-content:flex-end;"><button type="button" class="lmm-btn danger" data-rej>Отклонить</button><button type="button" class="lmm-btn good" data-app>✓ Подтвердить и выдать</button></div>' : ''}
+          ${pending ? `<div class="lmm-row" style="justify-content:flex-end;"><button type="button" class="lmm-btn danger" data-rej>${svgIcon('x', 14)}<span>Отклонить</span></button><button type="button" class="lmm-btn good" data-app>${svgIcon('check', 14)}<span>Подтвердить и выдать</span></button></div>` : ''}
         `;
         if (pending) {
           card.querySelector('[data-app]').onclick = async ev => { ev.currentTarget.disabled = true; await approveProposal(d.id); renderTab(); };
@@ -960,56 +1169,120 @@
     }
 
     async function renderCleanupTab(body) {
-      const bSnap = await window.db.collection('lmsBackups').orderBy('clientAt', 'desc').limit(10).get().catch(() => ({ docs: [] }));
+      const bSnap = await window.db.collection('lmsBackups').orderBy('clientAt', 'desc').limit(20).get().catch(() => ({ docs: [] }));
+      const restoredCount = bSnap.docs.filter(d => d.data()?.restored === true).length;
+
       body.innerHTML = `
         <div class="lmm-card">
-          <strong>Авто-уборка старых данных от ИИ</strong>
-          <div style="font-size:12.5px;color:var(--muted);line-height:1.55;">Твоё ручное удаление в обычной админке работает мгновенно без вопросов. Здесь ИИ проверяет старые технические записи и чистит их только с твоим подтверждением и автоматическим бэкапом.</div>
-          <div class="lmm-row" style="justify-content:flex-start;">
-            <button type="button" class="lmm-btn primary" id="lmmScanErr">Найти старые ошибки (&gt; 14 дн.)</button>
-            <button type="button" class="lmm-btn" id="lmmScanErrAll">Найти все ошибки</button>
+          <div class="lmm-row">
+            <div>
+              <strong>Безопасная уборка данных с авто-бэкапом</strong>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px;">Твоё ручное удаление в админке остаётся мгновенным. Здесь можно просканировать и безопасно очистить любую категорию с сохранением копии.</div>
+            </div>
           </div>
+          <div class="lmm-clean-grid" id="lmmCleanGrid"></div>
           <div id="lmmCleanPreview"></div>
         </div>
         <div class="lmm-card">
-          <strong>Резервные копии (возврат в 1 клик)</strong>
+          <div class="lmm-row">
+            <div>
+              <strong>Резервные копии (${bSnap.docs.length})</strong>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Любую копию можно восстановить в 1 клик или удалить навсегда, когда она больше не нужна.</div>
+            </div>
+            ${restoredCount > 0 ? `<button type="button" class="lmm-btn danger sm" id="lmmPurgeRestored">${svgIcon('trash', 13)}<span>Удалить восстановленные (${restoredCount})</span></button>` : ''}
+          </div>
           <div id="lmmBackupList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
       `;
-      async function runScan(days) {
-        const box = body.querySelector('#lmmCleanPreview');
-        box.innerHTML = '<div class="lmm-loader"><span class="lmm-spin"></span><span>Проверяем записи…</span></div>';
-        lastCleanupPreview = await previewCleanup({ target: 'platformErrors', olderThanDays: days });
-        if (!lastCleanupPreview.count) {
-          box.innerHTML = '<div class="lmm-notice">✅ Старых записей не найдено — всё чисто.</div>';
-          return;
-        }
-        box.innerHTML = `
-          <div class="lmm-row" style="padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;">
-            <span style="font-size:13px;">Найдено записей в <b>platformErrors</b>: <b>${lastCleanupPreview.count}</b></span>
-            <button type="button" class="lmm-btn danger" id="lmmDoClean">Подтвердить уборку (с бэкапом)</button>
+
+      const grid = body.querySelector('#lmmCleanGrid');
+      CLEANUP_CATALOG.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'lmm-clean-item lmm-glow';
+        el.innerHTML = `
+          <div class="lmm-clean-head">
+            <div class="lmm-clean-ic">${svgIcon(item.icon, 18)}</div>
+            <div><strong>${escHtml(item.label)}</strong><small>${escHtml(item.desc)}</small></div>
+          </div>
+          <div class="lmm-clean-actions">
+            <button type="button" class="lmm-btn sm primary" data-scan="14">Старше 14 дн.</button>
+            <button type="button" class="lmm-btn sm" data-scan="0">Все записи</button>
           </div>
         `;
-        box.querySelector('#lmmDoClean').onclick = async e => {
-          e.currentTarget.disabled = true; e.currentTarget.textContent = 'Сохраняем бэкап и чистим…';
-          await executeCleanup(lastCleanupPreview, true);
+        el.querySelectorAll('[data-scan]').forEach(btn => {
+          btn.onclick = () => runScan(item, Number(btn.dataset.scan));
+        });
+        grid.appendChild(el);
+      });
+
+      async function runScan(item, days) {
+        const box = body.querySelector('#lmmCleanPreview');
+        box.innerHTML = `<div class="lmm-notice">${svgIcon('refresh', 15)}<span>Сканируем категорию «${escHtml(item.label)}»…</span></div>`;
+        try {
+          lastCleanupPreview = await previewCleanup({ target: item.id, olderThanDays: days });
+          if (!lastCleanupPreview.count) {
+            box.innerHTML = `<div class="lmm-notice">${svgIcon('check', 15)}<span>В категории «${escHtml(item.label)}» лишних записей не найдено.</span></div>`;
+            return;
+          }
+          box.innerHTML = `
+            <div class="lmm-backup-row" style="margin-top:4px;">
+              <span style="font-size:13px;">Категория: <b>${escHtml(item.label)}</b> (${days > 0 ? 'старше ' + days + ' дн.' : 'все'}) · найдено записей: <b>${lastCleanupPreview.count}</b></span>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="lmm-btn sm" id="lmmCancelClean">${svgIcon('x', 13)}<span>Отмена</span></button>
+                <button type="button" class="lmm-btn sm danger" id="lmmDoClean">${svgIcon('trash', 13)}<span>Подтвердить уборку (с бэкапом)</span></button>
+              </div>
+            </div>
+          `;
+          box.querySelector('#lmmCancelClean').onclick = () => { box.innerHTML = ''; lastCleanupPreview = null; };
+          box.querySelector('#lmmDoClean').onclick = async e => {
+            e.currentTarget.disabled = true; e.currentTarget.innerHTML = `${svgIcon('refresh', 13)}<span>Сохраняем бэкап и чистим…</span>`;
+            try {
+              await executeCleanup(lastCleanupPreview, true);
+              renderTab();
+            } catch (err) {
+              box.innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка очистки: ${escHtml(err.message)}</span></div>`;
+            }
+          };
+        } catch (err) {
+          box.innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка сканирования: ${escHtml(err.message)}</span></div>`;
+        }
+      }
+
+      const purgeBtn = body.querySelector('#lmmPurgeRestored');
+      if (purgeBtn) {
+        purgeBtn.onclick = async () => {
+          purgeBtn.disabled = true;
+          await deleteAllRestoredBackups();
           renderTab();
         };
       }
-      body.querySelector('#lmmScanErr').onclick = () => runScan(14);
-      body.querySelector('#lmmScanErrAll').onclick = () => runScan(0);
 
       const bList = body.querySelector('#lmmBackupList');
-      if (!bSnap.docs.length) { bList.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Резервных копий пока нет.</div>'; return; }
+      if (!bSnap.docs.length) {
+        bList.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Резервных копий пока нет.</div>';
+        return;
+      }
       bSnap.docs.forEach(d => {
         const b = d.data() || {};
         const row = document.createElement('div');
-        row.className = 'lmm-row';
-        row.style.cssText = 'padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-size:12.5px;';
-        row.innerHTML = `<span><b>${escHtml(b.path)}</b> · ${b.count} зап. · ${b.clientAt ? new Date(b.clientAt).toLocaleString('ru-RU') : ''}</span>` +
-          (b.restored ? '<span class="lmm-badge ok">Восстановлено</span>' : '<button type="button" class="lmm-btn good">Восстановить</button>');
-        const btn = row.querySelector('button');
-        if (btn) btn.onclick = async () => { btn.disabled = true; btn.textContent = 'Восстанавливаем…'; await restoreBackup(d.id); renderTab(); };
+        row.className = 'lmm-backup-row';
+        const title = b.label || b.path || b.target || 'Копия';
+        const dt = b.clientAt ? new Date(b.clientAt).toLocaleString('ru-RU') : '';
+        row.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;">
+            <span style="color:var(--accent);display:flex;">${svgIcon('archive', 16)}</span>
+            <span><b>${escHtml(title)}</b> · ${Number(b.count || 0)} зап. · <span style="color:var(--muted);">${escHtml(dt)}</span></span>
+            ${b.restored ? '<span class="lmm-badge ok">Восстановлено</span>' : ''}
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+            ${!b.restored ? `<button type="button" class="lmm-btn sm good" data-restore>${svgIcon('rotateCcw', 13)}<span>Восстановить</span></button>` : ''}
+            <button type="button" class="lmm-btn sm danger" data-del-backup>${svgIcon('trash', 13)}<span>Удалить копию</span></button>
+          </div>
+        `;
+        const rBtn = row.querySelector('[data-restore]');
+        if (rBtn) rBtn.onclick = async () => { rBtn.disabled = true; rBtn.innerHTML = `${svgIcon('refresh', 13)}<span>Восстанавливаем…</span>`; await restoreBackup(d.id); renderTab(); };
+        const dBtn = row.querySelector('[data-del-backup]');
+        if (dBtn) dBtn.onclick = async () => { dBtn.disabled = true; await deleteBackup(d.id); renderTab(); };
         bList.appendChild(row);
       });
     }
@@ -1017,7 +1290,6 @@
     renderTab();
   }
 
-  // React-обёртка для нативного встраивания в AdminSections (6_admin.js)
   function LMSMentorSection() {
     const ref = React.useRef(null);
     React.useEffect(() => {
@@ -1027,13 +1299,12 @@
     return React.createElement('div', { ref });
   }
 
-  // На случай если раньше была открыта старая версия v3/v4 с кнопкой в углу — подчистим
   document.getElementById('lms-mentor-launcher')?.remove();
   document.getElementById('lms-mentor-overlay')?.remove();
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 5,
+    version: 6,
     OWNER_UID,
     isOwner,
     mountInto,
@@ -1050,6 +1321,8 @@
     rejectProposal,
     previewCleanup,
     executeCleanup,
-    restoreBackup
+    restoreBackup,
+    deleteBackup,
+    deleteAllRestoredBackups
   };
 })();
