@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v6) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v7) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 6) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 7) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -711,25 +711,37 @@
       @keyframes lmmPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.45)}50%{box-shadow:0 0 0 7px transparent}}
 
       .lmm-wrap{
-        --surface:#151d30;--surface-2:#0f1626;--surface-hover:#1d2740;
-        --border:#25314d;--border-2:#35456b;
-        --text:#f1f5ff;--muted:#90a3c4;
-        --accent:#7c5dfa;--accent-2:#a28bff;--accent-soft:rgba(124,93,250,.15);
-        --green:#22c55e;--green-soft:rgba(34,197,94,.14);
-        --amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);
-        --red:#ef4444;--red-soft:rgba(239,68,68,.14);
+        --surface:#ffffff;--surface-2:#f3f5fb;--surface-hover:#e9eef8;
+        --border:#dde3f0;--border-2:#c3cde3;
+        --text:#162033;--muted:#5b6a88;
+        --accent:#6a52e5;--accent-2:#8b72ff;--accent-soft:rgba(106,82,229,.10);
+        --green:#16a34a;--green-soft:rgba(22,163,74,.11);
+        --amber:#d97706;--amber-soft:rgba(217,119,6,.12);
+        --red:#dc2626;--red-soft:rgba(220,38,38,.11);
+        --shadow-card:0 4px 16px rgba(22,32,51,.05);
         --ease:cubic-bezier(.22,1,.36,1);
         display:flex;flex-direction:column;gap:18px;color:var(--text);
         font-family:Montserrat,system-ui,sans-serif;animation:lmmFadeUp .35s var(--ease) both;
       }
-      .lmm-wrap.lmm-light{
-        --surface:#ffffff;--surface-2:#f2f5fb;--surface-hover:#e8edf8;
-        --border:#dde3f0;--border-2:#c4cee5;
+      body.dark .lmm-wrap, html.dark .lmm-wrap, [data-theme="dark"] .lmm-wrap{
+        --surface:#151d30;--surface-2:#0f1626;--surface-hover:#1d2740;
+        --border:#25314d;--border-2:#35456b;
+        --text:#f1f5ff;--muted:#90a3c4;
+        --accent:#7c5dfa;--accent-2:#a28bff;--accent-soft:rgba(124,93,250,.16);
+        --green:#22c55e;--green-soft:rgba(34,197,94,.14);
+        --amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);
+        --red:#ef4444;--red-soft:rgba(239,68,68,.14);
+        --shadow-card:0 12px 32px rgba(0,0,0,.22);
+      }
+      body.light .lmm-wrap, html.light .lmm-wrap, [data-theme="light"] .lmm-wrap{
+        --surface:#ffffff;--surface-2:#f3f5fb;--surface-hover:#e9eef8;
+        --border:#dde3f0;--border-2:#c3cde3;
         --text:#162033;--muted:#5b6a88;
-        --accent:#6a52e5;--accent-2:#8d75ff;--accent-soft:rgba(106,82,229,.10);
+        --accent:#6a52e5;--accent-2:#8b72ff;--accent-soft:rgba(106,82,229,.10);
         --green:#16a34a;--green-soft:rgba(22,163,74,.11);
         --amber:#d97706;--amber-soft:rgba(217,119,6,.12);
         --red:#dc2626;--red-soft:rgba(220,38,38,.11);
+        --shadow-card:0 4px 16px rgba(22,32,51,.05);
       }
 
       /* Spotlight hover effect on desktop */
@@ -748,7 +760,7 @@
         display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
         padding:24px 26px;border-radius:22px;border:1px solid var(--border);
         background:radial-gradient(ellipse at 92% 0%,var(--accent-soft),transparent 60%),var(--surface);
-        box-shadow:0 12px 32px rgba(0,0,0,.14);
+        box-shadow:var(--shadow-card);
       }
       .lmm-hero-left{display:flex;align-items:center;gap:16px;}
       .lmm-hero-ic{
@@ -783,7 +795,7 @@
       .lmm-panel{display:flex;flex-direction:column;gap:14px;animation:lmmFadeUp .28s var(--ease) both;}
       .lmm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
       .lmm-kpi{
-        background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;
+        background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow-card);
         display:flex;align-items:center;gap:14px;
         animation:lmmFadeUp .35s var(--ease) both;animation-delay:calc(var(--i,0)*45ms);
         transition:transform .2s var(--ease),border-color .2s;
@@ -806,10 +818,10 @@
         transition:all .16s var(--ease);
       }
       .lmm-fbtn:hover{border-color:var(--border-2);color:var(--text);}
-      .lmm-fbtn.active{background:var(--text);color:var(--surface);border-color:var(--text);}
+      .lmm-fbtn.active{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#ffffff;border-color:var(--accent);box-shadow:0 4px 14px rgba(106,82,229,.28);}
 
       .lmm-card{
-        background:var(--surface);border:1px solid var(--border);border-radius:18px;
+        background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow-card);
         padding:16px 18px;display:flex;flex-direction:column;gap:12px;
         animation:lmmFadeUp .34s var(--ease) both;animation-delay:calc(min(var(--i,0),10)*35ms);
         transition:border-color .18s,transform .18s var(--ease);
@@ -916,7 +928,7 @@
     rootEl.innerHTML = '';
 
     const wrap = document.createElement('div');
-    wrap.className = 'lmm-wrap' + (isLightTheme() ? ' lmm-light' : '');
+    wrap.className = 'lmm-wrap';
     wrap.addEventListener('pointermove', e => {
       const card = e.target.closest('.lmm-glow');
       if (!card) return;
@@ -959,7 +971,7 @@
     });
 
     async function renderTab() {
-      wrap.classList.toggle('lmm-light', isLightTheme());
+      
       const body = wrap.querySelector('#lmmBody');
       if (!isOwner()) {
         body.innerHTML = '<div class="lmm-card">Раздел доступен только владельцу LMS.</div>';
@@ -1304,7 +1316,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 6,
+    version: 7,
     OWNER_UID,
     isOwner,
     mountInto,
