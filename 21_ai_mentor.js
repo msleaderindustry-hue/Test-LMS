@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v7) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v8) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 7) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 8) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -688,6 +688,124 @@
     return { ok: true, deleted: targets.length };
   }
 
+  const AUTO_SCAN_KEY = 'lms_ai_cleanup_last_scan_v1';
+  let pendingAutoPlan = null;
+
+  // Умное фоновое сканирование старых данных порциями (по умолчанию старше 14 дн., до 100 записей на категорию)
+  async function scanOldDataForAi(options = {}) {
+    requireOwner('авто-проверка старых данных');
+    const olderThanDays = Math.max(1, Number(options.olderThanDays || 14));
+    const maxPerCategory = Math.max(10, Number(options.maxPerCategory || 100));
+    const items = [];
+    let totalFound = 0;
+
+    for (const cat of CLEANUP_CATALOG) {
+      try {
+        const docs = await collectCleanupDocs(cat.id, olderThanDays);
+        if (!docs.length) continue;
+        // Берём самые старые записи порцией, чтобы чистить понемногу и без нагрузки
+        const sorted = docs.slice().sort((a, b) => {
+          const da = a.data() || {}, db = b.data() || {};
+          return toMillis(da.at || da.clientAt || da.createdAt) - toMillis(db.at || db.clientAt || db.createdAt);
+        });
+        const slice = sorted.slice(0, maxPerCategory);
+        totalFound += slice.length;
+        items.push({
+          target: cat.id,
+          label: cat.label,
+          olderThanDays,
+          totalAvailable: docs.length,
+          count: slice.length,
+          paths: slice.map(d => d.ref.path)
+        });
+      } catch (_) {}
+    }
+
+    if (!items.length) {
+      pendingAutoPlan = { generatedAt: Date.now(), olderThanDays, totalFound: 0, items: [], aiNote: 'Старых записей старше ' + olderThanDays + ' дн. не найдено — база чистая.' };
+      return pendingAutoPlan;
+    }
+
+    let aiNote = 'Найдено ' + totalFound + ' старых записей (старше ' + olderThanDays + ' дн.). Рекомендую очистить этой порцией — перед удалением автоматически сохранится резервная копия.';
+    try {
+      const compact = items.map(i => ({ category: i.label, batchCount: i.count, totalOld: i.totalAvailable }));
+      const prompt = 'Ты ИИ-менеджер Ultimate LMS. Напиши администратору 1–2 коротких предложения на русском (без эмодзи и приветствий), какие старые данные найдены для порционной уборки и почему их стоит безопасно почистить с бэкапом. Строго по цифрам: ' + JSON.stringify(compact);
+      const reply = await callAi(prompt, 15000);
+      if (reply) aiNote = reply;
+    } catch (_) {}
+
+    pendingAutoPlan = { generatedAt: Date.now(), olderThanDays, totalFound, items, aiNote };
+
+    if (options.notifyDiscord) {
+      const lines = items.map(i => `- **${i.label}**: ${i.count} зап. (всего старых: ${i.totalAvailable})`).join('
+');
+      await sendDiscord({
+        username: 'Ultimate LMS · ИИ-уборка',
+        embeds: [{
+          title: 'ИИ подготовил порционную уборку старых данных',
+          color: 0x6a52e5,
+          description: aiNote.slice(0, 1000),
+          fields: [
+            { name: 'К удалению (с авто-бэкапом)', value: lines.slice(0, 1000), inline: false },
+            { name: 'Действие', value: 'Открой **Админка → ИИ-менеджер → Уборка и бэкапы** и нажми «Подтвердить и очистить».', inline: false }
+          ],
+          footer: { text: 'Ничего не удаляется без твоего подтверждения' },
+          timestamp: new Date().toISOString()
+        }]
+      }).catch(() => false);
+    }
+    return pendingAutoPlan;
+  }
+
+  async function executeAutoCleanupPlan(plan, confirmed) {
+    requireOwner('подтверждение авто-уборки ИИ');
+    if (confirmed !== true) throw new Error('Требуется подтверждение администратора.');
+    const targetPlan = plan || pendingAutoPlan;
+    if (!targetPlan || !Array.isArray(targetPlan.items) || !targetPlan.items.length) return { ok: true, totalDeleted: 0, details: [] };
+
+    const details = [];
+    let totalDeleted = 0;
+    for (const item of targetPlan.items) {
+      const res = await executeCleanup(item, true);
+      totalDeleted += res.deleted || 0;
+      details.push({ label: item.label, deleted: res.deleted || 0, backupIds: res.backupIds || [] });
+    }
+    pendingAutoPlan = null;
+
+    const summaryLines = details.map(d => `- **${d.label}**: удалено ${d.deleted} зап. (бэкап сохранён)`).join('
+');
+    await sendDiscord({
+      username: 'Ultimate LMS · ИИ-уборка',
+      embeds: [{
+        title: 'Плановая уборка выполнена с резервной копией',
+        color: 0x16a34a,
+        fields: [
+          { name: 'Итого очищено', value: `**${totalDeleted} записей**`, inline: true },
+          { name: 'Детали', value: summaryLines.slice(0, 1000), inline: false }
+        ],
+        footer: { text: 'Копии сохранены в lmsBackups — можно восстановить в 1 клик' },
+        timestamp: new Date().toISOString()
+      }]
+    }).catch(() => false);
+
+    return { ok: true, totalDeleted, details };
+  }
+
+  // Фоновая проверка раз в 24 часа, когда админ заходит в LMS (без нагрузки на интерфейс)
+  function scheduleDailyAutoScan() {
+    if (!isOwner()) return;
+    try {
+      const last = Number(localStorage.getItem(AUTO_SCAN_KEY) || 0);
+      if (Date.now() - last < 86400000) return;
+      localStorage.setItem(AUTO_SCAN_KEY, String(Date.now()));
+    } catch (_) { return; }
+    setTimeout(() => {
+      if (isOwner()) void scanOldDataForAi({ olderThanDays: 14, maxPerCategory: 100, notifyDiscord: true }).catch(() => {});
+    }, 6000);
+  }
+  if (window.auth?.onAuthStateChanged) window.auth.onAuthStateChanged(() => scheduleDailyAutoScan());
+  window.addEventListener('lms:profile-ready', scheduleDailyAutoScan);
+
   function setProCriteria(patch) {
     requireOwner('настройка критериев «профи»');
     proCriteria = Object.assign({}, proCriteria, patch || {}, { confirmed: true });
@@ -1185,11 +1303,21 @@
       const restoredCount = bSnap.docs.filter(d => d.data()?.restored === true).length;
 
       body.innerHTML = `
+        <div class="lmm-card lmm-glow">
+          <div class="lmm-row">
+            <div>
+              <strong>Умная авто-уборка ИИ (порциями по 100 записей, старше 14 дн.)</strong>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px;">ИИ раз в сутки сам ищет старые ненужные записи по всем категориям, присылает запрос в Discord и чистит их понемногу только после твоего подтверждения (с авто-бэкапом).</div>
+            </div>
+            <button type="button" class="lmm-btn primary" id="lmmRunAutoScan">${svgIcon('sparkle', 14)}<span>Проверить старые данные сейчас</span></button>
+          </div>
+          <div id="lmmAutoPlanBox"></div>
+        </div>
         <div class="lmm-card">
           <div class="lmm-row">
             <div>
-              <strong>Безопасная уборка данных с авто-бэкапом</strong>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px;">Твоё ручное удаление в админке остаётся мгновенным. Здесь можно просканировать и безопасно очистить любую категорию с сохранением копии.</div>
+              <strong>Точечная уборка по категориям (с авто-бэкапом)</strong>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px;">Твоё ручное удаление в обычной админке остаётся мгновенным. Здесь можно вручную просканировать любую категорию.</div>
             </div>
           </div>
           <div class="lmm-clean-grid" id="lmmCleanGrid"></div>
@@ -1206,6 +1334,46 @@
           <div id="lmmBackupList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
       `;
+
+      function renderAutoPlanBox() {
+        const box = body.querySelector('#lmmAutoPlanBox');
+        if (!pendingAutoPlan) { box.innerHTML = ''; return; }
+        if (!pendingAutoPlan.totalFound) {
+          box.innerHTML = `<div class="lmm-notice">${svgIcon('check', 15)}<span>${escHtml(pendingAutoPlan.aiNote)}</span></div>`;
+          return;
+        }
+        const pills = pendingAutoPlan.items.map(i => `<span class="lmm-pill">${escHtml(i.label)}: ${i.count} из ${i.totalAvailable}</span>`).join('');
+        box.innerHTML = `
+          <div class="lmm-rich" style="display:flex;flex-direction:column;gap:10px;">
+            <div>${escHtml(pendingAutoPlan.aiNote)}</div>
+            <div class="lmm-pills">${pills}</div>
+            <div class="lmm-row" style="justify-content:flex-end;">
+              <button type="button" class="lmm-btn sm" id="lmmSkipAuto">${svgIcon('x', 13)}<span>Пропустить</span></button>
+              <button type="button" class="lmm-btn sm danger" id="lmmApproveAuto">${svgIcon('trash', 13)}<span>Подтвердить и очистить (${pendingAutoPlan.totalFound} зап. с бэкапом)</span></button>
+            </div>
+          </div>
+        `;
+        box.querySelector('#lmmSkipAuto').onclick = () => { pendingAutoPlan = null; renderAutoPlanBox(); };
+        box.querySelector('#lmmApproveAuto').onclick = async e => {
+          e.currentTarget.disabled = true; e.currentTarget.innerHTML = `${svgIcon('refresh', 13)}<span>Сохраняем бэкапы и чистим…</span>`;
+          try {
+            await executeAutoCleanupPlan(pendingAutoPlan, true);
+            renderTab();
+          } catch (err) {
+            box.innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка авто-уборки: ${escHtml(err.message)}</span></div>`;
+          }
+        };
+      }
+      renderAutoPlanBox();
+      body.querySelector('#lmmRunAutoScan').onclick = async e => {
+        const b = e.currentTarget; b.disabled = true; b.innerHTML = `${svgIcon('refresh', 14)}<span>ИИ проверяет старые данные…</span>`;
+        try {
+          await scanOldDataForAi({ olderThanDays: 14, maxPerCategory: 100, notifyDiscord: false });
+          renderAutoPlanBox();
+        } catch (err) {
+          body.querySelector('#lmmAutoPlanBox').innerHTML = `<div class="lmm-notice">${svgIcon('alert', 15)}<span>Ошибка: ${escHtml(err.message)}</span></div>`;
+        } finally { b.disabled = false; b.innerHTML = `${svgIcon('sparkle', 14)}<span>Проверить старые данные сейчас</span>`; }
+      };
 
       const grid = body.querySelector('#lmmCleanGrid');
       CLEANUP_CATALOG.forEach(item => {
@@ -1316,7 +1484,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 7,
+    version: 8,
     OWNER_UID,
     isOwner,
     mountInto,
@@ -1335,6 +1503,8 @@
     executeCleanup,
     restoreBackup,
     deleteBackup,
-    deleteAllRestoredBackups
+    deleteAllRestoredBackups,
+    scanOldDataForAi,
+    executeAutoCleanupPlan
   };
 })();
