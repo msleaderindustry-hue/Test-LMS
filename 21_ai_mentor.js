@@ -737,8 +737,7 @@
     pendingAutoPlan = { generatedAt: Date.now(), olderThanDays, totalFound, items, aiNote };
 
     if (options.notifyDiscord) {
-      const lines = items.map(i => `- **${i.label}**: ${i.count} зап. (всего старых: ${i.totalAvailable})`).join('
-');
+      const lines = items.map(i => `- **${i.label}**: ${i.count} зап. (всего старых: ${i.totalAvailable})`).join('\n');
       await sendDiscord({
         username: 'Ultimate LMS · ИИ-уборка',
         embeds: [{
@@ -772,8 +771,7 @@
     }
     pendingAutoPlan = null;
 
-    const summaryLines = details.map(d => `- **${d.label}**: удалено ${d.deleted} зап. (бэкап сохранён)`).join('
-');
+    const summaryLines = details.map(d => `- **${d.label}**: удалено ${d.deleted} зап. (бэкап сохранён)`).join('\n');
     await sendDiscord({
       username: 'Ultimate LMS · ИИ-уборка',
       embeds: [{
