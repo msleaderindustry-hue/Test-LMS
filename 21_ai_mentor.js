@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v10) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v11) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 10) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 11) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1031,40 +1031,120 @@
         background:linear-gradient(90deg,var(--surface) 25%,var(--surface-hover) 50%,var(--surface) 75%);
         background-size:200% 100%;animation:lmmShimmer 1.4s infinite linear;border:1px solid var(--border);
       }
-      .lmm-charts-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;}
+      .lmm-charts-grid{display:grid;grid-template-columns:1.18fr 1fr;gap:16px;}
       .lmm-chart-card{
         position:relative;overflow:hidden;
         background:var(--surface);border:1px solid var(--border);border-radius:20px;
-        padding:20px 22px 18px;display:flex;flex-direction:column;gap:14px;
-        box-shadow:var(--shadow-card);
-        animation:lmmFadeUp .42s var(--ease) both;
-        transition:border-color .2s,transform .2s var(--ease);
+        padding:20px 22px 18px;display:flex;flex-direction:column;gap:12px;
+        box-shadow:var(--shadow-card);animation:lmmFadeUp .4s var(--ease) both;
       }
       .lmm-chart-card::before{
-        content:"";position:absolute;left:0;right:0;top:0;height:3px;
-        background:linear-gradient(90deg,var(--accent),var(--green));opacity:.78;
+        content:"";position:absolute;left:0;right:0;top:0;height:2.5px;
+        background:linear-gradient(90deg,var(--accent),var(--green));opacity:.85;
       }
-      .lmm-chart-card:hover{border-color:var(--border-2);}
       .lmm-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-      .lmm-chart-head strong{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:8px;letter-spacing:-.01em;}
-      .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;}
+      .lmm-chart-head strong{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
+      .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;}
+      .lmm-vtabs{display:flex;gap:4px;flex-wrap:wrap;padding:3px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);}
+      .lmm-vtab{
+        padding:5px 9px;border-radius:8px;border:none;background:transparent;color:var(--muted);
+        font:700 11px/1.2 Montserrat,system-ui,sans-serif;cursor:pointer;transition:all .16s;
+      }
+      .lmm-vtab:hover{color:var(--text);}
+      .lmm-vtab.active{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(106,82,229,.28);}
       .lmm-select{
-        font:inherit;font-size:12px;font-weight:700;color:var(--text);
-        background:var(--surface-2);border:1px solid var(--border-2);border-radius:11px;
-        padding:8px 11px;max-width:215px;cursor:pointer;transition:border-color .16s;
+        font:inherit;font-size:11.5px;font-weight:700;color:var(--text);
+        background:var(--surface-2);border:1px solid var(--border-2);border-radius:10px;
+        padding:6px 10px;max-width:195px;cursor:pointer;
       }
-      .lmm-select:hover{border-color:var(--accent);}
-      .lmm-chart-box{position:relative;height:278px;width:100%;}
-      .lmm-skill-strip{
-        display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
-        padding-top:10px;border-top:1px solid var(--border);
+      .lmm-replay{
+        width:30px;height:30px;border-radius:9px;border:1px solid var(--border);
+        background:var(--surface-2);color:var(--muted);display:grid;place-items:center;cursor:pointer;
+        transition:all .16s;
       }
-      .lmm-skill-chip{
-        background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
-        padding:6px 4px;text-align:center;
+      .lmm-replay:hover{color:var(--text);border-color:var(--accent);transform:rotate(-45deg);}
+      .lmm-viz-box{min-height:252px;display:flex;flex-direction:column;justify-content:center;}
+      .lmm-viz-box svg{width:100%;height:auto;display:block;}
+      .lmm-viz-box text{fill:var(--muted);font-size:11px;font-family:Montserrat,system-ui,sans-serif;}
+
+      /* 1. Glowing gradient bars (как на скрине Ultimate LMS) */
+      .lv-cols{display:flex;align-items:flex-end;justify-content:space-around;height:215px;position:relative;border-bottom:1px solid var(--border);padding-top:22px;gap:8px;}
+      .lv-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:74px;cursor:pointer;}
+      .lv-bar{
+        width:100%;border-radius:11px 11px 4px 4px;height:0;
+        transition:height 1.15s cubic-bezier(.2,.8,.2,1) var(--d,0s),filter .2s;
+        background:linear-gradient(180deg,var(--c-top),var(--c));
+        box-shadow:0 0 22px -4px var(--c);
       }
+      .lv-col:hover .lv-bar{filter:brightness(1.12);}
+      .lv-go .lv-bar{height:var(--h);}
+      .lv-goal{position:absolute;left:0;right:0;bottom:calc(90% * .86);border-top:2px dashed var(--green);opacity:.7;pointer-events:none;}
+      .lv-goal span{position:absolute;right:0;top:-17px;color:var(--green);font-size:10.5px;font-weight:800;}
+      .lv-labs{display:flex;justify-content:space-around;gap:8px;margin-top:8px;color:var(--muted);font-size:11px;font-weight:700;}
+      .lv-labs span{flex:1;max-width:74px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .lv-val{font-size:11.5px;font-weight:800;color:var(--text);}
+
+      /* 2. Horizontal shimmer bars */
+      .lv-hrow{margin:9px 0;cursor:pointer;}
+      .lv-hrow .lv-ht{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;font-weight:700;}
+      .lv-htr{height:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;overflow:hidden;}
+      .lv-hfill{
+        height:100%;width:0;border-radius:99px;position:relative;overflow:hidden;
+        background:linear-gradient(90deg,var(--c),var(--c-top));
+        transition:width 1.2s cubic-bezier(.2,.8,.2,1) var(--d,0s);
+      }
+      .lv-go .lv-hfill{width:var(--w);}
+      .lv-hfill::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-100%);animation:lmmShimmer 2.4s infinite 1.2s;}
+
+      /* 3. Progress rings */
+      .lv-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:10px;text-align:center;}
+      .lv-ring-item{cursor:pointer;padding:6px;border-radius:14px;transition:background .16s;}
+      .lv-ring-item:hover{background:var(--surface-2);}
+      .lv-tk{fill:none;stroke:var(--surface-2);stroke-width:9;}
+      .lv-ring{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1.35s cubic-bezier(.2,.8,.2,1) var(--d,0s);}
+      .lv-go .lv-ring{stroke-dashoffset:var(--o);}
+      .lv-rnm{font-size:11px;font-weight:700;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+      /* 4. Concentric arcs */
+      .lv-arc{fill:none;stroke-width:11;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transform:rotate(-90deg);transform-origin:150px 125px;transition:stroke-dashoffset 1.45s cubic-bezier(.2,.8,.2,1) var(--d,0s);}
+      .lv-go .lv-arc{stroke-dashoffset:var(--o);}
+
+      /* 5. Speedometer gauge */
+      .lv-gar{fill:none;stroke-width:18;stroke-linecap:round;stroke-dasharray:100;transition:stroke-dashoffset 1.45s cubic-bezier(.2,.8,.2,1);}
+      .lv-gar.v{stroke-dashoffset:100;}.lv-go .lv-gar.v{stroke-dashoffset:var(--o);}
+      .lv-nd{transform:rotate(-90deg);transform-origin:150px 148px;transition:transform 1.65s cubic-bezier(.3,1.5,.4,1);}
+      .lv-go .lv-nd{transform:rotate(var(--rot));}
+
+      /* 6. Pulsing lollipops */
+      @keyframes lvPu{0%{box-shadow:0 0 0 0 var(--c)}100%{box-shadow:0 0 0 11px transparent}}
+      .lv-lp{position:relative;height:32px;margin:8px 0;cursor:pointer;}
+      .lv-lp .ln{position:absolute;left:86px;top:15px;height:3px;border-radius:2px;background:var(--c);width:0;transition:width 1.15s cubic-bezier(.2,.8,.2,1) var(--d,0s);}
+      .lv-lp .dt{position:absolute;left:86px;top:7px;width:18px;height:18px;border-radius:50%;background:var(--c);transform:translateX(-50%);transition:left 1.15s cubic-bezier(.2,.8,.2,1) var(--d,0s);animation:lvPu 2.2s infinite;}
+      .lv-go .lv-lp .ln{width:calc(var(--w) * (100% - 134px) / 100);}
+      .lv-go .lv-lp .dt{left:calc(86px + var(--w) * (100% - 134px) / 100);}
+      .lv-lp .nm{position:absolute;left:0;top:8px;width:80px;font-size:11.5px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .lv-lp .vl{position:absolute;right:0;top:8px;font-weight:800;font-size:12px;}
+
+      /* 7. Segmented blocks */
+      .lv-br{display:flex;align-items:center;gap:10px;margin:10px 0;cursor:pointer;}
+      .lv-br span{width:76px;font-size:11.5px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .lv-br b{width:38px;text-align:right;font-size:12px;}
+      .lv-bk{display:flex;gap:3px;flex:1;}
+      .lv-bk i{flex:1;height:19px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border);transition:background .28s,box-shadow .28s;transition-delay:var(--d);}
+      .lv-go .lv-bk i.on{background:var(--c);border-color:var(--c);box-shadow:0 0 9px -2px var(--c);}
+
+      /* 8. Animated SVG Radar & Heatmap */
+      .lv-poly{transform-origin:150px 145px;transform:scale(0);transition:transform 1.1s cubic-bezier(.2,.9,.2,1.08) var(--d,0s);}
+      .lv-go .lv-poly{transform:scale(1);}
+      .lv-leg{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:11.5px;font-weight:700;color:var(--text);margin-top:6px;}
+      .lv-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+      .lv-hm{display:grid;grid-template-columns:78px repeat(5,1fr);gap:5px;align-items:center;font-size:11px;font-weight:700;color:var(--muted);}
+      .lv-hc{border-radius:9px;height:34px;display:grid;place-items:center;font-weight:800;color:#fff;opacity:0;transform:scale(.55);transition:all .45s cubic-bezier(.3,1.5,.5,1) var(--d,0s);background:rgba(124,93,250,var(--a));}
+      .lv-go .lv-hc{opacity:1;transform:none;}
+      .lmm-skill-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;}
+      .lmm-skill-chip{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:6px 4px;text-align:center;}
       .lmm-skill-chip span{display:block;font-size:10px;font-weight:700;color:var(--muted);}
-      .lmm-skill-chip b{display:block;font-size:13px;font-weight:800;color:var(--text);margin-top:2px;}
+      .lmm-skill-chip b{display:block;font-size:12.5px;font-weight:800;color:var(--text);margin-top:2px;}
       @media(max-width:860px){.lmm-charts-grid{grid-template-columns:1fr;}.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
       @media(max-width:560px){.lmm-clean-grid{grid-template-columns:1fr;}.lmm-hero{padding:18px;}}
       @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
@@ -1111,260 +1191,194 @@
     let activeTab = 'group';
     let groupFilter = 'all';
     let selectedChartUid = null;
+    let groupVizMode = 'bars';     // 'bars' | 'hbars' | 'rings' | 'arcs' | 'gauge' | 'lollipop' | 'blocks'
+    let skillVizMode = 'radar';    // 'radar' | 'heatmap'
     let lastCleanupPreview = null;
-    let activeCharts = [];
 
-    function destroyCharts() {
-      activeCharts.forEach(ch => { try { ch.destroy(); } catch (_) {} });
-      activeCharts = [];
+    function destroyCharts() {}
+
+    function animateVizBox(box) {
+      if (!box) return;
+      box.classList.remove('lv-go');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        box.classList.add('lv-go');
+        box.querySelectorAll('[data-n]').forEach(el => {
+          const to = Number(el.dataset.n) || 0, t0 = performance.now();
+          (function step(t) {
+            const k = Math.min(1, (t - t0) / 1100);
+            el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+            if (k < 1) requestAnimationFrame(step);
+          })(t0);
+        });
+      }));
     }
 
-    function isDarkNow() {
-      const r = document.documentElement, b = document.body;
-      return b?.classList.contains('dark') || r.classList.contains('dark') || r.getAttribute('data-theme') === 'dark';
+    function colorFor(v) {
+      if (v >= 90) return ['#16a34a', '#4ade80'];
+      if (v >= 35) return ['#6a52e5', '#c4b5fd'];
+      if (v > 0) return ['#d97706', '#fcd34d'];
+      return ['#64748b', '#94a3b8'];
+    }
+
+    function renderLeftViz(body, g) {
+      const box = body.querySelector('#lmmLeftViz');
+      if (!box) return;
+      const list = g.students.slice().sort((a, b) => b.pro.readiness - a.pro.readiness).slice(0, 8);
+      if (!list.length) { box.innerHTML = '<div style="color:var(--muted);font-size:12.5px;">Нет данных по ученикам.</div>'; return; }
+      const avgVal = Math.round(avg(list.map(s => s.pro.readiness)));
+
+      if (groupVizMode === 'bars') {
+        box.innerHTML = `
+          <div class="lv-cols">
+            <div class="lv-goal"><span>Цель «Профи» 90%</span></div>
+            ${list.map((s, i) => {
+              const [c, ct] = colorFor(s.pro.readiness);
+              const px = Math.max(4, Math.round(s.pro.readiness * 1.65));
+              return `<div class="lv-col" data-pick="${escHtml(s.uid)}" title="${escHtml(s.name)} — ${s.pro.readiness}% (клик для радара)">
+                <span class="lv-val"><span data-n="${s.pro.readiness}">0</span>%</span>
+                <div class="lv-bar" style="--h:${px}px;--c:${c};--c-top:${ct};--d:${(i * 0.1).toFixed(2)}s"></div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="lv-labs">${list.map(s => `<span title="${escHtml(s.name)}">${escHtml(s.name)}</span>`).join('')}</div>`;
+      } else if (groupVizMode === 'hbars') {
+        box.innerHTML = list.map((s, i) => {
+          const [c, ct] = colorFor(s.pro.readiness);
+          return `<div class="lv-hrow" data-pick="${escHtml(s.uid)}">
+            <div class="lv-ht"><span>${escHtml(s.name)}</span><b><span data-n="${s.pro.readiness}">0</span>%</b></div>
+            <div class="lv-htr"><div class="lv-hfill" style="--w:${s.pro.readiness}%;--c:${c};--c-top:${ct};--d:${(i * 0.1).toFixed(2)}s"></div></div>
+          </div>`;
+        }).join('');
+      } else if (groupVizMode === 'rings') {
+        box.innerHTML = `<div class="lv-rings">${list.map((s, i) => {
+          const [c] = colorFor(s.pro.readiness);
+          return `<div class="lv-ring-item" data-pick="${escHtml(s.uid)}">
+            <svg viewBox="0 0 100 100">
+              <circle class="lv-tk" cx="50" cy="50" r="38"/>
+              <circle class="lv-ring" cx="50" cy="50" r="38" pathLength="100" stroke="${c}" style="--o:${100 - s.pro.readiness};--d:${(i * 0.12).toFixed(2)}s;transform:rotate(-90deg);transform-origin:50px 50px"/>
+              <text x="50" y="56" text-anchor="middle" style="fill:var(--text);font-size:19px;font-weight:800">${s.pro.readiness}%</text>
+            </svg>
+            <div class="lv-rnm" title="${escHtml(s.name)}">${escHtml(s.name)}</div>
+          </div>`;
+        }).join('')}</div>`;
+      } else if (groupVizMode === 'arcs') {
+        const top4 = list.slice(0, 4);
+        const pal = ['#7c5dfa', '#22c55e', '#f59e0b', '#38bdf8'];
+        box.innerHTML = `<svg viewBox="0 0 300 248">${top4.map((s, i) => {
+          const r = 98 - i * 19;
+          return `<circle cx="150" cy="125" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="11"/>
+            <circle class="lv-arc" cx="150" cy="125" r="${r}" pathLength="100" stroke="${pal[i]}" style="--o:${100 - s.pro.readiness};--d:${(i * 0.16).toFixed(2)}s"/>`;
+        }).join('')}
+          <text x="150" y="122" text-anchor="middle" style="fill:var(--text);font-size:25px;font-weight:800"><tspan data-n="${avgVal}">0</tspan>%</text>
+          <text x="150" y="142" text-anchor="middle">среднее</text>
+        </svg>
+        <div class="lv-leg">${top4.map((s, i) => `<span><i style="background:${pal[i]}"></i>${escHtml(s.name.slice(0, 12))} (${s.pro.readiness}%)</span>`).join('')}</div>`;
+      } else if (groupVizMode === 'gauge') {
+        box.innerHTML = `<svg viewBox="0 0 300 188">
+          <defs><linearGradient id="lmmGaugeGrad"><stop offset="0%" stop-color="#7c5dfa"/><stop offset="100%" stop-color="#22c55e"/></linearGradient></defs>
+          <path class="lv-gar" pathLength="100" d="M30 148A120 120 0 0 1 270 148" stroke="var(--surface-2)"/>
+          <path class="lv-gar" pathLength="100" d="M30 148A120 120 0 0 1 270 148" stroke="#22c55e" stroke-dasharray="3 97" style="stroke-dashoffset:-87"/>
+          <path class="lv-gar v" pathLength="100" d="M30 148A120 120 0 0 1 270 148" stroke="url(#lmmGaugeGrad)" style="--o:${100 - avgVal}"/>
+          <g class="lv-nd" style="--rot:${-90 + avgVal * 1.8}deg"><line x1="150" y1="148" x2="150" y2="48" stroke="var(--text)" stroke-width="4" stroke-linecap="round"/></g>
+          <circle cx="150" cy="148" r="8.5" fill="var(--text)"/>
+          <text x="150" y="180" text-anchor="middle" style="fill:var(--text);font-size:19px;font-weight:800"><tspan data-n="${avgVal}">0</tspan>% · цель 90%</text>
+        </svg>`;
+      } else if (groupVizMode === 'lollipop') {
+        box.innerHTML = `<div>${list.map((s, i) => {
+          const [c] = colorFor(s.pro.readiness);
+          return `<div class="lv-lp" data-pick="${escHtml(s.uid)}" style="--w:${s.pro.readiness};--c:${c};--d:${(i * 0.12).toFixed(2)}s">
+            <span class="nm" title="${escHtml(s.name)}">${escHtml(s.name)}</span>
+            <div class="ln"></div><div class="dt"></div>
+            <b class="vl"><span data-n="${s.pro.readiness}">0</span>%</b>
+          </div>`;
+        }).join('')}</div>`;
+      } else {
+        box.innerHTML = list.map((s, i) => {
+          const [c] = colorFor(s.pro.readiness);
+          const on = Math.round(s.pro.readiness / 5);
+          return `<div class="lv-br" data-pick="${escHtml(s.uid)}">
+            <span title="${escHtml(s.name)}">${escHtml(s.name)}</span>
+            <div class="lv-bk" style="--c:${c}">${Array.from({ length: 20 }, (_, j) => `<i class="${j < on ? 'on' : ''}" style="--d:${(j * 0.045 + i * 0.08).toFixed(2)}s"></i>`).join('')}</div>
+            <b><span data-n="${s.pro.readiness}">0</span>%</b>
+          </div>`;
+        }).join('') + `<div class="lv-br"><span>Цель</span><div class="lv-bk" style="--c:#22c55e">${Array.from({ length: 20 }, (_, j) => `<i class="${j < 18 ? 'on' : ''}" style="--d:${(j * 0.04 + 0.35).toFixed(2)}s"></i>`).join('')}</div><b>90%</b></div>`;
+      }
+
+      box.querySelectorAll('[data-pick]').forEach(el => {
+        el.onclick = () => {
+          selectedChartUid = el.dataset.pick;
+          const selEl = body.querySelector('#lmmRadarSelect');
+          if (selEl) selEl.value = selectedChartUid;
+          renderRightViz(body, g);
+        };
+      });
+      animateVizBox(box);
+    }
+
+    function renderRightViz(body, g) {
+      const box = body.querySelector('#lmmRightViz');
+      if (!box) return;
+      if (!g.students.length) { box.innerHTML = '<div style="color:var(--muted);font-size:12.5px;">Нет данных.</div>'; return; }
+
+      const skillKeys = ['typing', 'tests', 'hotkeys', 'excel', 'word'];
+      const skillLabels = ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'];
+      const avgSkills = skillKeys.map(k => Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0))));
+
+      if (skillVizMode === 'heatmap') {
+        const rows = g.students.slice().sort((a, b) => b.pro.readiness - a.pro.readiness).slice(0, 6);
+        box.innerHTML = `<div class="lv-hm">
+          <span></span>${skillLabels.map(k => `<span style="text-align:center">${k}</span>`).join('')}
+          ${rows.map((s, r) => `<span title="${escHtml(s.name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.name)}</span>` +
+            skillKeys.map((k, i) => {
+              const v = Number(s.pro.breakdown[k]) || 0;
+              return `<div class="lv-hc" style="--a:${(0.14 + (v / 100) * 0.86).toFixed(2)};--d:${((r * 5 + i) * 0.04).toFixed(2)}s">${v}</div>`;
+            }).join('')
+          ).join('')}
+        </div>`;
+        animateVizBox(box);
+        return;
+      }
+
+      const student = g.students.find(s => s.uid === selectedChartUid) || g.students[0];
+      selectedChartUid = student.uid;
+      const stSkills = skillKeys.map(k => Number(student.pro.breakdown[k]) || 0);
+      const pts = arr => arr.map((v, i) => {
+        const r = (v / 100) * 108, t = -Math.PI / 2 + i * 2 * Math.PI / 5;
+        return [150 + r * Math.cos(t), 145 + r * Math.sin(t)];
+      });
+      const polyStr = arr => pts(arr).map(p => p.map(n => n.toFixed(1)).join(',')).join(' ');
+      let gridSvg = '';
+      [25, 50, 75, 100].forEach(lvl => {
+        gridSvg += `<circle cx="150" cy="145" r="${(lvl / 100) * 108}" fill="none" stroke="var(--border)"/>`;
+      });
+      skillLabels.forEach((lbl, i) => {
+        const t = -Math.PI / 2 + i * 2 * Math.PI / 5;
+        gridSvg += `<line x1="150" y1="145" x2="${(150 + 108 * Math.cos(t)).toFixed(1)}" y2="${(145 + 108 * Math.sin(t)).toFixed(1)}" stroke="var(--border)"/>`;
+        gridSvg += `<text x="${(150 + 126 * Math.cos(t)).toFixed(1)}" y="${(149 + 126 * Math.sin(t)).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-weight:700;font-size:11px">${lbl}</text>`;
+      });
+      const stPts = pts(stSkills);
+      box.innerHTML = `
+        <svg viewBox="0 0 300 286" style="max-height:245px;margin:0 auto;">
+          ${gridSvg}
+          <g class="lv-poly" style="--d:.16s">
+            <polygon points="${polyStr(avgSkills)}" fill="rgba(34,197,94,0.14)" stroke="#22c55e" stroke-dasharray="4 3" stroke-width="2"/>
+          </g>
+          <g class="lv-poly">
+            <polygon points="${polyStr(stSkills)}" fill="rgba(124,93,250,0.26)" stroke="#7c5dfa" stroke-width="2.6"/>
+            ${stPts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="#7c5dfa" stroke="var(--surface)" stroke-width="2"/>`).join('')}
+          </g>
+        </svg>
+        <div class="lv-leg">
+          <span><i style="background:#7c5dfa"></i>${escHtml(student.name)}</span>
+          <span><i style="background:#22c55e"></i>Среднее группы</span>
+        </div>
+        <div class="lmm-skill-strip">${skillLabels.map((lbl, i) => `<div class="lmm-skill-chip"><span>${lbl}</span><b>${stSkills[i]}%</b></div>`).join('')}</div>`;
+      animateVizBox(box);
     }
 
     function renderGroupCharts(body, g) {
-      destroyCharts();
-      if (typeof window.Chart !== 'function') {
-        const host = body.querySelector('#lmmChartsHost');
-        if (host) host.innerHTML = '<div class="lmm-notice">Библиотека Chart.js не загрузилась — графики временно недоступны.</div>';
-        return;
-      }
-      if (!g.students.length) return;
-
-      const dark = isDarkNow();
-      const gridColor = dark ? 'rgba(148,163,184,0.12)' : 'rgba(22,32,51,0.07)';
-      const textColor = dark ? '#9fb0cf' : '#5b6b89';
-      const titleColor = dark ? '#f1f5ff' : '#162033';
-      const surfaceColor = dark ? '#151d30' : '#ffffff';
-
-      const modernBarPlugin = {
-        id: 'lmmModernBar',
-        beforeDatasetsDraw(chart) {
-          const c = chart.ctx;
-          c.save();
-          c.shadowColor = dark ? 'rgba(124,93,250,0.34)' : 'rgba(106,82,229,0.22)';
-          c.shadowBlur = 14;
-          c.shadowOffsetY = 6;
-        },
-        afterDatasetsDraw(chart) {
-          const c = chart.ctx;
-          c.restore();
-          const { chartArea, scales } = chart;
-          if (!chartArea || !scales?.y) return;
-
-          const y90 = scales.y.getPixelForValue(90);
-          c.save();
-          c.beginPath();
-          c.setLineDash([5, 5]);
-          c.strokeStyle = dark ? 'rgba(52,211,153,0.55)' : 'rgba(22,163,74,0.48)';
-          c.lineWidth = 1.4;
-          c.moveTo(chartArea.left, y90);
-          c.lineTo(chartArea.right, y90);
-          c.stroke();
-          c.setLineDash([]);
-          c.fillStyle = dark ? '#34d399' : '#16a34a';
-          c.font = '700 10.5px Montserrat, system-ui, sans-serif';
-          c.textAlign = 'right';
-          c.fillText('Цель «Профи» 90%', chartArea.right - 2, y90 - 5);
-
-          const meta = chart.getDatasetMeta(0);
-          c.fillStyle = titleColor;
-          c.font = '800 11px Montserrat, system-ui, sans-serif';
-          c.textAlign = 'center';
-          meta.data.forEach((bar, i) => {
-            const val = chart.data.datasets[0].data[i];
-            const yPos = Math.max(chartArea.top + 12, bar.y - 7);
-            c.fillText(val + '%', bar.x, yPos);
-          });
-          c.restore();
-        }
-      };
-
-      const barCanvas = body.querySelector('#lmmBarChart');
-      if (barCanvas) {
-        const ctx2d = barCanvas.getContext('2d');
-        const ordered = g.students.slice().sort((a, b) => b.pro.readiness - a.pro.readiness).slice(0, 12);
-
-        const makeGrad = (topHex, botHex) => {
-          const gr = ctx2d.createLinearGradient(0, 0, 0, 260);
-          gr.addColorStop(0, topHex);
-          gr.addColorStop(1, botHex);
-          return gr;
-        };
-        const barFills = ordered.map(s =>
-          s.pro.readiness >= 90 ? makeGrad('#34d399', 'rgba(16,185,129,0.55)')
-          : s.pro.readiness >= 35 ? makeGrad('#a78bfa', 'rgba(106,82,229,0.62)')
-          : makeGrad('#fbbf24', 'rgba(245,158,11,0.52)')
-        );
-
-        const barChart = new window.Chart(ctx2d, {
-          type: 'bar',
-          plugins: [modernBarPlugin],
-          data: {
-            labels: ordered.map(s => s.name.length > 13 ? s.name.slice(0, 12) + '…' : s.name),
-            datasets: [{
-              label: 'Готовность к «профи»',
-              data: ordered.map(s => s.pro.readiness),
-              backgroundColor: barFills,
-              hoverBackgroundColor: ordered.map(s => s.pro.readiness >= 90 ? '#22c55e' : s.pro.readiness >= 35 ? '#7c5dfa' : '#f59e0b'),
-              borderRadius: { topLeft: 10, topRight: 10, bottomLeft: 4, bottomRight: 4 },
-              borderSkipped: false,
-              maxBarThickness: 38
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 700, easing: 'easeOutQuart' },
-            onClick: (_evt, els) => {
-              if (!els || !els.length) return;
-              const clicked = ordered[els[0].index];
-              if (clicked) {
-                selectedChartUid = clicked.uid;
-                const selEl = body.querySelector('#lmmRadarSelect');
-                if (selEl) selEl.value = clicked.uid;
-                renderGroupCharts(body, g);
-              }
-            },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: dark ? 'rgba(15,22,38,0.96)' : 'rgba(22,32,51,0.95)',
-                titleColor: '#ffffff',
-                bodyColor: '#dbe4ff',
-                borderColor: 'rgba(124,93,250,0.45)',
-                borderWidth: 1,
-                padding: 12,
-                cornerRadius: 12,
-                displayColors: false,
-                callbacks: {
-                  title: items => ordered[items[0].dataIndex]?.name || '',
-                  label: ctx => `Готовность к «профи»: ${ctx.raw}%`,
-                  afterLabel: ctx => {
-                    const st = ordered[ctx.dataIndex];
-                    return st ? [`Тесты: ${st.tests.avg}%`, `Печать: ${st.typing.cpm} зн/мин`, 'Нажми, чтобы открыть в радаре'] : '';
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 105,
-                border: { display: false },
-                grid: { color: gridColor, drawTicks: false },
-                ticks: { color: textColor, padding: 8, stepSize: 25, font: { family: 'Montserrat', size: 11, weight: '600' }, callback: v => v <= 100 ? v + '%' : '' }
-              },
-              x: {
-                border: { display: false },
-                grid: { display: false },
-                ticks: { color: textColor, padding: 6, font: { family: 'Montserrat', size: 11, weight: '700' } }
-              }
-            }
-          }
-        });
-        activeCharts.push(barChart);
-      }
-
-      const radarCanvas = body.querySelector('#lmmRadarChart');
-      if (radarCanvas) {
-        const rCtx = radarCanvas.getContext('2d');
-        const student = g.students.find(s => s.uid === selectedChartUid) || g.students[0];
-        selectedChartUid = student.uid;
-
-        const skillKeys = ['typing', 'tests', 'hotkeys', 'excel', 'word'];
-        const skillLabels = ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'];
-        const avgSkills = skillKeys.map(k => Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0))));
-        const stSkills = skillKeys.map(k => Number(student.pro.breakdown[k]) || 0);
-
-        const radGrad = rCtx.createRadialGradient(140, 125, 10, 140, 125, 130);
-        radGrad.addColorStop(0, dark ? 'rgba(167,139,250,0.44)' : 'rgba(106,82,229,0.34)');
-        radGrad.addColorStop(1, dark ? 'rgba(124,93,250,0.08)' : 'rgba(106,82,229,0.06)');
-
-        const radarChart = new window.Chart(rCtx, {
-          type: 'radar',
-          data: {
-            labels: skillLabels,
-            datasets: [
-              {
-                label: student.name,
-                data: stSkills,
-                fill: true,
-                tension: 0.14,
-                backgroundColor: radGrad,
-                borderColor: '#7c5dfa',
-                borderWidth: 2.5,
-                pointBackgroundColor: '#7c5dfa',
-                pointBorderColor: surfaceColor,
-                pointBorderWidth: 2,
-                pointRadius: 4.5,
-                pointHoverRadius: 7
-              },
-              {
-                label: 'Среднее группы',
-                data: avgSkills,
-                fill: true,
-                tension: 0.14,
-                backgroundColor: dark ? 'rgba(34,197,94,0.12)' : 'rgba(22,163,74,0.10)',
-                borderColor: '#22c55e',
-                borderWidth: 1.8,
-                borderDash: [5, 4],
-                pointBackgroundColor: '#22c55e',
-                pointBorderColor: surfaceColor,
-                pointBorderWidth: 1.5,
-                pointRadius: 3.5,
-                pointHoverRadius: 6
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 600, easing: 'easeOutQuart' },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  color: titleColor,
-                  usePointStyle: true,
-                  pointStyle: 'circle',
-                  boxWidth: 8,
-                  padding: 14,
-                  font: { family: 'Montserrat', size: 11.5, weight: '700' }
-                }
-              },
-              tooltip: {
-                backgroundColor: dark ? 'rgba(15,22,38,0.96)' : 'rgba(22,32,51,0.95)',
-                borderColor: 'rgba(124,93,250,0.45)',
-                borderWidth: 1,
-                padding: 11,
-                cornerRadius: 11,
-                callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` }
-              }
-            },
-            scales: {
-              r: {
-                beginAtZero: true,
-                max: 100,
-                ticks: { stepSize: 25, display: false },
-                grid: { circular: true, color: gridColor },
-                angleLines: { color: gridColor },
-                pointLabels: { color: titleColor, font: { family: 'Montserrat', size: 11.5, weight: '700' } }
-              }
-            }
-          }
-        });
-        activeCharts.push(radarChart);
-
-        const strip = body.querySelector('#lmmSkillStrip');
-        if (strip) {
-          strip.innerHTML = skillLabels.map((lbl, idx) =>
-            `<div class="lmm-skill-chip"><span>${lbl}</span><b>${stSkills[idx]}%</b></div>`
-          ).join('');
-        }
-      }
+      renderLeftViz(body, g);
+      renderRightViz(body, g);
     }
 
     wrap.querySelectorAll('.lmm-tab').forEach(btn => {
@@ -1412,17 +1426,33 @@
         <div id="lmmChartsHost" class="lmm-charts-grid">
           <div class="lmm-chart-card lmm-glow">
             <div class="lmm-chart-head">
-              <div><strong>${svgIcon('chart', 16)}<span>Готовность группы до «профи»</span></strong><small>Сравнение прогресса всех учеников (0–100%)</small></div>
+              <div><strong>${svgIcon('chart', 16)}<span>Готовность группы до «профи»</span></strong><small>Нажми на ученика, чтобы открыть его навыки справа</small></div>
+              <button type="button" class="lmm-replay" id="lmmReplayLeft" title="Повторить анимацию">${svgIcon('refresh', 14)}</button>
             </div>
-            <div class="lmm-chart-box"><canvas id="lmmBarChart"></canvas></div>
+            <div class="lmm-vtabs" id="lmmLeftModes">
+              <button type="button" class="lmm-vtab ${groupVizMode === 'bars' ? 'active' : ''}" data-lv="bars">Столбцы</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'hbars' ? 'active' : ''}" data-lv="hbars">Полосы</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'rings' ? 'active' : ''}" data-lv="rings">Кольца</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'arcs' ? 'active' : ''}" data-lv="arcs">Дуги</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'gauge' ? 'active' : ''}" data-lv="gauge">Спидометр</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'lollipop' ? 'active' : ''}" data-lv="lollipop">Точки</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'blocks' ? 'active' : ''}" data-lv="blocks">Сегменты</button>
+            </div>
+            <div class="lmm-viz-box" id="lmmLeftViz"></div>
           </div>
           <div class="lmm-chart-card lmm-glow">
             <div class="lmm-chart-head">
-              <div><strong>${svgIcon('shield', 16)}<span>Профиль навыков</span></strong><small>Ученик против среднего по группе</small></div>
-              <select class="lmm-select" id="lmmRadarSelect" aria-label="Выбор ученика для графика"></select>
+              <div><strong>${svgIcon('shield', 16)}<span>Навыки учеников</span></strong><small>Радар или тепловая карта по 5 направлениям</small></div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <select class="lmm-select" id="lmmRadarSelect" aria-label="Выбор ученика для графика"></select>
+                <button type="button" class="lmm-replay" id="lmmReplayRight" title="Повторить анимацию">${svgIcon('refresh', 14)}</button>
+              </div>
             </div>
-            <div class="lmm-chart-box"><canvas id="lmmRadarChart"></canvas></div>
-            <div class="lmm-skill-strip" id="lmmSkillStrip"></div>
+            <div class="lmm-vtabs" id="lmmRightModes">
+              <button type="button" class="lmm-vtab ${skillVizMode === 'radar' ? 'active' : ''}" data-rv="radar">Радар навыков</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'heatmap' ? 'active' : ''}" data-rv="heatmap">Тепловая карта</button>
+            </div>
+            <div class="lmm-viz-box" id="lmmRightViz"></div>
           </div>
         </div>
         <div class="lmm-toolbar">
@@ -1447,6 +1477,24 @@
         sel.innerHTML = g.students.map(s => `<option value="${escHtml(s.uid)}"${s.uid === selectedChartUid ? ' selected' : ''}>${escHtml(s.name)} (${s.pro.readiness}%)</option>`).join('');
         sel.onchange = () => { selectedChartUid = sel.value; renderGroupCharts(body, g); };
       }
+      body.querySelectorAll('[data-lv]').forEach(b => {
+        b.onclick = () => {
+          groupVizMode = b.dataset.lv;
+          body.querySelectorAll('[data-lv]').forEach(x => x.classList.toggle('active', x === b));
+          renderLeftViz(body, g);
+        };
+      });
+      body.querySelectorAll('[data-rv]').forEach(b => {
+        b.onclick = () => {
+          skillVizMode = b.dataset.rv;
+          body.querySelectorAll('[data-rv]').forEach(x => x.classList.toggle('active', x === b));
+          renderRightViz(body, g);
+        };
+      });
+      const rL = body.querySelector('#lmmReplayLeft');
+      if (rL) rL.onclick = () => renderLeftViz(body, g);
+      const rR = body.querySelector('#lmmReplayRight');
+      if (rR) rR.onclick = () => renderRightViz(body, g);
       renderGroupCharts(body, g);
 
       const list = body.querySelector('#lmmStudentList');
@@ -1789,7 +1837,7 @@
     const themeObs = new MutationObserver(() => {
       if (activeTab === 'group' && cache.group && wrap.isConnected) {
         const body = wrap.querySelector('#lmmBody');
-        if (body && body.querySelector('#lmmBarChart')) renderGroupCharts(body, cache.group);
+        if (body && body.querySelector('#lmmLeftViz')) renderGroupCharts(body, cache.group);
       }
     });
     if (document.body) themeObs.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
@@ -1816,7 +1864,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 10,
+    version: 11,
     OWNER_UID,
     isOwner,
     mountInto,
