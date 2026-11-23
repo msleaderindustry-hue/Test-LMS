@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v9) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v10) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 9) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 10) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1033,19 +1033,38 @@
       }
       .lmm-charts-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;}
       .lmm-chart-card{
-        background:var(--surface);border:1px solid var(--border);border-radius:18px;
-        padding:18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-card);
-        animation:lmmFadeUp .38s var(--ease) both;
+        position:relative;overflow:hidden;
+        background:var(--surface);border:1px solid var(--border);border-radius:20px;
+        padding:20px 22px 18px;display:flex;flex-direction:column;gap:14px;
+        box-shadow:var(--shadow-card);
+        animation:lmmFadeUp .42s var(--ease) both;
+        transition:border-color .2s,transform .2s var(--ease);
       }
+      .lmm-chart-card::before{
+        content:"";position:absolute;left:0;right:0;top:0;height:3px;
+        background:linear-gradient(90deg,var(--accent),var(--green));opacity:.78;
+      }
+      .lmm-chart-card:hover{border-color:var(--border-2);}
       .lmm-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-      .lmm-chart-head strong{font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
-      .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;}
+      .lmm-chart-head strong{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:8px;letter-spacing:-.01em;}
+      .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;}
       .lmm-select{
         font:inherit;font-size:12px;font-weight:700;color:var(--text);
-        background:var(--surface-2);border:1px solid var(--border-2);border-radius:10px;
-        padding:7px 10px;max-width:210px;cursor:pointer;
+        background:var(--surface-2);border:1px solid var(--border-2);border-radius:11px;
+        padding:8px 11px;max-width:215px;cursor:pointer;transition:border-color .16s;
       }
-      .lmm-chart-box{position:relative;height:255px;width:100%;}
+      .lmm-select:hover{border-color:var(--accent);}
+      .lmm-chart-box{position:relative;height:278px;width:100%;}
+      .lmm-skill-strip{
+        display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+        padding-top:10px;border-top:1px solid var(--border);
+      }
+      .lmm-skill-chip{
+        background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+        padding:6px 4px;text-align:center;
+      }
+      .lmm-skill-chip span{display:block;font-size:10px;font-weight:700;color:var(--muted);}
+      .lmm-skill-chip b{display:block;font-size:13px;font-weight:800;color:var(--text);margin-top:2px;}
       @media(max-width:860px){.lmm-charts-grid{grid-template-columns:1fr;}.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
       @media(max-width:560px){.lmm-clean-grid{grid-template-columns:1fr;}.lmm-hero{padding:18px;}}
       @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
@@ -1115,48 +1134,117 @@
       if (!g.students.length) return;
 
       const dark = isDarkNow();
-      const gridColor = dark ? 'rgba(148,163,184,0.14)' : 'rgba(22,32,51,0.08)';
-      const textColor = dark ? '#9fb0cf' : '#556582';
+      const gridColor = dark ? 'rgba(148,163,184,0.12)' : 'rgba(22,32,51,0.07)';
+      const textColor = dark ? '#9fb0cf' : '#5b6b89';
       const titleColor = dark ? '#f1f5ff' : '#162033';
+      const surfaceColor = dark ? '#151d30' : '#ffffff';
 
-      // Bar Chart: Готовность каждого ученика к уровню «профи»
+      const modernBarPlugin = {
+        id: 'lmmModernBar',
+        beforeDatasetsDraw(chart) {
+          const c = chart.ctx;
+          c.save();
+          c.shadowColor = dark ? 'rgba(124,93,250,0.34)' : 'rgba(106,82,229,0.22)';
+          c.shadowBlur = 14;
+          c.shadowOffsetY = 6;
+        },
+        afterDatasetsDraw(chart) {
+          const c = chart.ctx;
+          c.restore();
+          const { chartArea, scales } = chart;
+          if (!chartArea || !scales?.y) return;
+
+          const y90 = scales.y.getPixelForValue(90);
+          c.save();
+          c.beginPath();
+          c.setLineDash([5, 5]);
+          c.strokeStyle = dark ? 'rgba(52,211,153,0.55)' : 'rgba(22,163,74,0.48)';
+          c.lineWidth = 1.4;
+          c.moveTo(chartArea.left, y90);
+          c.lineTo(chartArea.right, y90);
+          c.stroke();
+          c.setLineDash([]);
+          c.fillStyle = dark ? '#34d399' : '#16a34a';
+          c.font = '700 10.5px Montserrat, system-ui, sans-serif';
+          c.textAlign = 'right';
+          c.fillText('Цель «Профи» 90%', chartArea.right - 2, y90 - 5);
+
+          const meta = chart.getDatasetMeta(0);
+          c.fillStyle = titleColor;
+          c.font = '800 11px Montserrat, system-ui, sans-serif';
+          c.textAlign = 'center';
+          meta.data.forEach((bar, i) => {
+            const val = chart.data.datasets[0].data[i];
+            const yPos = Math.max(chartArea.top + 12, bar.y - 7);
+            c.fillText(val + '%', bar.x, yPos);
+          });
+          c.restore();
+        }
+      };
+
       const barCanvas = body.querySelector('#lmmBarChart');
       if (barCanvas) {
+        const ctx2d = barCanvas.getContext('2d');
         const ordered = g.students.slice().sort((a, b) => b.pro.readiness - a.pro.readiness).slice(0, 12);
-        const barColors = ordered.map(s =>
-          s.pro.readiness >= 90 ? 'rgba(34,197,94,0.85)'
-          : s.pro.readiness >= 35 ? 'rgba(124,93,250,0.85)'
-          : 'rgba(245,158,11,0.85)'
+
+        const makeGrad = (topHex, botHex) => {
+          const gr = ctx2d.createLinearGradient(0, 0, 0, 260);
+          gr.addColorStop(0, topHex);
+          gr.addColorStop(1, botHex);
+          return gr;
+        };
+        const barFills = ordered.map(s =>
+          s.pro.readiness >= 90 ? makeGrad('#34d399', 'rgba(16,185,129,0.55)')
+          : s.pro.readiness >= 35 ? makeGrad('#a78bfa', 'rgba(106,82,229,0.62)')
+          : makeGrad('#fbbf24', 'rgba(245,158,11,0.52)')
         );
-        const barChart = new window.Chart(barCanvas.getContext('2d'), {
+
+        const barChart = new window.Chart(ctx2d, {
           type: 'bar',
+          plugins: [modernBarPlugin],
           data: {
-            labels: ordered.map(s => s.name.length > 14 ? s.name.slice(0, 13) + '…' : s.name),
+            labels: ordered.map(s => s.name.length > 13 ? s.name.slice(0, 12) + '…' : s.name),
             datasets: [{
-              label: 'Готовность к «профи» (%)',
+              label: 'Готовность к «профи»',
               data: ordered.map(s => s.pro.readiness),
-              backgroundColor: barColors,
-              borderRadius: 8,
+              backgroundColor: barFills,
+              hoverBackgroundColor: ordered.map(s => s.pro.readiness >= 90 ? '#22c55e' : s.pro.readiness >= 35 ? '#7c5dfa' : '#f59e0b'),
+              borderRadius: { topLeft: 10, topRight: 10, bottomLeft: 4, bottomRight: 4 },
               borderSkipped: false,
-              maxBarThickness: 34
+              maxBarThickness: 38
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: { duration: 550 },
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            onClick: (_evt, els) => {
+              if (!els || !els.length) return;
+              const clicked = ordered[els[0].index];
+              if (clicked) {
+                selectedChartUid = clicked.uid;
+                const selEl = body.querySelector('#lmmRadarSelect');
+                if (selEl) selEl.value = clicked.uid;
+                renderGroupCharts(body, g);
+              }
+            },
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: dark ? '#0f1626' : '#162033',
+                backgroundColor: dark ? 'rgba(15,22,38,0.96)' : 'rgba(22,32,51,0.95)',
                 titleColor: '#ffffff',
                 bodyColor: '#dbe4ff',
-                padding: 10,
-                cornerRadius: 10,
+                borderColor: 'rgba(124,93,250,0.45)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 12,
+                displayColors: false,
                 callbacks: {
+                  title: items => ordered[items[0].dataIndex]?.name || '',
+                  label: ctx => `Готовность к «профи»: ${ctx.raw}%`,
                   afterLabel: ctx => {
                     const st = ordered[ctx.dataIndex];
-                    return st ? [`Тесты: ${st.tests.avg}%`, `Печать: ${st.typing.cpm} зн/мин`] : '';
+                    return st ? [`Тесты: ${st.tests.avg}%`, `Печать: ${st.typing.cpm} зн/мин`, 'Нажми, чтобы открыть в радаре'] : '';
                   }
                 }
               }
@@ -1164,13 +1252,15 @@
             scales: {
               y: {
                 beginAtZero: true,
-                max: 100,
-                grid: { color: gridColor },
-                ticks: { color: textColor, font: { family: 'Montserrat', size: 11, weight: '600' }, callback: v => v + '%' }
+                max: 105,
+                border: { display: false },
+                grid: { color: gridColor, drawTicks: false },
+                ticks: { color: textColor, padding: 8, stepSize: 25, font: { family: 'Montserrat', size: 11, weight: '600' }, callback: v => v <= 100 ? v + '%' : '' }
               },
               x: {
+                border: { display: false },
                 grid: { display: false },
-                ticks: { color: textColor, font: { family: 'Montserrat', size: 11, weight: '600' } }
+                ticks: { color: textColor, padding: 6, font: { family: 'Montserrat', size: 11, weight: '700' } }
               }
             }
           }
@@ -1178,56 +1268,79 @@
         activeCharts.push(barChart);
       }
 
-      // Radar Chart: Навыки выбранного ученика vs Среднее по группе
       const radarCanvas = body.querySelector('#lmmRadarChart');
       if (radarCanvas) {
+        const rCtx = radarCanvas.getContext('2d');
         const student = g.students.find(s => s.uid === selectedChartUid) || g.students[0];
         selectedChartUid = student.uid;
-        const avgSkills = ['typing', 'tests', 'hotkeys', 'excel', 'word'].map(k =>
-          Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0)))
-        );
-        const stSkills = ['typing', 'tests', 'hotkeys', 'excel', 'word'].map(k =>
-          Number(student.pro.breakdown[k]) || 0
-        );
-        const radarChart = new window.Chart(radarCanvas.getContext('2d'), {
+
+        const skillKeys = ['typing', 'tests', 'hotkeys', 'excel', 'word'];
+        const skillLabels = ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'];
+        const avgSkills = skillKeys.map(k => Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0))));
+        const stSkills = skillKeys.map(k => Number(student.pro.breakdown[k]) || 0);
+
+        const radGrad = rCtx.createRadialGradient(140, 125, 10, 140, 125, 130);
+        radGrad.addColorStop(0, dark ? 'rgba(167,139,250,0.44)' : 'rgba(106,82,229,0.34)');
+        radGrad.addColorStop(1, dark ? 'rgba(124,93,250,0.08)' : 'rgba(106,82,229,0.06)');
+
+        const radarChart = new window.Chart(rCtx, {
           type: 'radar',
           data: {
-            labels: ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'],
+            labels: skillLabels,
             datasets: [
               {
                 label: student.name,
                 data: stSkills,
-                backgroundColor: 'rgba(124,93,250,0.22)',
+                fill: true,
+                tension: 0.14,
+                backgroundColor: radGrad,
                 borderColor: '#7c5dfa',
-                borderWidth: 2.2,
+                borderWidth: 2.5,
                 pointBackgroundColor: '#7c5dfa',
-                pointRadius: 3.5
+                pointBorderColor: surfaceColor,
+                pointBorderWidth: 2,
+                pointRadius: 4.5,
+                pointHoverRadius: 7
               },
               {
                 label: 'Среднее группы',
                 data: avgSkills,
-                backgroundColor: 'rgba(34,197,94,0.13)',
+                fill: true,
+                tension: 0.14,
+                backgroundColor: dark ? 'rgba(34,197,94,0.12)' : 'rgba(22,163,74,0.10)',
                 borderColor: '#22c55e',
                 borderWidth: 1.8,
-                borderDash: [4, 4],
+                borderDash: [5, 4],
                 pointBackgroundColor: '#22c55e',
-                pointRadius: 3
+                pointBorderColor: surfaceColor,
+                pointBorderWidth: 1.5,
+                pointRadius: 3.5,
+                pointHoverRadius: 6
               }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: { duration: 480 },
+            animation: { duration: 600, easing: 'easeOutQuart' },
             plugins: {
               legend: {
                 position: 'bottom',
-                labels: { color: titleColor, boxWidth: 12, padding: 14, font: { family: 'Montserrat', size: 11.5, weight: '700' } }
+                labels: {
+                  color: titleColor,
+                  usePointStyle: true,
+                  pointStyle: 'circle',
+                  boxWidth: 8,
+                  padding: 14,
+                  font: { family: 'Montserrat', size: 11.5, weight: '700' }
+                }
               },
               tooltip: {
-                backgroundColor: dark ? '#0f1626' : '#162033',
-                padding: 10,
-                cornerRadius: 10,
+                backgroundColor: dark ? 'rgba(15,22,38,0.96)' : 'rgba(22,32,51,0.95)',
+                borderColor: 'rgba(124,93,250,0.45)',
+                borderWidth: 1,
+                padding: 11,
+                cornerRadius: 11,
                 callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` }
               }
             },
@@ -1236,7 +1349,7 @@
                 beginAtZero: true,
                 max: 100,
                 ticks: { stepSize: 25, display: false },
-                grid: { color: gridColor },
+                grid: { circular: true, color: gridColor },
                 angleLines: { color: gridColor },
                 pointLabels: { color: titleColor, font: { family: 'Montserrat', size: 11.5, weight: '700' } }
               }
@@ -1244,6 +1357,13 @@
           }
         });
         activeCharts.push(radarChart);
+
+        const strip = body.querySelector('#lmmSkillStrip');
+        if (strip) {
+          strip.innerHTML = skillLabels.map((lbl, idx) =>
+            `<div class="lmm-skill-chip"><span>${lbl}</span><b>${stSkills[idx]}%</b></div>`
+          ).join('');
+        }
       }
     }
 
@@ -1302,6 +1422,7 @@
               <select class="lmm-select" id="lmmRadarSelect" aria-label="Выбор ученика для графика"></select>
             </div>
             <div class="lmm-chart-box"><canvas id="lmmRadarChart"></canvas></div>
+            <div class="lmm-skill-strip" id="lmmSkillStrip"></div>
           </div>
         </div>
         <div class="lmm-toolbar">
@@ -1695,7 +1816,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 9,
+    version: 10,
     OWNER_UID,
     isOwner,
     mountInto,
