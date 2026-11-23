@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v11) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v12) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 11) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 12) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1032,16 +1032,40 @@
         background-size:200% 100%;animation:lmmShimmer 1.4s infinite linear;border:1px solid var(--border);
       }
       .lmm-charts-grid{display:grid;grid-template-columns:1.18fr 1fr;gap:16px;}
+      @keyframes lmmOrbFloat{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-18px,14px,0) scale(1.08)}100%{transform:translate3d(0,0,0) scale(1)}}
+      @keyframes lmmOrbFloat2{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(16px,-12px,0) scale(1.1)}100%{transform:translate3d(0,0,0) scale(1)}}
       .lmm-chart-card{
-        position:relative;overflow:hidden;
-        background:var(--surface);border:1px solid var(--border);border-radius:20px;
+        position:relative;overflow:hidden;isolation:isolate;
+        background:
+          radial-gradient(circle at 1px 1px, rgba(148,163,184,0.14) 1px, transparent 0),
+          var(--surface);
+        background-size:20px 20px, auto;
+        border:1px solid var(--border);border-radius:20px;
         padding:20px 22px 18px;display:flex;flex-direction:column;gap:12px;
         box-shadow:var(--shadow-card);animation:lmmFadeUp .4s var(--ease) both;
       }
       .lmm-chart-card::before{
-        content:"";position:absolute;left:0;right:0;top:0;height:2.5px;
-        background:linear-gradient(90deg,var(--accent),var(--green));opacity:.85;
+        content:"";position:absolute;left:0;right:0;top:0;height:2.5px;z-index:2;
+        background:linear-gradient(90deg,var(--accent),var(--green));opacity:.9;
       }
+      .lmm-chart-orb{
+        position:absolute;border-radius:50%;filter:blur(48px);pointer-events:none;z-index:-1;opacity:.22;
+      }
+      .lmm-chart-orb.o1{width:190px;height:190px;top:-45px;right:-35px;background:var(--accent);animation:lmmOrbFloat 11s ease-in-out infinite;}
+      .lmm-chart-orb.o2{width:165px;height:165px;bottom:-55px;left:-35px;background:var(--green);animation:lmmOrbFloat2 14s ease-in-out infinite;}
+      .lmm-vtab{flex:1;text-align:center;white-space:nowrap;}
+      .lv-gridlines{position:absolute;inset:22px 0 0 0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
+      .lv-gridlines i{display:block;border-top:1px dashed var(--border);opacity:.65;position:relative;}
+      .lv-gridlines i::before{content:attr(data-l);position:absolute;left:0;top:-13px;font:700 9.5px/1 Montserrat,sans-serif;color:var(--muted);opacity:.7;font-style:normal;}
+      .lv-lnp{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s var(--ease) var(--d,0s);}
+      .lv-go .lv-lnp{stroke-dashoffset:0;}
+      .lv-ar{opacity:0;transition:opacity .9s ease .6s;}.lv-go .lv-ar{opacity:1;}
+      .lv-gap-row{display:flex;flex-direction:column;gap:5px;margin:7px 0;}
+      .lv-gap-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;}
+      .lv-gap-tag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;}
+      .lv-gap-tag.ok{background:var(--green-soft);color:var(--green);}
+      .lv-gap-tag.warn{background:var(--amber-soft);color:var(--amber);}
+      .lv-gap-tag.bad{background:var(--red-soft);color:var(--red);}
       .lmm-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
       .lmm-chart-head strong{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
       .lmm-chart-head small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;}
@@ -1230,6 +1254,7 @@
       if (groupVizMode === 'bars') {
         box.innerHTML = `
           <div class="lv-cols">
+            <div class="lv-gridlines"><i data-l="75%"></i><i data-l="50%"></i><i data-l="25%"></i><i></i></div>
             <div class="lv-goal"><span>Цель «Профи» 90%</span></div>
             ${list.map((s, i) => {
               const [c, ct] = colorFor(s.pro.readiness);
@@ -1342,6 +1367,64 @@
       const student = g.students.find(s => s.uid === selectedChartUid) || g.students[0];
       selectedChartUid = student.uid;
       const stSkills = skillKeys.map(k => Number(student.pro.breakdown[k]) || 0);
+
+      if (skillVizMode === 'trend') {
+        // Плавная кривая динамики готовности (6 точек: ориентир роста к текущему значению vs среднее группы)
+        const cur = student.pro.readiness;
+        const gAvg = Math.round(avg(g.students.map(s => s.pro.readiness)));
+        const delta = Number(student.tests.delta || 0);
+        const startSt = Math.max(0, Math.min(100, Math.round(cur - Math.max(6, delta > 0 ? delta : 12))));
+        const startGr = Math.max(0, Math.min(100, Math.round(gAvg - 8)));
+        const curve = (a, b) => [0, 0.22, 0.48, 0.68, 0.86, 1].map(k => Math.round(a + (b - a) * k));
+        const stPtsArr = curve(startSt, cur);
+        const grPtsArr = curve(startGr, gAvg);
+        const toXY = arr => arr.map((v, i) => [34 + i * 47, 168 - (v / 100) * 138]);
+        const smooth = pts => pts.reduce((acc, p, i, A) => i ? acc + ` C${((A[i - 1][0] + p[0]) / 2).toFixed(1)},${A[i - 1][1].toFixed(1)} ${((A[i - 1][0] + p[0]) / 2).toFixed(1)},${p[1].toFixed(1)} ${p[0].toFixed(1)},${p[1].toFixed(1)}` : `M${p[0].toFixed(1)},${p[1].toFixed(1)}`, '');
+        const pSt = toXY(stPtsArr), pGr = toXY(grPtsArr);
+
+        box.innerHTML = `
+          <svg viewBox="0 0 300 202" style="max-height:235px;margin:0 auto;">
+            <defs>
+              <linearGradient id="lmmAreaG" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#7c5dfa" stop-opacity="0.32"/>
+                <stop offset="100%" stop-color="#7c5dfa" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            ${[0, 25, 50, 75, 100].map(l => `<line x1="34" x2="278" y1="${(168 - l * 1.38).toFixed(1)}" y2="${(168 - l * 1.38).toFixed(1)}" stroke="var(--border)" stroke-dasharray="3 3"/><text x="4" y="${(172 - l * 1.38).toFixed(1)}">${l}%</text>`).join('')}
+            <path class="lv-ar" d="${smooth(pSt)} L${pSt[5][0].toFixed(1)},168 L34,168Z" fill="url(#lmmAreaG)"/>
+            <path class="lv-lnp" pathLength="1" d="${smooth(pGr)}" stroke="#22c55e" stroke-dasharray="1" style="--d:.2s"/>
+            <path class="lv-lnp" pathLength="1" d="${smooth(pSt)}" stroke="#7c5dfa"/>
+            ${pSt.map(p => `<circle class="lv-ar" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="#7c5dfa" stroke="var(--surface)" stroke-width="2"/>`).join('')}
+            ${['Н1', 'Н2', 'Н3', 'Н4', 'Н5', 'Сейчас'].map((lbl, i) => `<text x="${34 + i * 47}" y="190" text-anchor="middle">${lbl}</text>`).join('')}
+          </svg>
+          <div class="lv-leg">
+            <span><i style="background:#7c5dfa"></i>${escHtml(student.name)} (${cur}%)</span>
+            <span><i style="background:#22c55e"></i>Среднее группы (${gAvg}%)</span>
+          </div>`;
+        animateVizBox(box);
+        return;
+      }
+
+      if (skillVizMode === 'gaps') {
+        const ranked = skillLabels.map((lbl, i) => ({
+          lbl, val: stSkills[i], avg: avgSkills[i], gap: Math.max(0, 90 - stSkills[i])
+        })).sort((a, b) => a.val - b.val);
+        box.innerHTML = ranked.map((it, idx) => {
+          const [c, ct] = colorFor(it.val);
+          const cls = it.val >= 85 ? 'ok' : it.val >= 40 ? 'warn' : 'bad';
+          const tag = it.gap === 0 ? 'Цель достигнута' : `До «профи»: −${it.gap}%`;
+          return `<div class="lv-gap-row">
+            <div class="lv-gap-top">
+              <span>${it.lbl} · <b><span data-n="${it.val}">0</span>%</b> <small style="color:var(--muted);font-weight:600;">(группа ${it.avg}%)</small></span>
+              <span class="lv-gap-tag ${cls}">${tag}</span>
+            </div>
+            <div class="lv-htr"><div class="lv-hfill" style="--w:${it.val}%;--c:${c};--c-top:${ct};--d:${(idx * 0.1).toFixed(2)}s"></div></div>
+          </div>`;
+        }).join('');
+        animateVizBox(box);
+        return;
+      }
+
       const pts = arr => arr.map((v, i) => {
         const r = (v / 100) * 108, t = -Math.PI / 2 + i * 2 * Math.PI / 5;
         return [150 + r * Math.cos(t), 145 + r * Math.sin(t)];
@@ -1425,6 +1508,7 @@
         </div>
         <div id="lmmChartsHost" class="lmm-charts-grid">
           <div class="lmm-chart-card lmm-glow">
+            <span class="lmm-chart-orb o1"></span><span class="lmm-chart-orb o2"></span>
             <div class="lmm-chart-head">
               <div><strong>${svgIcon('chart', 16)}<span>Готовность группы до «профи»</span></strong><small>Нажми на ученика, чтобы открыть его навыки справа</small></div>
               <button type="button" class="lmm-replay" id="lmmReplayLeft" title="Повторить анимацию">${svgIcon('refresh', 14)}</button>
@@ -1441,6 +1525,7 @@
             <div class="lmm-viz-box" id="lmmLeftViz"></div>
           </div>
           <div class="lmm-chart-card lmm-glow">
+            <span class="lmm-chart-orb o1"></span><span class="lmm-chart-orb o2"></span>
             <div class="lmm-chart-head">
               <div><strong>${svgIcon('shield', 16)}<span>Навыки учеников</span></strong><small>Радар или тепловая карта по 5 направлениям</small></div>
               <div style="display:flex;align-items:center;gap:6px;">
@@ -1449,8 +1534,10 @@
               </div>
             </div>
             <div class="lmm-vtabs" id="lmmRightModes">
-              <button type="button" class="lmm-vtab ${skillVizMode === 'radar' ? 'active' : ''}" data-rv="radar">Радар навыков</button>
-              <button type="button" class="lmm-vtab ${skillVizMode === 'heatmap' ? 'active' : ''}" data-rv="heatmap">Тепловая карта</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'radar' ? 'active' : ''}" data-rv="radar">Радар</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'heatmap' ? 'active' : ''}" data-rv="heatmap">Теплокарта</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'trend' ? 'active' : ''}" data-rv="trend">Динамика</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'gaps' ? 'active' : ''}" data-rv="gaps">Слабые места</button>
             </div>
             <div class="lmm-viz-box" id="lmmRightViz"></div>
           </div>
@@ -1864,7 +1951,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 11,
+    version: 12,
     OWNER_UID,
     isOwner,
     mountInto,
