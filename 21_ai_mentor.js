@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v12) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v13) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 12) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 13) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1054,9 +1054,7 @@
       .lmm-chart-orb.o1{width:190px;height:190px;top:-45px;right:-35px;background:var(--accent);animation:lmmOrbFloat 11s ease-in-out infinite;}
       .lmm-chart-orb.o2{width:165px;height:165px;bottom:-55px;left:-35px;background:var(--green);animation:lmmOrbFloat2 14s ease-in-out infinite;}
       .lmm-vtab{flex:1;text-align:center;white-space:nowrap;}
-      .lv-gridlines{position:absolute;inset:22px 0 0 0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
-      .lv-gridlines i{display:block;border-top:1px dashed var(--border);opacity:.65;position:relative;}
-      .lv-gridlines i::before{content:attr(data-l);position:absolute;left:0;top:-13px;font:700 9.5px/1 Montserrat,sans-serif;color:var(--muted);opacity:.7;font-style:normal;}
+
       .lv-lnp{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s var(--ease) var(--d,0s);}
       .lv-go .lv-lnp{stroke-dashoffset:0;}
       .lv-ar{opacity:0;transition:opacity .9s ease .6s;}.lv-go .lv-ar{opacity:1;}
@@ -1091,19 +1089,21 @@
       .lmm-viz-box svg{width:100%;height:auto;display:block;}
       .lmm-viz-box text{fill:var(--muted);font-size:11px;font-family:Montserrat,system-ui,sans-serif;}
 
-      /* 1. Glowing gradient bars (как на скрине Ultimate LMS) */
-      .lv-cols{display:flex;align-items:flex-end;justify-content:space-around;height:215px;position:relative;border-bottom:1px solid var(--border);padding-top:22px;gap:8px;}
-      .lv-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:74px;cursor:pointer;}
+      /* 1. Glowing gradient bars (точная шкала 0-100%) */
+      .lv-cols{display:flex;align-items:flex-end;justify-content:space-around;height:200px;position:relative;border-bottom:1px solid var(--border);margin-top:16px;gap:10px;padding:0 6px;}
+      .lv-col{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;flex:1;max-width:68px;cursor:pointer;}
       .lv-bar{
-        width:100%;border-radius:11px 11px 4px 4px;height:0;
+        width:100%;border-radius:10px 10px 4px 4px;height:0;
         transition:height 1.15s cubic-bezier(.2,.8,.2,1) var(--d,0s),filter .2s;
         background:linear-gradient(180deg,var(--c-top),var(--c));
         box-shadow:0 0 22px -4px var(--c);
       }
       .lv-col:hover .lv-bar{filter:brightness(1.12);}
       .lv-go .lv-bar{height:var(--h);}
-      .lv-goal{position:absolute;left:0;right:0;bottom:calc(90% * .86);border-top:2px dashed var(--green);opacity:.7;pointer-events:none;}
-      .lv-goal span{position:absolute;right:0;top:-17px;color:var(--green);font-size:10.5px;font-weight:800;}
+      .lv-goal{position:absolute;left:0;right:0;bottom:90%;border-top:2px dashed var(--green);opacity:.82;pointer-events:none;z-index:1;}
+      .lv-goal span{position:absolute;right:2px;top:-17px;color:var(--green);font-size:10.5px;font-weight:800;}
+      .lv-gline{position:absolute;left:0;right:0;border-top:1px dashed var(--border);opacity:.7;pointer-events:none;z-index:0;}
+      .lv-gline span{position:absolute;left:0;top:-13px;font:700 9.5px/1 Montserrat,sans-serif;color:var(--muted);opacity:.75;}
       .lv-labs{display:flex;justify-content:space-around;gap:8px;margin-top:8px;color:var(--muted);font-size:11px;font-weight:700;}
       .lv-labs span{flex:1;max-width:74px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
       .lv-val{font-size:11.5px;font-weight:800;color:var(--text);}
@@ -1169,8 +1169,94 @@
       .lmm-skill-chip{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:6px 4px;text-align:center;}
       .lmm-skill-chip span{display:block;font-size:10px;font-weight:700;color:var(--muted);}
       .lmm-skill-chip b{display:block;font-size:12.5px;font-weight:800;color:var(--text);margin-top:2px;}
-      @media(max-width:860px){.lmm-charts-grid{grid-template-columns:1fr;}.lmm-clean-grid{grid-template-columns:repeat(2,1fr);}.lmm-grid{grid-template-columns:repeat(2,1fr);}}
-      @media(max-width:560px){.lmm-clean-grid{grid-template-columns:1fr;}.lmm-hero{padding:18px;}}
+      /* Современная карточка ученика (единый порядок на ПК и мобилке) */
+      .lmm-stu-card{
+        background:var(--surface);border:1px solid var(--border);border-radius:18px;
+        padding:16px 18px;display:flex;flex-direction:column;gap:12px;
+        box-shadow:var(--shadow-card);
+        animation:lmmFadeUp .34s var(--ease) both;animation-delay:calc(min(var(--i,0),10)*35ms);
+        transition:border-color .2s,transform .2s var(--ease);
+      }
+      .lmm-stu-card:hover{border-color:var(--border-2);transform:translateY(-1px);}
+      .lmm-stu-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+      .lmm-stu-id{display:flex;align-items:center;gap:12px;min-width:0;flex:1;}
+      .lmm-stu-name{font-size:14.5px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;}
+      .lmm-stu-sub{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;}
+      .lmm-stu-pct{
+        flex-shrink:0;font-size:14px;font-weight:800;padding:5px 11px;border-radius:11px;
+        background:var(--accent-soft);color:var(--accent);border:1px solid rgba(124,93,250,.28);
+      }
+      .lmm-stu-pct.st-pro{background:var(--green-soft);color:var(--green);border-color:rgba(34,197,94,.32);}
+      .lmm-stu-pct.st-warn{background:var(--amber-soft);color:var(--amber);border-color:rgba(245,158,11,.32);}
+      .lmm-stu-bar{height:7px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;overflow:hidden;width:100%;}
+      .lmm-stu-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .5s var(--ease);}
+      .lmm-stu-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+      .lmm-stu-m{
+        background:var(--surface-2);border:1px solid var(--border);border-radius:11px;
+        padding:7px 6px;text-align:center;min-width:0;
+      }
+      .lmm-stu-m span{display:block;font-size:10px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .lmm-stu-m b{display:block;font-size:12.5px;font-weight:800;color:var(--text);margin-top:2px;white-space:nowrap;}
+      .lmm-stu-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:2px;}
+      .lmm-stu-actions .lmm-btn{width:100%;padding:9px 10px;font-size:12px;}
+
+      .lmm-kpi b small{font-size:13px;font-weight:700;color:var(--muted);margin-left:3px;}
+      .lmm-chart-head{flex-wrap:nowrap;align-items:flex-start;}
+      .lmm-chart-head > div:first-child{min-width:0;flex:1;}
+      .lmm-chart-ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+
+      @media(max-width:860px){
+        .lmm-charts-grid{grid-template-columns:1fr;}
+        .lmm-clean-grid{grid-template-columns:repeat(2,1fr);}
+        .lmm-grid{grid-template-columns:repeat(2,1fr);}
+      }
+      @media(max-width:640px){
+        .lmm-wrap{gap:14px;}
+        .lmm-hero{padding:16px;border-radius:18px;gap:12px;}
+        .lmm-hero h3{font-size:17px;}
+        .lmm-hero p{font-size:11.5px;}
+        .lmm-live-pill{width:100%;justify-content:center;font-size:11.5px;padding:7px 12px;}
+
+        /* Аккуратная сетка 2x2 для 4 главных вкладок ИИ-менеджера */
+        .lmm-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;border-radius:16px;}
+        .lmm-tab{justify-content:center;padding:10px 8px;font-size:11.5px;gap:6px;text-align:center;}
+
+        /* Компактные KPI 2x2 без переносов цифр */
+        .lmm-grid{gap:9px;}
+        .lmm-kpi{padding:13px 12px;gap:10px;border-radius:15px;}
+        .lmm-kpi-ic{width:36px;height:36px;border-radius:11px;}
+        .lmm-kpi span{font-size:9.5px;letter-spacing:.03em;}
+        .lmm-kpi b{font-size:18px;white-space:nowrap;}
+        .lmm-kpi b small{font-size:11px;}
+
+        /* Карточки графиков: одна аккуратная лента режимов с плавным скроллом */
+        .lmm-chart-card{padding:16px 14px;border-radius:18px;gap:10px;}
+        .lmm-chart-head strong{font-size:13.5px;}
+        .lmm-chart-head small{font-size:11px;}
+        #lmmLeftModes{display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;}
+        #lmmLeftModes::-webkit-scrollbar{display:none;}
+        #lmmLeftModes .lmm-vtab{flex:0 0 auto;padding:7px 11px;font-size:11.5px;}
+        #lmmRightModes{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+        #lmmRightModes .lmm-vtab{padding:7px 8px;font-size:11.5px;}
+        .lmm-select{max-width:140px;font-size:11px;padding:6px 8px;}
+
+        /* Панель фильтров: аккуратно в одну линию + кнопка пересчёта */
+        .lmm-toolbar{flex-direction:column;align-items:stretch;gap:8px;}
+        .lmm-filters{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding-bottom:2px;}
+        .lmm-filters::-webkit-scrollbar{display:none;}
+        .lmm-fbtn{flex:0 0 auto;padding:8px 13px;font-size:11.5px;}
+        #lmmRefreshGroup{width:100%;justify-content:center;}
+
+        /* Карточка ученика на мобилке: порядок и симметрия */
+        .lmm-stu-card{padding:14px;border-radius:16px;gap:10px;}
+        .lmm-stu-name{font-size:13.5px;}
+        .lmm-stu-metrics{grid-template-columns:repeat(3,1fr);gap:6px;}
+        .lmm-stu-m{padding:6px 4px;}
+        .lmm-stu-m b{font-size:12px;}
+        .lmm-stu-actions{grid-template-columns:repeat(3,1fr);gap:6px;}
+        .lmm-stu-actions .lmm-btn{padding:9px 6px;font-size:11px;gap:4px;}
+        .lmm-clean-grid{grid-template-columns:1fr;}
+      }
       @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
     `;
     document.head.appendChild(style);
@@ -1254,14 +1340,16 @@
       if (groupVizMode === 'bars') {
         box.innerHTML = `
           <div class="lv-cols">
-            <div class="lv-gridlines"><i data-l="75%"></i><i data-l="50%"></i><i data-l="25%"></i><i></i></div>
+            <div class="lv-gline" style="bottom:75%"><span>75%</span></div>
+            <div class="lv-gline" style="bottom:50%"><span>50%</span></div>
+            <div class="lv-gline" style="bottom:25%"><span>25%</span></div>
             <div class="lv-goal"><span>Цель «Профи» 90%</span></div>
             ${list.map((s, i) => {
               const [c, ct] = colorFor(s.pro.readiness);
-              const px = Math.max(4, Math.round(s.pro.readiness * 1.65));
+              const pctH = Math.max(2, Math.min(100, s.pro.readiness));
               return `<div class="lv-col" data-pick="${escHtml(s.uid)}" title="${escHtml(s.name)} — ${s.pro.readiness}% (клик для радара)">
                 <span class="lv-val"><span data-n="${s.pro.readiness}">0</span>%</span>
-                <div class="lv-bar" style="--h:${px}px;--c:${c};--c-top:${ct};--d:${(i * 0.1).toFixed(2)}s"></div>
+                <div class="lv-bar" style="--h:${pctH}%;--c:${c};--c-top:${ct};--d:${(i * 0.1).toFixed(2)}s"></div>
               </div>`;
             }).join('')}
           </div>
@@ -1504,7 +1592,7 @@
           <div class="lmm-kpi lmm-glow" style="--i:0"><div class="lmm-kpi-ic">${svgIcon('users', 20)}</div><div><span>Учеников</span><b>${g.totalStudents}</b></div></div>
           <div class="lmm-kpi lmm-glow" style="--i:1"><div class="lmm-kpi-ic">${svgIcon('shield', 20)}</div><div><span>Медиана «профи»</span><b>${g.medianReadiness}%</b></div></div>
           <div class="lmm-kpi lmm-glow" style="--i:2"><div class="lmm-kpi-ic">${svgIcon('chart', 20)}</div><div><span>Средний тест</span><b>${g.avgTests}%</b></div></div>
-          <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b>${g.avgCpm} зн/м</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b>${g.avgCpm}<small>зн/м</small></b></div></div>
         </div>
         <div id="lmmChartsHost" class="lmm-charts-grid">
           <div class="lmm-chart-card lmm-glow">
@@ -1528,7 +1616,7 @@
             <span class="lmm-chart-orb o1"></span><span class="lmm-chart-orb o2"></span>
             <div class="lmm-chart-head">
               <div><strong>${svgIcon('shield', 16)}<span>Навыки учеников</span></strong><small>Радар или тепловая карта по 5 направлениям</small></div>
-              <div style="display:flex;align-items:center;gap:6px;">
+              <div class="lmm-chart-ctrl">
                 <select class="lmm-select" id="lmmRadarSelect" aria-label="Выбор ученика для графика"></select>
                 <button type="button" class="lmm-replay" id="lmmReplayRight" title="Повторить анимацию">${svgIcon('refresh', 14)}</button>
               </div>
@@ -1598,34 +1686,31 @@
             : '<span class="lmm-badge info">В темпе</span>';
 
         const card = document.createElement('div');
-        card.className = 'lmm-card lmm-glow';
+        card.className = 'lmm-stu-card lmm-glow';
         card.style.setProperty('--i', idx);
         card.innerHTML = `
-          <div class="lmm-row">
-            <div class="lmm-student-head">
+          <div class="lmm-stu-top">
+            <div class="lmm-stu-id">
               <div class="lmm-avatar ${avCls}">${escHtml(initialsOf(s.name))}</div>
-              <div style="min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <strong>${escHtml(s.name)}</strong>${badgeHtml}
-                </div>
-                <div class="lmm-pills">
-                  <span class="lmm-pill">Тесты ${s.tests.avg}%</span>
-                  <span class="lmm-pill">Печать ${s.typing.cpm} зн/м</span>
-                  <span class="lmm-pill">Хоткеи ${s.hotkeys.accuracy}%</span>
-                  <span class="lmm-pill">Excel ${s.excel.completed}</span>
-                  <span class="lmm-pill">Word ${s.word.completed}</span>
-                </div>
+              <div style="min-width:0;flex:1;">
+                <span class="lmm-stu-name" title="${escHtml(s.name)}">${escHtml(s.name)}</span>
+                <div class="lmm-stu-sub">${badgeHtml}</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div class="lmm-prog-wrap">
-                <b style="font-size:13px;">${s.pro.readiness}%</b>
-                <div class="lmm-bar"><i style="width:${s.pro.readiness}%"></i></div>
-              </div>
-              <button type="button" class="lmm-btn" data-chart title="Показать навыки на графике">${svgIcon('chart', 14)}<span>График</span></button>
-              <button type="button" class="lmm-btn primary" data-plan>${svgIcon('sparkle', 14)}<span>План ИИ</span></button>
-              <button type="button" class="lmm-btn" data-prop>${svgIcon('plus', 14)}<span>Задание</span></button>
-            </div>
+            <span class="lmm-stu-pct ${avCls}">${s.pro.readiness}%</span>
+          </div>
+          <div class="lmm-stu-bar"><i style="width:${s.pro.readiness}%"></i></div>
+          <div class="lmm-stu-metrics">
+            <div class="lmm-stu-m"><span>Тесты</span><b>${s.tests.avg}%</b></div>
+            <div class="lmm-stu-m"><span>Печать</span><b>${s.typing.cpm}</b></div>
+            <div class="lmm-stu-m"><span>Хоткеи</span><b>${s.hotkeys.accuracy}%</b></div>
+            <div class="lmm-stu-m"><span>Excel</span><b>${s.excel.completed}</b></div>
+            <div class="lmm-stu-m"><span>Word</span><b>${s.word.completed}</b></div>
+          </div>
+          <div class="lmm-stu-actions">
+            <button type="button" class="lmm-btn" data-chart title="Показать навыки на графике">${svgIcon('chart', 14)}<span>График</span></button>
+            <button type="button" class="lmm-btn primary" data-plan>${svgIcon('sparkle', 14)}<span>План ИИ</span></button>
+            <button type="button" class="lmm-btn" data-prop>${svgIcon('plus', 14)}<span>Задание</span></button>
           </div>
         `;
         card.querySelector('[data-chart]').onclick = () => {
@@ -1951,7 +2036,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 12,
+    version: 13,
     OWNER_UID,
     isOwner,
     mountInto,
