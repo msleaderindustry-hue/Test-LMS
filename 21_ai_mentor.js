@@ -1,7 +1,7 @@
-// 21_ai_mentor.js (v13) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, полная уборка + удаление бэкапов).
+// 21_ai_mentor.js (v14) — Премиальный встроенный раздел «ИИ-менеджер» (без эмодзи, SVG-иконки, анимации, новые графики, подсказки, полная уборка + удаление бэкапов).
 (function () {
   'use strict';
-  if (window.LMSMentor && window.LMSMentor.version >= 13) return;
+  if (window.LMSMentor && window.LMSMentor.version >= 14) return;
 
   const OWNER_UID = '1qhlWSbqAxd1dAvo2Nw92gdJhNk1';
   const AI_URL = 'https://gemini-proxy-lms.msleaderindustry.workers.dev';
@@ -1257,7 +1257,93 @@
         .lmm-stu-actions .lmm-btn{padding:9px 6px;font-size:11px;gap:4px;}
         .lmm-clean-grid{grid-template-columns:1fr;}
       }
-      @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}}
+
+      /* ===== v14: новые анимации и графики ===== */
+      @keyframes lmmIconFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-4deg)}}
+      @keyframes lmmIconGlow{0%,100%{box-shadow:0 8px 24px rgba(106,82,229,.35)}50%{box-shadow:0 10px 34px rgba(106,82,229,.6)}}
+      @keyframes lmmPop{0%{transform:scale(.6) rotate(-12deg);opacity:.4}60%{transform:scale(1.18) rotate(4deg)}100%{transform:none;opacity:1}}
+      @keyframes lmmGrowX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+      @keyframes lmmVizIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+      @keyframes lmmRipple{to{transform:scale(1);opacity:0}}
+      @keyframes lmmSweep{0%{transform:translateX(-120%)}100%{transform:translateX(220%)}}
+      @keyframes lmmTipIn{from{opacity:0;transform:translate(-50%,-4px) scale(.94)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+
+      .lmm-hero-ic{animation:lmmIconFloat 5s ease-in-out infinite,lmmIconGlow 3.2s ease-in-out infinite;}
+      .lmm-hero::before{
+        content:"";position:absolute;top:0;bottom:0;left:0;width:38%;pointer-events:none;z-index:0;
+        background:linear-gradient(100deg,transparent,rgba(124,93,250,.10),transparent);
+        animation:lmmSweep 7s ease-in-out infinite;
+      }
+      .lmm-hero{position:relative;overflow:hidden;}
+      .lmm-tab.active svg{animation:lmmPop .45s var(--ease);}
+      .lmm-tab.active::after{
+        content:"";position:absolute;left:14px;right:14px;bottom:3px;height:2px;border-radius:2px;
+        background:linear-gradient(90deg,var(--accent),var(--green));transform-origin:left;animation:lmmGrowX .4s var(--ease) both;
+      }
+      .lmm-btn,.lmm-tab,.lmm-fbtn{position:relative;overflow:hidden;}
+      .lmm-rip{
+        position:absolute;border-radius:50%;pointer-events:none;width:180px;height:180px;margin:-90px 0 0 -90px;
+        background:radial-gradient(circle,rgba(255,255,255,.55),rgba(124,93,250,.25) 45%,transparent 70%);
+        transform:scale(0);opacity:.9;animation:lmmRipple .6s ease-out forwards;
+      }
+      .lmm-viz-box > *{animation:lmmVizIn .38s var(--ease) both;}
+      .lmm-stu-bar i{transform-origin:left;animation:lmmGrowX .9s var(--ease) both;animation-delay:calc(min(var(--i,0),10)*35ms + .15s);}
+      .lmm-stu-card:hover .lmm-stu-pct{transform:scale(1.07);}
+      .lmm-stu-pct{transition:transform .2s var(--ease);}
+      .lmm-clean-item{animation:lmmFadeUp .35s var(--ease) both;animation-delay:calc(var(--i,0)*50ms);}
+      .lmm-backup-row{animation:lmmFadeUp .3s var(--ease) both;animation-delay:calc(min(var(--i,0),10)*30ms);}
+      .lmm-badge{transition:transform .18s var(--ease);}
+      .lmm-card:hover .lmm-badge{transform:scale(1.05);}
+
+      /* Подсказка при наведении на график */
+      .lmm-tip{
+        position:fixed;z-index:99999;pointer-events:none;padding:7px 11px;border-radius:10px;
+        background:var(--text);color:var(--surface);font-size:11.5px;font-weight:700;white-space:nowrap;
+        box-shadow:0 8px 24px rgba(0,0,0,.28);transform:translate(-50%,0);animation:lmmTipIn .16s var(--ease) both;
+      }
+
+      /* Пульс группы: стек статусов + кольца навыков */
+      .lmm-pulse{display:flex;flex-direction:column;gap:16px;}
+      .lv-stack{display:flex;gap:3px;height:18px;border-radius:99px;overflow:hidden;}
+      .lv-stack i{
+        display:block;height:100%;flex:var(--f) 1 0;min-width:0;border-radius:6px;background:var(--c);
+        transform:scaleX(0);transform-origin:left;transition:transform 1.05s cubic-bezier(.2,.8,.2,1) var(--d,0s);
+        box-shadow:0 0 14px -3px var(--c);cursor:pointer;
+      }
+      .lv-stack i:first-child{border-radius:99px 6px 6px 99px;}
+      .lv-stack i:last-child{border-radius:6px 99px 99px 6px;}
+      .lv-go .lv-stack i{transform:scaleX(1);}
+      .lv-stack-empty{height:18px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);}
+      .lv-stat-row{display:flex;gap:10px;flex-wrap:wrap;}
+      .lv-stat{
+        flex:1;min-width:120px;padding:9px 12px;border-radius:13px;background:var(--surface-2);border:1px solid var(--border);
+        display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);
+        transition:opacity .45s ease var(--d,0s),transform .45s var(--ease) var(--d,0s),border-color .18s;
+      }
+      .lv-go .lv-stat{opacity:1;transform:none;}
+      .lv-stat:hover{border-color:var(--c);}
+      .lv-stat i{width:10px;height:10px;border-radius:50%;background:var(--c);flex-shrink:0;animation:lvPu 2.2s infinite;}
+      .lv-stat span{display:block;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+      .lv-stat b{display:block;font-size:17px;font-weight:800;color:var(--text);}
+      .lv-stat b small{font-size:11px;color:var(--muted);font-weight:700;margin-left:4px;}
+      .lv-sub-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:-6px;}
+      .lv-mini-rings{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;}
+      .lv-mini-rings .lv-ring-item svg{max-width:78px;margin:0 auto;display:block;}
+
+      /* Гистограмма распределения */
+      .lv-hist-note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600;}
+      .lv-hist-col .lv-bar{min-height:3px;}
+
+      /* Сравнение: ученик vs группа */
+      .lv-cmp-row{display:flex;flex-direction:column;gap:3px;margin:9px 0;}
+      .lv-cmp-row .lv-htr.thin{height:8px;}
+
+      @media(max-width:640px){
+        .lv-mini-rings{grid-template-columns:repeat(3,1fr);}
+        .lv-stat{min-width:calc(50% - 6px);}
+      }
+      @media(prefers-reduced-motion:reduce){.lmm-wrap,.lmm-wrap *{animation:none!important;transition:none!important;}
+        .lv-stack i,.lv-stat,.lv-hc{opacity:1!important;transform:none!important;}}
     `;
     document.head.appendChild(style);
   }
@@ -1301,26 +1387,102 @@
     let activeTab = 'group';
     let groupFilter = 'all';
     let selectedChartUid = null;
-    let groupVizMode = 'bars';     // 'bars' | 'hbars' | 'rings' | 'arcs' | 'gauge' | 'lollipop' | 'blocks'
-    let skillVizMode = 'radar';    // 'radar' | 'heatmap'
+    let groupVizMode = 'bars';     // 'bars' | 'hbars' | 'rings' | 'arcs' | 'gauge' | 'lollipop' | 'blocks' | 'hist'
+    let skillVizMode = 'radar';    // 'radar' | 'heatmap' | 'trend' | 'compare' | 'gaps'
     let lastCleanupPreview = null;
 
     function destroyCharts() {}
 
     function animateVizBox(box) {
       if (!box) return;
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       box.classList.remove('lv-go');
       requestAnimationFrame(() => requestAnimationFrame(() => {
         box.classList.add('lv-go');
         box.querySelectorAll('[data-n]').forEach(el => {
-          const to = Number(el.dataset.n) || 0, t0 = performance.now();
+          const to = Number(el.dataset.n) || 0, dec = Number(el.dataset.d) || 0, t0 = performance.now();
+          const fmt = v => dec ? v.toFixed(dec) : String(Math.round(v));
+          if (reduce) { el.textContent = fmt(to); return; }
           (function step(t) {
             const k = Math.min(1, (t - t0) / 1100);
-            el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+            el.textContent = fmt(to * (1 - Math.pow(1 - k, 3)));
             if (k < 1) requestAnimationFrame(step);
           })(t0);
         });
       }));
+    }
+
+    // Подсказки при наведении и «волна» при нажатии на кнопки
+    const tipEl = document.createElement('div');
+    tipEl.className = 'lmm-tip';
+    tipEl.style.display = 'none';
+    wrap.appendChild(tipEl);
+    wrap.addEventListener('pointerover', e => {
+      const t = e.target.closest && e.target.closest('[data-tip]');
+      if (!t || !wrap.contains(t)) return;
+      tipEl.textContent = t.dataset.tip;
+      tipEl.style.display = 'block';
+    });
+    wrap.addEventListener('pointermove', e => {
+      if (tipEl.style.display === 'none') return;
+      tipEl.style.left = Math.min(window.innerWidth - 80, Math.max(80, e.clientX)) + 'px';
+      tipEl.style.top = (e.clientY + 18) + 'px';
+    });
+    wrap.addEventListener('pointerout', e => {
+      const t = e.target.closest && e.target.closest('[data-tip]');
+      if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) tipEl.style.display = 'none';
+    });
+    wrap.addEventListener('pointerdown', e => {
+      const b = e.target.closest && e.target.closest('.lmm-btn,.lmm-tab,.lmm-fbtn');
+      if (!b || b.disabled) return;
+      const r = b.getBoundingClientRect();
+      const rip = document.createElement('span');
+      rip.className = 'lmm-rip';
+      rip.style.left = (e.clientX - r.left) + 'px';
+      rip.style.top = (e.clientY - r.top) + 'px';
+      b.appendChild(rip);
+      setTimeout(() => rip.remove(), 650);
+    });
+
+    function statusSplit(g) {
+      const total = g.students.length;
+      const pro = g.students.filter(s => s.pro.status === 'pro_ready').length;
+      const warn = g.students.filter(s => s.pro.status === 'needs_attention').length;
+      return { total, pro, warn, mid: Math.max(0, total - pro - warn) };
+    }
+
+    function renderPulse(body, g) {
+      const box = body.querySelector('#lmmPulse');
+      if (!box) return;
+      const sp = statusSplit(g);
+      const skillKeys = ['typing', 'tests', 'hotkeys', 'excel', 'word'];
+      const skillLabels = ['Печать', 'Тесты', 'Хоткеи', 'Excel', 'Word'];
+      const avgSk = skillKeys.map(k => Math.round(avg(g.students.map(s => Number(s.pro.breakdown[k]) || 0))));
+      const parts = [
+        { n: sp.pro, label: 'Готовы к профи', c: '#16a34a' },
+        { n: sp.mid, label: 'В темпе', c: '#7c5dfa' },
+        { n: sp.warn, label: 'Нужно внимание', c: '#f59e0b' }
+      ];
+      const pct = n => sp.total ? Math.round(n / sp.total * 100) : 0;
+      box.innerHTML = `
+        ${sp.total ? `<div class="lv-stack">${parts.filter(p => p.n > 0).map((p, i) => `<i data-tip="${p.label}: ${p.n} (${pct(p.n)}%)" style="--f:${p.n};--c:${p.c};--d:${(i * 0.15).toFixed(2)}s"></i>`).join('')}</div>` : '<div class="lv-stack-empty"></div>'}
+        <div class="lv-stat-row">${parts.map((p, i) => `
+          <div class="lv-stat" style="--c:${p.c};--d:${(0.2 + i * 0.12).toFixed(2)}s">
+            <i></i><div><span>${p.label}</span><b><span data-n="${p.n}">0</span><small>${pct(p.n)}%</small></b></div>
+          </div>`).join('')}</div>
+        <div class="lv-sub-title">Средний уровень группы по навыкам</div>
+        <div class="lv-mini-rings">${avgSk.map((v, i) => {
+          const [c] = colorFor(v);
+          return `<div class="lv-ring-item" data-tip="${skillLabels[i]}: в среднем ${v}%">
+            <svg viewBox="0 0 100 100">
+              <circle class="lv-tk" cx="50" cy="50" r="38"/>
+              <circle class="lv-ring" cx="50" cy="50" r="38" pathLength="100" stroke="${c}" style="--o:${100 - v};--d:${(i * 0.12).toFixed(2)}s;transform:rotate(-90deg);transform-origin:50px 50px"/>
+              <text x="50" y="56" text-anchor="middle" style="fill:var(--text);font-size:19px;font-weight:800"><tspan data-n="${v}">0</tspan>%</text>
+            </svg>
+            <div class="lv-rnm">${skillLabels[i]}</div>
+          </div>`;
+        }).join('')}</div>`;
+      animateVizBox(box);
     }
 
     function colorFor(v) {
@@ -1405,6 +1567,22 @@
             <b class="vl"><span data-n="${s.pro.readiness}">0</span>%</b>
           </div>`;
         }).join('')}</div>`;
+      } else if (groupVizMode === 'hist') {
+        const buckets = [[0, 19], [20, 39], [40, 59], [60, 79], [80, 100]];
+        const counts = buckets.map(([a, b]) => g.students.filter(s => s.pro.readiness >= a && s.pro.readiness <= b).length);
+        const maxC = Math.max(1, ...counts);
+        box.innerHTML = `
+          <div class="lv-cols">
+            ${buckets.map(([a, b], i) => {
+              const [c, ct] = colorFor((a + b) / 2);
+              return `<div class="lv-col lv-hist-col" data-tip="${a}–${b}%: ${counts[i]} уч.">
+                <span class="lv-val"><span data-n="${counts[i]}">0</span></span>
+                <div class="lv-bar" style="--h:${Math.round(counts[i] / maxC * 100)}%;--c:${c};--c-top:${ct};--d:${(i * 0.12).toFixed(2)}s"></div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="lv-labs">${buckets.map(([a, b]) => `<span>${a}–${b}%</span>`).join('')}</div>
+          <div class="lv-hist-note">Сколько учеников в каждом диапазоне готовности</div>`;
       } else {
         box.innerHTML = list.map((s, i) => {
           const [c] = colorFor(s.pro.readiness);
@@ -1418,6 +1596,8 @@
       }
 
       box.querySelectorAll('[data-pick]').forEach(el => {
+        const stu = g.students.find(x => x.uid === el.dataset.pick);
+        if (stu) el.dataset.tip = stu.name + ' — ' + stu.pro.readiness + '%';
         el.onclick = () => {
           selectedChartUid = el.dataset.pick;
           const selEl = body.querySelector('#lmmRadarSelect');
@@ -1488,6 +1668,21 @@
           <div class="lv-leg">
             <span><i style="background:#7c5dfa"></i>${escHtml(student.name)} (${cur}%)</span>
             <span><i style="background:#22c55e"></i>Среднее группы (${gAvg}%)</span>
+          </div>`;
+        animateVizBox(box);
+        return;
+      }
+
+      if (skillVizMode === 'compare') {
+        box.innerHTML = skillLabels.map((lbl, i) => `
+          <div class="lv-cmp-row" data-tip="${lbl}: ${escHtml(student.name)} ${stSkills[i]}% · группа ${avgSkills[i]}%">
+            <div class="lv-gap-top"><span>${lbl}</span><span><b><span data-n="${stSkills[i]}">0</span>%</b> <small style="color:var(--muted);font-weight:600;">группа ${avgSkills[i]}%</small></span></div>
+            <div class="lv-htr"><div class="lv-hfill" style="--w:${stSkills[i]}%;--c:#7c5dfa;--c-top:#a28bff;--d:${(i * 0.1).toFixed(2)}s"></div></div>
+            <div class="lv-htr thin"><div class="lv-hfill" style="--w:${avgSkills[i]}%;--c:#16a34a;--c-top:#4ade80;--d:${(i * 0.1 + 0.08).toFixed(2)}s"></div></div>
+          </div>`).join('') + `
+          <div class="lv-leg">
+            <span><i style="background:#7c5dfa"></i>${escHtml(student.name)}</span>
+            <span><i style="background:#22c55e"></i>Среднее группы</span>
           </div>`;
         animateVizBox(box);
         return;
@@ -1589,10 +1784,18 @@
 
       body.innerHTML = `
         <div class="lmm-grid">
-          <div class="lmm-kpi lmm-glow" style="--i:0"><div class="lmm-kpi-ic">${svgIcon('users', 20)}</div><div><span>Учеников</span><b>${g.totalStudents}</b></div></div>
-          <div class="lmm-kpi lmm-glow" style="--i:1"><div class="lmm-kpi-ic">${svgIcon('shield', 20)}</div><div><span>Медиана «профи»</span><b>${g.medianReadiness}%</b></div></div>
-          <div class="lmm-kpi lmm-glow" style="--i:2"><div class="lmm-kpi-ic">${svgIcon('chart', 20)}</div><div><span>Средний тест</span><b>${g.avgTests}%</b></div></div>
-          <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b>${g.avgCpm}<small>зн/м</small></b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:0"><div class="lmm-kpi-ic">${svgIcon('users', 20)}</div><div><span>Учеников</span><b><span data-n="${g.totalStudents}">0</span></b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:1"><div class="lmm-kpi-ic">${svgIcon('shield', 20)}</div><div><span>Медиана «профи»</span><b><span data-n="${g.medianReadiness}" data-d="1">0</span>%</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:2"><div class="lmm-kpi-ic">${svgIcon('chart', 20)}</div><div><span>Средний тест</span><b><span data-n="${g.avgTests}" data-d="1">0</span>%</b></div></div>
+          <div class="lmm-kpi lmm-glow" style="--i:3"><div class="lmm-kpi-ic">${svgIcon('keyboard', 20)}</div><div><span>Средняя печать</span><b><span data-n="${g.avgCpm}">0</span><small>зн/м</small></b></div></div>
+        </div>
+        <div class="lmm-chart-card lmm-glow" id="lmmPulseCard">
+          <span class="lmm-chart-orb o1"></span><span class="lmm-chart-orb o2"></span>
+          <div class="lmm-chart-head">
+            <div><strong>${svgIcon('activity', 16)}<span>Пульс группы</span></strong><small>Статусы учеников и средний уровень по навыкам</small></div>
+            <button type="button" class="lmm-replay" id="lmmReplayPulse" title="Повторить анимацию">${svgIcon('refresh', 14)}</button>
+          </div>
+          <div class="lmm-pulse" id="lmmPulse"></div>
         </div>
         <div id="lmmChartsHost" class="lmm-charts-grid">
           <div class="lmm-chart-card lmm-glow">
@@ -1609,6 +1812,7 @@
               <button type="button" class="lmm-vtab ${groupVizMode === 'gauge' ? 'active' : ''}" data-lv="gauge">Спидометр</button>
               <button type="button" class="lmm-vtab ${groupVizMode === 'lollipop' ? 'active' : ''}" data-lv="lollipop">Точки</button>
               <button type="button" class="lmm-vtab ${groupVizMode === 'blocks' ? 'active' : ''}" data-lv="blocks">Сегменты</button>
+              <button type="button" class="lmm-vtab ${groupVizMode === 'hist' ? 'active' : ''}" data-lv="hist">Распределение</button>
             </div>
             <div class="lmm-viz-box" id="lmmLeftViz"></div>
           </div>
@@ -1625,6 +1829,7 @@
               <button type="button" class="lmm-vtab ${skillVizMode === 'radar' ? 'active' : ''}" data-rv="radar">Радар</button>
               <button type="button" class="lmm-vtab ${skillVizMode === 'heatmap' ? 'active' : ''}" data-rv="heatmap">Теплокарта</button>
               <button type="button" class="lmm-vtab ${skillVizMode === 'trend' ? 'active' : ''}" data-rv="trend">Динамика</button>
+              <button type="button" class="lmm-vtab ${skillVizMode === 'compare' ? 'active' : ''}" data-rv="compare">Сравнение</button>
               <button type="button" class="lmm-vtab ${skillVizMode === 'gaps' ? 'active' : ''}" data-rv="gaps">Слабые места</button>
             </div>
             <div class="lmm-viz-box" id="lmmRightViz"></div>
@@ -1670,6 +1875,10 @@
       if (rL) rL.onclick = () => renderLeftViz(body, g);
       const rR = body.querySelector('#lmmReplayRight');
       if (rR) rR.onclick = () => renderRightViz(body, g);
+      const rP = body.querySelector('#lmmReplayPulse');
+      if (rP) rP.onclick = () => renderPulse(body, g);
+      animateVizBox(body.querySelector('.lmm-grid'));
+      renderPulse(body, g);
       renderGroupCharts(body, g);
 
       const list = body.querySelector('#lmmStudentList');
@@ -1697,7 +1906,7 @@
                 <div class="lmm-stu-sub">${badgeHtml}</div>
               </div>
             </div>
-            <span class="lmm-stu-pct ${avCls}">${s.pro.readiness}%</span>
+            <span class="lmm-stu-pct ${avCls}"><span data-n="${s.pro.readiness}">0</span>%</span>
           </div>
           <div class="lmm-stu-bar"><i style="width:${s.pro.readiness}%"></i></div>
           <div class="lmm-stu-metrics">
@@ -1744,6 +1953,7 @@
         };
         list.appendChild(card);
       });
+      animateVizBox(list);
     }
 
     async function renderReportsTab(body) {
@@ -1915,8 +2125,9 @@
       };
 
       const grid = body.querySelector('#lmmCleanGrid');
-      CLEANUP_CATALOG.forEach(item => {
+      CLEANUP_CATALOG.forEach((item, ci) => {
         const el = document.createElement('div');
+        el.style.setProperty('--i', ci);
         el.className = 'lmm-clean-item lmm-glow';
         el.innerHTML = `
           <div class="lmm-clean-head">
@@ -1981,9 +2192,10 @@
         bList.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Резервных копий пока нет.</div>';
         return;
       }
-      bSnap.docs.forEach(d => {
+      bSnap.docs.forEach((d, bi) => {
         const b = d.data() || {};
         const row = document.createElement('div');
+        row.style.setProperty('--i', bi);
         row.className = 'lmm-backup-row';
         const title = b.label || b.path || b.target || 'Копия';
         const dt = b.clientAt ? new Date(b.clientAt).toLocaleString('ru-RU') : '';
@@ -2009,7 +2221,7 @@
     const themeObs = new MutationObserver(() => {
       if (activeTab === 'group' && cache.group && wrap.isConnected) {
         const body = wrap.querySelector('#lmmBody');
-        if (body && body.querySelector('#lmmLeftViz')) renderGroupCharts(body, cache.group);
+        if (body && body.querySelector('#lmmLeftViz')) { renderGroupCharts(body, cache.group); renderPulse(body, cache.group); }
       }
     });
     if (document.body) themeObs.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
@@ -2036,7 +2248,7 @@
 
   window.LMSMentorSection = LMSMentorSection;
   window.LMSMentor = {
-    version: 13,
+    version: 14,
     OWNER_UID,
     isOwner,
     mountInto,
